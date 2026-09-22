@@ -1,10 +1,4 @@
-import {
-  Suspense,
-  forwardRef,
-  lazy,
-  useImperativeHandle,
-  useRef,
-} from 'react'
+import { Suspense, forwardRef, lazy, useImperativeHandle, useRef } from 'react'
 
 import { useProjectStore } from '../../stores/projectStore'
 import { BlendModes } from '../comparison/BlendModes'
@@ -149,9 +143,7 @@ export const PreviewCanvas = forwardRef<PreviewCanvasHandle, PreviewCanvasProps>
         <div
           ref={containerRef}
           className={`w-full h-full max-w-[1920px] relative ${
-            isTimelineVisible && comparisonMode !== 'document'
-              ? 'max-h-[1080px] aspect-video'
-              : ''
+            isTimelineVisible && comparisonMode !== 'document' ? 'max-h-[1080px] aspect-video' : ''
           }`}
         >
           <Suspense fallback={<ComparisonLoadingFallback />}>
