@@ -426,11 +426,7 @@ export default function App() {
 
       {isExportOpen && (
         <Suspense fallback={null}>
-          <ExportDialog
-            isOpen
-            onClose={() => setIsExportOpen(false)}
-            canvasRef={canvasRef}
-          />
+          <ExportDialog isOpen onClose={() => setIsExportOpen(false)} canvasRef={canvasRef} />
         </Suspense>
       )}
       <KeyboardShortcutsHelp isOpen={shortcutsHelp.isOpen} onClose={shortcutsHelp.close} />
