@@ -199,9 +199,9 @@ importers:
       mammoth:
         specifier: ^1.12.3
         version: 1.12.3
-      mp4-muxer:
-        specifier: ^5.2.2
-        version: 5.2.2
+      mediabunny:
+        specifier: ^1.58.1
+        version: 1.58.1
       papaparse:
         specifier: ^5.7.0
         version: 5.7.0
@@ -905,8 +905,11 @@ packages:
   '@types/deep-eql@4.0.2':
     resolution: {integrity: sha512-c9h9dVVMigMPc4bwTvC5dxqtqJZwQPePsWjPlpSOnojbor6pGqdk541lfA7AqFQr5pB1BRdq0juY9db81BwyFw==}
 
-  '@types/dom-webcodecs@0.1.19':
-    resolution: {integrity: sha512-+yFUIDUaASFz0vQpWBErPxun/Lb+F0TdrlTsj50gm7K797YzEx2TmV6fEiwciHyFNghlZYPgQXH5qRcwMHcJFQ==}
+  '@types/dom-mediacapture-transform@0.1.12':
+    resolution: {integrity: sha512-d7/QsLRwF864A5mgIM/YrfiglHoYn7zgCcAoJgW404r+2DwnNr7EBbLnCWpmOMgH8y0te73L1AV6H1bmauaWFw==}
+
+  '@types/dom-webcodecs@0.1.13':
+    resolution: {integrity: sha512-O5hkiFIcjjszPIYyUSyvScyvrBoV3NOEEZx/pMlsu44TKzWNkLVBBxnxJz42in5n3QIolYOcBYFCPZZ0h8SkwQ==}
 
   '@types/draco3d@1.4.10':
     resolution: {integrity: sha512-AX22jp8Y7wwaBgAixaSvkoG4M/+PlAcm3Qs4OW8yT9DM4xUpWKeFhLueTAyZF39pviAdcDdeJoACapiAceqNcw==}
@@ -953,9 +956,6 @@ packages:
 
   '@types/webxr@0.5.24':
     resolution: {integrity: sha512-h8fgEd/DpoS9CBrjEQXR+dIDraopAEfu4wYVNY2tEPwk60stPWhvZMf4Foo5FakuQ7HFZoa8WceaWFervK2Ovg==}
-
-  '@types/wicg-file-system-access@2020.9.8':
-    resolution: {integrity: sha512-ggMz8nOygG7d/stpH40WVaNvBwuyYLnrg5Mbyf6bmsj/8+gb6Ei4ZZ9/4PNpcPNTT8th9Q8sM8wYmWGjMWLX/A==}
 
   '@typescript/typescript-aix-ppc64@7.0.2':
     resolution: {integrity: sha512-MTKKkWB7p/0E9xi1d1tHtZ5PiLkGEMIq88pK2CubZjOsLtYTLqhgIgi6zepFa+9GHZ6h05NMCkQxGKiPXMxXtQ==}
@@ -1490,6 +1490,9 @@ packages:
     engines: {node: '>=12.0.0'}
     hasBin: true
 
+  mediabunny@1.58.1:
+    resolution: {integrity: sha512-edscMXOwBgUlMT+45wpAHdiXTGukCQb1nOJPE2D+fM4esNhAvGyB2yGGgnEer2VSwhEg+7gMliZDDQQqLaR7nA==}
+
   meshline@3.3.1:
     resolution: {integrity: sha512-/TQj+JdZkeSUOl5Mk2J7eLcYTLiQm2IDzmlSvYm7ov15anEcDJ92GHqqazxTSreeNgfnYu24kiEvvv0WlbCdFQ==}
     peerDependencies:
@@ -1497,10 +1500,6 @@ packages:
 
   meshoptimizer@1.1.1:
     resolution: {integrity: sha512-oRFNWJRDA/WTrVj7NWvqa5HqE1t9MYDj2VaWirQCzCCrAd2GHrqR/sQezCxiWATPNlKTcRaPRHPJwIRoPBAp5g==}
-
-  mp4-muxer@5.2.2:
-    resolution: {integrity: sha512-dhozjTywI0h2qFzeShagt8YYw811fh1XlwiDCE2f6Aeqf6xG2CyuShoSa5E0AZDO8pPF0JOZ3wOmWBNWIGdSpQ==}
-    deprecated: This library is superseded by Mediabunny. Please migrate to it.
 
   nanoid@3.3.19:
     resolution: {integrity: sha512-Y2tUNy4ouw6tq5oDSKeQYGOyhkUBhNOcGV/02KC+6kd9eDGqdZd++mjMiIDilrBYvjEnCYvVtsuHCuP+okSfug==}
@@ -2330,7 +2329,11 @@ snapshots:
 
   '@types/deep-eql@4.0.2': {}
 
-  '@types/dom-webcodecs@0.1.19': {}
+  '@types/dom-mediacapture-transform@0.1.12':
+    dependencies:
+      '@types/dom-webcodecs': 0.1.13
+
+  '@types/dom-webcodecs@0.1.13': {}
 
   '@types/draco3d@1.4.10': {}
 
@@ -2378,8 +2381,6 @@ snapshots:
     optional: true
 
   '@types/webxr@0.5.24': {}
-
-  '@types/wicg-file-system-access@2020.9.8': {}
 
   '@typescript/typescript-aix-ppc64@7.0.2':
     optional: true
@@ -2787,16 +2788,16 @@ snapshots:
       underscore: 1.13.8
       xmlbuilder: 10.1.1
 
+  mediabunny@1.58.1:
+    dependencies:
+      '@types/dom-mediacapture-transform': 0.1.12
+      '@types/dom-webcodecs': 0.1.13
+
   meshline@3.3.1(three@0.186.0):
     dependencies:
       three: 0.186.0
 
   meshoptimizer@1.1.1: {}
-
-  mp4-muxer@5.2.2:
-    dependencies:
-      '@types/dom-webcodecs': 0.1.19
-      '@types/wicg-file-system-access': 2020.9.8
 
   nanoid@3.3.19: {}
 
