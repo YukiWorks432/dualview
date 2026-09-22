@@ -596,16 +596,15 @@ Toggle with `W` key.
 </tr>
 </table>
 
-
 ### Development Tooling
 
-| Tool       | Purpose                              |
-| ---------- | ------------------------------------ |
-| pnpm 12    | Package management and lockfile      |
-| Oxfmt      | Formatting and import sorting        |
-| Oxlint     | Type-aware linting                   |
-| Vitest 5   | Unit tests                           |
-| GitHub CI  | Frozen install + full quality checks |
+| Tool      | Purpose                              |
+| --------- | ------------------------------------ |
+| pnpm 12   | Package management and lockfile      |
+| Oxfmt     | Formatting and import sorting        |
+| Oxlint    | Type-aware linting                   |
+| Vitest 5  | Unit tests                           |
+| GitHub CI | Frozen install + full quality checks |
 
 Heavy comparison modes, document parsers, export tooling, PDF.js workers, and FFmpeg are split or self-hosted so they are loaded only when needed.
 
