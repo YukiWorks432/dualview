@@ -1,4 +1,4 @@
-import { Download, Loader2, Check, AlertCircle, Sparkles, Film, Layers } from 'lucide-react'
+import { Download, Loader2, Check, AlertCircle, Film, Layers } from 'lucide-react'
 import { useState, useMemo } from 'react'
 import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
@@ -47,6 +47,11 @@ import {
   type ScreenshotResolution,
   type ScreenshotSource,
 } from '../export/ScreenshotExportPanel'
+import {
+  TransitionExportPanel,
+  type TransitionExportFormat,
+  type TransitionExportQuality,
+} from '../export/TransitionExportPanel'
 import {
   Button,
   Dialog,
@@ -111,8 +116,8 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
   const [transitionIntensity, setTransitionIntensity] = useState(1.0)
   const [transitionExportMode, setTransitionExportMode] =
     useState<TransitionExportMode>('sequential')
-  const [transitionFormat, setTransitionFormat] = useState<'mp4' | 'gif'>('mp4')
-  const [transitionQuality, setTransitionQuality] = useState<'low' | 'medium' | 'high'>('medium')
+  const [transitionFormat, setTransitionFormat] = useState<TransitionExportFormat>('mp4')
+  const [transitionQuality, setTransitionQuality] = useState<TransitionExportQuality>('medium')
   // Stitch export settings
   const [isExportingStitch, setIsExportingStitch] = useState(false)
   const [stitchTrackId, setStitchTrackId] = useState<string>('track-a')
@@ -1625,6 +1630,15 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
   // Get available engines and variants for transition UI
   const transitionEngines = useMemo(() => getAllEngines(), [])
   const transitionVariants = useMemo(() => getAllVariants(transitionEngine), [transitionEngine])
+  const transitionVariantOptions = useMemo(
+    () =>
+      transitionVariants.map((value) => ({
+        value,
+        label: getShader(transitionEngine, value)?.label || value,
+      })),
+    [transitionEngine, transitionVariants],
+  )
+  const transitionShaderCount = useMemo(() => getTotalShaderCount(), [])
 
   // Handle engine change - reset variant to first available
   const handleEngineChange = (engine: TransitionEngine) => {
@@ -2517,275 +2531,37 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
             </>
           )}
 
-          {/* Transition Export */}
           {exportMode === 'transition' && (
-            <>
-              {/* Header with shader count */}
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs text-text-muted">
-                  {getTotalShaderCount()} transition effects available
-                </span>
-                {!WebGLTransitionRenderer.isSupported() && (
-                  <span className="text-xs text-error">WebGL not supported</span>
-                )}
-              </div>
-
-              {/* Export Mode Selection */}
-              <div>
-                <label className="block text-sm text-text-secondary mb-2">Export Mode</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    {
-                      value: 'sequential',
-                      label: 'A → T → B',
-                      desc: 'Full A, then transition, then full B',
-                    },
-                    {
-                      value: 'overlap',
-                      label: 'Overlap',
-                      desc: 'Videos overlap during transition',
-                    },
-                    { value: 'loop', label: 'Loop A↔B', desc: 'Continuous A↔B transitions' },
-                    {
-                      value: 'transition-only',
-                      label: 'Trans Only',
-                      desc: 'Just the transition effect',
-                    },
-                  ].map((mode) => (
-                    <button
-                      key={mode.value}
-                      onClick={() => setTransitionExportMode(mode.value as TransitionExportMode)}
-                      title={mode.desc}
-                      className={`px-3 py-2 text-sm border transition-colors ${
-                        transitionExportMode === mode.value
-                          ? 'border-accent bg-accent/10 text-accent'
-                          : 'border-border text-text-secondary hover:border-text-muted'
-                      }`}
-                    >
-                      {mode.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Transition Engine Selection */}
-              <div>
-                <label className="block text-sm text-text-secondary mb-2">Effect Category</label>
-                <div className="grid grid-cols-4 gap-1 max-h-32 overflow-y-auto">
-                  {transitionEngines.map((engine) => (
-                    <button
-                      key={engine.id}
-                      onClick={() => handleEngineChange(engine.id)}
-                      title={engine.description}
-                      className={`px-2 py-1.5 text-xs border transition-colors flex flex-col items-center ${
-                        transitionEngine === engine.id
-                          ? 'border-accent bg-accent/10 text-accent'
-                          : 'border-border text-text-secondary hover:border-text-muted'
-                      }`}
-                    >
-                      <span className="text-base">{engine.icon}</span>
-                      <span className="truncate w-full text-center">{engine.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Variant Selection */}
-              <div>
-                <label className="block text-sm text-text-secondary mb-2">
-                  Variant ({transitionVariants.length} options)
-                </label>
-                <div className="grid grid-cols-4 gap-1 max-h-24 overflow-y-auto">
-                  {transitionVariants.map((variant) => {
-                    const shader = getShader(transitionEngine, variant)
-                    return (
-                      <button
-                        key={variant}
-                        onClick={() => setTransitionVariant(variant)}
-                        className={`px-2 py-1 text-xs border transition-colors truncate ${
-                          transitionVariant === variant
-                            ? 'border-accent bg-accent/10 text-accent'
-                            : 'border-border text-text-secondary hover:border-text-muted'
-                        }`}
-                      >
-                        {shader?.label || variant}
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-
-              {/* Transition Settings */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm text-text-secondary mb-2">
-                    Duration: {transitionDuration.toFixed(1)}s
-                  </label>
-                  <Slider
-                    value={transitionDuration * 10}
-                    onChange={(e) => setTransitionDuration(Number(e.target.value) / 10)}
-                    min={5}
-                    max={50}
-                    step={1}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm text-text-secondary mb-2">
-                    Intensity: {Math.round(transitionIntensity * 100)}%
-                  </label>
-                  <Slider
-                    value={transitionIntensity * 100}
-                    onChange={(e) => setTransitionIntensity(Number(e.target.value) / 100)}
-                    min={0}
-                    max={100}
-                    step={5}
-                  />
-                </div>
-              </div>
-
-              {/* Format Selection */}
-              <div>
-                <label className="block text-sm text-text-secondary mb-2">Format</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    { value: 'mp4', label: 'MP4' },
-                    { value: 'gif', label: 'GIF' },
-                  ].map((fmt) => (
-                    <button
-                      key={fmt.value}
-                      onClick={() => setTransitionFormat(fmt.value as 'mp4' | 'gif')}
-                      className={`px-3 py-2 text-sm border transition-colors ${
-                        transitionFormat === fmt.value
-                          ? 'border-accent bg-accent/10 text-accent'
-                          : 'border-border text-text-secondary hover:border-text-muted'
-                      }`}
-                    >
-                      {fmt.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Quality - only for MP4 */}
-              {transitionFormat === 'mp4' && (
-                <Select
-                  label="Quality"
-                  value={transitionQuality}
-                  onChange={(e) =>
-                    setTransitionQuality(e.target.value as 'low' | 'medium' | 'high')
-                  }
-                  options={[
-                    { value: 'low', label: 'Low (faster, smaller file)' },
-                    { value: 'medium', label: 'Medium (balanced)' },
-                    { value: 'high', label: 'High (best quality)' },
-                  ]}
-                />
-              )}
-
-              {/* Progress */}
-              {isExportingTransition && (
-                <div className="space-y-3 p-4 bg-surface-alt border border-border">
-                  <div className="flex items-center justify-between text-xs">
-                    <span
-                      className={`px-2 py-1 ${progress >= 0 ? 'bg-accent text-white' : 'bg-border text-text-muted'}`}
-                    >
-                      1. Initialize
-                    </span>
-                    <div className="flex-1 h-px bg-border mx-2" />
-                    <span
-                      className={`px-2 py-1 ${progress >= 10 ? 'bg-accent text-white' : 'bg-border text-text-muted'}`}
-                    >
-                      2. Rendering
-                    </span>
-                    <div className="flex-1 h-px bg-border mx-2" />
-                    <span
-                      className={`px-2 py-1 ${progress >= 90 ? 'bg-accent text-white' : 'bg-border text-text-muted'}`}
-                    >
-                      3. Encode
-                    </span>
-                  </div>
-
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-text-secondary">{exportProgress.message}</span>
-                      <span
-                        className={`font-medium ${progress >= 90 ? 'text-secondary' : 'text-accent'}`}
-                      >
-                        {Math.round(progress)}%
-                      </span>
-                    </div>
-                    <div className="h-2 bg-background overflow-hidden">
-                      <div
-                        className="h-full bg-gradient-to-r from-accent via-accent to-secondary transition-all duration-200"
-                        style={{ width: `${progress}%` }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Success state */}
-              {exportProgress.status === 'done' && exportMode === 'transition' && (
-                <div className="p-6 bg-gradient-to-br from-accent/20 via-accent/10 to-secondary/10 border border-accent/40 text-center space-y-4">
-                  <div className="w-16 h-16 mx-auto bg-accent/20 flex items-center justify-center mb-3">
-                    <Check className="w-8 h-8 text-accent" strokeWidth={3} />
-                  </div>
-                  <h3 className="text-xl font-bold text-text-primary">
-                    Transition Export Complete!
-                  </h3>
-                  <p className="text-sm text-text-secondary">
-                    Your {transitionFormat.toUpperCase()} with {transitionEngine}/
-                    {transitionVariant} effect is ready
-                  </p>
-                  <div className="flex items-center justify-center gap-3 pt-2">
-                    <button
-                      onClick={onClose}
-                      className="px-4 py-2 text-sm bg-accent text-white hover:bg-accent-hover transition-colors"
-                    >
-                      Done
-                    </button>
-                    <button
-                      onClick={() => {
-                        setExportProgress({ status: 'idle', progress: 0 })
-                        setProgress(0)
-                      }}
-                      className="px-4 py-2 text-sm border border-border text-text-secondary hover:text-text-primary transition-colors"
-                    >
-                      Export Another
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {error && (
-                <div className="flex items-center gap-2 text-error text-sm">
-                  <AlertCircle className="w-4 h-4" />
-                  <span>{error}</span>
-                </div>
-              )}
-
-              <div className="flex justify-end gap-2 pt-4">
-                <Button variant="outline" onClick={onClose} disabled={isExportingTransition}>
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleTransitionExport}
-                  disabled={isExportingTransition || !WebGLTransitionRenderer.isSupported()}
-                >
-                  {isExportingTransition ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Exporting...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="w-4 h-4" />
-                      Export FX
-                    </>
-                  )}
-                </Button>
-              </div>
-            </>
+            <TransitionExportPanel
+              shaderCount={transitionShaderCount}
+              webglSupported={WebGLTransitionRenderer.isSupported()}
+              exportMode={transitionExportMode}
+              onExportModeChange={setTransitionExportMode}
+              engines={transitionEngines}
+              engine={transitionEngine}
+              onEngineChange={handleEngineChange}
+              variants={transitionVariantOptions}
+              variant={transitionVariant}
+              onVariantChange={setTransitionVariant}
+              duration={transitionDuration}
+              onDurationChange={setTransitionDuration}
+              intensity={transitionIntensity}
+              onIntensityChange={setTransitionIntensity}
+              format={transitionFormat}
+              onFormatChange={setTransitionFormat}
+              quality={transitionQuality}
+              onQualityChange={setTransitionQuality}
+              isExporting={isExportingTransition}
+              progress={progress}
+              exportProgress={exportProgress}
+              error={error}
+              onClose={onClose}
+              onExport={() => void handleTransitionExport()}
+              onReset={() => {
+                setExportProgress({ status: 'idle', progress: 0 })
+                setProgress(0)
+              }}
+            />
           )}
 
           {exportMode === 'screenshot' && (
