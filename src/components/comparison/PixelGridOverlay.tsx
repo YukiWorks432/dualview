@@ -319,6 +319,15 @@ export function PixelGridOverlay() {
     }
   }, [hoveredPixel])
 
+  // Combine containerProps handlers with our own
+  const combinedMouseMove = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      handleMouseMove(e)
+      containerProps.onMouseMove?.(e)
+    },
+    [handleMouseMove, containerProps],
+  )
+
   const transformStyle = getTransformStyle()
 
   // Empty state
@@ -338,15 +347,6 @@ export function PixelGridOverlay() {
       </div>
     )
   }
-
-  // Combine containerProps handlers with our own
-  const combinedMouseMove = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
-      handleMouseMove(e)
-      containerProps.onMouseMove?.(e)
-    },
-    [handleMouseMove, containerProps],
-  )
 
   return (
     <div
