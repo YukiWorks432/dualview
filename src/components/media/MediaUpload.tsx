@@ -1,10 +1,22 @@
+import {
+  Upload,
+  Film,
+  Image,
+  Music,
+  AlertCircle,
+  Link,
+  Clipboard,
+  Monitor,
+  Box,
+  FileSpreadsheet,
+} from 'lucide-react'
 import { useCallback, useState, useEffect } from 'react'
+
+import { captureScreenAsFile, isScreenCaptureSupported } from '../../lib/screenCapture'
+import { cn } from '../../lib/utils'
 import { useMediaStore } from '../../stores/mediaStore'
 import { useTimelineStore } from '../../stores/timelineStore'
-import { cn } from '../../lib/utils'
-import { Upload, Film, Image, Music, AlertCircle, Link, Clipboard, Monitor, Box, FileSpreadsheet } from 'lucide-react'
 import { URLImport } from './URLImport'
-import { captureScreenAsFile, isScreenCaptureSupported } from '../../lib/screenCapture'
 
 interface MediaUploadProps {
   className?: string
@@ -43,8 +55,8 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
               const mediaFile = await addFile(file)
 
               // Auto-add to timeline
-              const trackA = tracks.find(t => t.type === 'a')
-              const trackB = tracks.find(t => t.type === 'b')
+              const trackA = tracks.find((t) => t.type === 'a')
+              const trackB = tracks.find((t) => t.type === 'b')
 
               if (trackA && trackA.clips.length === 0) {
                 addClip(trackA.id, mediaFile.id, 0, mediaFile.duration || 10)
@@ -91,7 +103,12 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
         // Validate file type (including 3D models and documents by extension)
         const extension = file.name.toLowerCase().split('.').pop()
         const isModel = extension === 'glb' || extension === 'gltf'
-        const isDocument = extension === 'csv' || extension === 'xlsx' || extension === 'xls' || extension === 'docx' || extension === 'pdf'
+        const isDocument =
+          extension === 'csv' ||
+          extension === 'xlsx' ||
+          extension === 'xls' ||
+          extension === 'docx' ||
+          extension === 'pdf'
         if (
           !file.type.startsWith('video/') &&
           !file.type.startsWith('image/') &&
@@ -100,7 +117,7 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
           !isDocument
         ) {
           invalidFiles.push(file.name)
-          setUploadProgress(prev => ({ ...prev, current: i + 1 }))
+          setUploadProgress((prev) => ({ ...prev, current: i + 1 }))
           continue
         }
 
@@ -110,8 +127,8 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
           const duration = mediaFile.duration || 10
 
           // Auto-add to timeline based on target track
-          const trackA = tracks.find(t => t.type === 'a')
-          const trackB = tracks.find(t => t.type === 'b')
+          const trackA = tracks.find((t) => t.type === 'a')
+          const trackB = tracks.find((t) => t.type === 'b')
 
           if (targetTrack === 'a' && trackA) {
             // Add all files to Track A sequentially
@@ -152,7 +169,7 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
       setUploadProgress({ current: 0, total: 0 })
       onUpload?.()
     },
-    [addFile, addClip, tracks, onUpload]
+    [addFile, addClip, tracks, onUpload],
   )
 
   // General drop handler (auto mode)
@@ -162,7 +179,7 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
       setIsDragOverGeneral(false)
       handleFiles(e.dataTransfer.files, 'auto')
     },
-    [handleFiles]
+    [handleFiles],
   )
 
   // Track A drop handler
@@ -173,7 +190,7 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
       setIsDragOverA(false)
       handleFiles(e.dataTransfer.files, 'a')
     },
-    [handleFiles]
+    [handleFiles],
   )
 
   // Track B drop handler
@@ -184,7 +201,7 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
       setIsDragOverB(false)
       handleFiles(e.dataTransfer.files, 'b')
     },
-    [handleFiles]
+    [handleFiles],
   )
 
   const handleDragOverGeneral = (e: React.DragEvent) => {
@@ -270,8 +287,8 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
       const mediaFile = await addFile(file)
 
       // Auto-add to timeline
-      const trackA = tracks.find(t => t.type === 'a')
-      const trackB = tracks.find(t => t.type === 'b')
+      const trackA = tracks.find((t) => t.type === 'a')
+      const trackB = tracks.find((t) => t.type === 'b')
 
       if (trackA && trackA.clips.length === 0) {
         addClip(trackA.id, mediaFile.id, 0, mediaFile.duration || 10)
@@ -302,7 +319,7 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
             isDragOverA
               ? 'border-orange-500 bg-orange-500/20 scale-[1.02]'
               : 'border-orange-500/40 hover:border-orange-500 hover:bg-orange-500/10',
-            isUploading && 'opacity-50 pointer-events-none'
+            isUploading && 'opacity-50 pointer-events-none',
           )}
           onDrop={handleDropA}
           onDragOver={handleDragOverA}
@@ -310,16 +327,27 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
           onClick={handleClickA}
         >
           <div className="flex flex-col items-center justify-center py-4 px-2">
-            <div className={cn(
-              'p-1.5 mb-1 transition-colors',
-              isDragOverA ? 'bg-orange-500/30' : 'bg-orange-500/10 group-hover:bg-orange-500/20'
-            )}>
-              <Upload className={cn('w-5 h-5', isDragOverA ? 'text-orange-500' : 'text-orange-500/70 group-hover:text-orange-500')} />
+            <div
+              className={cn(
+                'p-1.5 mb-1 transition-colors',
+                isDragOverA ? 'bg-orange-500/30' : 'bg-orange-500/10 group-hover:bg-orange-500/20',
+              )}
+            >
+              <Upload
+                className={cn(
+                  'w-5 h-5',
+                  isDragOverA
+                    ? 'text-orange-500'
+                    : 'text-orange-500/70 group-hover:text-orange-500',
+                )}
+              />
             </div>
-            <p className={cn(
-              'text-xs text-center font-medium',
-              isDragOverA ? 'text-orange-500' : 'text-text-primary'
-            )}>
+            <p
+              className={cn(
+                'text-xs text-center font-medium',
+                isDragOverA ? 'text-orange-500' : 'text-text-primary',
+              )}
+            >
               {isDragOverA ? 'Drop for A' : 'Media A'}
             </p>
             <p className="text-[10px] text-text-muted mt-0.5">Track A</p>
@@ -333,7 +361,7 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
             isDragOverB
               ? 'border-lime-400 bg-lime-400/20 scale-[1.02]'
               : 'border-lime-400/40 hover:border-lime-400 hover:bg-lime-400/10',
-            isUploading && 'opacity-50 pointer-events-none'
+            isUploading && 'opacity-50 pointer-events-none',
           )}
           onDrop={handleDropB}
           onDragOver={handleDragOverB}
@@ -341,16 +369,25 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
           onClick={handleClickB}
         >
           <div className="flex flex-col items-center justify-center py-4 px-2">
-            <div className={cn(
-              'p-1.5 mb-1 transition-colors',
-              isDragOverB ? 'bg-lime-400/30' : 'bg-lime-400/10 group-hover:bg-lime-400/20'
-            )}>
-              <Upload className={cn('w-5 h-5', isDragOverB ? 'text-lime-400' : 'text-lime-400/70 group-hover:text-lime-400')} />
+            <div
+              className={cn(
+                'p-1.5 mb-1 transition-colors',
+                isDragOverB ? 'bg-lime-400/30' : 'bg-lime-400/10 group-hover:bg-lime-400/20',
+              )}
+            >
+              <Upload
+                className={cn(
+                  'w-5 h-5',
+                  isDragOverB ? 'text-lime-400' : 'text-lime-400/70 group-hover:text-lime-400',
+                )}
+              />
             </div>
-            <p className={cn(
-              'text-xs text-center font-medium',
-              isDragOverB ? 'text-lime-400' : 'text-text-primary'
-            )}>
+            <p
+              className={cn(
+                'text-xs text-center font-medium',
+                isDragOverB ? 'text-lime-400' : 'text-text-primary',
+              )}
+            >
               {isDragOverB ? 'Drop for B' : 'Media B'}
             </p>
             <p className="text-[10px] text-text-muted mt-0.5">Track B</p>
@@ -365,7 +402,7 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
           isDragOverGeneral
             ? 'border-accent bg-accent/10 scale-[1.01]'
             : 'border-border hover:border-accent/60 hover:bg-accent/5',
-          isUploading && 'opacity-50 pointer-events-none'
+          isUploading && 'opacity-50 pointer-events-none',
         )}
         onDrop={handleDropGeneral}
         onDragOver={handleDragOverGeneral}
@@ -373,10 +410,12 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
         onClick={handleClickGeneral}
       >
         <div className="flex flex-col items-center justify-center py-4 px-4">
-          <p className={cn(
-            'text-xs text-center',
-            isDragOverGeneral ? 'text-accent' : 'text-text-muted'
-          )}>
+          <p
+            className={cn(
+              'text-xs text-center',
+              isDragOverGeneral ? 'text-accent' : 'text-text-muted',
+            )}
+          >
             {isUploading
               ? `Uploading ${uploadProgress.current}/${uploadProgress.total}...`
               : isDragOverGeneral
@@ -396,14 +435,20 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
       {/* Import options */}
       <div className="grid grid-cols-3 gap-2">
         <button
-          onClick={(e) => { e.stopPropagation(); setIsURLImportOpen(true) }}
+          onClick={(e) => {
+            e.stopPropagation()
+            setIsURLImportOpen(true)
+          }}
           className="flex items-center justify-center gap-1 px-2 py-2 text-xs text-text-secondary hover:text-text-primary bg-surface-hover hover:bg-surface border border-border rounded transition-colors"
         >
           <Link className="w-3 h-3" />
           URL
         </button>
         <button
-          onClick={(e) => { e.stopPropagation(); navigator.clipboard.read().catch(() => {}) }}
+          onClick={(e) => {
+            e.stopPropagation()
+            navigator.clipboard.read().catch(() => {})
+          }}
           className="flex items-center justify-center gap-1 px-2 py-2 text-xs text-text-secondary hover:text-text-primary bg-surface-hover hover:bg-surface border border-border rounded transition-colors"
           title="Ctrl+V to paste images"
         >
@@ -411,11 +456,14 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
           Paste
         </button>
         <button
-          onClick={(e) => { e.stopPropagation(); handleScreenCapture() }}
+          onClick={(e) => {
+            e.stopPropagation()
+            handleScreenCapture()
+          }}
           disabled={isCapturing}
           className={cn(
-            "flex items-center justify-center gap-1 px-2 py-2 text-xs text-text-secondary hover:text-text-primary bg-surface-hover hover:bg-surface border border-border rounded transition-colors",
-            isCapturing && "opacity-50 cursor-wait"
+            'flex items-center justify-center gap-1 px-2 py-2 text-xs text-text-secondary hover:text-text-primary bg-surface-hover hover:bg-surface border border-border rounded transition-colors',
+            isCapturing && 'opacity-50 cursor-wait',
           )}
           title="Capture screen region"
         >

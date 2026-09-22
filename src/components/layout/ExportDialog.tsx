@@ -1,23 +1,51 @@
+import {
+  X,
+  Download,
+  Loader2,
+  Check,
+  AlertCircle,
+  Camera,
+  FileText,
+  Clipboard,
+  Box,
+  Sparkles,
+  Film,
+  Layers,
+} from 'lucide-react'
 import { useState, useMemo } from 'react'
-import { Button, Select, Slider } from '../ui'
-import { useProjectStore } from '../../stores/projectStore'
-import { useMediaStore } from '../../stores/mediaStore'
-import { useTimelineStore } from '../../stores/timelineStore'
-import { usePlaybackStore } from '../../stores/playbackStore'
-import { X, Download, Loader2, Check, AlertCircle, Camera, FileText, Clipboard, Box, Sparkles, Film, Layers } from 'lucide-react'
-import { captureCanvasScreenshot, downloadBlob, generatePDFReport } from '../../lib/screenshotExport'
-import { downloadVideo } from '../../lib/sweepExport'
-import { GIF_PRESETS } from '../../lib/gifEncoder'
-import { isWebCodecsSupported } from '../../lib/mp4Encoder'
-import { Muxer, ArrayBufferTarget } from 'mp4-muxer'
 import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js'
-import { WebGLTransitionRenderer } from '../../lib/webgl/WebGLTransitionRenderer'
-import { getAllEngines, getAllVariants, getShader, getTotalShaderCount } from '../../lib/webgl/shaders'
-import { exportStitchedVideo, downloadStitchedVideo, getTrackExportInfo, type StitchExportProgress } from '../../lib/stitchExport'
-import type { ExportSource, SweepStyle, TransitionEngine, TransitionExportMode } from '../../types'
+
+import { GIF_PRESETS } from '../../lib/gifEncoder'
+import { isWebCodecsSupported } from '../../lib/mp4Encoder'
+import { createAvcMp4Muxer } from '../../lib/mp4Muxer'
+import {
+  captureCanvasScreenshot,
+  downloadBlob,
+  generatePDFReport,
+} from '../../lib/screenshotExport'
+import {
+  exportStitchedVideo,
+  downloadStitchedVideo,
+  getTrackExportInfo,
+  type StitchExportProgress,
+} from '../../lib/stitchExport'
+import { downloadVideo } from '../../lib/sweepExport'
 import { formatTime } from '../../lib/utils'
+import {
+  getAllEngines,
+  getAllVariants,
+  getShader,
+  getTotalShaderCount,
+} from '../../lib/webgl/shaders'
+import { WebGLTransitionRenderer } from '../../lib/webgl/WebGLTransitionRenderer'
+import { useMediaStore } from '../../stores/mediaStore'
+import { usePlaybackStore } from '../../stores/playbackStore'
+import { useProjectStore } from '../../stores/projectStore'
+import { useTimelineStore } from '../../stores/timelineStore'
+import type { ExportSource, SweepStyle, TransitionEngine, TransitionExportMode } from '../../types'
+import { Button, Select, Slider } from '../ui'
 
 type ExportMode = 'video' | 'screenshot' | 'pdf' | '3d' | 'transition' | 'stitch'
 
@@ -36,11 +64,22 @@ function formatFileSize(bytes: number): string {
 }
 
 export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) {
-  const { exportSettings, setExportSettings, exportProgress, setExportProgress, comparisonMode, metricsSSIM, metricsPSNR, setSliderPosition } = useProjectStore()
+  const {
+    exportSettings,
+    setExportSettings,
+    exportProgress,
+    setExportProgress,
+    comparisonMode,
+    metricsSSIM,
+    metricsPSNR,
+    setSliderPosition,
+  } = useProjectStore()
   const [exportMode, setExportMode] = useState<ExportMode>('video')
   const [screenshotFormat, setScreenshotFormat] = useState<'png' | 'jpg'>('png')
   const [screenshotResolution, setScreenshotResolution] = useState<'720p' | '1080p' | '4k'>('1080p')
-  const [screenshotSource, setScreenshotSource] = useState<'comparison' | 'a-only' | 'b-only'>('comparison')
+  const [screenshotSource, setScreenshotSource] = useState<'comparison' | 'a-only' | 'b-only'>(
+    'comparison',
+  )
   const [screenshotSliderPos, setScreenshotSliderPos] = useState(50)
   const [screenshotQuality, setScreenshotQuality] = useState(95)
   const [isExporting, setIsExporting] = useState(false)
@@ -52,7 +91,9 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
   const [progress, setProgress] = useState(0)
   const [error, setError] = useState<string | null>(null)
   // 3D export settings
-  const [export3DSource, setExport3DSource] = useState<'side-by-side' | 'a-only' | 'b-only'>('side-by-side')
+  const [export3DSource, setExport3DSource] = useState<'side-by-side' | 'a-only' | 'b-only'>(
+    'side-by-side',
+  )
   const [export3DRotations, setExport3DRotations] = useState(1)
   const [export3DFps, setExport3DFps] = useState(30)
   const [export3DFormat, setExport3DFormat] = useState<'mp4' | 'gif'>('mp4')
@@ -64,7 +105,8 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
   const [transitionVariant, setTransitionVariant] = useState('crossfade')
   const [transitionDuration, setTransitionDuration] = useState(1.5)
   const [transitionIntensity, setTransitionIntensity] = useState(1.0)
-  const [transitionExportMode, setTransitionExportMode] = useState<TransitionExportMode>('sequential')
+  const [transitionExportMode, setTransitionExportMode] =
+    useState<TransitionExportMode>('sequential')
   const [transitionFormat, setTransitionFormat] = useState<'mp4' | 'gif'>('mp4')
   const [transitionQuality, setTransitionQuality] = useState<'low' | 'medium' | 'high'>('medium')
   // Stitch export settings
@@ -127,8 +169,8 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
       }
 
       // Calculate loop duration based on longest video
-      const trackA = tracks.find(t => t.type === 'a')
-      const trackB = tracks.find(t => t.type === 'b')
+      const trackA = tracks.find((t) => t.type === 'a')
+      const trackB = tracks.find((t) => t.type === 'b')
       const clipA = trackA?.clips[0]
       const clipB = trackB?.clips[0]
       const fileA = clipA ? getFile(clipA.mediaId) : null
@@ -184,7 +226,9 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
               const sliderX = (progress / 100) * width
               ctx.rect(0, 0, sliderX, height)
               ctx.clip()
-              try { ctx.drawImage(mediaA, 0, 0, width, height) } catch {}
+              try {
+                ctx.drawImage(mediaA, 0, 0, width, height)
+              } catch {}
               ctx.restore()
               // Draw slider line
               ctx.fillStyle = '#ffffff'
@@ -197,7 +241,9 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
               const sliderY = (progress / 100) * height
               ctx.rect(0, 0, width, sliderY)
               ctx.clip()
-              try { ctx.drawImage(mediaA, 0, 0, width, height) } catch {}
+              try {
+                ctx.drawImage(mediaA, 0, 0, width, height)
+              } catch {}
               ctx.restore()
               // Draw slider line
               ctx.fillStyle = '#ffffff'
@@ -215,7 +261,9 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
               ctx.lineTo(-width, 0)
               ctx.closePath()
               ctx.clip()
-              try { ctx.drawImage(mediaA, 0, 0, width, height) } catch {}
+              try {
+                ctx.drawImage(mediaA, 0, 0, width, height)
+              } catch {}
               ctx.restore()
               // Draw diagonal line
               ctx.strokeStyle = '#ffffff'
@@ -235,7 +283,9 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
               const centerY = height / 2
               ctx.arc(centerX, centerY, radius, 0, Math.PI * 2)
               ctx.clip()
-              try { ctx.drawImage(mediaA, 0, 0, width, height) } catch {}
+              try {
+                ctx.drawImage(mediaA, 0, 0, width, height)
+              } catch {}
               ctx.restore()
               // Draw circle outline
               ctx.strokeStyle = '#ffffff'
@@ -256,7 +306,9 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
               const rectY = (height - rectH) / 2
               ctx.rect(rectX, rectY, rectW, rectH)
               ctx.clip()
-              try { ctx.drawImage(mediaA, 0, 0, width, height) } catch {}
+              try {
+                ctx.drawImage(mediaA, 0, 0, width, height)
+              } catch {}
               ctx.restore()
               // Draw rectangle outline
               ctx.strokeStyle = '#ffffff'
@@ -283,7 +335,7 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
               // Triangle wave: goes 0→1→0→1... creating bounce effect
               const triangleWave = (t: number, dir: number) => {
                 // Apply direction to potentially reverse the wave
-                const adjusted = dir > 0 ? t : (t + 1) // Phase shift for reverse direction
+                const adjusted = dir > 0 ? t : t + 1 // Phase shift for reverse direction
                 const normalized = adjusted % 2
                 return normalized <= 1 ? normalized : 2 - normalized
               }
@@ -293,15 +345,23 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
               const t = progress / 100
 
               // Calculate bouncing positions with random offsets and directions
-              const bounceX = triangleWave(t * speedX * 2 + spotlightRandom.phaseX, spotlightRandom.dirX)
-              const bounceY = triangleWave(t * speedY * 2 + spotlightRandom.phaseY, spotlightRandom.dirY)
+              const bounceX = triangleWave(
+                t * speedX * 2 + spotlightRandom.phaseX,
+                spotlightRandom.dirX,
+              )
+              const bounceY = triangleWave(
+                t * speedY * 2 + spotlightRandom.phaseY,
+                spotlightRandom.dirY,
+              )
 
               const rectX = bounceX * maxX
               const rectY = bounceY * maxY
 
               ctx.rect(rectX, rectY, rectW, rectH)
               ctx.clip()
-              try { ctx.drawImage(mediaA, 0, 0, width, height) } catch {}
+              try {
+                ctx.drawImage(mediaA, 0, 0, width, height)
+              } catch {}
               ctx.restore()
               // Draw rectangle outline
               ctx.strokeStyle = '#ffffff'
@@ -313,7 +373,10 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
             case 'spotlight-circle': {
               // Bouncing circle like DVD screensaver
               // Use the average of width and height for circle radius
-              const circleRadius = ((exportSettings.spotlightWidth + exportSettings.spotlightHeight) / 2) * Math.min(width, height) / 2
+              const circleRadius =
+                (((exportSettings.spotlightWidth + exportSettings.spotlightHeight) / 2) *
+                  Math.min(width, height)) /
+                2
 
               // Bouncing area bounds (accounting for circle radius)
               const maxX = width - circleRadius * 2
@@ -327,7 +390,7 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
               // Calculate position using triangle wave (bouncing)
               const triangleWave = (t: number, dir: number) => {
                 // Apply direction to potentially reverse the wave
-                const adjusted = dir > 0 ? t : (t + 1) // Phase shift for reverse direction
+                const adjusted = dir > 0 ? t : t + 1 // Phase shift for reverse direction
                 const normalized = adjusted % 2
                 return normalized <= 1 ? normalized : 2 - normalized
               }
@@ -336,15 +399,23 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
               const t = progress / 100
 
               // Calculate bouncing positions with random offsets and directions
-              const bounceX = triangleWave(t * speedX * 2 + spotlightRandom.phaseX, spotlightRandom.dirX)
-              const bounceY = triangleWave(t * speedY * 2 + spotlightRandom.phaseY, spotlightRandom.dirY)
+              const bounceX = triangleWave(
+                t * speedX * 2 + spotlightRandom.phaseX,
+                spotlightRandom.dirX,
+              )
+              const bounceY = triangleWave(
+                t * speedY * 2 + spotlightRandom.phaseY,
+                spotlightRandom.dirY,
+              )
 
               const centerX = circleRadius + bounceX * maxX
               const centerY = circleRadius + bounceY * maxY
 
               ctx.arc(centerX, centerY, circleRadius, 0, Math.PI * 2)
               ctx.clip()
-              try { ctx.drawImage(mediaA, 0, 0, width, height) } catch {}
+              try {
+                ctx.drawImage(mediaA, 0, 0, width, height)
+              } catch {}
               ctx.restore()
               // Draw circle outline
               ctx.strokeStyle = '#ffffff'
@@ -381,32 +452,41 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
         const targetDuration = targetFile?.duration || duration || 1
 
         if (!targetMedia) {
-          throw new Error(`No media ${exportSettings.exportSource === 'a-only' ? 'A' : 'B'} to export`)
+          throw new Error(
+            `No media ${exportSettings.exportSource === 'a-only' ? 'A' : 'B'} to export`,
+          )
         }
 
-        setExportProgress({ status: 'encoding', progress: 0, message: `Exporting ${exportSettings.exportSource === 'a-only' ? 'A' : 'B'}...` })
+        setExportProgress({
+          status: 'encoding',
+          progress: 0,
+          message: `Exporting ${exportSettings.exportSource === 'a-only' ? 'A' : 'B'}...`,
+        })
 
         // Handle MP4 export for single media
         if (exportSettings.format === 'mp4') {
           if (!isWebCodecsSupported()) {
-            throw new Error('MP4 export requires a modern browser with WebCodecs support (Chrome, Edge)')
+            throw new Error(
+              'MP4 export requires a modern browser with WebCodecs support (Chrome, Edge)',
+            )
           }
 
           const fps = 30
           const totalFrames = Math.ceil(targetDuration * fps)
-          const bitrate = exportSettings.quality === 'high' ? 10_000_000 : exportSettings.quality === 'medium' ? 5_000_000 : 2_500_000
+          const bitrate =
+            exportSettings.quality === 'high'
+              ? 10_000_000
+              : exportSettings.quality === 'medium'
+                ? 5_000_000
+                : 2_500_000
 
           // Pause and prepare for seeking
           if (targetVideo) targetVideo.pause()
 
-          const muxer = new Muxer({
-            target: new ArrayBufferTarget(),
-            video: { codec: 'avc', width: 1920, height: 1080 },
-            fastStart: 'in-memory',
-          })
+          const muxer = await createAvcMp4Muxer()
 
           const encoder = new VideoEncoder({
-            output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
+            output: (chunk, meta) => muxer.addChunk(chunk, meta),
             error: (e) => console.error('VideoEncoder error:', e),
           })
 
@@ -450,16 +530,18 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
             if (i % 5 === 0) {
               const progress = Math.round((i / totalFrames) * 90)
               setProgress(progress)
-              setExportProgress({ status: 'encoding', progress, message: `Encoding frame ${i + 1}/${totalFrames}` })
+              setExportProgress({
+                status: 'encoding',
+                progress,
+                message: `Encoding frame ${i + 1}/${totalFrames}`,
+              })
             }
-            if (i % 3 === 0) await new Promise(r => setTimeout(r, 0))
+            if (i % 3 === 0) await new Promise((r) => setTimeout(r, 0))
           }
 
           await encoder.flush()
           encoder.close()
-          muxer.finalize()
-
-          const { buffer } = muxer.target as ArrayBufferTarget
+          const buffer = await muxer.finalize()
           const mp4Blob = new Blob([buffer], { type: 'video/mp4' })
           const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
           downloadVideo(mp4Blob, `dualview-${exportSettings.exportSource}-${timestamp}.mp4`)
@@ -505,9 +587,13 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
 
             if (i % 5 === 0) {
               setProgress(Math.round((i / totalFrames) * 40))
-              setExportProgress({ status: 'encoding', progress: Math.round((i / totalFrames) * 40), message: `Capturing frame ${i + 1}/${totalFrames}` })
+              setExportProgress({
+                status: 'encoding',
+                progress: Math.round((i / totalFrames) * 40),
+                message: `Capturing frame ${i + 1}/${totalFrames}`,
+              })
             }
-            if (i % 3 === 0) await new Promise(r => setTimeout(r, 0))
+            if (i % 3 === 0) await new Promise((r) => setTimeout(r, 0))
           }
 
           // Load and encode GIF
@@ -536,7 +622,11 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
           const gifBlob = await new Promise<Blob>((resolve, reject) => {
             gif.on('progress', (p: number) => {
               setProgress(40 + Math.round(p * 60))
-              setExportProgress({ status: 'encoding', progress: 40 + Math.round(p * 60), message: `Encoding GIF... ${Math.round(p * 100)}%` })
+              setExportProgress({
+                status: 'encoding',
+                progress: 40 + Math.round(p * 60),
+                message: `Encoding GIF... ${Math.round(p * 100)}%`,
+              })
             })
             gif.on('finished', (blob: Blob) => resolve(blob))
             gif.on('error', (err: Error) => reject(err))
@@ -558,7 +648,12 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
 
         const mediaRecorder = new MediaRecorder(stream, {
           mimeType,
-          videoBitsPerSecond: exportSettings.quality === 'high' ? 10_000_000 : exportSettings.quality === 'medium' ? 5_000_000 : 2_500_000,
+          videoBitsPerSecond:
+            exportSettings.quality === 'high'
+              ? 10_000_000
+              : exportSettings.quality === 'medium'
+                ? 5_000_000
+                : 2_500_000,
         })
 
         const chunks: Blob[] = []
@@ -592,7 +687,11 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
 
           drawSingleMedia(targetMedia)
           setProgress(Math.round(progressPct * 100))
-          setExportProgress({ status: 'encoding', progress: Math.round(progressPct * 100), message: `Recording... ${Math.round(progressPct * 100)}%` })
+          setExportProgress({
+            status: 'encoding',
+            progress: Math.round(progressPct * 100),
+            message: `Recording... ${Math.round(progressPct * 100)}%`,
+          })
           requestAnimationFrame(animateSingle)
         }
 
@@ -614,7 +713,12 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
 
       const mediaRecorder = new MediaRecorder(stream, {
         mimeType,
-        videoBitsPerSecond: exportSettings.quality === 'high' ? 10_000_000 : exportSettings.quality === 'medium' ? 5_000_000 : 2_500_000,
+        videoBitsPerSecond:
+          exportSettings.quality === 'high'
+            ? 10_000_000
+            : exportSettings.quality === 'medium'
+              ? 5_000_000
+              : 2_500_000,
       })
 
       const chunks: Blob[] = []
@@ -629,8 +733,14 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
       })
 
       // Reset videos to start
-      if (videoA) { videoA.currentTime = 0; videoA.play().catch(() => {}) }
-      if (videoB) { videoB.currentTime = 0; videoB.play().catch(() => {}) }
+      if (videoA) {
+        videoA.currentTime = 0
+        videoA.play().catch(() => {})
+      }
+      if (videoB) {
+        videoB.currentTime = 0
+        videoB.play().catch(() => {})
+      }
 
       mediaRecorder.start(100)
 
@@ -680,7 +790,11 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
         }
 
         setProgress(Math.round(progressPct * 100))
-        setExportProgress({ status: 'encoding', progress: Math.round(progressPct * 100), message: `Recording... ${Math.round(progressPct * 100)}%` })
+        setExportProgress({
+          status: 'encoding',
+          progress: Math.round(progressPct * 100),
+          message: `Recording... ${Math.round(progressPct * 100)}%`,
+        })
 
         requestAnimationFrame(animate)
       }
@@ -704,40 +818,43 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
       // Handle MP4 export using WebCodecs + mp4-muxer
       if (exportSettings.format === 'mp4') {
         if (!isWebCodecsSupported()) {
-          throw new Error('MP4 export requires a modern browser with WebCodecs support (Chrome, Edge)')
+          throw new Error(
+            'MP4 export requires a modern browser with WebCodecs support (Chrome, Edge)',
+          )
         }
 
         const fps = 30
         const totalExportDuration = loopDuration * exportSettings.videoLoops
         const totalFrames = Math.ceil(totalExportDuration * fps)
-        const bitrate = exportSettings.quality === 'high' ? 10_000_000 : exportSettings.quality === 'medium' ? 5_000_000 : 2_500_000
+        const bitrate =
+          exportSettings.quality === 'high'
+            ? 10_000_000
+            : exportSettings.quality === 'medium'
+              ? 5_000_000
+              : 2_500_000
 
         // Get individual video durations for looping
         const videoADuration = fileA?.duration || loopDuration
         const videoBDuration = fileB?.duration || loopDuration
 
-        setExportProgress({ status: 'encoding', progress: 0, message: 'Initializing MP4 encoder...' })
+        setExportProgress({
+          status: 'encoding',
+          progress: 0,
+          message: 'Initializing MP4 encoder...',
+        })
 
         // Pause videos and prepare for seeking
         if (videoA) videoA.pause()
         if (videoB) videoB.pause()
 
         // Create muxer
-        const muxer = new Muxer({
-          target: new ArrayBufferTarget(),
-          video: {
-            codec: 'avc',
-            width: 1920,
-            height: 1080,
-          },
-          fastStart: 'in-memory',
-        })
+        const muxer = await createAvcMp4Muxer()
 
         // Create video encoder
         let encodedFrames = 0
         const encoder = new VideoEncoder({
           output: (chunk, meta) => {
-            muxer.addVideoChunk(chunk, meta)
+            muxer.addChunk(chunk, meta)
             encodedFrames++
           },
           error: (e) => console.error('VideoEncoder error:', e),
@@ -764,15 +881,17 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
           // Seek videos to the correct time within the loop
           if (videoA) {
             // If video is shorter than loop, optionally loop it within the sweep
-            const videoTimeA = (exportSettings.loopShorterVideo && videoADuration < loopDuration)
-              ? timeWithinLoop % videoADuration
-              : Math.min(timeWithinLoop, videoADuration - 0.001)
+            const videoTimeA =
+              exportSettings.loopShorterVideo && videoADuration < loopDuration
+                ? timeWithinLoop % videoADuration
+                : Math.min(timeWithinLoop, videoADuration - 0.001)
             await seekVideoAndWait(videoA, videoTimeA)
           }
           if (videoB) {
-            const videoTimeB = (exportSettings.loopShorterVideo && videoBDuration < loopDuration)
-              ? timeWithinLoop % videoBDuration
-              : Math.min(timeWithinLoop, videoBDuration - 0.001)
+            const videoTimeB =
+              exportSettings.loopShorterVideo && videoBDuration < loopDuration
+                ? timeWithinLoop % videoBDuration
+                : Math.min(timeWithinLoop, videoBDuration - 0.001)
             await seekVideoAndWait(videoB, videoTimeB)
           }
 
@@ -799,20 +918,18 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
             setExportProgress({
               status: 'encoding',
               progress,
-              message: `Encoding frame ${i + 1}/${totalFrames}`
+              message: `Encoding frame ${i + 1}/${totalFrames}`,
             })
           }
 
           // Small delay to prevent blocking and allow UI updates
-          if (i % 3 === 0) await new Promise(r => setTimeout(r, 0))
+          if (i % 3 === 0) await new Promise((r) => setTimeout(r, 0))
         }
 
         setExportProgress({ status: 'encoding', progress: 95, message: 'Finalizing MP4...' })
         await encoder.flush()
         encoder.close()
-        muxer.finalize()
-
-        const { buffer } = muxer.target as ArrayBufferTarget
+        const buffer = await muxer.finalize()
         const mp4Blob = new Blob([buffer], { type: 'video/mp4' })
 
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
@@ -833,7 +950,11 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
         const videoADuration = fileA?.duration || loopDuration
         const videoBDuration = fileB?.duration || loopDuration
 
-        setExportProgress({ status: 'encoding', progress: 0, message: 'Capturing frames for GIF...' })
+        setExportProgress({
+          status: 'encoding',
+          progress: 0,
+          message: 'Capturing frames for GIF...',
+        })
 
         // Pause videos and prepare for seeking
         if (videoA) videoA.pause()
@@ -856,15 +977,17 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
           // Seek videos to the correct time within the loop
           if (videoA) {
             // If video is shorter than loop, optionally loop it within the sweep
-            const videoTimeA = (exportSettings.loopShorterVideo && videoADuration < loopDuration)
-              ? timeWithinLoop % videoADuration
-              : Math.min(timeWithinLoop, videoADuration - 0.001)
+            const videoTimeA =
+              exportSettings.loopShorterVideo && videoADuration < loopDuration
+                ? timeWithinLoop % videoADuration
+                : Math.min(timeWithinLoop, videoADuration - 0.001)
             await seekVideoAndWait(videoA, videoTimeA)
           }
           if (videoB) {
-            const videoTimeB = (exportSettings.loopShorterVideo && videoBDuration < loopDuration)
-              ? timeWithinLoop % videoBDuration
-              : Math.min(timeWithinLoop, videoBDuration - 0.001)
+            const videoTimeB =
+              exportSettings.loopShorterVideo && videoBDuration < loopDuration
+                ? timeWithinLoop % videoBDuration
+                : Math.min(timeWithinLoop, videoBDuration - 0.001)
             await seekVideoAndWait(videoB, videoTimeB)
           }
 
@@ -885,12 +1008,12 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
             setExportProgress({
               status: 'encoding',
               progress: Math.round((i / totalFrames) * 40),
-              message: `Capturing frame ${i + 1}/${totalFrames}`
+              message: `Capturing frame ${i + 1}/${totalFrames}`,
             })
           }
 
           // Small delay to prevent blocking and allow UI updates
-          if (i % 3 === 0) await new Promise(r => setTimeout(r, 0))
+          if (i % 3 === 0) await new Promise((r) => setTimeout(r, 0))
         }
 
         // Encode GIF using gif.js from CDN
@@ -929,7 +1052,7 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
             setExportProgress({
               status: 'encoding',
               progress: 45 + Math.round(p * 55),
-              message: `Encoding GIF... ${Math.round(p * 100)}%`
+              message: `Encoding GIF... ${Math.round(p * 100)}%`,
             })
           })
           gif.on('finished', (blob: Blob) => resolve(blob))
@@ -1033,25 +1156,27 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
 
       const blob = await new Promise<Blob>((resolve, reject) => {
         canvas.toBlob(
-          (b) => b ? resolve(b) : reject(new Error('Failed to create blob')),
+          (b) => (b ? resolve(b) : reject(new Error('Failed to create blob'))),
           mimeType,
-          quality
+          quality,
         )
       })
 
       if (copyToClipboard) {
         // Copy to clipboard
         try {
-          await navigator.clipboard.write([
-            new ClipboardItem({ [mimeType]: blob })
-          ])
+          await navigator.clipboard.write([new ClipboardItem({ [mimeType]: blob })])
           setExportProgress({ status: 'done', progress: 100, message: 'Copied to clipboard!' })
         } catch (clipboardErr) {
           console.error('Clipboard write failed:', clipboardErr)
           // Fallback to download
           const filename = `dualview-${screenshotSource}-${Date.now()}.${screenshotFormat}`
           downloadBlob(blob, filename)
-          setExportProgress({ status: 'done', progress: 100, message: 'Downloaded (clipboard not supported)' })
+          setExportProgress({
+            status: 'done',
+            progress: 100,
+            message: 'Downloaded (clipboard not supported)',
+          })
         }
       } else {
         const filename = `dualview-${screenshotSource}-${Date.now()}.${screenshotFormat}`
@@ -1076,8 +1201,8 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
       if (!screenshotBlob) throw new Error('Failed to capture screenshot')
 
       // Get media info
-      const trackA = tracks.find(t => t.type === 'a')
-      const trackB = tracks.find(t => t.type === 'b')
+      const trackA = tracks.find((t) => t.type === 'a')
+      const trackB = tracks.find((t) => t.type === 'b')
       const clipA = trackA?.clips[0]
       const clipB = trackB?.clips[0]
       const mediaA = clipA ? getFile(clipA.mediaId) : undefined
@@ -1089,18 +1214,24 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
         includeAnnotations: false,
         includeSettings,
         screenshotBlob,
-        mediaA: mediaA ? {
-          name: mediaA.name,
-          type: mediaA.type,
-          size: formatFileSize(mediaA.file.size),
-          dimensions: mediaA.width && mediaA.height ? `${mediaA.width}×${mediaA.height}` : undefined,
-        } : undefined,
-        mediaB: mediaB ? {
-          name: mediaB.name,
-          type: mediaB.type,
-          size: formatFileSize(mediaB.file.size),
-          dimensions: mediaB.width && mediaB.height ? `${mediaB.width}×${mediaB.height}` : undefined,
-        } : undefined,
+        mediaA: mediaA
+          ? {
+              name: mediaA.name,
+              type: mediaA.type,
+              size: formatFileSize(mediaA.file.size),
+              dimensions:
+                mediaA.width && mediaA.height ? `${mediaA.width}×${mediaA.height}` : undefined,
+            }
+          : undefined,
+        mediaB: mediaB
+          ? {
+              name: mediaB.name,
+              type: mediaB.type,
+              size: formatFileSize(mediaB.file.size),
+              dimensions:
+                mediaB.width && mediaB.height ? `${mediaB.width}×${mediaB.height}` : undefined,
+            }
+          : undefined,
         comparisonMode,
         metrics: {
           ssim: metricsSSIM ?? undefined,
@@ -1125,8 +1256,8 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
 
     try {
       // Get 3D model URLs from timeline
-      const trackA = tracks.find(t => t.type === 'a')
-      const trackB = tracks.find(t => t.type === 'b')
+      const trackA = tracks.find((t) => t.type === 'a')
+      const trackB = tracks.find((t) => t.type === 'b')
       const clipA = trackA?.clips[0]
       const clipB = trackB?.clips[0]
       const modelA = clipA ? getFile(clipA.mediaId) : null
@@ -1153,7 +1284,7 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
       // Determine canvas size based on export mode
       // Use square aspect ratio for single model, 2:1 for side-by-side
       const isSideBySide = export3DSource === 'side-by-side'
-      const singleWidth = 1080  // Square for single model
+      const singleWidth = 1080 // Square for single model
       const singleHeight = 1080
       const canvasWidth = isSideBySide ? 1920 : singleWidth
       const canvasHeight = isSideBySide ? 1080 : singleHeight
@@ -1221,7 +1352,7 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
       const renderer = new THREE.WebGLRenderer({
         antialias: true,
         preserveDrawingBuffer: true,
-        alpha: false
+        alpha: false,
       })
       renderer.setSize(canvasWidth, canvasHeight)
       renderer.setClearColor(0x1a1a2a)
@@ -1248,19 +1379,22 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
       // Handle MP4 export with WebCodecs
       if (export3DFormat === 'mp4') {
         if (!isWebCodecsSupported()) {
-          throw new Error('MP4 export requires a modern browser with WebCodecs support (Chrome, Edge)')
+          throw new Error(
+            'MP4 export requires a modern browser with WebCodecs support (Chrome, Edge)',
+          )
         }
 
-        const bitrate = export3DQuality === 'high' ? 10_000_000 : export3DQuality === 'medium' ? 5_000_000 : 2_500_000
+        const bitrate =
+          export3DQuality === 'high'
+            ? 10_000_000
+            : export3DQuality === 'medium'
+              ? 5_000_000
+              : 2_500_000
 
-        const muxer = new Muxer({
-          target: new ArrayBufferTarget(),
-          video: { codec: 'avc', width: canvasWidth, height: canvasHeight },
-          fastStart: 'in-memory',
-        })
+        const muxer = await createAvcMp4Muxer()
 
         const encoder = new VideoEncoder({
-          output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
+          output: (chunk, meta) => muxer.addChunk(chunk, meta),
           error: (e) => console.error('VideoEncoder error:', e),
         })
 
@@ -1329,18 +1463,20 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
           if (i % 5 === 0) {
             const prog = 10 + Math.round((i / totalFrames) * 85)
             setProgress(prog)
-            setExportProgress({ status: 'encoding', progress: prog, message: `Rendering frame ${i + 1}/${totalFrames}` })
+            setExportProgress({
+              status: 'encoding',
+              progress: prog,
+              message: `Rendering frame ${i + 1}/${totalFrames}`,
+            })
           }
 
-          if (i % 3 === 0) await new Promise(r => setTimeout(r, 0))
+          if (i % 3 === 0) await new Promise((r) => setTimeout(r, 0))
         }
 
         setExportProgress({ status: 'encoding', progress: 95, message: 'Finalizing MP4...' })
         await encoder.flush()
         encoder.close()
-        muxer.finalize()
-
-        const { buffer } = muxer.target as ArrayBufferTarget
+        const buffer = await muxer.finalize()
         const mp4Blob = new Blob([buffer], { type: 'video/mp4' })
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
         downloadVideo(mp4Blob, `dualview-3d-turntable-${export3DSource}-${timestamp}.mp4`)
@@ -1392,10 +1528,14 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
           if (i % 5 === 0) {
             const prog = 10 + Math.round((i / totalFrames) * 40)
             setProgress(prog)
-            setExportProgress({ status: 'encoding', progress: prog, message: `Capturing frame ${i + 1}/${totalFrames}` })
+            setExportProgress({
+              status: 'encoding',
+              progress: prog,
+              message: `Capturing frame ${i + 1}/${totalFrames}`,
+            })
           }
 
-          if (i % 3 === 0) await new Promise(r => setTimeout(r, 0))
+          if (i % 3 === 0) await new Promise((r) => setTimeout(r, 0))
         }
 
         // Encode GIF
@@ -1426,7 +1566,11 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
         const gifBlob = await new Promise<Blob>((resolve, reject) => {
           gif.on('progress', (p: number) => {
             setProgress(50 + Math.round(p * 50))
-            setExportProgress({ status: 'encoding', progress: 50 + Math.round(p * 50), message: `Encoding GIF... ${Math.round(p * 100)}%` })
+            setExportProgress({
+              status: 'encoding',
+              progress: 50 + Math.round(p * 50),
+              message: `Encoding GIF... ${Math.round(p * 100)}%`,
+            })
           })
           gif.on('finished', (blob: Blob) => resolve(blob))
           gif.on('error', (err: Error) => reject(err))
@@ -1444,7 +1588,7 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
           if (obj instanceof THREE.Mesh) {
             obj.geometry?.dispose()
             if (Array.isArray(obj.material)) {
-              obj.material.forEach(m => m.dispose())
+              obj.material.forEach((m) => m.dispose())
             } else {
               obj.material?.dispose()
             }
@@ -1456,7 +1600,7 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
           if (obj instanceof THREE.Mesh) {
             obj.geometry?.dispose()
             if (Array.isArray(obj.material)) {
-              obj.material.forEach(m => m.dispose())
+              obj.material.forEach((m) => m.dispose())
             } else {
               obj.material?.dispose()
             }
@@ -1510,8 +1654,8 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
       }
 
       // Get media durations
-      const trackA = tracks.find(t => t.type === 'a')
-      const trackB = tracks.find(t => t.type === 'b')
+      const trackA = tracks.find((t) => t.type === 'a')
+      const trackB = tracks.find((t) => t.type === 'b')
       const clipA = trackA?.clips[0]
       const clipB = trackB?.clips[0]
       const fileA = clipA ? getFile(clipA.mediaId) : null
@@ -1532,7 +1676,7 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
           break
         case 'loop':
           // A → B → A cycle
-          totalDuration = (transitionDuration * 2) + Math.max(durationA, durationB)
+          totalDuration = transitionDuration * 2 + Math.max(durationA, durationB)
           break
         case 'transition-only':
           // Just the transition
@@ -1599,16 +1743,17 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
           throw new Error('MP4 export requires WebCodecs support (Chrome, Edge)')
         }
 
-        const bitrate = transitionQuality === 'high' ? 10_000_000 : transitionQuality === 'medium' ? 5_000_000 : 2_500_000
+        const bitrate =
+          transitionQuality === 'high'
+            ? 10_000_000
+            : transitionQuality === 'medium'
+              ? 5_000_000
+              : 2_500_000
 
-        const muxer = new Muxer({
-          target: new ArrayBufferTarget(),
-          video: { codec: 'avc', width, height },
-          fastStart: 'in-memory',
-        })
+        const muxer = await createAvcMp4Muxer()
 
         const encoder = new VideoEncoder({
-          output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
+          output: (chunk, meta) => muxer.addChunk(chunk, meta),
           error: (e) => console.error('VideoEncoder error:', e),
         })
 
@@ -1671,7 +1816,8 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
               } else {
                 showA = true
                 showB = true
-                transitionProgress = (currentTime - (midPoint - transitionDuration / 2)) / transitionDuration
+                transitionProgress =
+                  (currentTime - (midPoint - transitionDuration / 2)) / transitionDuration
                 timeA = currentTime
                 timeB = currentTime - (midPoint - transitionDuration / 2)
               }
@@ -1742,23 +1888,20 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
             setExportProgress({
               status: 'encoding',
               progress: prog,
-              message: `Encoding frame ${i + 1}/${totalFrames}`
+              message: `Encoding frame ${i + 1}/${totalFrames}`,
             })
           }
 
-          if (i % 3 === 0) await new Promise(r => setTimeout(r, 0))
+          if (i % 3 === 0) await new Promise((r) => setTimeout(r, 0))
         }
 
         setExportProgress({ status: 'encoding', progress: 95, message: 'Finalizing MP4...' })
         await encoder.flush()
         encoder.close()
-        muxer.finalize()
-
-        const { buffer } = muxer.target as ArrayBufferTarget
+        const buffer = await muxer.finalize()
         const mp4Blob = new Blob([buffer], { type: 'video/mp4' })
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
         downloadVideo(mp4Blob, `dualview-transition-${transitionEngine}-${timestamp}.mp4`)
-
       } else {
         // GIF export
         const gifOptions = GIF_PRESETS.medium
@@ -1783,27 +1926,38 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
           switch (transitionExportMode) {
             case 'sequential': {
               if (currentTime < durationA) {
-                showA = true; showB = false; transitionProgress = 0; timeA = currentTime
+                showA = true
+                showB = false
+                transitionProgress = 0
+                timeA = currentTime
               } else if (currentTime < durationA + transitionDuration) {
-                showA = true; showB = true
+                showA = true
+                showB = true
                 transitionProgress = (currentTime - durationA) / transitionDuration
-                timeA = durationA - 0.001; timeB = 0
+                timeA = durationA - 0.001
+                timeB = 0
               } else {
-                showA = false; showB = true; transitionProgress = 1
+                showA = false
+                showB = true
+                transitionProgress = 1
                 timeB = currentTime - durationA - transitionDuration
               }
               break
             }
             case 'transition-only': {
-              showA = true; showB = true
+              showA = true
+              showB = true
               transitionProgress = currentTime / transitionDuration
-              timeA = 0; timeB = 0
+              timeA = 0
+              timeB = 0
               break
             }
             default: {
-              showA = true; showB = true
+              showA = true
+              showB = true
               transitionProgress = currentTime / totalDuration
-              timeA = 0; timeB = 0
+              timeA = 0
+              timeB = 0
             }
           }
 
@@ -1829,10 +1983,10 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
             setExportProgress({
               status: 'encoding',
               progress: 5 + Math.round((i / gifTotalFrames) * 40),
-              message: `Capturing frame ${i + 1}/${gifTotalFrames}`
+              message: `Capturing frame ${i + 1}/${gifTotalFrames}`,
             })
           }
-          if (i % 3 === 0) await new Promise(r => setTimeout(r, 0))
+          if (i % 3 === 0) await new Promise((r) => setTimeout(r, 0))
         }
 
         // Encode GIF
@@ -1866,7 +2020,7 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
             setExportProgress({
               status: 'encoding',
               progress: 50 + Math.round(p * 50),
-              message: `Encoding GIF... ${Math.round(p * 100)}%`
+              message: `Encoding GIF... ${Math.round(p * 100)}%`,
             })
           })
           gif.on('finished', (blob: Blob) => resolve(blob))
@@ -1897,10 +2051,7 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-        onClick={onClose}
-      />
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
       {/* Dialog */}
       <div className="relative bg-surface border border-border rounded-lg shadow-xl w-full max-w-md p-6">
@@ -1911,14 +2062,12 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
           <X className="w-5 h-5" />
         </button>
 
-        <h2 className="text-lg font-semibold text-text-primary mb-2">
-          Export Comparison
-        </h2>
+        <h2 className="text-lg font-semibold text-text-primary mb-2">Export Comparison</h2>
 
         {/* Zeigarnik Effect - Readiness indicator */}
         {(() => {
-          const trackA = tracks.find(t => t.type === 'a')
-          const trackB = tracks.find(t => t.type === 'b')
+          const trackA = tracks.find((t) => t.type === 'a')
+          const trackB = tracks.find((t) => t.type === 'b')
           const hasMediaA = trackA && trackA.clips.length > 0
           const hasMediaB = trackB && trackB.clips.length > 0
           const isReady = hasMediaA || hasMediaB
@@ -1935,12 +2084,20 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
           if (!hasMediaA || !hasMediaB) {
             return (
               <div className="mb-4 p-2 bg-surface-alt border border-border flex items-center gap-3 text-xs">
-                <div className={`flex items-center gap-1 ${hasMediaA ? 'text-accent' : 'text-text-muted'}`}>
-                  <div className={`w-2 h-2 rounded-full ${hasMediaA ? 'bg-accent' : 'bg-border'}`} />
+                <div
+                  className={`flex items-center gap-1 ${hasMediaA ? 'text-accent' : 'text-text-muted'}`}
+                >
+                  <div
+                    className={`w-2 h-2 rounded-full ${hasMediaA ? 'bg-accent' : 'bg-border'}`}
+                  />
                   <span>Media A</span>
                 </div>
-                <div className={`flex items-center gap-1 ${hasMediaB ? 'text-secondary' : 'text-text-muted'}`}>
-                  <div className={`w-2 h-2 rounded-full ${hasMediaB ? 'bg-secondary' : 'bg-border'}`} />
+                <div
+                  className={`flex items-center gap-1 ${hasMediaB ? 'text-secondary' : 'text-text-muted'}`}
+                >
+                  <div
+                    className={`w-2 h-2 rounded-full ${hasMediaB ? 'bg-secondary' : 'bg-border'}`}
+                  />
                   <span>Media B</span>
                 </div>
                 <span className="text-text-muted ml-auto">Single media export available</span>
@@ -2042,7 +2199,9 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
                   ].map((option) => (
                     <button
                       key={option.value}
-                      onClick={() => setExportSettings({ exportSource: option.value as ExportSource })}
+                      onClick={() =>
+                        setExportSettings({ exportSource: option.value as ExportSource })
+                      }
                       className={`px-3 py-2 text-sm border transition-colors ${
                         exportSettings.exportSource === option.value
                           ? 'border-accent bg-accent/10 text-accent'
@@ -2084,7 +2243,9 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
                   onChange={(e) => setExportSettings({ loopShorterVideo: e.target.checked })}
                   className="w-4 h-4 accent-accent"
                 />
-                <span className="text-sm text-text-primary">Loop shorter video to match longer</span>
+                <span className="text-sm text-text-primary">
+                  Loop shorter video to match longer
+                </span>
               </label>
 
               {/* Sweep Settings for Comparison Export */}
@@ -2105,7 +2266,9 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
                       ].map((style) => (
                         <button
                           key={style.value}
-                          onClick={() => setExportSettings({ sweepStyle: style.value as SweepStyle })}
+                          onClick={() =>
+                            setExportSettings({ sweepStyle: style.value as SweepStyle })
+                          }
                           title={style.title}
                           className={`px-2 py-2 text-lg border transition-colors ${
                             exportSettings.sweepStyle === style.value
@@ -2124,12 +2287,14 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
                       {exportSettings.sweepStyle === 'circle' && 'Expanding circle from center'}
                       {exportSettings.sweepStyle === 'rectangle' && 'Growing rectangle from center'}
                       {exportSettings.sweepStyle === 'spotlight' && 'Bouncing spotlight rectangle'}
-                      {exportSettings.sweepStyle === 'spotlight-circle' && 'Bouncing spotlight circle'}
+                      {exportSettings.sweepStyle === 'spotlight-circle' &&
+                        'Bouncing spotlight circle'}
                     </p>
                   </div>
 
                   {/* Spotlight Size Controls */}
-                  {(exportSettings.sweepStyle === 'spotlight' || exportSettings.sweepStyle === 'spotlight-circle') && (
+                  {(exportSettings.sweepStyle === 'spotlight' ||
+                    exportSettings.sweepStyle === 'spotlight-circle') && (
                     <div className="space-y-3 p-3 bg-surface-alt border border-border rounded">
                       {exportSettings.sweepStyle === 'spotlight' ? (
                         <>
@@ -2139,7 +2304,9 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
                             </label>
                             <Slider
                               value={exportSettings.spotlightWidth * 100}
-                              onChange={(e) => setExportSettings({ spotlightWidth: Number(e.target.value) / 100 })}
+                              onChange={(e) =>
+                                setExportSettings({ spotlightWidth: Number(e.target.value) / 100 })
+                              }
                               min={10}
                               max={90}
                               step={5}
@@ -2151,7 +2318,9 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
                             </label>
                             <Slider
                               value={exportSettings.spotlightHeight * 100}
-                              onChange={(e) => setExportSettings({ spotlightHeight: Number(e.target.value) / 100 })}
+                              onChange={(e) =>
+                                setExportSettings({ spotlightHeight: Number(e.target.value) / 100 })
+                              }
                               min={10}
                               max={90}
                               step={5}
@@ -2161,10 +2330,20 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
                       ) : (
                         <div>
                           <label className="block text-xs text-text-secondary mb-1">
-                            Size: {Math.round(((exportSettings.spotlightWidth + exportSettings.spotlightHeight) / 2) * 100)}%
+                            Size:{' '}
+                            {Math.round(
+                              ((exportSettings.spotlightWidth + exportSettings.spotlightHeight) /
+                                2) *
+                                100,
+                            )}
+                            %
                           </label>
                           <Slider
-                            value={((exportSettings.spotlightWidth + exportSettings.spotlightHeight) / 2) * 100}
+                            value={
+                              ((exportSettings.spotlightWidth + exportSettings.spotlightHeight) /
+                                2) *
+                              100
+                            }
                             onChange={(e) => {
                               const val = Number(e.target.value) / 100
                               setExportSettings({ spotlightWidth: val, spotlightHeight: val })
@@ -2181,7 +2360,9 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
                         </label>
                         <Slider
                           value={exportSettings.spotlightSpeed * 10}
-                          onChange={(e) => setExportSettings({ spotlightSpeed: Number(e.target.value) / 10 })}
+                          onChange={(e) =>
+                            setExportSettings({ spotlightSpeed: Number(e.target.value) / 10 })
+                          }
                           min={1}
                           max={50}
                           step={1}
@@ -2215,7 +2396,9 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
                       </label>
                       <Slider
                         value={exportSettings.sweepsPerLoop}
-                        onChange={(e) => setExportSettings({ sweepsPerLoop: Number(e.target.value) })}
+                        onChange={(e) =>
+                          setExportSettings({ sweepsPerLoop: Number(e.target.value) })
+                        }
                         min={1}
                         max={10}
                         step={1}
@@ -2237,7 +2420,9 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
                   ].map((fmt) => (
                     <button
                       key={fmt.value}
-                      onClick={() => setExportSettings({ format: fmt.value as 'webm' | 'mp4' | 'gif' })}
+                      onClick={() =>
+                        setExportSettings({ format: fmt.value as 'webm' | 'mp4' | 'gif' })
+                      }
                       className={`px-3 py-2 text-sm border transition-colors ${
                         exportSettings.format === fmt.value
                           ? 'border-accent bg-accent/10 text-accent'
@@ -2250,7 +2435,8 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
                 </div>
                 <p className="text-xs text-text-muted mt-1">
                   {exportSettings.format === 'webm' && 'Fastest export, modern browsers'}
-                  {exportSettings.format === 'mp4' && 'Universal compatibility, hardware accelerated'}
+                  {exportSettings.format === 'mp4' &&
+                    'Universal compatibility, hardware accelerated'}
                   {exportSettings.format === 'gif' && 'Animated image, works everywhere'}
                 </p>
               </div>
@@ -2260,7 +2446,11 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
                 <Select
                   label="GIF Size"
                   value={exportSettings.gifPreset || 'medium'}
-                  onChange={(e) => setExportSettings({ gifPreset: e.target.value as 'small' | 'medium' | 'large' | 'hd' })}
+                  onChange={(e) =>
+                    setExportSettings({
+                      gifPreset: e.target.value as 'small' | 'medium' | 'large' | 'hd',
+                    })
+                  }
                   options={[
                     { value: 'small', label: 'Small (320px, 10fps)' },
                     { value: 'medium', label: 'Medium (480px, 12fps)' },
@@ -2275,7 +2465,9 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
                 <Select
                   label="Quality"
                   value={exportSettings.quality}
-                  onChange={(e) => setExportSettings({ quality: e.target.value as 'low' | 'medium' | 'high' })}
+                  onChange={(e) =>
+                    setExportSettings({ quality: e.target.value as 'low' | 'medium' | 'high' })
+                  }
                   options={[
                     { value: 'low', label: 'Low (faster, smaller file)' },
                     { value: 'medium', label: 'Medium (balanced)' },
@@ -2284,122 +2476,149 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
                 />
               )}
 
-          {/* Progress with stages */}
-          {isExporting && (
-            <div className="space-y-3 p-4 bg-surface-alt border border-border">
-              {/* Stage indicators */}
-              <div className="flex items-center justify-between text-xs">
-                <span className={`px-2 py-1 ${progress >= 0 ? 'bg-accent text-white' : 'bg-border text-text-muted'}`}>
-                  1. Preparing
-                </span>
-                <div className="flex-1 h-px bg-border mx-2" />
-                <span className={`px-2 py-1 ${progress >= 30 ? 'bg-accent text-white' : 'bg-border text-text-muted'}`}>
-                  2. {exportSettings.format === 'gif' ? 'Capturing' : 'Encoding'}
-                </span>
-                <div className="flex-1 h-px bg-border mx-2" />
-                <span className={`px-2 py-1 ${progress >= 90 ? 'bg-accent text-white' : 'bg-border text-text-muted'}`}>
-                  3. Finishing
-                </span>
-              </div>
+              {/* Progress with stages */}
+              {isExporting && (
+                <div className="space-y-3 p-4 bg-surface-alt border border-border">
+                  {/* Stage indicators */}
+                  <div className="flex items-center justify-between text-xs">
+                    <span
+                      className={`px-2 py-1 ${progress >= 0 ? 'bg-accent text-white' : 'bg-border text-text-muted'}`}
+                    >
+                      1. Preparing
+                    </span>
+                    <div className="flex-1 h-px bg-border mx-2" />
+                    <span
+                      className={`px-2 py-1 ${progress >= 30 ? 'bg-accent text-white' : 'bg-border text-text-muted'}`}
+                    >
+                      2. {exportSettings.format === 'gif' ? 'Capturing' : 'Encoding'}
+                    </span>
+                    <div className="flex-1 h-px bg-border mx-2" />
+                    <span
+                      className={`px-2 py-1 ${progress >= 90 ? 'bg-accent text-white' : 'bg-border text-text-muted'}`}
+                    >
+                      3. Finishing
+                    </span>
+                  </div>
 
-              {/* Progress bar with Goal-Gradient Effect */}
-              <div className="space-y-1">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-text-secondary">{exportProgress.message}</span>
-                  <span className={`font-medium transition-all ${progress >= 90 ? 'text-secondary scale-110' : 'text-accent'}`}>
-                    {Math.round(progress)}%
-                  </span>
+                  {/* Progress bar with Goal-Gradient Effect */}
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-text-secondary">{exportProgress.message}</span>
+                      <span
+                        className={`font-medium transition-all ${progress >= 90 ? 'text-secondary scale-110' : 'text-accent'}`}
+                      >
+                        {Math.round(progress)}%
+                      </span>
+                    </div>
+                    <div className="h-2 bg-background overflow-hidden relative">
+                      {/* Animated gradient bar - speeds up visually near end */}
+                      <div
+                        className={`h-full bg-gradient-to-r from-accent via-accent to-secondary transition-all ${
+                          progress >= 90
+                            ? 'duration-150'
+                            : progress >= 70
+                              ? 'duration-200'
+                              : 'duration-300'
+                        }`}
+                        style={{ width: `${progress}%` }}
+                      />
+                      {/* Shimmer effect when near completion */}
+                      {progress >= 80 && progress < 100 && (
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse" />
+                      )}
+                    </div>
+                    {/* Encouragement text near completion */}
+                    {progress >= 85 && progress < 100 && (
+                      <p className="text-xs text-secondary animate-pulse">Almost there!</p>
+                    )}
+                  </div>
                 </div>
-                <div className="h-2 bg-background overflow-hidden relative">
-                  {/* Animated gradient bar - speeds up visually near end */}
-                  <div
-                    className={`h-full bg-gradient-to-r from-accent via-accent to-secondary transition-all ${
-                      progress >= 90 ? 'duration-150' : progress >= 70 ? 'duration-200' : 'duration-300'
-                    }`}
-                    style={{ width: `${progress}%` }}
-                  />
-                  {/* Shimmer effect when near completion */}
-                  {progress >= 80 && progress < 100 && (
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse" />
-                  )}
-                </div>
-                {/* Encouragement text near completion */}
-                {progress >= 85 && progress < 100 && (
-                  <p className="text-xs text-secondary animate-pulse">Almost there!</p>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Success state - Peak-End Rule: Celebrate the completion! */}
-          {exportProgress.status === 'done' && (
-            <div className="relative p-6 bg-gradient-to-br from-accent/20 via-accent/10 to-secondary/10 border border-accent/40 text-center space-y-4 overflow-hidden">
-              {/* Celebration particles */}
-              <div className="absolute inset-0 pointer-events-none">
-                <div className="absolute top-2 left-4 w-2 h-2 bg-accent animate-bounce" style={{ animationDelay: '0ms' }} />
-                <div className="absolute top-4 right-8 w-1.5 h-1.5 bg-secondary animate-bounce" style={{ animationDelay: '150ms' }} />
-                <div className="absolute bottom-6 left-12 w-1 h-1 bg-accent animate-bounce" style={{ animationDelay: '300ms' }} />
-                <div className="absolute top-8 left-1/4 w-1.5 h-1.5 bg-secondary animate-bounce" style={{ animationDelay: '100ms' }} />
-                <div className="absolute bottom-4 right-1/4 w-2 h-2 bg-accent animate-bounce" style={{ animationDelay: '200ms' }} />
-              </div>
-
-              {/* Success icon with glow */}
-              <div className="relative z-10">
-                <div className="w-16 h-16 mx-auto bg-accent/20 flex items-center justify-center mb-3 shadow-[0_0_30px_rgba(255,87,34,0.4)]">
-                  <Check className="w-8 h-8 text-accent" strokeWidth={3} />
-                </div>
-                <h3 className="text-xl font-bold text-text-primary">Export Complete!</h3>
-                <p className="text-sm text-text-secondary mt-1">
-                  Your {exportSettings.format.toUpperCase()} is ready in your downloads folder
-                </p>
-              </div>
-
-              {/* Quick actions */}
-              <div className="relative z-10 flex items-center justify-center gap-3 pt-2">
-                <button
-                  onClick={onClose}
-                  className="px-4 py-2 text-sm bg-accent text-white hover:bg-accent-hover transition-colors"
-                >
-                  Done
-                </button>
-                <button
-                  onClick={() => {
-                    setExportProgress({ status: 'idle', progress: 0 })
-                    setProgress(0)
-                  }}
-                  className="px-4 py-2 text-sm border border-border text-text-secondary hover:text-text-primary hover:border-border-hover transition-colors"
-                >
-                  Export Another
-                </button>
-              </div>
-            </div>
-          )}
-
-          {error && (
-            <div className="flex items-center gap-2 text-error text-sm">
-              <AlertCircle className="w-4 h-4" />
-              <span>{error}</span>
-            </div>
-          )}
-
-          <div className="flex justify-end gap-2 pt-4">
-            <Button variant="outline" onClick={onClose} disabled={isExporting}>
-              Cancel
-            </Button>
-            <Button onClick={handleExport} disabled={isExporting}>
-              {isExporting ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Exporting...
-                </>
-              ) : (
-                <>
-                  <Download className="w-4 h-4" />
-                  Export
-                </>
               )}
-            </Button>
-          </div>
+
+              {/* Success state - Peak-End Rule: Celebrate the completion! */}
+              {exportProgress.status === 'done' && (
+                <div className="relative p-6 bg-gradient-to-br from-accent/20 via-accent/10 to-secondary/10 border border-accent/40 text-center space-y-4 overflow-hidden">
+                  {/* Celebration particles */}
+                  <div className="absolute inset-0 pointer-events-none">
+                    <div
+                      className="absolute top-2 left-4 w-2 h-2 bg-accent animate-bounce"
+                      style={{ animationDelay: '0ms' }}
+                    />
+                    <div
+                      className="absolute top-4 right-8 w-1.5 h-1.5 bg-secondary animate-bounce"
+                      style={{ animationDelay: '150ms' }}
+                    />
+                    <div
+                      className="absolute bottom-6 left-12 w-1 h-1 bg-accent animate-bounce"
+                      style={{ animationDelay: '300ms' }}
+                    />
+                    <div
+                      className="absolute top-8 left-1/4 w-1.5 h-1.5 bg-secondary animate-bounce"
+                      style={{ animationDelay: '100ms' }}
+                    />
+                    <div
+                      className="absolute bottom-4 right-1/4 w-2 h-2 bg-accent animate-bounce"
+                      style={{ animationDelay: '200ms' }}
+                    />
+                  </div>
+
+                  {/* Success icon with glow */}
+                  <div className="relative z-10">
+                    <div className="w-16 h-16 mx-auto bg-accent/20 flex items-center justify-center mb-3 shadow-[0_0_30px_rgba(255,87,34,0.4)]">
+                      <Check className="w-8 h-8 text-accent" strokeWidth={3} />
+                    </div>
+                    <h3 className="text-xl font-bold text-text-primary">Export Complete!</h3>
+                    <p className="text-sm text-text-secondary mt-1">
+                      Your {exportSettings.format.toUpperCase()} is ready in your downloads folder
+                    </p>
+                  </div>
+
+                  {/* Quick actions */}
+                  <div className="relative z-10 flex items-center justify-center gap-3 pt-2">
+                    <button
+                      onClick={onClose}
+                      className="px-4 py-2 text-sm bg-accent text-white hover:bg-accent-hover transition-colors"
+                    >
+                      Done
+                    </button>
+                    <button
+                      onClick={() => {
+                        setExportProgress({ status: 'idle', progress: 0 })
+                        setProgress(0)
+                      }}
+                      className="px-4 py-2 text-sm border border-border text-text-secondary hover:text-text-primary hover:border-border-hover transition-colors"
+                    >
+                      Export Another
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {error && (
+                <div className="flex items-center gap-2 text-error text-sm">
+                  <AlertCircle className="w-4 h-4" />
+                  <span>{error}</span>
+                </div>
+              )}
+
+              <div className="flex justify-end gap-2 pt-4">
+                <Button variant="outline" onClick={onClose} disabled={isExporting}>
+                  Cancel
+                </Button>
+                <Button onClick={handleExport} disabled={isExporting}>
+                  {isExporting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Exporting...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="w-4 h-4" />
+                      Export
+                    </>
+                  )}
+                </Button>
+              </div>
             </>
           )}
 
@@ -2421,10 +2640,22 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
                 <label className="block text-sm text-text-secondary mb-2">Export Mode</label>
                 <div className="grid grid-cols-2 gap-2">
                   {[
-                    { value: 'sequential', label: 'A → T → B', desc: 'Full A, then transition, then full B' },
-                    { value: 'overlap', label: 'Overlap', desc: 'Videos overlap during transition' },
+                    {
+                      value: 'sequential',
+                      label: 'A → T → B',
+                      desc: 'Full A, then transition, then full B',
+                    },
+                    {
+                      value: 'overlap',
+                      label: 'Overlap',
+                      desc: 'Videos overlap during transition',
+                    },
                     { value: 'loop', label: 'Loop A↔B', desc: 'Continuous A↔B transitions' },
-                    { value: 'transition-only', label: 'Trans Only', desc: 'Just the transition effect' },
+                    {
+                      value: 'transition-only',
+                      label: 'Trans Only',
+                      desc: 'Just the transition effect',
+                    },
                   ].map((mode) => (
                     <button
                       key={mode.value}
@@ -2545,7 +2776,9 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
                 <Select
                   label="Quality"
                   value={transitionQuality}
-                  onChange={(e) => setTransitionQuality(e.target.value as 'low' | 'medium' | 'high')}
+                  onChange={(e) =>
+                    setTransitionQuality(e.target.value as 'low' | 'medium' | 'high')
+                  }
                   options={[
                     { value: 'low', label: 'Low (faster, smaller file)' },
                     { value: 'medium', label: 'Medium (balanced)' },
@@ -2558,15 +2791,21 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
               {isExportingTransition && (
                 <div className="space-y-3 p-4 bg-surface-alt border border-border">
                   <div className="flex items-center justify-between text-xs">
-                    <span className={`px-2 py-1 ${progress >= 0 ? 'bg-accent text-white' : 'bg-border text-text-muted'}`}>
+                    <span
+                      className={`px-2 py-1 ${progress >= 0 ? 'bg-accent text-white' : 'bg-border text-text-muted'}`}
+                    >
                       1. Initialize
                     </span>
                     <div className="flex-1 h-px bg-border mx-2" />
-                    <span className={`px-2 py-1 ${progress >= 10 ? 'bg-accent text-white' : 'bg-border text-text-muted'}`}>
+                    <span
+                      className={`px-2 py-1 ${progress >= 10 ? 'bg-accent text-white' : 'bg-border text-text-muted'}`}
+                    >
                       2. Rendering
                     </span>
                     <div className="flex-1 h-px bg-border mx-2" />
-                    <span className={`px-2 py-1 ${progress >= 90 ? 'bg-accent text-white' : 'bg-border text-text-muted'}`}>
+                    <span
+                      className={`px-2 py-1 ${progress >= 90 ? 'bg-accent text-white' : 'bg-border text-text-muted'}`}
+                    >
                       3. Encode
                     </span>
                   </div>
@@ -2574,7 +2813,9 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
                   <div className="space-y-1">
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-text-secondary">{exportProgress.message}</span>
-                      <span className={`font-medium ${progress >= 90 ? 'text-secondary' : 'text-accent'}`}>
+                      <span
+                        className={`font-medium ${progress >= 90 ? 'text-secondary' : 'text-accent'}`}
+                      >
                         {Math.round(progress)}%
                       </span>
                     </div>
@@ -2594,9 +2835,12 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
                   <div className="w-16 h-16 mx-auto bg-accent/20 flex items-center justify-center mb-3">
                     <Check className="w-8 h-8 text-accent" strokeWidth={3} />
                   </div>
-                  <h3 className="text-xl font-bold text-text-primary">Transition Export Complete!</h3>
+                  <h3 className="text-xl font-bold text-text-primary">
+                    Transition Export Complete!
+                  </h3>
                   <p className="text-sm text-text-secondary">
-                    Your {transitionFormat.toUpperCase()} with {transitionEngine}/{transitionVariant} effect is ready
+                    Your {transitionFormat.toUpperCase()} with {transitionEngine}/
+                    {transitionVariant} effect is ready
                   </p>
                   <div className="flex items-center justify-center gap-3 pt-2">
                     <button
@@ -2663,7 +2907,9 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
                   ].map((option) => (
                     <button
                       key={option.value}
-                      onClick={() => setScreenshotSource(option.value as 'comparison' | 'a-only' | 'b-only')}
+                      onClick={() =>
+                        setScreenshotSource(option.value as 'comparison' | 'a-only' | 'b-only')
+                      }
                       className={`px-3 py-2 text-sm border transition-colors ${
                         screenshotSource === option.value
                           ? 'border-accent bg-accent/10 text-accent'
@@ -2780,7 +3026,10 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
                   <Clipboard className="w-4 h-4" />
                   Copy
                 </Button>
-                <Button onClick={() => handleScreenshotExport(false)} disabled={isExportingScreenshot}>
+                <Button
+                  onClick={() => handleScreenshotExport(false)}
+                  disabled={isExportingScreenshot}
+                >
                   {isExportingScreenshot ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -2811,7 +3060,9 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
                   ].map((option) => (
                     <button
                       key={option.value}
-                      onClick={() => setExport3DSource(option.value as 'side-by-side' | 'a-only' | 'b-only')}
+                      onClick={() =>
+                        setExport3DSource(option.value as 'side-by-side' | 'a-only' | 'b-only')
+                      }
                       className={`px-3 py-2 text-sm border transition-colors ${
                         export3DSource === option.value
                           ? 'border-accent bg-accent/10 text-accent'
@@ -2909,15 +3160,21 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
               {isExporting3D && (
                 <div className="space-y-3 p-4 bg-surface-alt border border-border">
                   <div className="flex items-center justify-between text-xs">
-                    <span className={`px-2 py-1 ${progress >= 0 ? 'bg-accent text-white' : 'bg-border text-text-muted'}`}>
+                    <span
+                      className={`px-2 py-1 ${progress >= 0 ? 'bg-accent text-white' : 'bg-border text-text-muted'}`}
+                    >
                       1. Setup
                     </span>
                     <div className="flex-1 h-px bg-border mx-2" />
-                    <span className={`px-2 py-1 ${progress >= 10 ? 'bg-accent text-white' : 'bg-border text-text-muted'}`}>
+                    <span
+                      className={`px-2 py-1 ${progress >= 10 ? 'bg-accent text-white' : 'bg-border text-text-muted'}`}
+                    >
                       2. Rendering
                     </span>
                     <div className="flex-1 h-px bg-border mx-2" />
-                    <span className={`px-2 py-1 ${progress >= 90 ? 'bg-accent text-white' : 'bg-border text-text-muted'}`}>
+                    <span
+                      className={`px-2 py-1 ${progress >= 90 ? 'bg-accent text-white' : 'bg-border text-text-muted'}`}
+                    >
                       3. Encoding
                     </span>
                   </div>
@@ -2925,7 +3182,9 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
                   <div className="space-y-1">
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-text-secondary">{exportProgress.message}</span>
-                      <span className={`font-medium ${progress >= 90 ? 'text-secondary' : 'text-accent'}`}>
+                      <span
+                        className={`font-medium ${progress >= 90 ? 'text-secondary' : 'text-accent'}`}
+                      >
                         {Math.round(progress)}%
                       </span>
                     </div>
@@ -3004,34 +3263,41 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
               <div>
                 <label className="block text-sm text-text-secondary mb-2">Source Track</label>
                 <div className="grid grid-cols-2 gap-2">
-                  {tracks.filter(t => t.type === 'a' || t.type === 'b').map((track) => {
-                    const trackInfo = getTrackExportInfo(track, getFile)
-                    return (
-                      <button
-                        key={track.id}
-                        onClick={() => setStitchTrackId(track.id)}
-                        className={`p-3 text-left border transition-colors ${
-                          stitchTrackId === track.id
-                            ? 'border-accent bg-accent/10'
-                            : 'border-border hover:border-text-muted'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2 mb-1">
-                          <div className={`w-3 h-3 rounded ${track.type === 'a' ? 'bg-orange-500' : 'bg-lime-400'}`} />
-                          <span className="text-sm font-medium text-text-primary">{track.name}</span>
-                        </div>
-                        <div className="text-xs text-text-muted">
-                          {trackInfo.clipCount} clip{trackInfo.clipCount !== 1 ? 's' : ''} • {formatTime(trackInfo.totalDuration)}
-                        </div>
-                      </button>
-                    )
-                  })}
+                  {tracks
+                    .filter((t) => t.type === 'a' || t.type === 'b')
+                    .map((track) => {
+                      const trackInfo = getTrackExportInfo(track, getFile)
+                      return (
+                        <button
+                          key={track.id}
+                          onClick={() => setStitchTrackId(track.id)}
+                          className={`p-3 text-left border transition-colors ${
+                            stitchTrackId === track.id
+                              ? 'border-accent bg-accent/10'
+                              : 'border-border hover:border-text-muted'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 mb-1">
+                            <div
+                              className={`w-3 h-3 rounded ${track.type === 'a' ? 'bg-orange-500' : 'bg-lime-400'}`}
+                            />
+                            <span className="text-sm font-medium text-text-primary">
+                              {track.name}
+                            </span>
+                          </div>
+                          <div className="text-xs text-text-muted">
+                            {trackInfo.clipCount} clip{trackInfo.clipCount !== 1 ? 's' : ''} •{' '}
+                            {formatTime(trackInfo.totalDuration)}
+                          </div>
+                        </button>
+                      )
+                    })}
                 </div>
               </div>
 
               {/* Clip Preview */}
               {(() => {
-                const selectedTrack = tracks.find(t => t.id === stitchTrackId)
+                const selectedTrack = tracks.find((t) => t.id === stitchTrackId)
                 if (!selectedTrack) return null
                 const trackInfo = getTrackExportInfo(selectedTrack, getFile)
 
@@ -3040,14 +3306,18 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
                     <div className="p-4 bg-surface-alt border border-border text-center">
                       <Film className="w-8 h-8 mx-auto text-text-muted mb-2" />
                       <p className="text-sm text-text-secondary">No clips on this track</p>
-                      <p className="text-xs text-text-muted mt-1">Add clips to the timeline to export</p>
+                      <p className="text-xs text-text-muted mt-1">
+                        Add clips to the timeline to export
+                      </p>
                     </div>
                   )
                 }
 
                 return (
                   <div className="space-y-2">
-                    <label className="block text-sm text-text-secondary">Clips to Stitch ({trackInfo.clipCount})</label>
+                    <label className="block text-sm text-text-secondary">
+                      Clips to Stitch ({trackInfo.clipCount})
+                    </label>
                     <div className="max-h-32 overflow-y-auto space-y-1 p-2 bg-surface-alt border border-border">
                       {trackInfo.clips.map((clip, i) => (
                         <div key={i} className="flex items-center gap-2 text-xs">
@@ -3134,9 +3404,7 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
               {stitchProgress.status === 'encoding' && (
                 <div className="p-4 bg-surface-alt border border-border space-y-3">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-text-secondary">
-                      {stitchProgress.message}
-                    </span>
+                    <span className="text-text-secondary">{stitchProgress.message}</span>
                     <span className="text-accent font-medium">{stitchProgress.progress}%</span>
                   </div>
                   <div className="h-2 bg-background overflow-hidden">
@@ -3169,7 +3437,15 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
                       Done
                     </button>
                     <button
-                      onClick={() => setStitchProgress({ status: 'idle', progress: 0, message: '', currentClip: 0, totalClips: 0 })}
+                      onClick={() =>
+                        setStitchProgress({
+                          status: 'idle',
+                          progress: 0,
+                          message: '',
+                          currentClip: 0,
+                          totalClips: 0,
+                        })
+                      }
                       className="px-4 py-2 text-sm border border-border text-text-secondary hover:text-text-primary transition-colors"
                     >
                       Export Another
@@ -3193,11 +3469,17 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
                 </Button>
                 <Button
                   onClick={async () => {
-                    const selectedTrack = tracks.find(t => t.id === stitchTrackId)
+                    const selectedTrack = tracks.find((t) => t.id === stitchTrackId)
                     if (!selectedTrack || selectedTrack.clips.length === 0) return
 
                     setIsExportingStitch(true)
-                    setStitchProgress({ status: 'preparing', progress: 0, message: 'Preparing...', currentClip: 0, totalClips: selectedTrack.clips.length })
+                    setStitchProgress({
+                      status: 'preparing',
+                      progress: 0,
+                      message: 'Preparing...',
+                      currentClip: 0,
+                      totalClips: selectedTrack.clips.length,
+                    })
 
                     try {
                       const blob = await exportStitchedVideo(
@@ -3211,11 +3493,14 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
                           fps: stitchFps,
                           includeAudio: false,
                         },
-                        setStitchProgress
+                        setStitchProgress,
                       )
 
                       if (blob) {
-                        downloadStitchedVideo(blob, `${selectedTrack.name.toLowerCase().replace(/\s+/g, '-')}-stitched.mp4`)
+                        downloadStitchedVideo(
+                          blob,
+                          `${selectedTrack.name.toLowerCase().replace(/\s+/g, '-')}-stitched.mp4`,
+                        )
                       }
                     } catch (err) {
                       console.error('Stitch export error:', err)
@@ -3230,7 +3515,9 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
                       setIsExportingStitch(false)
                     }
                   }}
-                  disabled={isExportingStitch || !tracks.find(t => t.id === stitchTrackId)?.clips.length}
+                  disabled={
+                    isExportingStitch || !tracks.find((t) => t.id === stitchTrackId)?.clips.length
+                  }
                 >
                   {isExportingStitch ? (
                     <>
@@ -3284,7 +3571,10 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
 
               <div className="flex items-center gap-2 p-3 bg-surface-alt border border-border rounded text-sm text-text-secondary">
                 <FileText className="w-4 h-4 flex-shrink-0" />
-                <span>Generates a professional PDF report with screenshot, metadata, and quality metrics.</span>
+                <span>
+                  Generates a professional PDF report with screenshot, metadata, and quality
+                  metrics.
+                </span>
               </div>
 
               <div className="flex justify-end gap-2 pt-4">

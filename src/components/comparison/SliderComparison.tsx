@@ -1,13 +1,14 @@
+import { Upload } from 'lucide-react'
 import { useRef, useState, useCallback, useEffect, useMemo } from 'react'
+
+import { useDropZone } from '../../hooks/useDropZone'
+import { useOptimizedClipSync } from '../../hooks/useOptimizedVideoSync'
+import { useSyncedZoom } from '../../hooks/useSyncedZoom'
+import { cn } from '../../lib/utils'
+import { useMediaStore } from '../../stores/mediaStore'
+import { usePlaybackStore } from '../../stores/playbackStore'
 import { useProjectStore } from '../../stores/projectStore'
 import { useTimelineStore } from '../../stores/timelineStore'
-import { usePlaybackStore } from '../../stores/playbackStore'
-import { useMediaStore } from '../../stores/mediaStore'
-import { cn } from '../../lib/utils'
-import { useSyncedZoom } from '../../hooks/useSyncedZoom'
-import { useOptimizedClipSync } from '../../hooks/useOptimizedVideoSync'
-import { useDropZone } from '../../hooks/useDropZone'
-import { Upload } from 'lucide-react'
 
 interface VideoBounds {
   left: number
@@ -29,7 +30,8 @@ export function SliderComparison() {
   const [isDragging, setIsDragging] = useState(false)
   const [videoBounds, setVideoBounds] = useState<VideoBounds | null>(null)
 
-  const { sliderPosition, setSliderPosition, sliderOrientation, hideSlider, toggleHideSlider } = useProjectStore()
+  const { sliderPosition, setSliderPosition, sliderOrientation, hideSlider, toggleHideSlider } =
+    useProjectStore()
   const { tracks } = useTimelineStore()
   const { currentTime } = usePlaybackStore()
   const { getFile } = useMediaStore()
@@ -41,8 +43,8 @@ export function SliderComparison() {
   const imgBRef = useRef<HTMLImageElement>(null)
 
   // Get tracks
-  const trackA = tracks.find(t => t.type === 'a')
-  const trackB = tracks.find(t => t.type === 'b')
+  const trackA = tracks.find((t) => t.type === 'a')
+  const trackB = tracks.find((t) => t.type === 'b')
 
   // Get first clip for display (always show something)
   const firstClipA = trackA?.clips[0] || null
@@ -51,12 +53,12 @@ export function SliderComparison() {
   // Find clip that contains current time for proper sync
   const activeClipA = useMemo(() => {
     if (!trackA) return null
-    return trackA.clips.find(c => currentTime >= c.startTime && currentTime < c.endTime) || null
+    return trackA.clips.find((c) => currentTime >= c.startTime && currentTime < c.endTime) || null
   }, [trackA, currentTime])
 
   const activeClipB = useMemo(() => {
     if (!trackB) return null
-    return trackB.clips.find(c => currentTime >= c.startTime && currentTime < c.endTime) || null
+    return trackB.clips.find((c) => currentTime >= c.startTime && currentTime < c.endTime) || null
   }, [trackB, currentTime])
 
   // Use active clip's media for display (clip at current time), fallback to first clip
@@ -185,7 +187,7 @@ export function SliderComparison() {
 
       setSliderPosition(Math.max(0, Math.min(100, position)))
     },
-    [sliderOrientation, setSliderPosition, videoBounds]
+    [sliderOrientation, setSliderPosition, videoBounds],
   )
 
   const handleMouseMove = useCallback(
@@ -209,7 +211,7 @@ export function SliderComparison() {
 
       setSliderPosition(Math.max(0, Math.min(100, position)))
     },
-    [sliderOrientation, setSliderPosition, videoBounds]
+    [sliderOrientation, setSliderPosition, videoBounds],
   )
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -315,7 +317,10 @@ export function SliderComparison() {
         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 bg-black/70 backdrop-blur-sm px-3 py-1 flex items-center gap-2">
           <span className="text-xs text-text-primary font-medium">{Math.round(zoom * 100)}%</span>
           <button
-            onClick={(e) => { e.stopPropagation(); resetZoom() }}
+            onClick={(e) => {
+              e.stopPropagation()
+              resetZoom()
+            }}
             className="text-[10px] text-text-muted hover:text-text-primary"
           >
             Reset
@@ -334,10 +339,10 @@ export function SliderComparison() {
             top: videoBounds.top,
             width: videoBounds.width,
             height: videoBounds.height,
-            opacity: mediaB ? 1 : (mediaA ? 0.3 : 1),
+            opacity: mediaB ? 1 : mediaA ? 0.3 : 1,
           }}
         >
-          {(mediaB || mediaA) ? (
+          {mediaB || mediaA ? (
             (mediaB || mediaA)!.type === 'video' ? (
               <video
                 ref={videoBRef}
@@ -368,11 +373,11 @@ export function SliderComparison() {
           style={{
             ...clipperStyle,
             ...transformStyle,
-            opacity: mediaA ? 1 : (mediaB ? 0.3 : 1),
+            opacity: mediaA ? 1 : mediaB ? 0.3 : 1,
           }}
         >
           <div style={clippedMediaStyle}>
-            {(mediaA || mediaB) ? (
+            {mediaA || mediaB ? (
               (mediaA || mediaB)!.type === 'video' ? (
                 <video
                   ref={videoARef}
@@ -421,43 +426,59 @@ export function SliderComparison() {
           {/* Drop zone A (left half) - Bold empty state */}
           <div
             className={cn(
-              "flex-1 flex flex-col items-center justify-center transition-all duration-300 pointer-events-auto relative overflow-hidden",
-              !mediaA && "bg-surface",
-              dropZoneA.isDragOver && "bg-accent/15 ring-2 ring-inset ring-accent"
+              'flex-1 flex flex-col items-center justify-center transition-all duration-300 pointer-events-auto relative overflow-hidden',
+              !mediaA && 'bg-surface',
+              dropZoneA.isDragOver && 'bg-accent/15 ring-2 ring-inset ring-accent',
             )}
             {...dropZoneA.dropZoneProps}
           >
             {(!mediaA || dropZoneA.isDragOver) && (
-              <div className={cn(
-                "flex flex-col items-center gap-4 text-center relative z-10",
-                dropZoneA.isDragOver ? "text-accent scale-105" : "text-text-muted"
-              )}>
+              <div
+                className={cn(
+                  'flex flex-col items-center gap-4 text-center relative z-10',
+                  dropZoneA.isDragOver ? 'text-accent scale-105' : 'text-text-muted',
+                )}
+              >
                 {/* Large A badge */}
-                <div className={cn(
-                  "w-16 h-16 flex items-center justify-center transition-all duration-300",
-                  dropZoneA.isDragOver
-                    ? "bg-accent text-white"
-                    : "bg-accent/10 border border-accent/20"
-                )}>
-                  <span className={cn("text-2xl font-bold", dropZoneA.isDragOver ? "text-white" : "text-accent")}>A</span>
-                </div>
-                <button
-                  onClick={(e) => { e.stopPropagation(); dropZoneA.openFileDialog() }}
+                <div
                   className={cn(
-                    "p-4 border border-dashed transition-all duration-200 group",
+                    'w-16 h-16 flex items-center justify-center transition-all duration-300',
                     dropZoneA.isDragOver
-                      ? "border-accent bg-accent/10"
-                      : "border-text-muted/20 hover:border-accent/50"
+                      ? 'bg-accent text-white'
+                      : 'bg-accent/10 border border-accent/20',
                   )}
                 >
-                  <Upload className={cn(
-                    "w-8 h-8 transition-transform",
-                    dropZoneA.isDragOver ? "animate-bounce text-accent" : "group-hover:scale-105"
-                  )} />
+                  <span
+                    className={cn(
+                      'text-2xl font-bold',
+                      dropZoneA.isDragOver ? 'text-white' : 'text-accent',
+                    )}
+                  >
+                    A
+                  </span>
+                </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    dropZoneA.openFileDialog()
+                  }}
+                  className={cn(
+                    'p-4 border border-dashed transition-all duration-200 group',
+                    dropZoneA.isDragOver
+                      ? 'border-accent bg-accent/10'
+                      : 'border-text-muted/20 hover:border-accent/50',
+                  )}
+                >
+                  <Upload
+                    className={cn(
+                      'w-8 h-8 transition-transform',
+                      dropZoneA.isDragOver ? 'animate-bounce text-accent' : 'group-hover:scale-105',
+                    )}
+                  />
                 </button>
                 <div className="space-y-1">
                   <span className="text-base font-semibold block">
-                    {mediaA ? "Replace Media A" : "Drop Media A"}
+                    {mediaA ? 'Replace Media A' : 'Drop Media A'}
                   </span>
                   {!mediaA && (
                     <span className="text-sm text-text-muted/60 block">Before / Original</span>
@@ -484,43 +505,61 @@ export function SliderComparison() {
           {/* Drop zone B (right half) - Bold empty state */}
           <div
             className={cn(
-              "flex-1 flex flex-col items-center justify-center transition-all duration-300 pointer-events-auto relative overflow-hidden",
-              !mediaB && "bg-surface/90",
-              dropZoneB.isDragOver && "bg-secondary/15 ring-2 ring-inset ring-secondary"
+              'flex-1 flex flex-col items-center justify-center transition-all duration-300 pointer-events-auto relative overflow-hidden',
+              !mediaB && 'bg-surface/90',
+              dropZoneB.isDragOver && 'bg-secondary/15 ring-2 ring-inset ring-secondary',
             )}
             {...dropZoneB.dropZoneProps}
           >
             {(!mediaB || dropZoneB.isDragOver) && (
-              <div className={cn(
-                "flex flex-col items-center gap-4 text-center relative z-10",
-                dropZoneB.isDragOver ? "text-secondary scale-105" : "text-text-muted"
-              )}>
+              <div
+                className={cn(
+                  'flex flex-col items-center gap-4 text-center relative z-10',
+                  dropZoneB.isDragOver ? 'text-secondary scale-105' : 'text-text-muted',
+                )}
+              >
                 {/* Large B badge */}
-                <div className={cn(
-                  "w-16 h-16 flex items-center justify-center transition-all duration-300",
-                  dropZoneB.isDragOver
-                    ? "bg-secondary text-black"
-                    : "bg-secondary/10 border border-secondary/20"
-                )}>
-                  <span className={cn("text-2xl font-bold", dropZoneB.isDragOver ? "text-black" : "text-secondary")}>B</span>
-                </div>
-                <button
-                  onClick={(e) => { e.stopPropagation(); dropZoneB.openFileDialog() }}
+                <div
                   className={cn(
-                    "p-4 border border-dashed transition-all duration-200 group",
+                    'w-16 h-16 flex items-center justify-center transition-all duration-300',
                     dropZoneB.isDragOver
-                      ? "border-secondary bg-secondary/10"
-                      : "border-text-muted/20 hover:border-secondary/50"
+                      ? 'bg-secondary text-black'
+                      : 'bg-secondary/10 border border-secondary/20',
                   )}
                 >
-                  <Upload className={cn(
-                    "w-8 h-8 transition-transform",
-                    dropZoneB.isDragOver ? "animate-bounce text-secondary" : "group-hover:scale-105"
-                  )} />
+                  <span
+                    className={cn(
+                      'text-2xl font-bold',
+                      dropZoneB.isDragOver ? 'text-black' : 'text-secondary',
+                    )}
+                  >
+                    B
+                  </span>
+                </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    dropZoneB.openFileDialog()
+                  }}
+                  className={cn(
+                    'p-4 border border-dashed transition-all duration-200 group',
+                    dropZoneB.isDragOver
+                      ? 'border-secondary bg-secondary/10'
+                      : 'border-text-muted/20 hover:border-secondary/50',
+                  )}
+                >
+                  <Upload
+                    className={cn(
+                      'w-8 h-8 transition-transform',
+                      dropZoneB.isDragOver
+                        ? 'animate-bounce text-secondary'
+                        : 'group-hover:scale-105',
+                    )}
+                  />
                 </button>
                 <div className="space-y-1">
                   <span className="text-base font-semibold block">
-                    {mediaB ? "Replace Media B" : "Drop Media B"}
+                    {mediaB ? 'Replace Media B' : 'Drop Media B'}
                   </span>
                   {!mediaB && (
                     <span className="text-sm text-text-muted/60 block">After / Modified</span>
@@ -542,7 +581,10 @@ export function SliderComparison() {
         <>
           {/* Upload button A (top-left) */}
           <button
-            onClick={(e) => { e.stopPropagation(); dropZoneA.openFileDialog() }}
+            onClick={(e) => {
+              e.stopPropagation()
+              dropZoneA.openFileDialog()
+            }}
             className="absolute top-4 left-4 z-20 p-2 bg-black/60 hover:bg-accent/80 rounded-lg transition-colors group"
             title="Replace Media A"
           >
@@ -551,7 +593,10 @@ export function SliderComparison() {
 
           {/* Upload button B (top-right) */}
           <button
-            onClick={(e) => { e.stopPropagation(); dropZoneB.openFileDialog() }}
+            onClick={(e) => {
+              e.stopPropagation()
+              dropZoneB.openFileDialog()
+            }}
             className="absolute top-4 right-4 z-20 p-2 bg-black/60 hover:bg-secondary/80 rounded-lg transition-colors group"
             title="Replace Media B"
           >
@@ -577,7 +622,7 @@ export function SliderComparison() {
         <div
           className={cn(
             'absolute bg-lime-400 shadow-lg z-10',
-            isVertical ? 'w-0.5 cursor-ew-resize' : 'h-0.5 cursor-ns-resize'
+            isVertical ? 'w-0.5 cursor-ew-resize' : 'h-0.5 cursor-ns-resize',
           )}
           style={
             isVertical
@@ -603,7 +648,7 @@ export function SliderComparison() {
               'absolute bg-lime-400 shadow-md flex items-center justify-center cursor-grab active:cursor-grabbing rounded-sm',
               isVertical
                 ? 'w-3 h-8 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2'
-                : 'w-8 h-3 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2'
+                : 'w-8 h-3 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2',
             )}
           >
             <div className={cn('flex gap-px', isVertical ? 'flex-row' : 'flex-col')}>
@@ -613,7 +658,6 @@ export function SliderComparison() {
           </div>
         </div>
       )}
-
     </div>
   )
 }

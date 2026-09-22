@@ -7,18 +7,18 @@ import type { WebGLComparisonMode } from '../../types'
 import { COMPARISON_VERTEX_SHADER, getComparisonShader } from './comparison-shaders'
 
 export interface ComparisonUniforms {
-  amplification?: number  // 1-100
-  threshold?: number      // 0-1
-  opacity?: number        // 0-1
-  blockSize?: number      // 4, 8, 16, 32
-  loupeSize?: number      // 100-400
-  loupeZoom?: number      // 2-8
-  checkerSize?: number    // 8-128
-  mouseX?: number         // 0-1
-  mouseY?: number         // 0-1
-  textureAWidth?: number  // Original texture A width
+  amplification?: number // 1-100
+  threshold?: number // 0-1
+  opacity?: number // 0-1
+  blockSize?: number // 4, 8, 16, 32
+  loupeSize?: number // 100-400
+  loupeZoom?: number // 2-8
+  checkerSize?: number // 8-128
+  mouseX?: number // 0-1
+  mouseY?: number // 0-1
+  textureAWidth?: number // Original texture A width
   textureAHeight?: number // Original texture A height
-  textureBWidth?: number  // Original texture B width
+  textureBWidth?: number // Original texture B width
   textureBHeight?: number // Original texture B height
 }
 
@@ -51,7 +51,7 @@ export class WebGLComparisonRenderer {
       preserveDrawingBuffer: true,
       antialias: false,
       depth: false,
-      stencil: false
+      stencil: false,
     })
 
     if (!gl) {
@@ -111,24 +111,14 @@ export class WebGLComparisonRenderer {
     if (!gl) return
 
     // Position buffer (full-screen quad)
-    const positions = new Float32Array([
-      -1, -1,
-       1, -1,
-      -1,  1,
-       1,  1
-    ])
+    const positions = new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1])
 
     this.positionBuffer = gl.createBuffer()
     gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer)
     gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW)
 
     // Texture coordinate buffer
-    const texCoords = new Float32Array([
-      0, 1,
-      1, 1,
-      0, 0,
-      1, 0
-    ])
+    const texCoords = new Float32Array([0, 1, 1, 1, 0, 0, 1, 0])
 
     this.texCoordBuffer = gl.createBuffer()
     gl.bindBuffer(gl.ARRAY_BUFFER, this.texCoordBuffer)
@@ -309,7 +299,15 @@ export class WebGLComparisonRenderer {
 
     // Log first few renders
     if (this.renderCount < 5) {
-      console.log('[WebGL] render #' + this.renderCount, 'mode:', this.currentMode, 'size:', this.width, 'x', this.height)
+      console.log(
+        '[WebGL] render #' + this.renderCount,
+        'mode:',
+        this.currentMode,
+        'size:',
+        this.width,
+        'x',
+        this.height,
+      )
       this.renderCount++
     }
 
@@ -359,69 +357,41 @@ export class WebGLComparisonRenderer {
     gl.uniform1i(gl.getUniformLocation(program, 'u_textureB'), 1)
 
     // Set uniforms
-    gl.uniform2f(
-      gl.getUniformLocation(program, 'u_resolution'),
-      this.width,
-      this.height
-    )
+    gl.uniform2f(gl.getUniformLocation(program, 'u_resolution'), this.width, this.height)
 
-    gl.uniform1f(
-      gl.getUniformLocation(program, 'u_amplification'),
-      uniforms.amplification ?? 1.0
-    )
+    gl.uniform1f(gl.getUniformLocation(program, 'u_amplification'), uniforms.amplification ?? 1.0)
 
-    gl.uniform1f(
-      gl.getUniformLocation(program, 'u_threshold'),
-      uniforms.threshold ?? 0.0
-    )
+    gl.uniform1f(gl.getUniformLocation(program, 'u_threshold'), uniforms.threshold ?? 0.0)
 
-    gl.uniform1f(
-      gl.getUniformLocation(program, 'u_opacity'),
-      uniforms.opacity ?? 1.0
-    )
+    gl.uniform1f(gl.getUniformLocation(program, 'u_opacity'), uniforms.opacity ?? 1.0)
 
-    gl.uniform1f(
-      gl.getUniformLocation(program, 'u_time'),
-      (Date.now() - this.startTime) / 1000.0
-    )
+    gl.uniform1f(gl.getUniformLocation(program, 'u_time'), (Date.now() - this.startTime) / 1000.0)
 
     gl.uniform2f(
       gl.getUniformLocation(program, 'u_mouse'),
       uniforms.mouseX ?? 0.5,
-      uniforms.mouseY ?? 0.5
+      uniforms.mouseY ?? 0.5,
     )
 
-    gl.uniform1f(
-      gl.getUniformLocation(program, 'u_blockSize'),
-      uniforms.blockSize ?? 16.0
-    )
+    gl.uniform1f(gl.getUniformLocation(program, 'u_blockSize'), uniforms.blockSize ?? 16.0)
 
-    gl.uniform1f(
-      gl.getUniformLocation(program, 'u_loupeSize'),
-      uniforms.loupeSize ?? 200.0
-    )
+    gl.uniform1f(gl.getUniformLocation(program, 'u_loupeSize'), uniforms.loupeSize ?? 200.0)
 
-    gl.uniform1f(
-      gl.getUniformLocation(program, 'u_loupeZoom'),
-      uniforms.loupeZoom ?? 4.0
-    )
+    gl.uniform1f(gl.getUniformLocation(program, 'u_loupeZoom'), uniforms.loupeZoom ?? 4.0)
 
-    gl.uniform1f(
-      gl.getUniformLocation(program, 'u_checkerSize'),
-      uniforms.checkerSize ?? 32.0
-    )
+    gl.uniform1f(gl.getUniformLocation(program, 'u_checkerSize'), uniforms.checkerSize ?? 32.0)
 
     // Set texture dimensions for aspect ratio correction
     gl.uniform2f(
       gl.getUniformLocation(program, 'u_textureASize'),
       uniforms.textureAWidth ?? this.width,
-      uniforms.textureAHeight ?? this.height
+      uniforms.textureAHeight ?? this.height,
     )
 
     gl.uniform2f(
       gl.getUniformLocation(program, 'u_textureBSize'),
       uniforms.textureBWidth ?? this.width,
-      uniforms.textureBHeight ?? this.height
+      uniforms.textureBHeight ?? this.height,
     )
 
     // Draw
@@ -436,14 +406,20 @@ export class WebGLComparisonRenderer {
         [gl.INVALID_OPERATION]: 'INVALID_OPERATION',
         [gl.INVALID_FRAMEBUFFER_OPERATION]: 'INVALID_FRAMEBUFFER_OPERATION',
         [gl.OUT_OF_MEMORY]: 'OUT_OF_MEMORY',
-        [gl.CONTEXT_LOST_WEBGL]: 'CONTEXT_LOST_WEBGL'
+        [gl.CONTEXT_LOST_WEBGL]: 'CONTEXT_LOST_WEBGL',
       }
       console.error('[WebGL] Error after draw:', errorNames[error] || error)
     }
 
     // Log successful render for first few frames
     if (this.renderCount < 5) {
-      console.log('[WebGL] Render complete #' + this.renderCount, 'canvas size:', this.canvas.width, 'x', this.canvas.height)
+      console.log(
+        '[WebGL] Render complete #' + this.renderCount,
+        'canvas size:',
+        this.canvas.width,
+        'x',
+        this.canvas.height,
+      )
     }
   }
 
@@ -486,7 +462,7 @@ export class WebGLComparisonRenderer {
     if (!gl) return
 
     // Delete programs
-    this.programs.forEach(program => {
+    this.programs.forEach((program) => {
       gl.deleteProgram(program)
     })
     this.programs.clear()
@@ -521,22 +497,41 @@ export class WebGLComparisonRenderer {
   static getModes(): WebGLComparisonMode[] {
     return [
       // Difference
-      'diff-absolute', 'diff-perceptual', 'diff-luminance',
-      'diff-chroma', 'diff-threshold', 'diff-amplified',
+      'diff-absolute',
+      'diff-perceptual',
+      'diff-luminance',
+      'diff-chroma',
+      'diff-threshold',
+      'diff-amplified',
       // Structural
-      'struct-ssim', 'struct-edge', 'struct-gradient',
-      'struct-contrast', 'struct-block',
+      'struct-ssim',
+      'struct-edge',
+      'struct-gradient',
+      'struct-contrast',
+      'struct-block',
       // Color
-      'color-hue', 'color-saturation', 'color-false',
-      'color-channels', 'color-histogram',
+      'color-hue',
+      'color-saturation',
+      'color-false',
+      'color-channels',
+      'color-histogram',
       // Professional
-      'pro-anaglyph', 'pro-checkerboard', 'pro-onion',
-      'pro-loupe', 'pro-frequency', 'pro-mask',
+      'pro-anaglyph',
+      'pro-checkerboard',
+      'pro-onion',
+      'pro-loupe',
+      'pro-frequency',
+      'pro-mask',
       // Video
-      'video-temporal', 'video-motion', 'video-flicker', 'video-blend',
+      'video-temporal',
+      'video-motion',
+      'video-flicker',
+      'video-blend',
       // Analysis (ANALYSIS-001, 002, 003)
-      'analysis-multiscale-edge', 'analysis-local-contrast',
-      'analysis-gradient-direction', 'analysis-direction-histogram'
+      'analysis-multiscale-edge',
+      'analysis-local-contrast',
+      'analysis-gradient-direction',
+      'analysis-direction-histogram',
     ]
   }
 }

@@ -1,6 +1,6 @@
 /**
  * Project Templates (PROJECT-002)
- * 
+ *
  * System for saving and loading project templates.
  * Templates include: aspect ratio, tracks, settings, but NOT media files.
  */
@@ -14,7 +14,7 @@ export interface ProjectTemplate {
   category: TemplateCategory
   createdAt: number
   isBuiltIn: boolean
-  
+
   // Template configuration
   config: TemplateConfig
 }
@@ -24,18 +24,18 @@ export type TemplateCategory = 'comparison' | 'before-after' | 'ab-test' | 'cust
 export interface TemplateConfig {
   // Aspect ratio and resolution
   aspectRatioSettings: AspectRatioSettings
-  
+
   // Track configuration
   trackCount: number
   trackNames: string[]
   trackTypes: ('a' | 'b' | 'c' | 'd')[]
-  
+
   // Comparison settings
   comparisonMode: ComparisonMode
   blendMode: BlendMode
   sliderOrientation: 'vertical' | 'horizontal'
   sliderPosition: number
-  
+
   // Additional settings (optional)
   showFilmstrip?: boolean
   showScopes?: boolean
@@ -171,7 +171,7 @@ export function getAllTemplates(): ProjectTemplate[] {
  * Get templates by category
  */
 export function getTemplatesByCategory(category: TemplateCategory): ProjectTemplate[] {
-  return getAllTemplates().filter(t => t.category === category)
+  return getAllTemplates().filter((t) => t.category === category)
 }
 
 /**
@@ -191,7 +191,9 @@ export function getCustomTemplates(): ProjectTemplate[] {
  * Save a custom template
  * @throws Error if localStorage quota is exceeded
  */
-export function saveTemplate(template: Omit<ProjectTemplate, 'id' | 'createdAt' | 'isBuiltIn'>): ProjectTemplate {
+export function saveTemplate(
+  template: Omit<ProjectTemplate, 'id' | 'createdAt' | 'isBuiltIn'>,
+): ProjectTemplate {
   const newTemplate: ProjectTemplate = {
     ...template,
     id: `custom-${Date.now()}`,
@@ -201,12 +203,15 @@ export function saveTemplate(template: Omit<ProjectTemplate, 'id' | 'createdAt' 
 
   const existing = getCustomTemplates()
   existing.push(newTemplate)
-  
+
   try {
     localStorage.setItem(TEMPLATES_STORAGE_KEY, JSON.stringify(existing))
   } catch (error) {
     // Handle quota exceeded error
-    if (error instanceof DOMException && (error.name === 'QuotaExceededError' || error.code === 22)) {
+    if (
+      error instanceof DOMException &&
+      (error.name === 'QuotaExceededError' || error.code === 22)
+    ) {
       throw new Error('Storage quota exceeded. Please delete some templates to free up space.')
     }
     throw error
@@ -220,8 +225,8 @@ export function saveTemplate(template: Omit<ProjectTemplate, 'id' | 'createdAt' 
  */
 export function deleteTemplate(templateId: string): boolean {
   const templates = getCustomTemplates()
-  const filtered = templates.filter(t => t.id !== templateId)
-  
+  const filtered = templates.filter((t) => t.id !== templateId)
+
   if (filtered.length === templates.length) {
     return false // Template not found
   }
@@ -235,10 +240,10 @@ export function deleteTemplate(templateId: string): boolean {
  */
 export function renameTemplate(templateId: string, newName: string): boolean {
   const templates = getCustomTemplates()
-  const template = templates.find(t => t.id === templateId)
-  
+  const template = templates.find((t) => t.id === templateId)
+
   if (!template) return false
-  
+
   template.name = newName
   localStorage.setItem(TEMPLATES_STORAGE_KEY, JSON.stringify(templates))
   return true
@@ -249,15 +254,17 @@ export function renameTemplate(templateId: string, newName: string): boolean {
  */
 export function exportTemplates(templateIds?: string[]): string {
   const templates = getCustomTemplates()
-  const toExport = templateIds 
-    ? templates.filter(t => templateIds.includes(t.id))
-    : templates
+  const toExport = templateIds ? templates.filter((t) => templateIds.includes(t.id)) : templates
 
-  return JSON.stringify({
-    version: 1,
-    exportedAt: Date.now(),
-    templates: toExport,
-  }, null, 2)
+  return JSON.stringify(
+    {
+      version: 1,
+      exportedAt: Date.now(),
+      templates: toExport,
+    },
+    null,
+    2,
+  )
 }
 
 /**
@@ -266,16 +273,16 @@ export function exportTemplates(templateIds?: string[]): string {
  */
 export function importTemplates(json: string): number {
   const data = JSON.parse(json)
-  
+
   if (data.version !== 1) {
     throw new Error('Unsupported template format version')
   }
 
   const imported = data.templates as ProjectTemplate[]
   const existing = getCustomTemplates()
-  
+
   // Assign new IDs to avoid conflicts
-  const withNewIds = imported.map(t => ({
+  const withNewIds = imported.map((t) => ({
     ...t,
     id: `custom-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     isBuiltIn: false,
@@ -283,11 +290,14 @@ export function importTemplates(json: string): number {
   }))
 
   const combined = [...existing, ...withNewIds]
-  
+
   try {
     localStorage.setItem(TEMPLATES_STORAGE_KEY, JSON.stringify(combined))
   } catch (error) {
-    if (error instanceof DOMException && (error.name === 'QuotaExceededError' || error.code === 22)) {
+    if (
+      error instanceof DOMException &&
+      (error.name === 'QuotaExceededError' || error.code === 22)
+    ) {
       throw new Error('Storage quota exceeded. Cannot import templates.')
     }
     throw error
@@ -300,5 +310,5 @@ export function importTemplates(json: string): number {
  * Get a template by ID
  */
 export function getTemplateById(id: string): ProjectTemplate | undefined {
-  return getAllTemplates().find(t => t.id === id)
+  return getAllTemplates().find((t) => t.id === id)
 }

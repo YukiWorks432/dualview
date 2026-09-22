@@ -1,6 +1,7 @@
-import { useState, useCallback } from 'react'
-import { cn } from '../../lib/utils'
 import { Pipette, Copy, Check } from 'lucide-react'
+import { useState, useCallback } from 'react'
+
+import { cn } from '../../lib/utils'
 
 interface ColorInfo {
   x: number
@@ -130,17 +131,12 @@ export function ColorPickerComparison({
           <Pipette className="w-4 h-4" />
           Color Picker
         </span>
-        <button
-          onClick={onToggle}
-          className="text-xs text-text-muted hover:text-text-primary"
-        >
+        <button onClick={onToggle} className="text-xs text-text-muted hover:text-text-primary">
           Close
         </button>
       </div>
 
-      <div className="text-xs text-text-muted mb-2">
-        Click on the image to sample colors
-      </div>
+      <div className="text-xs text-text-muted mb-2">Click on the image to sample colors</div>
 
       <div className="grid grid-cols-2 gap-3">
         {/* Color A */}
@@ -169,22 +165,29 @@ export function ColorPickerComparison({
             <span className="text-xs text-text-secondary">Color Difference (ΔE)</span>
             <span
               className={cn(
-                "text-sm font-mono font-medium",
-                deltaE < 1 ? "text-green-400" :
-                deltaE < 5 ? "text-yellow-400" :
-                deltaE < 10 ? "text-orange-400" :
-                "text-red-400"
+                'text-sm font-mono font-medium',
+                deltaE < 1
+                  ? 'text-green-400'
+                  : deltaE < 5
+                    ? 'text-yellow-400'
+                    : deltaE < 10
+                      ? 'text-orange-400'
+                      : 'text-red-400',
               )}
             >
               {deltaE.toFixed(2)}
             </span>
           </div>
           <div className="text-[10px] text-text-muted mt-1">
-            {deltaE < 1 ? "Not perceptible" :
-             deltaE < 2 ? "Barely perceptible" :
-             deltaE < 5 ? "Perceptible on close look" :
-             deltaE < 10 ? "Easily noticeable" :
-             "Very different"}
+            {deltaE < 1
+              ? 'Not perceptible'
+              : deltaE < 2
+                ? 'Barely perceptible'
+                : deltaE < 5
+                  ? 'Perceptible on close look'
+                  : deltaE < 10
+                    ? 'Easily noticeable'
+                    : 'Very different'}
           </div>
         </div>
       )}
@@ -216,7 +219,7 @@ function ColorPanel({
 
   return (
     <div>
-      <div className={cn("text-xs font-medium mb-2", labelColor)}>{label}</div>
+      <div className={cn('text-xs font-medium mb-2', labelColor)}>{label}</div>
 
       {/* Color swatch */}
       <div
@@ -226,12 +229,7 @@ function ColorPanel({
 
       {/* Values */}
       <div className="space-y-1 text-xs">
-        <CopyableValue
-          label="HEX"
-          value={color.hex}
-          onCopy={onCopy}
-          copiedValue={copiedValue}
-        />
+        <CopyableValue label="HEX" value={color.hex} onCopy={onCopy} copiedValue={copiedValue} />
         <CopyableValue
           label="RGB"
           value={`${color.r}, ${color.g}, ${color.b}`}
@@ -291,60 +289,64 @@ export function useColorPicker() {
   const [colorA, setColorA] = useState<ColorInfo | null>(null)
   const [colorB, setColorB] = useState<ColorInfo | null>(null)
 
-  const sampleColor = useCallback((
-    e: React.MouseEvent,
-    source: HTMLVideoElement | HTMLImageElement | HTMLCanvasElement | null,
-    side: 'a' | 'b'
-  ) => {
-    if (!source) return
+  const sampleColor = useCallback(
+    (
+      e: React.MouseEvent,
+      source: HTMLVideoElement | HTMLImageElement | HTMLCanvasElement | null,
+      side: 'a' | 'b',
+    ) => {
+      if (!source) return
 
-    const rect = (e.target as HTMLElement).getBoundingClientRect()
-    const x = Math.round(e.clientX - rect.left)
-    const y = Math.round(e.clientY - rect.top)
+      const rect = (e.target as HTMLElement).getBoundingClientRect()
+      const x = Math.round(e.clientX - rect.left)
+      const y = Math.round(e.clientY - rect.top)
 
-    // Create canvas to sample pixel
-    const canvas = document.createElement('canvas')
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
+      // Create canvas to sample pixel
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')
+      if (!ctx) return
 
-    let sourceWidth: number, sourceHeight: number
-    if (source instanceof HTMLVideoElement) {
-      sourceWidth = source.videoWidth
-      sourceHeight = source.videoHeight
-    } else if (source instanceof HTMLImageElement) {
-      sourceWidth = source.naturalWidth
-      sourceHeight = source.naturalHeight
-    } else {
-      sourceWidth = source.width
-      sourceHeight = source.height
-    }
+      let sourceWidth: number, sourceHeight: number
+      if (source instanceof HTMLVideoElement) {
+        sourceWidth = source.videoWidth
+        sourceHeight = source.videoHeight
+      } else if (source instanceof HTMLImageElement) {
+        sourceWidth = source.naturalWidth
+        sourceHeight = source.naturalHeight
+      } else {
+        sourceWidth = source.width
+        sourceHeight = source.height
+      }
 
-    canvas.width = sourceWidth
-    canvas.height = sourceHeight
-    ctx.drawImage(source, 0, 0)
+      canvas.width = sourceWidth
+      canvas.height = sourceHeight
+      ctx.drawImage(source, 0, 0)
 
-    // Map click position to source coordinates
-    const scaleX = sourceWidth / rect.width
-    const scaleY = sourceHeight / rect.height
-    const sourceX = Math.round(x * scaleX)
-    const sourceY = Math.round(y * scaleY)
+      // Map click position to source coordinates
+      const scaleX = sourceWidth / rect.width
+      const scaleY = sourceHeight / rect.height
+      const sourceX = Math.round(x * scaleX)
+      const sourceY = Math.round(y * scaleY)
 
-    const pixel = ctx.getImageData(sourceX, sourceY, 1, 1).data
-    const r = pixel[0]
-    const g = pixel[1]
-    const b = pixel[2]
+      const pixel = ctx.getImageData(sourceX, sourceY, 1, 1).data
+      const r = pixel[0]
+      const g = pixel[1]
+      const b = pixel[2]
 
-    const hex = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`.toUpperCase()
-    const hsl = rgbToHsl(r, g, b)
+      const hex =
+        `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`.toUpperCase()
+      const hsl = rgbToHsl(r, g, b)
 
-    const colorInfo: ColorInfo = { x: sourceX, y: sourceY, r, g, b, hex, hsl }
+      const colorInfo: ColorInfo = { x: sourceX, y: sourceY, r, g, b, hex, hsl }
 
-    if (side === 'a') {
-      setColorA(colorInfo)
-    } else {
-      setColorB(colorInfo)
-    }
-  }, [])
+      if (side === 'a') {
+        setColorA(colorInfo)
+      } else {
+        setColorB(colorInfo)
+      }
+    },
+    [],
+  )
 
   return { colorA, colorB, sampleColor, setColorA, setColorB }
 }

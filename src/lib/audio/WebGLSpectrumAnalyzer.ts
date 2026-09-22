@@ -171,7 +171,7 @@ export class WebGLSpectrumAnalyzer {
     peakDecay: 0.97,
     octaveBands: 0,
     colorA: [1.0, 0.5, 0.0], // Orange
-    colorB: [0.0, 0.8, 1.0]  // Cyan
+    colorB: [0.0, 0.8, 1.0], // Cyan
   }
 
   // Spectrum data
@@ -197,7 +197,7 @@ export class WebGLSpectrumAnalyzer {
   private initWebGL(): void {
     const gl = this.canvas.getContext('webgl', {
       antialias: true,
-      preserveDrawingBuffer: true
+      preserveDrawingBuffer: true,
     })
 
     if (!gl) {
@@ -284,8 +284,8 @@ export class WebGLSpectrumAnalyzer {
       }
 
       // Apply smoothing
-      this.smoothedA[i] = this.smoothedA[i] * this.config.smoothing +
-                          value * (1 - this.config.smoothing)
+      this.smoothedA[i] =
+        this.smoothedA[i] * this.config.smoothing + value * (1 - this.config.smoothing)
       this.spectrumA[i] = this.smoothedA[i]
 
       // Update peaks
@@ -311,8 +311,8 @@ export class WebGLSpectrumAnalyzer {
         value = data[i]
       }
 
-      this.smoothedB[i] = this.smoothedB[i] * this.config.smoothing +
-                          value * (1 - this.config.smoothing)
+      this.smoothedB[i] =
+        this.smoothedB[i] * this.config.smoothing + value * (1 - this.config.smoothing)
       this.spectrumB[i] = this.smoothedB[i]
 
       if (this.spectrumB[i] > this.peaksB[i]) {
@@ -425,7 +425,11 @@ export class WebGLSpectrumAnalyzer {
     gl.uniform1i(gl.getUniformLocation(this.spectrumProgram, 'u_style'), this.getStyleIndex())
     gl.uniform3fv(gl.getUniformLocation(this.spectrumProgram, 'u_colorA'), this.config.colorA)
     gl.uniform3fv(gl.getUniformLocation(this.spectrumProgram, 'u_colorB'), this.config.colorB)
-    gl.uniform2f(gl.getUniformLocation(this.spectrumProgram, 'u_resolution'), this.canvas.width, this.canvas.height)
+    gl.uniform2f(
+      gl.getUniformLocation(this.spectrumProgram, 'u_resolution'),
+      this.canvas.width,
+      this.canvas.height,
+    )
     gl.uniform1f(gl.getUniformLocation(this.spectrumProgram, 'u_barWidth'), 2.0 / this.numBins)
 
     // Draw
@@ -443,9 +447,9 @@ export class WebGLSpectrumAnalyzer {
     colors: number[],
     spectrum: Float32Array,
     colorMix: number,
-    dbRange: number
+    dbRange: number,
   ): void {
-    const barWidth = 2.0 / this.numBins * 0.8
+    const barWidth = (2.0 / this.numBins) * 0.8
 
     for (let i = 0; i < this.numBins; i++) {
       const x = this.binToX(i, this.numBins) * 2 - 1
@@ -475,9 +479,9 @@ export class WebGLSpectrumAnalyzer {
     positions: number[],
     heights: number[],
     colors: number[],
-    dbRange: number
+    dbRange: number,
   ): void {
-    const barWidth = 2.0 / this.numBins * 0.8
+    const barWidth = (2.0 / this.numBins) * 0.8
 
     for (let i = 0; i < this.numBins; i++) {
       const x = this.binToX(i, this.numBins) * 2 - 1
@@ -506,15 +510,15 @@ export class WebGLSpectrumAnalyzer {
     positions: number[],
     heights: number[],
     colors: number[],
-    dbRange: number
+    dbRange: number,
   ): void {
     const halfBins = Math.floor(this.numBins / 2)
-    const barWidth = 1.0 / halfBins * 0.8
+    const barWidth = (1.0 / halfBins) * 0.8
 
     // Left half: A
     for (let i = 0; i < halfBins; i++) {
-      const srcBin = Math.floor(i / halfBins * this.numBins)
-      const x = (i / halfBins) - 1
+      const srcBin = Math.floor((i / halfBins) * this.numBins)
+      const x = i / halfBins - 1
       const height = Math.max(0, (this.spectrumA[srcBin] - this.config.minDb) / dbRange)
       const y = height * 2 - 1
 
@@ -533,7 +537,7 @@ export class WebGLSpectrumAnalyzer {
 
     // Right half: B
     for (let i = 0; i < halfBins; i++) {
-      const srcBin = Math.floor(i / halfBins * this.numBins)
+      const srcBin = Math.floor((i / halfBins) * this.numBins)
       const x = i / halfBins
       const height = Math.max(0, (this.spectrumB[srcBin] - this.config.minDb) / dbRange)
       const y = height * 2 - 1
@@ -556,9 +560,9 @@ export class WebGLSpectrumAnalyzer {
     positions: number[],
     heights: number[],
     colors: number[],
-    dbRange: number
+    dbRange: number,
   ): void {
-    const barWidth = 2.0 / this.numBins * 0.8
+    const barWidth = (2.0 / this.numBins) * 0.8
 
     for (let i = 0; i < this.numBins; i++) {
       const x = this.binToX(i, this.numBins) * 2 - 1
@@ -654,7 +658,11 @@ export class WebGLSpectrumAnalyzer {
     gl.enableVertexAttribArray(posLoc)
     gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0)
 
-    gl.uniform2f(gl.getUniformLocation(this.gridProgram, 'u_resolution'), this.canvas.width, this.canvas.height)
+    gl.uniform2f(
+      gl.getUniformLocation(this.gridProgram, 'u_resolution'),
+      this.canvas.width,
+      this.canvas.height,
+    )
     gl.uniform1f(gl.getUniformLocation(this.gridProgram, 'u_minDb'), this.config.minDb)
     gl.uniform1f(gl.getUniformLocation(this.gridProgram, 'u_maxDb'), this.config.maxDb)
     gl.uniform1i(gl.getUniformLocation(this.gridProgram, 'u_scale'), this.getScaleIndex())

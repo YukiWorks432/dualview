@@ -1,60 +1,192 @@
 import { create } from 'zustand'
-import type { ComparisonMode, BlendMode, SplitLayout, ExportSettings, ExportProgress, TransitionEngine, TransitionExportMode, WebGLComparisonSettings, WebGLComparisonMode, WebGLAnalysisMetrics, ROIRect, ScopesSettings, QuadViewSettings, RadialLoupeSettings, GridTileSettings, PixelGridSettings, MorphologicalSettings, MorphOperation, AspectRatioPreset, AspectRatioSettings, ResolutionPreset, ResolutionConfig } from '../types'
+
+import type {
+  ComparisonMode,
+  BlendMode,
+  SplitLayout,
+  ExportSettings,
+  ExportProgress,
+  TransitionEngine,
+  TransitionExportMode,
+  WebGLComparisonSettings,
+  WebGLComparisonMode,
+  WebGLAnalysisMetrics,
+  ROIRect,
+  ScopesSettings,
+  QuadViewSettings,
+  RadialLoupeSettings,
+  GridTileSettings,
+  PixelGridSettings,
+  MorphologicalSettings,
+  MorphOperation,
+  AspectRatioPreset,
+  AspectRatioSettings,
+  ResolutionPreset,
+  ResolutionConfig,
+} from '../types'
 
 // ASPECT-001: Aspect Ratio Presets configuration
-export const ASPECT_RATIO_PRESETS: Record<AspectRatioPreset, { label: string; ratio: number; description: string }> = {
+export const ASPECT_RATIO_PRESETS: Record<
+  AspectRatioPreset,
+  { label: string; ratio: number; description: string }
+> = {
   '16:9': { label: 'Landscape', ratio: 16 / 9, description: 'YouTube, TV' },
   '9:16': { label: 'Portrait', ratio: 9 / 16, description: 'TikTok, Reels' },
   '1:1': { label: 'Square', ratio: 1, description: 'Instagram Posts' },
   '4:3': { label: 'Classic', ratio: 4 / 3, description: 'Traditional' },
   '21:9': { label: 'Ultrawide', ratio: 21 / 9, description: 'Cinematic' },
   '4:5': { label: 'Portrait (4:5)', ratio: 4 / 5, description: 'Instagram Portrait' },
-  'custom': { label: 'Custom', ratio: 1, description: 'Custom size' },
+  custom: { label: 'Custom', ratio: 1, description: 'Custom size' },
 }
 
 // ASPECT-002: Resolution Presets tied to aspect ratios
-export const RESOLUTION_PRESETS: Record<AspectRatioPreset, Record<ResolutionPreset, ResolutionConfig>> = {
+export const RESOLUTION_PRESETS: Record<
+  AspectRatioPreset,
+  Record<ResolutionPreset, ResolutionConfig>
+> = {
   '16:9': {
     '720p': { preset: '720p', label: 'HD', width: 1280, height: 720, description: '1280×720' },
-    '1080p': { preset: '1080p', label: 'Full HD', width: 1920, height: 1080, description: '1920×1080' },
-    '2160p': { preset: '2160p', label: '4K UHD', width: 3840, height: 2160, description: '3840×2160' },
-    'custom': { preset: 'custom', label: 'Custom', width: 1920, height: 1080, description: 'Custom size' },
+    '1080p': {
+      preset: '1080p',
+      label: 'Full HD',
+      width: 1920,
+      height: 1080,
+      description: '1920×1080',
+    },
+    '2160p': {
+      preset: '2160p',
+      label: '4K UHD',
+      width: 3840,
+      height: 2160,
+      description: '3840×2160',
+    },
+    custom: {
+      preset: 'custom',
+      label: 'Custom',
+      width: 1920,
+      height: 1080,
+      description: 'Custom size',
+    },
   },
   '9:16': {
     '720p': { preset: '720p', label: 'HD', width: 720, height: 1280, description: '720×1280' },
-    '1080p': { preset: '1080p', label: 'Full HD', width: 1080, height: 1920, description: '1080×1920' },
-    '2160p': { preset: '2160p', label: '4K UHD', width: 2160, height: 3840, description: '2160×3840' },
-    'custom': { preset: 'custom', label: 'Custom', width: 1080, height: 1920, description: 'Custom size' },
+    '1080p': {
+      preset: '1080p',
+      label: 'Full HD',
+      width: 1080,
+      height: 1920,
+      description: '1080×1920',
+    },
+    '2160p': {
+      preset: '2160p',
+      label: '4K UHD',
+      width: 2160,
+      height: 3840,
+      description: '2160×3840',
+    },
+    custom: {
+      preset: 'custom',
+      label: 'Custom',
+      width: 1080,
+      height: 1920,
+      description: 'Custom size',
+    },
   },
   '1:1': {
     '720p': { preset: '720p', label: 'HD', width: 720, height: 720, description: '720×720' },
-    '1080p': { preset: '1080p', label: 'Full HD', width: 1080, height: 1080, description: '1080×1080' },
-    '2160p': { preset: '2160p', label: '4K UHD', width: 2160, height: 2160, description: '2160×2160' },
-    'custom': { preset: 'custom', label: 'Custom', width: 1080, height: 1080, description: 'Custom size' },
+    '1080p': {
+      preset: '1080p',
+      label: 'Full HD',
+      width: 1080,
+      height: 1080,
+      description: '1080×1080',
+    },
+    '2160p': {
+      preset: '2160p',
+      label: '4K UHD',
+      width: 2160,
+      height: 2160,
+      description: '2160×2160',
+    },
+    custom: {
+      preset: 'custom',
+      label: 'Custom',
+      width: 1080,
+      height: 1080,
+      description: 'Custom size',
+    },
   },
   '4:3': {
     '720p': { preset: '720p', label: 'SD', width: 960, height: 720, description: '960×720' },
     '1080p': { preset: '1080p', label: 'HD', width: 1440, height: 1080, description: '1440×1080' },
     '2160p': { preset: '2160p', label: '4K', width: 2880, height: 2160, description: '2880×2160' },
-    'custom': { preset: 'custom', label: 'Custom', width: 1440, height: 1080, description: 'Custom size' },
+    custom: {
+      preset: 'custom',
+      label: 'Custom',
+      width: 1440,
+      height: 1080,
+      description: 'Custom size',
+    },
   },
   '21:9': {
     '720p': { preset: '720p', label: 'HD', width: 1680, height: 720, description: '1680×720' },
-    '1080p': { preset: '1080p', label: 'Full HD', width: 2520, height: 1080, description: '2520×1080' },
+    '1080p': {
+      preset: '1080p',
+      label: 'Full HD',
+      width: 2520,
+      height: 1080,
+      description: '2520×1080',
+    },
     '2160p': { preset: '2160p', label: '4K', width: 5040, height: 2160, description: '5040×2160' },
-    'custom': { preset: 'custom', label: 'Custom', width: 2520, height: 1080, description: 'Custom size' },
+    custom: {
+      preset: 'custom',
+      label: 'Custom',
+      width: 2520,
+      height: 1080,
+      description: 'Custom size',
+    },
   },
   '4:5': {
     '720p': { preset: '720p', label: 'HD', width: 576, height: 720, description: '576×720' },
-    '1080p': { preset: '1080p', label: 'Full HD', width: 864, height: 1080, description: '864×1080' },
+    '1080p': {
+      preset: '1080p',
+      label: 'Full HD',
+      width: 864,
+      height: 1080,
+      description: '864×1080',
+    },
     '2160p': { preset: '2160p', label: '4K', width: 1728, height: 2160, description: '1728×2160' },
-    'custom': { preset: 'custom', label: 'Custom', width: 864, height: 1080, description: 'Custom size' },
+    custom: {
+      preset: 'custom',
+      label: 'Custom',
+      width: 864,
+      height: 1080,
+      description: 'Custom size',
+    },
   },
-  'custom': {
+  custom: {
     '720p': { preset: '720p', label: 'HD', width: 1280, height: 720, description: '1280×720' },
-    '1080p': { preset: '1080p', label: 'Full HD', width: 1920, height: 1080, description: '1920×1080' },
-    '2160p': { preset: '2160p', label: '4K UHD', width: 3840, height: 2160, description: '3840×2160' },
-    'custom': { preset: 'custom', label: 'Custom', width: 1920, height: 1080, description: 'Custom size' },
+    '1080p': {
+      preset: '1080p',
+      label: 'Full HD',
+      width: 1920,
+      height: 1080,
+      description: '1920×1080',
+    },
+    '2160p': {
+      preset: '2160p',
+      label: '4K UHD',
+      width: 3840,
+      height: 2160,
+      description: '3840×2160',
+    },
+    custom: {
+      preset: 'custom',
+      label: 'Custom',
+      width: 1920,
+      height: 1080,
+      description: 'Custom size',
+    },
   },
 }
 
@@ -122,7 +254,10 @@ interface ProjectStore {
   setPan: (x: number, y: number) => void
   resetZoom: () => void
   togglePixelInspector: () => void
-  setPixelInfo: (side: 'a' | 'b', info: { x: number; y: number; r: number; g: number; b: number } | null) => void
+  setPixelInfo: (
+    side: 'a' | 'b',
+    info: { x: number; y: number; r: number; g: number; b: number } | null,
+  ) => void
   setPromptA: (prompt: string) => void
   setPromptB: (prompt: string) => void
   setWebGLComparisonMode: (mode: WebGLComparisonMode) => void
@@ -355,7 +490,8 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   setZoom: (zoom) => set({ zoom: Math.max(1, Math.min(10, zoom)) }),
   setPan: (x, y) => set({ panX: x, panY: y }),
   resetZoom: () => set({ zoom: 1, panX: 0, panY: 0 }),
-  togglePixelInspector: () => set((state) => ({ pixelInspectorEnabled: !state.pixelInspectorEnabled })),
+  togglePixelInspector: () =>
+    set((state) => ({ pixelInspectorEnabled: !state.pixelInspectorEnabled })),
   setPixelInfo: (side, info) => set(side === 'a' ? { pixelInfoA: info } : { pixelInfoB: info }),
   setPromptA: (prompt) => set({ promptA: prompt }),
   setPromptB: (prompt) => set({ promptB: prompt }),
@@ -584,7 +720,9 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       radialLoupeSettings: {
         ...state.radialLoupeSettings,
         locked: !state.radialLoupeSettings.locked,
-        lockedPosition: state.radialLoupeSettings.locked ? null : state.radialLoupeSettings.lockedPosition,
+        lockedPosition: state.radialLoupeSettings.locked
+          ? null
+          : state.radialLoupeSettings.lockedPosition,
       },
     })),
 
@@ -705,12 +843,13 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
 
   getResolution: () => {
     const state = get()
-    const { preset, resolutionPreset, customResolutionWidth, customResolutionHeight } = state.aspectRatioSettings
-    
+    const { preset, resolutionPreset, customResolutionWidth, customResolutionHeight } =
+      state.aspectRatioSettings
+
     if (resolutionPreset === 'custom' && customResolutionWidth && customResolutionHeight) {
       return { width: customResolutionWidth, height: customResolutionHeight }
     }
-    
+
     const resPresets = RESOLUTION_PRESETS[preset] || RESOLUTION_PRESETS['16:9']
     const resConfig = resPresets[resolutionPreset] || resPresets['1080p']
     return { width: resConfig.width, height: resConfig.height }

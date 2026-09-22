@@ -1,8 +1,9 @@
+import { Link, X, Loader2, AlertCircle, CheckCircle } from 'lucide-react'
 import { useState } from 'react'
+
+import { cn } from '../../lib/utils'
 import { useMediaStore } from '../../stores/mediaStore'
 import { useTimelineStore } from '../../stores/timelineStore'
-import { cn } from '../../lib/utils'
-import { Link, X, Loader2, AlertCircle, CheckCircle } from 'lucide-react'
 import { Button } from '../ui'
 
 interface URLImportProps {
@@ -85,12 +86,16 @@ export function URLImport({ isOpen, onClose }: URLImportProps) {
       const mediaFile = await addFile(file)
 
       // Auto-add to timeline if tracks are empty
-      const trackA = tracks.find(t => t.type === 'a')
-      const trackB = tracks.find(t => t.type === 'b')
+      const trackA = tracks.find((t) => t.type === 'a')
+      const trackB = tracks.find((t) => t.type === 'b')
 
       if (trackA && trackA.clips.length === 0 && trackA.acceptedTypes.includes(mediaFile.type)) {
         addClip(trackA.id, mediaFile.id, 0, mediaFile.duration || 10)
-      } else if (trackB && trackB.clips.length === 0 && trackB.acceptedTypes.includes(mediaFile.type)) {
+      } else if (
+        trackB &&
+        trackB.clips.length === 0 &&
+        trackB.acceptedTypes.includes(mediaFile.type)
+      ) {
         addClip(trackB.id, mediaFile.id, 0, mediaFile.duration || 10)
       }
 
@@ -118,34 +123,27 @@ export function URLImport({ isOpen, onClose }: URLImportProps) {
             <Link className="w-5 h-5" />
             Import from URL
           </h2>
-          <button
-            onClick={onClose}
-            className="p-1 hover:bg-surface-hover rounded"
-          >
+          <button onClick={onClose} className="p-1 hover:bg-surface-hover rounded">
             <X className="w-5 h-5 text-text-muted" />
           </button>
         </div>
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm text-text-secondary mb-1">
-              Media URL
-            </label>
+            <label className="block text-sm text-text-secondary mb-1">Media URL</label>
             <input
               type="url"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               placeholder="https://example.com/image.jpg"
               className={cn(
-                "w-full px-3 py-2 bg-background border rounded text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-1",
-                error ? "border-error focus:ring-error" : "border-border focus:ring-accent"
+                'w-full px-3 py-2 bg-background border rounded text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-1',
+                error ? 'border-error focus:ring-error' : 'border-border focus:ring-accent',
               )}
               disabled={isLoading}
               onKeyDown={(e) => e.key === 'Enter' && handleImport()}
             />
-            <p className="text-xs text-text-muted mt-1">
-              Supports video, image, and audio URLs
-            </p>
+            <p className="text-xs text-text-muted mt-1">Supports video, image, and audio URLs</p>
           </div>
 
           {error && (

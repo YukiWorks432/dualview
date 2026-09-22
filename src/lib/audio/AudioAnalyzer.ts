@@ -14,17 +14,17 @@
 
 export interface LoudnessMetrics {
   // LUFS measurements
-  momentary: number      // 400ms window
-  shortTerm: number      // 3s window
-  integrated: number     // Full duration
-  loudnessRange: number  // LRA - dynamic range in LU
+  momentary: number // 400ms window
+  shortTerm: number // 3s window
+  integrated: number // Full duration
+  loudnessRange: number // LRA - dynamic range in LU
 
   // Peak measurements
-  truePeak: number       // dBTP
-  samplePeak: number     // dBFS
+  truePeak: number // dBTP
+  samplePeak: number // dBFS
 
   // RMS
-  rms: number           // dBFS
+  rms: number // dBFS
 
   // Crest factor (peak to RMS ratio in dB)
   crestFactor: number
@@ -71,7 +71,7 @@ const K_WEIGHT_HIGH_SHELF = {
   b1: -2.69169618940638,
   b2: 1.19839281085285,
   a1: -1.69065929318241,
-  a2: 0.73248077421585
+  a2: 0.73248077421585,
 }
 
 const K_WEIGHT_HIGH_PASS = {
@@ -79,7 +79,7 @@ const K_WEIGHT_HIGH_PASS = {
   b1: -2.0,
   b2: 1.0,
   a1: -1.99004745483398,
-  a2: 0.99007225036621
+  a2: 0.99007225036621,
 }
 
 /**
@@ -87,15 +87,17 @@ const K_WEIGHT_HIGH_PASS = {
  */
 function applyBiquadFilter(
   data: Float32Array,
-  coeffs: { b0: number; b1: number; b2: number; a1: number; a2: number }
+  coeffs: { b0: number; b1: number; b2: number; a1: number; a2: number },
 ): Float32Array {
   const output = new Float32Array(data.length)
-  let x1 = 0, x2 = 0, y1 = 0, y2 = 0
+  let x1 = 0,
+    x2 = 0,
+    y1 = 0,
+    y2 = 0
 
   for (let i = 0; i < data.length; i++) {
     const x0 = data[i]
-    const y0 = coeffs.b0 * x0 + coeffs.b1 * x1 + coeffs.b2 * x2
-                - coeffs.a1 * y1 - coeffs.a2 * y2
+    const y0 = coeffs.b0 * x0 + coeffs.b1 * x1 + coeffs.b2 * x2 - coeffs.a1 * y1 - coeffs.a2 * y2
 
     output[i] = y0
     x2 = x1
@@ -190,7 +192,10 @@ function calculateCorrelation(left: Float32Array, right: Float32Array): number {
 /**
  * Calculate stereo width using mid/side analysis
  */
-function calculateStereoWidth(left: Float32Array, right: Float32Array): {
+function calculateStereoWidth(
+  left: Float32Array,
+  right: Float32Array,
+): {
   width: number
   balance: number
   midLevel: number
@@ -230,7 +235,7 @@ function calculateStereoWidth(left: Float32Array, right: Float32Array): {
     width,
     balance,
     midLevel: linearToDb(midRms),
-    sideLevel: linearToDb(sideRms)
+    sideLevel: linearToDb(sideRms),
   }
 }
 
@@ -259,12 +264,15 @@ function generateWaveformPeaks(data: Float32Array, numPeaks: number): Float32Arr
 /**
  * Calculate LUFS with different time windows
  */
-function calculateLUFS(
-  audioBuffer: AudioBuffer
-): { momentary: number; shortTerm: number; integrated: number; loudnessRange: number } {
+function calculateLUFS(audioBuffer: AudioBuffer): {
+  momentary: number
+  shortTerm: number
+  integrated: number
+  loudnessRange: number
+} {
   const sampleRate = audioBuffer.sampleRate
-  const momentaryWindow = Math.floor(0.4 * sampleRate)   // 400ms
-  const shortTermWindow = Math.floor(3 * sampleRate)      // 3s
+  const momentaryWindow = Math.floor(0.4 * sampleRate) // 400ms
+  const shortTermWindow = Math.floor(3 * sampleRate) // 3s
 
   // Get all channels and apply K-weighting
   const channels: Float32Array[] = []
@@ -296,7 +304,8 @@ function calculateLUFS(
     }
     const blockMean = blockSum / blockSize
     const lufs = meanSquareToLUFS(blockMean)
-    if (lufs > -70) { // Absolute gate
+    if (lufs > -70) {
+      // Absolute gate
       blockLoudness.push(lufs)
     }
   }
@@ -304,13 +313,15 @@ function calculateLUFS(
   // Integrated loudness (with relative gating)
   let integrated = -Infinity
   if (blockLoudness.length > 0) {
-    const ungatedMean = blockLoudness.reduce((a, b) => a + Math.pow(10, b / 10), 0) / blockLoudness.length
+    const ungatedMean =
+      blockLoudness.reduce((a, b) => a + Math.pow(10, b / 10), 0) / blockLoudness.length
     const ungatedLUFS = 10 * Math.log10(ungatedMean)
     const relativeThreshold = ungatedLUFS - 10
 
-    const gatedBlocks = blockLoudness.filter(l => l > relativeThreshold)
+    const gatedBlocks = blockLoudness.filter((l) => l > relativeThreshold)
     if (gatedBlocks.length > 0) {
-      const gatedMean = gatedBlocks.reduce((a, b) => a + Math.pow(10, b / 10), 0) / gatedBlocks.length
+      const gatedMean =
+        gatedBlocks.reduce((a, b) => a + Math.pow(10, b / 10), 0) / gatedBlocks.length
       integrated = 10 * Math.log10(gatedMean)
     }
   }
@@ -335,7 +346,7 @@ function calculateLUFS(
   let loudnessRange = 0
   if (blockLoudness.length > 10) {
     const sorted = [...blockLoudness].sort((a, b) => a - b)
-    const low = sorted[Math.floor(sorted.length * 0.1)]  // 10th percentile
+    const low = sorted[Math.floor(sorted.length * 0.1)] // 10th percentile
     const high = sorted[Math.floor(sorted.length * 0.95)] // 95th percentile
     loudnessRange = high - low
   }
@@ -398,7 +409,7 @@ export async function analyzeAudio(audioBuffer: AudioBuffer): Promise<AudioAnaly
     phases: new Float32Array(0),
     binCount: 0,
     sampleRate,
-    fftSize: 2048
+    fftSize: 2048,
   }
 
   return {
@@ -410,20 +421,20 @@ export async function analyzeAudio(audioBuffer: AudioBuffer): Promise<AudioAnaly
       truePeak: linearToDb(truePeak),
       samplePeak: linearToDb(samplePeak),
       rms: linearToDb(rms),
-      crestFactor
+      crestFactor,
     },
     stereo: {
       correlation,
       width: stereoWidth.width,
       balance: stereoWidth.balance,
       midLevel: stereoWidth.midLevel,
-      sideLevel: stereoWidth.sideLevel
+      sideLevel: stereoWidth.sideLevel,
     },
     spectral,
     waveformPeaks,
     duration,
     sampleRate,
-    channels
+    channels,
   }
 }
 
@@ -432,7 +443,7 @@ export async function analyzeAudio(audioBuffer: AudioBuffer): Promise<AudioAnaly
  */
 export function calculateAudioDifference(
   a: AudioAnalysisResult,
-  b: AudioAnalysisResult
+  b: AudioAnalysisResult,
 ): {
   loudnessDiff: number
   correlationDiff: number
@@ -443,7 +454,7 @@ export function calculateAudioDifference(
     loudnessDiff: Math.abs(a.loudness.integrated - b.loudness.integrated),
     correlationDiff: Math.abs(a.stereo.correlation - b.stereo.correlation),
     spectralDiff: 0, // Will be calculated in real-time
-    phaseDiff: Math.abs(a.stereo.width - b.stereo.width)
+    phaseDiff: Math.abs(a.stereo.width - b.stereo.width),
   }
 }
 
@@ -473,8 +484,8 @@ export const LOUDNESS_TARGETS = {
   amazonMusic: -14,
   tidal: -14,
   broadcast: -24, // EBU R128
-  cinema: -27,    // SMPTE
-  podcast: -16
+  cinema: -27, // SMPTE
+  podcast: -16,
 } as const
 
 /**
@@ -482,13 +493,13 @@ export const LOUDNESS_TARGETS = {
  */
 export function checkLoudnessCompliance(
   integrated: number,
-  platform: keyof typeof LOUDNESS_TARGETS
+  platform: keyof typeof LOUDNESS_TARGETS,
 ): { compliant: boolean; difference: number; target: number } {
   const target = LOUDNESS_TARGETS[platform]
   const difference = integrated - target
   return {
     compliant: Math.abs(difference) <= 1, // 1 LU tolerance
     difference,
-    target
+    target,
   }
 }

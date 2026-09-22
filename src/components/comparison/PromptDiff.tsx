@@ -1,14 +1,3 @@
-/**
- * TXT-001: Advanced Text Diff
- * TXT-002: Token Counter
- * TXT-003: Syntax Highlighting
- * TXT-004: JSON Tree Diff
- * Redesigned with elegant, professional UI
- */
-import { useState, useMemo, useRef } from 'react'
-import { useProjectStore } from '../../stores/projectStore'
-import { cn } from '../../lib/utils'
-import { JsonTreeDiff, isStructuredData } from './JsonTreeDiff'
 import {
   Copy,
   Trash2,
@@ -23,8 +12,20 @@ import {
   GitCompare,
   Percent,
   Upload,
-  FileJson
+  FileJson,
 } from 'lucide-react'
+/**
+ * TXT-001: Advanced Text Diff
+ * TXT-002: Token Counter
+ * TXT-003: Syntax Highlighting
+ * TXT-004: JSON Tree Diff
+ * Redesigned with elegant, professional UI
+ */
+import { useState, useMemo, useRef } from 'react'
+
+import { cn } from '../../lib/utils'
+import { useProjectStore } from '../../stores/projectStore'
+import { JsonTreeDiff, isStructuredData } from './JsonTreeDiff'
 
 type DiffMode = 'character' | 'word' | 'line' | 'tree'
 
@@ -41,7 +42,9 @@ function computeCharDiff(textA: string, textB: string): DiffPart[] {
   const charsB = textB.split('')
   const m = charsA.length
   const n = charsB.length
-  const dp: number[][] = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0))
+  const dp: number[][] = Array(m + 1)
+    .fill(null)
+    .map(() => Array(n + 1).fill(0))
 
   for (let i = 1; i <= m; i++) {
     for (let j = 1; j <= n; j++) {
@@ -53,13 +56,15 @@ function computeCharDiff(textA: string, textB: string): DiffPart[] {
     }
   }
 
-  let i = m, j = n
+  let i = m,
+    j = n
   const parts: DiffPart[] = []
 
   while (i > 0 || j > 0) {
     if (i > 0 && j > 0 && charsA[i - 1] === charsB[j - 1]) {
       parts.unshift({ type: 'equal', text: charsA[i - 1] })
-      i--; j--
+      i--
+      j--
     } else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) {
       parts.unshift({ type: 'added', text: charsB[j - 1] })
       j--
@@ -86,7 +91,9 @@ function computeWordDiff(textA: string, textB: string): DiffPart[] {
   const result: DiffPart[] = []
   const m = wordsA.length
   const n = wordsB.length
-  const dp: number[][] = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0))
+  const dp: number[][] = Array(m + 1)
+    .fill(null)
+    .map(() => Array(n + 1).fill(0))
 
   for (let i = 1; i <= m; i++) {
     for (let j = 1; j <= n; j++) {
@@ -98,13 +105,15 @@ function computeWordDiff(textA: string, textB: string): DiffPart[] {
     }
   }
 
-  let i = m, j = n
+  let i = m,
+    j = n
   const parts: DiffPart[] = []
 
   while (i > 0 || j > 0) {
     if (i > 0 && j > 0 && wordsA[i - 1] === wordsB[j - 1]) {
       parts.unshift({ type: 'equal', text: wordsA[i - 1] })
-      i--; j--
+      i--
+      j--
     } else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) {
       parts.unshift({ type: 'added', text: wordsB[j - 1] })
       j--
@@ -130,7 +139,9 @@ function computeLineDiff(textA: string, textB: string): DiffPart[] {
   const linesB = textB.split('\n')
   const m = linesA.length
   const n = linesB.length
-  const dp: number[][] = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0))
+  const dp: number[][] = Array(m + 1)
+    .fill(null)
+    .map(() => Array(n + 1).fill(0))
 
   for (let i = 1; i <= m; i++) {
     for (let j = 1; j <= n; j++) {
@@ -142,7 +153,8 @@ function computeLineDiff(textA: string, textB: string): DiffPart[] {
     }
   }
 
-  let i = m, j = n
+  let i = m,
+    j = n
   const parts: DiffPart[] = []
   let lineNumA = linesA.length
   let lineNumB = linesB.length
@@ -150,13 +162,18 @@ function computeLineDiff(textA: string, textB: string): DiffPart[] {
   while (i > 0 || j > 0) {
     if (i > 0 && j > 0 && linesA[i - 1] === linesB[j - 1]) {
       parts.unshift({ type: 'equal', text: linesA[i - 1] + '\n', lineNumber: lineNumA })
-      i--; j--; lineNumA--; lineNumB--
+      i--
+      j--
+      lineNumA--
+      lineNumB--
     } else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) {
       parts.unshift({ type: 'added', text: linesB[j - 1] + '\n', lineNumber: lineNumB })
-      j--; lineNumB--
+      j--
+      lineNumB--
     } else if (i > 0) {
       parts.unshift({ type: 'removed', text: linesA[i - 1] + '\n', lineNumber: lineNumA })
-      i--; lineNumA--
+      i--
+      lineNumA--
     }
   }
   return parts
@@ -185,7 +202,9 @@ function calculateSimilarity(textA: string, textB: string): number {
   const setA = new Set(wordsA)
   const setB = new Set(wordsB)
   let intersection = 0
-  setA.forEach(word => { if (setB.has(word)) intersection++ })
+  setA.forEach((word) => {
+    if (setB.has(word)) intersection++
+  })
   const union = new Set([...wordsA, ...wordsB]).size
   return Math.round((intersection / union) * 100)
 }
@@ -196,7 +215,7 @@ function ToggleButton({
   onClick,
   icon: Icon,
   label,
-  title
+  title,
 }: {
   active: boolean
   onClick: () => void
@@ -212,7 +231,7 @@ function ToggleButton({
         'flex items-center gap-1.5 px-2 py-1 text-[10px] font-medium transition-all',
         active
           ? 'bg-accent/20 text-accent'
-          : 'text-text-muted hover:text-text-primary hover:bg-surface-hover'
+          : 'text-text-muted hover:text-text-primary hover:bg-surface-hover',
       )}
     >
       <Icon className="w-3 h-3" />
@@ -258,7 +277,10 @@ export function PromptDiff() {
     e.target.value = ''
   }
 
-  const similarity = useMemo(() => calculateSimilarity(promptA || '', promptB || ''), [promptA, promptB])
+  const similarity = useMemo(
+    () => calculateSimilarity(promptA || '', promptB || ''),
+    [promptA, promptB],
+  )
 
   const handleCopy = async (text: string, side: 'a' | 'b') => {
     await navigator.clipboard.writeText(text)
@@ -282,18 +304,24 @@ export function PromptDiff() {
     const a = promptA || ''
     const b = promptB || ''
     switch (diffMode) {
-      case 'character': return computeCharDiff(a, b)
-      case 'line': return computeLineDiff(a, b)
-      default: return computeWordDiff(a, b)
+      case 'character':
+        return computeCharDiff(a, b)
+      case 'line':
+        return computeLineDiff(a, b)
+      default:
+        return computeWordDiff(a, b)
     }
   }, [promptA, promptB, diffMode])
 
   const stats = useMemo(() => {
-    let added = 0, removed = 0
-    diffParts.forEach(part => {
+    let added = 0,
+      removed = 0
+    diffParts.forEach((part) => {
       const content = part.text.trim()
-      if (part.type === 'added') added += content.split(/\s+/).filter(Boolean).length || (content.length > 0 ? 1 : 0)
-      if (part.type === 'removed') removed += content.split(/\s+/).filter(Boolean).length || (content.length > 0 ? 1 : 0)
+      if (part.type === 'added')
+        added += content.split(/\s+/).filter(Boolean).length || (content.length > 0 ? 1 : 0)
+      if (part.type === 'removed')
+        removed += content.split(/\s+/).filter(Boolean).length || (content.length > 0 ? 1 : 0)
     })
     return { added, removed }
   }, [diffParts])
@@ -306,7 +334,10 @@ export function PromptDiff() {
   const wordsB = (promptB || '').trim().split(/\s+/).filter(Boolean).length
   const charsA = (promptA || '').length
   const charsB = (promptB || '').length
-  const isStructured = useMemo(() => isStructuredData(promptA || '') || isStructuredData(promptB || ''), [promptA, promptB])
+  const isStructured = useMemo(
+    () => isStructuredData(promptA || '') || isStructuredData(promptB || ''),
+    [promptA, promptB],
+  )
 
   const renderWhitespace = (text: string) => {
     if (!showWhitespace) return text
@@ -335,7 +366,7 @@ export function PromptDiff() {
                   'flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-all',
                   diffMode === mode
                     ? 'bg-accent text-white'
-                    : 'text-text-muted hover:text-text-primary'
+                    : 'text-text-muted hover:text-text-primary',
                 )}
               >
                 <Icon className="w-3 h-3" />
@@ -349,7 +380,7 @@ export function PromptDiff() {
                   'flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-all',
                   diffMode === 'tree'
                     ? 'bg-accent text-white'
-                    : 'text-text-muted hover:text-text-primary'
+                    : 'text-text-muted hover:text-text-primary',
                 )}
               >
                 <GitCompare className="w-3 h-3" />
@@ -366,12 +397,16 @@ export function PromptDiff() {
               <div className="flex items-center gap-2">
                 <Percent className="w-3 h-3 text-text-muted" />
                 <span className="text-xs text-text-muted">Similarity</span>
-                <span className={cn(
-                  'text-sm font-bold tabular-nums px-2 py-0.5',
-                  similarity >= 80 ? 'bg-green-500/20 text-green-400' :
-                  similarity >= 50 ? 'bg-yellow-500/20 text-yellow-400' :
-                  'bg-red-500/20 text-red-400'
-                )}>
+                <span
+                  className={cn(
+                    'text-sm font-bold tabular-nums px-2 py-0.5',
+                    similarity >= 80
+                      ? 'bg-green-500/20 text-green-400'
+                      : similarity >= 50
+                        ? 'bg-yellow-500/20 text-yellow-400'
+                        : 'bg-red-500/20 text-red-400',
+                  )}
+                >
                   {similarity}%
                 </span>
               </div>
@@ -406,14 +441,18 @@ export function PromptDiff() {
       {/* Editor Panels */}
       <div className="flex-1 flex min-h-0">
         {/* Panel A */}
-        <div className={cn(
-          'flex-1 flex flex-col border-r border-border transition-all',
-          focusedPanel === 'a' && 'bg-accent/5'
-        )}>
+        <div
+          className={cn(
+            'flex-1 flex flex-col border-r border-border transition-all',
+            focusedPanel === 'a' && 'bg-accent/5',
+          )}
+        >
           {/* Panel A Header */}
           <div className="h-10 bg-surface/50 border-b border-border flex items-center justify-between px-3">
             <div className="flex items-center gap-2">
-              <span className="w-6 h-6 bg-accent flex items-center justify-center text-white text-xs font-bold">A</span>
+              <span className="w-6 h-6 bg-accent flex items-center justify-center text-white text-xs font-bold">
+                A
+              </span>
               <span className="text-xs font-medium text-text-secondary">Original</span>
               {languageA && (
                 <span className="text-[10px] text-accent bg-accent/10 px-1.5 py-0.5 font-medium">
@@ -447,19 +486,27 @@ export function PromptDiff() {
                   onClick={() => handleCopy(promptA || '', 'a')}
                   disabled={!promptA}
                   className={cn(
-                    "p-1.5 transition-colors",
-                    promptA ? "text-text-muted hover:text-text-primary hover:bg-surface-hover" : "text-text-muted/30"
+                    'p-1.5 transition-colors',
+                    promptA
+                      ? 'text-text-muted hover:text-text-primary hover:bg-surface-hover'
+                      : 'text-text-muted/30',
                   )}
                   title="Copy"
                 >
-                  {copiedA ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
+                  {copiedA ? (
+                    <Check className="w-3.5 h-3.5 text-green-400" />
+                  ) : (
+                    <Copy className="w-3.5 h-3.5" />
+                  )}
                 </button>
                 <button
                   onClick={() => setPromptA('')}
                   disabled={!promptA}
                   className={cn(
-                    "p-1.5 transition-colors",
-                    promptA ? "text-text-muted hover:text-error hover:bg-surface-hover" : "text-text-muted/30"
+                    'p-1.5 transition-colors',
+                    promptA
+                      ? 'text-text-muted hover:text-error hover:bg-surface-hover'
+                      : 'text-text-muted/30',
                   )}
                   title="Clear"
                 >
@@ -474,7 +521,9 @@ export function PromptDiff() {
             {showLineNumbers && promptA && (
               <div className="w-10 bg-surface/30 border-r border-border py-3 text-right pr-2 text-[10px] text-text-muted select-none font-mono overflow-hidden">
                 {(promptA || '').split('\n').map((_, i) => (
-                  <div key={i} className="h-5 leading-5">{i + 1}</div>
+                  <div key={i} className="h-5 leading-5">
+                    {i + 1}
+                  </div>
                 ))}
               </div>
             )}
@@ -520,14 +569,18 @@ export function PromptDiff() {
         </div>
 
         {/* Panel B */}
-        <div className={cn(
-          'flex-1 flex flex-col transition-all',
-          focusedPanel === 'b' && 'bg-secondary/5'
-        )}>
+        <div
+          className={cn(
+            'flex-1 flex flex-col transition-all',
+            focusedPanel === 'b' && 'bg-secondary/5',
+          )}
+        >
           {/* Panel B Header */}
           <div className="h-10 bg-surface/50 border-b border-border flex items-center justify-between px-3">
             <div className="flex items-center gap-2">
-              <span className="w-6 h-6 bg-secondary flex items-center justify-center text-black text-xs font-bold">B</span>
+              <span className="w-6 h-6 bg-secondary flex items-center justify-center text-black text-xs font-bold">
+                B
+              </span>
               <span className="text-xs font-medium text-text-secondary">Modified</span>
               {languageB && (
                 <span className="text-[10px] text-secondary bg-secondary/10 px-1.5 py-0.5 font-medium">
@@ -541,11 +594,14 @@ export function PromptDiff() {
                 <span>{charsB} chars</span>
                 <span className="text-secondary">~{tokensB} tokens</span>
                 {tokensB !== tokensA && (promptA || promptB) && (
-                  <span className={cn(
-                    'font-medium',
-                    tokensB > tokensA ? 'text-green-400' : 'text-red-400'
-                  )}>
-                    ({tokensB > tokensA ? '+' : ''}{tokensB - tokensA})
+                  <span
+                    className={cn(
+                      'font-medium',
+                      tokensB > tokensA ? 'text-green-400' : 'text-red-400',
+                    )}
+                  >
+                    ({tokensB > tokensA ? '+' : ''}
+                    {tokensB - tokensA})
                   </span>
                 )}
               </div>
@@ -569,19 +625,27 @@ export function PromptDiff() {
                   onClick={() => handleCopy(promptB || '', 'b')}
                   disabled={!promptB}
                   className={cn(
-                    "p-1.5 transition-colors",
-                    promptB ? "text-text-muted hover:text-text-primary hover:bg-surface-hover" : "text-text-muted/30"
+                    'p-1.5 transition-colors',
+                    promptB
+                      ? 'text-text-muted hover:text-text-primary hover:bg-surface-hover'
+                      : 'text-text-muted/30',
                   )}
                   title="Copy"
                 >
-                  {copiedB ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
+                  {copiedB ? (
+                    <Check className="w-3.5 h-3.5 text-green-400" />
+                  ) : (
+                    <Copy className="w-3.5 h-3.5" />
+                  )}
                 </button>
                 <button
                   onClick={() => setPromptB('')}
                   disabled={!promptB}
                   className={cn(
-                    "p-1.5 transition-colors",
-                    promptB ? "text-text-muted hover:text-error hover:bg-surface-hover" : "text-text-muted/30"
+                    'p-1.5 transition-colors',
+                    promptB
+                      ? 'text-text-muted hover:text-error hover:bg-surface-hover'
+                      : 'text-text-muted/30',
                   )}
                   title="Clear"
                 >
@@ -596,7 +660,9 @@ export function PromptDiff() {
             {showLineNumbers && promptB && (
               <div className="w-10 bg-surface/30 border-r border-border py-3 text-right pr-2 text-[10px] text-text-muted select-none font-mono overflow-hidden">
                 {(promptB || '').split('\n').map((_, i) => (
-                  <div key={i} className="h-5 leading-5">{i + 1}</div>
+                  <div key={i} className="h-5 leading-5">
+                    {i + 1}
+                  </div>
                 ))}
               </div>
             )}
@@ -641,7 +707,7 @@ export function PromptDiff() {
           </div>
           {diffParts.length > 0 && (
             <span className="text-[10px] text-text-muted">
-              {diffParts.filter(p => p.type !== 'equal').length} changes
+              {diffParts.filter((p) => p.type !== 'equal').length} changes
             </span>
           )}
         </div>
@@ -665,7 +731,7 @@ export function PromptDiff() {
                   className={cn(
                     'flex',
                     part.type === 'added' && 'bg-green-500/10',
-                    part.type === 'removed' && 'bg-red-500/10'
+                    part.type === 'removed' && 'bg-red-500/10',
                   )}
                 >
                   {showLineNumbers && (
@@ -677,12 +743,14 @@ export function PromptDiff() {
                     {part.type === 'added' && <span className="text-green-400">+</span>}
                     {part.type === 'removed' && <span className="text-red-400">−</span>}
                   </div>
-                  <pre className={cn(
-                    'flex-1 px-2 py-0.5 whitespace-pre-wrap',
-                    part.type === 'added' && 'text-green-400',
-                    part.type === 'removed' && 'text-red-400 line-through opacity-70',
-                    part.type === 'equal' && 'text-text-primary/70'
-                  )}>
+                  <pre
+                    className={cn(
+                      'flex-1 px-2 py-0.5 whitespace-pre-wrap',
+                      part.type === 'added' && 'text-green-400',
+                      part.type === 'removed' && 'text-red-400 line-through opacity-70',
+                      part.type === 'equal' && 'text-text-primary/70',
+                    )}
+                  >
                     {showWhitespace ? renderWhitespace(part.text) : part.text}
                   </pre>
                 </div>
@@ -696,7 +764,7 @@ export function PromptDiff() {
                   className={cn(
                     part.type === 'added' && 'bg-green-500/20 text-green-400 px-0.5',
                     part.type === 'removed' && 'bg-red-500/20 text-red-400 line-through px-0.5',
-                    part.type === 'equal' && 'text-text-primary'
+                    part.type === 'equal' && 'text-text-primary',
                   )}
                 >
                   {showWhitespace ? renderWhitespace(part.text) : part.text}

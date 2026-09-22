@@ -9,13 +9,14 @@
  * - Optional hexagonal grid pattern
  */
 
-import { useRef, useEffect, useState, useCallback, useMemo } from 'react'
-import { useTimelineStore } from '../../stores/timelineStore'
-import { usePlaybackStore } from '../../stores/playbackStore'
-import { useMediaStore } from '../../stores/mediaStore'
-import { useProjectStore } from '../../stores/projectStore'
-import { useOptimizedClipSync } from '../../hooks/useOptimizedVideoSync'
 import { Grid, Play, Pause, RotateCcw } from 'lucide-react'
+import { useRef, useEffect, useState, useCallback, useMemo } from 'react'
+
+import { useOptimizedClipSync } from '../../hooks/useOptimizedVideoSync'
+import { useMediaStore } from '../../stores/mediaStore'
+import { usePlaybackStore } from '../../stores/playbackStore'
+import { useProjectStore } from '../../stores/projectStore'
+import { useTimelineStore } from '../../stores/timelineStore'
 
 export function GridTileComparison() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -32,30 +33,26 @@ export function GridTileComparison() {
   const [isDragging, setIsDragging] = useState(false)
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
 
-  const {
-    gridTileSettings,
-    setGridTileSettings,
-    toggleGridTileAnimation
-  } = useProjectStore()
+  const { gridTileSettings, setGridTileSettings, toggleGridTileAnimation } = useProjectStore()
   const { getFile } = useMediaStore()
   const { tracks } = useTimelineStore()
   const { currentTime } = usePlaybackStore()
 
   // Get tracks and clips
-  const trackA = tracks.find(t => t.type === 'a')
-  const trackB = tracks.find(t => t.type === 'b')
+  const trackA = tracks.find((t) => t.type === 'a')
+  const trackB = tracks.find((t) => t.type === 'b')
   const firstClipA = trackA?.clips[0] || null
   const firstClipB = trackB?.clips[0] || null
 
   // Find active clip
   const activeClipA = useMemo(() => {
     if (!trackA) return null
-    return trackA.clips.find(c => currentTime >= c.startTime && currentTime < c.endTime) || null
+    return trackA.clips.find((c) => currentTime >= c.startTime && currentTime < c.endTime) || null
   }, [trackA, currentTime])
 
   const activeClipB = useMemo(() => {
     if (!trackB) return null
-    return trackB.clips.find(c => currentTime >= c.startTime && currentTime < c.endTime) || null
+    return trackB.clips.find((c) => currentTime >= c.startTime && currentTime < c.endTime) || null
   }, [trackB, currentTime])
 
   // Get media files - use active clip (clip at current time), fallback to first clip
@@ -72,176 +69,189 @@ export function GridTileComparison() {
 
   // Handle image load
   const handleImageALoad = useCallback(() => {
-    setImagesLoaded(prev => ({ ...prev, a: true }))
+    setImagesLoaded((prev) => ({ ...prev, a: true }))
   }, [])
 
   const handleImageBLoad = useCallback(() => {
-    setImagesLoaded(prev => ({ ...prev, b: true }))
+    setImagesLoaded((prev) => ({ ...prev, b: true }))
   }, [])
 
   // Render function
-  const render = useCallback((timestamp: number) => {
-    const canvas = canvasRef.current
-    const container = containerRef.current
-    if (!canvas || !container) {
-      animationRef.current = requestAnimationFrame(render)
-      return
-    }
-
-    const ctx = canvas.getContext('2d')
-    if (!ctx) {
-      animationRef.current = requestAnimationFrame(render)
-      return
-    }
-
-    // Get container dimensions
-    const rect = container.getBoundingClientRect()
-    if (canvas.width !== rect.width || canvas.height !== rect.height) {
-      canvas.width = rect.width
-      canvas.height = rect.height
-    }
-
-    const width = canvas.width
-    const height = canvas.height
-
-    // Get settings
-    const { tileSize, animated, animationSpeed, offsetX, offsetY, hexagonal } = gridTileSettings
-
-    // Update animation phase
-    if (animated) {
-      const deltaTime = timestamp - lastFrameTimeRef.current
-      if (deltaTime > animationSpeed * 1000) {
-        animationPhaseRef.current = 1 - animationPhaseRef.current
-        lastFrameTimeRef.current = timestamp
+  const render = useCallback(
+    (timestamp: number) => {
+      const canvas = canvasRef.current
+      const container = containerRef.current
+      if (!canvas || !container) {
+        animationRef.current = requestAnimationFrame(render)
+        return
       }
-    }
 
-    // Clear canvas
-    ctx.clearRect(0, 0, width, height)
+      const ctx = canvas.getContext('2d')
+      if (!ctx) {
+        animationRef.current = requestAnimationFrame(render)
+        return
+      }
 
-    // Get sources
-    const sourceA = mediaA?.type === 'video' ? videoARef.current :
-                   mediaA?.type === 'image' ? imgARef.current : null
-    const sourceB = mediaB?.type === 'video' ? videoBRef.current :
-                   mediaB?.type === 'image' ? imgBRef.current : null
+      // Get container dimensions
+      const rect = container.getBoundingClientRect()
+      if (canvas.width !== rect.width || canvas.height !== rect.height) {
+        canvas.width = rect.width
+        canvas.height = rect.height
+      }
 
-    // Check if sources are ready
-    const sourceAReady = sourceA && (
-      mediaA?.type === 'video' ? (videoARef.current?.readyState || 0) >= 2 :
-      mediaA?.type === 'image' && imagesLoaded.a
-    )
-    const sourceBReady = sourceB && (
-      mediaB?.type === 'video' ? (videoBRef.current?.readyState || 0) >= 2 :
-      mediaB?.type === 'image' && imagesLoaded.b
-    )
+      const width = canvas.width
+      const height = canvas.height
 
-    // If no sources, show placeholder
-    if (!sourceAReady && !sourceBReady) {
-      ctx.fillStyle = '#1a1a1a'
-      ctx.fillRect(0, 0, width, height)
-      animationRef.current = requestAnimationFrame(render)
-      return
-    }
+      // Get settings
+      const { tileSize, animated, animationSpeed, offsetX, offsetY, hexagonal } = gridTileSettings
 
-    // Draw complete images first to off-screen canvases
-    const tempCanvasA = document.createElement('canvas')
-    const tempCanvasB = document.createElement('canvas')
-    tempCanvasA.width = width
-    tempCanvasA.height = height
-    tempCanvasB.width = width
-    tempCanvasB.height = height
+      // Update animation phase
+      if (animated) {
+        const deltaTime = timestamp - lastFrameTimeRef.current
+        if (deltaTime > animationSpeed * 1000) {
+          animationPhaseRef.current = 1 - animationPhaseRef.current
+          lastFrameTimeRef.current = timestamp
+        }
+      }
 
-    const ctxA = tempCanvasA.getContext('2d')
-    const ctxB = tempCanvasB.getContext('2d')
+      // Clear canvas
+      ctx.clearRect(0, 0, width, height)
 
-    if (ctxA && sourceA && sourceAReady) {
-      ctxA.drawImage(sourceA, 0, 0, width, height)
-    } else if (ctxA) {
-      ctxA.fillStyle = '#1a1a1a'
-      ctxA.fillRect(0, 0, width, height)
-    }
+      // Get sources
+      const sourceA =
+        mediaA?.type === 'video'
+          ? videoARef.current
+          : mediaA?.type === 'image'
+            ? imgARef.current
+            : null
+      const sourceB =
+        mediaB?.type === 'video'
+          ? videoBRef.current
+          : mediaB?.type === 'image'
+            ? imgBRef.current
+            : null
 
-    if (ctxB && sourceB && sourceBReady) {
-      ctxB.drawImage(sourceB, 0, 0, width, height)
-    } else if (ctxB) {
-      ctxB.fillStyle = '#252525'
-      ctxB.fillRect(0, 0, width, height)
-    }
+      // Check if sources are ready
+      const sourceAReady =
+        sourceA &&
+        (mediaA?.type === 'video'
+          ? (videoARef.current?.readyState || 0) >= 2
+          : mediaA?.type === 'image' && imagesLoaded.a)
+      const sourceBReady =
+        sourceB &&
+        (mediaB?.type === 'video'
+          ? (videoBRef.current?.readyState || 0) >= 2
+          : mediaB?.type === 'image' && imagesLoaded.b)
 
-    // Calculate offset in pixels
-    const pixelOffsetX = offsetX * tileSize
-    const pixelOffsetY = offsetY * tileSize
+      // If no sources, show placeholder
+      if (!sourceAReady && !sourceBReady) {
+        ctx.fillStyle = '#1a1a1a'
+        ctx.fillRect(0, 0, width, height)
+        animationRef.current = requestAnimationFrame(render)
+        return
+      }
 
-    // Draw checkerboard pattern
-    const cols = Math.ceil(width / tileSize) + 2
-    const rows = Math.ceil(height / tileSize) + 2
+      // Draw complete images first to off-screen canvases
+      const tempCanvasA = document.createElement('canvas')
+      const tempCanvasB = document.createElement('canvas')
+      tempCanvasA.width = width
+      tempCanvasA.height = height
+      tempCanvasB.width = width
+      tempCanvasB.height = height
 
-    for (let row = -1; row < rows; row++) {
-      for (let col = -1; col < cols; col++) {
+      const ctxA = tempCanvasA.getContext('2d')
+      const ctxB = tempCanvasB.getContext('2d')
+
+      if (ctxA && sourceA && sourceAReady) {
+        ctxA.drawImage(sourceA, 0, 0, width, height)
+      } else if (ctxA) {
+        ctxA.fillStyle = '#1a1a1a'
+        ctxA.fillRect(0, 0, width, height)
+      }
+
+      if (ctxB && sourceB && sourceBReady) {
+        ctxB.drawImage(sourceB, 0, 0, width, height)
+      } else if (ctxB) {
+        ctxB.fillStyle = '#252525'
+        ctxB.fillRect(0, 0, width, height)
+      }
+
+      // Calculate offset in pixels
+      const pixelOffsetX = offsetX * tileSize
+      const pixelOffsetY = offsetY * tileSize
+
+      // Draw checkerboard pattern
+      const cols = Math.ceil(width / tileSize) + 2
+      const rows = Math.ceil(height / tileSize) + 2
+
+      for (let row = -1; row < rows; row++) {
+        for (let col = -1; col < cols; col++) {
+          const x = col * tileSize + pixelOffsetX
+          const y = row * tileSize + pixelOffsetY
+
+          // Skip if completely outside canvas
+          if (x + tileSize < 0 || x > width || y + tileSize < 0 || y > height) continue
+
+          // Determine which source to show
+          let showA: boolean
+          if (hexagonal) {
+            // Hexagonal offset pattern
+            const rowOffset = row % 2 === 0 ? 0 : 0.5
+            showA = Math.floor(col + rowOffset) % 2 === row % 2
+          } else {
+            // Standard checkerboard
+            showA = (col + row) % 2 === 0
+          }
+
+          // Swap during animation
+          if (animated && animationPhaseRef.current === 1) {
+            showA = !showA
+          }
+
+          // Draw the tile
+          ctx.save()
+          ctx.beginPath()
+          ctx.rect(Math.max(0, x), Math.max(0, y), tileSize, tileSize)
+          ctx.clip()
+
+          if (showA) {
+            ctx.drawImage(tempCanvasA, 0, 0)
+          } else {
+            ctx.drawImage(tempCanvasB, 0, 0)
+          }
+
+          ctx.restore()
+        }
+      }
+
+      // Draw grid lines for clarity
+      ctx.strokeStyle = 'rgba(128, 128, 128, 0.2)'
+      ctx.lineWidth = 1
+
+      for (let col = 0; col <= cols; col++) {
         const x = col * tileSize + pixelOffsetX
+        if (x >= 0 && x <= width) {
+          ctx.beginPath()
+          ctx.moveTo(x, 0)
+          ctx.lineTo(x, height)
+          ctx.stroke()
+        }
+      }
+
+      for (let row = 0; row <= rows; row++) {
         const y = row * tileSize + pixelOffsetY
-
-        // Skip if completely outside canvas
-        if (x + tileSize < 0 || x > width || y + tileSize < 0 || y > height) continue
-
-        // Determine which source to show
-        let showA: boolean
-        if (hexagonal) {
-          // Hexagonal offset pattern
-          const rowOffset = row % 2 === 0 ? 0 : 0.5
-          showA = Math.floor(col + rowOffset) % 2 === row % 2
-        } else {
-          // Standard checkerboard
-          showA = (col + row) % 2 === 0
+        if (y >= 0 && y <= height) {
+          ctx.beginPath()
+          ctx.moveTo(0, y)
+          ctx.lineTo(width, y)
+          ctx.stroke()
         }
-
-        // Swap during animation
-        if (animated && animationPhaseRef.current === 1) {
-          showA = !showA
-        }
-
-        // Draw the tile
-        ctx.save()
-        ctx.beginPath()
-        ctx.rect(Math.max(0, x), Math.max(0, y), tileSize, tileSize)
-        ctx.clip()
-
-        if (showA) {
-          ctx.drawImage(tempCanvasA, 0, 0)
-        } else {
-          ctx.drawImage(tempCanvasB, 0, 0)
-        }
-
-        ctx.restore()
       }
-    }
 
-    // Draw grid lines for clarity
-    ctx.strokeStyle = 'rgba(128, 128, 128, 0.2)'
-    ctx.lineWidth = 1
-
-    for (let col = 0; col <= cols; col++) {
-      const x = col * tileSize + pixelOffsetX
-      if (x >= 0 && x <= width) {
-        ctx.beginPath()
-        ctx.moveTo(x, 0)
-        ctx.lineTo(x, height)
-        ctx.stroke()
-      }
-    }
-
-    for (let row = 0; row <= rows; row++) {
-      const y = row * tileSize + pixelOffsetY
-      if (y >= 0 && y <= height) {
-        ctx.beginPath()
-        ctx.moveTo(0, y)
-        ctx.lineTo(width, y)
-        ctx.stroke()
-      }
-    }
-
-    animationRef.current = requestAnimationFrame(render)
-  }, [mediaA, mediaB, gridTileSettings, imagesLoaded])
+      animationRef.current = requestAnimationFrame(render)
+    },
+    [mediaA, mediaB, gridTileSettings, imagesLoaded],
+  )
 
   // Start render loop
   useEffect(() => {
@@ -260,19 +270,29 @@ export function GridTileComparison() {
     setDragStart({ x: e.clientX, y: e.clientY })
   }, [])
 
-  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    if (!isDragging) return
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if (!isDragging) return
 
-    const dx = (e.clientX - dragStart.x) / gridTileSettings.tileSize
-    const dy = (e.clientY - dragStart.y) / gridTileSettings.tileSize
+      const dx = (e.clientX - dragStart.x) / gridTileSettings.tileSize
+      const dy = (e.clientY - dragStart.y) / gridTileSettings.tileSize
 
-    setGridTileSettings({
-      offsetX: (gridTileSettings.offsetX + dx) % 1,
-      offsetY: (gridTileSettings.offsetY + dy) % 1
-    })
+      setGridTileSettings({
+        offsetX: (gridTileSettings.offsetX + dx) % 1,
+        offsetY: (gridTileSettings.offsetY + dy) % 1,
+      })
 
-    setDragStart({ x: e.clientX, y: e.clientY })
-  }, [isDragging, dragStart, gridTileSettings.tileSize, gridTileSettings.offsetX, gridTileSettings.offsetY, setGridTileSettings])
+      setDragStart({ x: e.clientX, y: e.clientY })
+    },
+    [
+      isDragging,
+      dragStart,
+      gridTileSettings.tileSize,
+      gridTileSettings.offsetX,
+      gridTileSettings.offsetY,
+      setGridTileSettings,
+    ],
+  )
 
   const handleMouseUp = useCallback(() => {
     setIsDragging(false)
@@ -315,7 +335,13 @@ export function GridTileComparison() {
       <video
         ref={videoARef}
         src={mediaA?.type === 'video' ? mediaA.url : undefined}
-        style={{ position: 'absolute', width: '1px', height: '1px', opacity: 0, pointerEvents: 'none' }}
+        style={{
+          position: 'absolute',
+          width: '1px',
+          height: '1px',
+          opacity: 0,
+          pointerEvents: 'none',
+        }}
         muted
         playsInline
         loop
@@ -324,7 +350,13 @@ export function GridTileComparison() {
       <video
         ref={videoBRef}
         src={mediaB?.type === 'video' ? mediaB.url : undefined}
-        style={{ position: 'absolute', width: '1px', height: '1px', opacity: 0, pointerEvents: 'none' }}
+        style={{
+          position: 'absolute',
+          width: '1px',
+          height: '1px',
+          opacity: 0,
+          pointerEvents: 'none',
+        }}
         muted
         playsInline
         loop
@@ -333,29 +365,14 @@ export function GridTileComparison() {
 
       {/* Hidden image elements */}
       {mediaA?.type === 'image' && (
-        <img
-          ref={imgARef}
-          src={mediaA.url}
-          className="hidden"
-          onLoad={handleImageALoad}
-          alt=""
-        />
+        <img ref={imgARef} src={mediaA.url} className="hidden" onLoad={handleImageALoad} alt="" />
       )}
       {mediaB?.type === 'image' && (
-        <img
-          ref={imgBRef}
-          src={mediaB.url}
-          className="hidden"
-          onLoad={handleImageBLoad}
-          alt=""
-        />
+        <img ref={imgBRef} src={mediaB.url} className="hidden" onLoad={handleImageBLoad} alt="" />
       )}
 
       {/* Canvas */}
-      <canvas
-        ref={canvasRef}
-        className="w-full h-full"
-      />
+      <canvas ref={canvasRef} className="w-full h-full" />
 
       {/* Controls */}
       <div className="absolute top-4 right-4 flex flex-col gap-2">
@@ -397,9 +414,8 @@ export function GridTileComparison() {
 
       {/* Settings display */}
       <div className="absolute bottom-4 left-4 bg-black/70 px-3 py-1.5 rounded text-xs text-gray-400">
-        Tile Size: {gridTileSettings.tileSize}px |
-        Speed: {gridTileSettings.animationSpeed}s |
-        Drag to offset
+        Tile Size: {gridTileSettings.tileSize}px | Speed: {gridTileSettings.animationSpeed}s | Drag
+        to offset
       </div>
 
       {/* Tile size slider */}
@@ -429,7 +445,9 @@ export function GridTileComparison() {
             onChange={(e) => setGridTileSettings({ animationSpeed: parseFloat(e.target.value) })}
             className="w-32 accent-accent"
           />
-          <div className="text-xs text-gray-400 mt-1 text-center">{gridTileSettings.animationSpeed.toFixed(1)}s</div>
+          <div className="text-xs text-gray-400 mt-1 text-center">
+            {gridTileSettings.animationSpeed.toFixed(1)}s
+          </div>
         </div>
       )}
     </div>

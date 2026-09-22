@@ -1,8 +1,9 @@
+import { Bookmark, Plus, Trash2, Edit2, Check, X, ChevronDown } from 'lucide-react'
 import { useState } from 'react'
+
 import { cn } from '../../lib/utils'
 import { usePresetStore, type ComparisonPreset } from '../../stores/presetStore'
 import { useProjectStore } from '../../stores/projectStore'
-import { Bookmark, Plus, Trash2, Edit2, Check, X, ChevronDown } from 'lucide-react'
 import { Button } from '../ui'
 
 interface PresetManagerProps {
@@ -16,7 +17,8 @@ export function PresetManager({ isOpen, onClose }: PresetManagerProps) {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editName, setEditName] = useState('')
 
-  const { presets, activePresetId, savePreset, deletePreset, renamePreset, setActivePreset } = usePresetStore()
+  const { presets, activePresetId, savePreset, deletePreset, renamePreset, setActivePreset } =
+    usePresetStore()
   const {
     comparisonMode,
     blendMode,
@@ -84,8 +86,8 @@ export function PresetManager({ isOpen, onClose }: PresetManagerProps) {
 
   if (!isOpen) return null
 
-  const userPresets = presets.filter(p => !p.id.startsWith('default-'))
-  const defaultPresets = presets.filter(p => p.id.startsWith('default-'))
+  const userPresets = presets.filter((p) => !p.id.startsWith('default-'))
+  const defaultPresets = presets.filter((p) => p.id.startsWith('default-'))
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -95,10 +97,7 @@ export function PresetManager({ isOpen, onClose }: PresetManagerProps) {
             <Bookmark className="w-5 h-5" />
             Comparison Presets
           </h2>
-          <button
-            onClick={onClose}
-            className="p-1 hover:bg-surface-hover rounded"
-          >
+          <button onClick={onClose} className="p-1 hover:bg-surface-hover rounded">
             <X className="w-5 h-5 text-text-muted" />
           </button>
         </div>
@@ -110,11 +109,11 @@ export function PresetManager({ isOpen, onClose }: PresetManagerProps) {
               <input
                 type="text"
                 value={newPresetName}
-                onChange={e => setNewPresetName(e.target.value)}
+                onChange={(e) => setNewPresetName(e.target.value)}
                 placeholder="Preset name..."
                 className="flex-1 px-3 py-2 bg-background border border-border rounded text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-accent"
                 autoFocus
-                onKeyDown={e => e.key === 'Enter' && handleCreatePreset()}
+                onKeyDown={(e) => e.key === 'Enter' && handleCreatePreset()}
               />
               <Button variant="default" size="icon" onClick={handleCreatePreset}>
                 <Check className="w-4 h-4" />
@@ -124,11 +123,7 @@ export function PresetManager({ isOpen, onClose }: PresetManagerProps) {
               </Button>
             </div>
           ) : (
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => setIsCreating(true)}
-            >
+            <Button variant="outline" className="w-full" onClick={() => setIsCreating(true)}>
               <Plus className="w-4 h-4 mr-2" />
               Save Current Settings as Preset
             </Button>
@@ -141,7 +136,7 @@ export function PresetManager({ isOpen, onClose }: PresetManagerProps) {
                 Your Presets
               </h3>
               <div className="space-y-1">
-                {userPresets.map(preset => (
+                {userPresets.map((preset) => (
                   <PresetItem
                     key={preset.id}
                     preset={preset}
@@ -167,7 +162,7 @@ export function PresetManager({ isOpen, onClose }: PresetManagerProps) {
               Default Presets
             </h3>
             <div className="space-y-1">
-              {defaultPresets.map(preset => (
+              {defaultPresets.map((preset) => (
                 <PresetItem
                   key={preset.id}
                   preset={preset}
@@ -222,10 +217,10 @@ function PresetItem({
         <input
           type="text"
           value={editName}
-          onChange={e => onEditNameChange(e.target.value)}
+          onChange={(e) => onEditNameChange(e.target.value)}
           className="flex-1 px-2 py-1 bg-background border border-border rounded text-sm text-text-primary"
           autoFocus
-          onKeyDown={e => e.key === 'Enter' && onSaveEdit()}
+          onKeyDown={(e) => e.key === 'Enter' && onSaveEdit()}
         />
         <button onClick={onSaveEdit} className="p-1 hover:bg-surface rounded">
           <Check className="w-4 h-4 text-green-400" />
@@ -240,14 +235,19 @@ function PresetItem({
   return (
     <div
       className={cn(
-        "flex items-center justify-between p-2 rounded cursor-pointer group",
-        isActive ? "bg-accent/20 border border-accent/50" : "hover:bg-surface-hover"
+        'flex items-center justify-between p-2 rounded cursor-pointer group',
+        isActive ? 'bg-accent/20 border border-accent/50' : 'hover:bg-surface-hover',
       )}
       onClick={onApply}
     >
       <div className="flex items-center gap-2">
-        <Bookmark className={cn("w-4 h-4", isActive ? "text-accent" : "text-text-muted")} />
-        <span className={cn("text-sm", isActive ? "text-text-primary font-medium" : "text-text-secondary")}>
+        <Bookmark className={cn('w-4 h-4', isActive ? 'text-accent' : 'text-text-muted')} />
+        <span
+          className={cn(
+            'text-sm',
+            isActive ? 'text-text-primary font-medium' : 'text-text-secondary',
+          )}
+        >
           {preset.name}
         </span>
       </div>
@@ -255,14 +255,20 @@ function PresetItem({
       {canEdit && (
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
           <button
-            onClick={e => { e.stopPropagation(); onStartEdit() }}
+            onClick={(e) => {
+              e.stopPropagation()
+              onStartEdit()
+            }}
             className="p-1 hover:bg-surface rounded"
             title="Rename"
           >
             <Edit2 className="w-3 h-3 text-text-muted" />
           </button>
           <button
-            onClick={e => { e.stopPropagation(); onDelete() }}
+            onClick={(e) => {
+              e.stopPropagation()
+              onDelete()
+            }}
             className="p-1 hover:bg-surface rounded"
             title="Delete"
           >
@@ -290,7 +296,7 @@ export function PresetSelector() {
     togglePixelInspector,
   } = useProjectStore()
 
-  const activePreset = presets.find(p => p.id === activePresetId)
+  const activePreset = presets.find((p) => p.id === activePresetId)
 
   const applyPreset = (preset: ComparisonPreset) => {
     setComparisonMode(preset.settings.comparisonMode)
@@ -323,18 +329,15 @@ export function PresetSelector() {
 
       {isOpen && (
         <>
-          <div
-            className="fixed inset-0 z-40"
-            onClick={() => setIsOpen(false)}
-          />
+          <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
           <div className="absolute top-full right-0 mt-1 w-48 bg-surface border border-border rounded shadow-lg z-50">
-            {presets.map(preset => (
+            {presets.map((preset) => (
               <button
                 key={preset.id}
                 onClick={() => applyPreset(preset)}
                 className={cn(
-                  "w-full text-left px-3 py-2 text-sm hover:bg-surface-hover flex items-center gap-2",
-                  activePresetId === preset.id && "bg-accent/20 text-accent"
+                  'w-full text-left px-3 py-2 text-sm hover:bg-surface-hover flex items-center gap-2',
+                  activePresetId === preset.id && 'bg-accent/20 text-accent',
                 )}
               >
                 <Bookmark className="w-3 h-3" />

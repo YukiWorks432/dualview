@@ -3,8 +3,9 @@
  * Tracks history of timeline state for undo/redo operations
  */
 import { create } from 'zustand'
-import { useTimelineStore } from './timelineStore'
+
 import type { TimelineTrack } from '../types'
+import { useTimelineStore } from './timelineStore'
 
 interface HistoryState {
   tracks: TimelineTrack[]
@@ -29,9 +30,9 @@ const MAX_HISTORY = 50
 
 // Deep clone tracks to avoid reference issues
 const cloneTracks = (tracks: TimelineTrack[]): TimelineTrack[] => {
-  return tracks.map(track => ({
+  return tracks.map((track) => ({
     ...track,
-    clips: track.clips.map(clip => ({ ...clip })),
+    clips: track.clips.map((clip) => ({ ...clip })),
   }))
 }
 

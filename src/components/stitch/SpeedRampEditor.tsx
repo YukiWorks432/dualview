@@ -3,8 +3,9 @@
  * Set speed keyframes on clip timeline with ease curve interpolation
  */
 
-import { useState, useCallback, useRef, useEffect } from 'react'
 import { Gauge, Plus, Trash2, X, Play, Pause, ArrowRightLeft, RotateCcw } from 'lucide-react'
+import { useState, useCallback, useRef, useEffect } from 'react'
+
 import type { SpeedRamp, SpeedKeyframe } from '../../types'
 import { EASE_PRESETS, evaluateEaseCurve } from './EaseCurveEditor'
 
@@ -16,9 +17,9 @@ export const DEFAULT_SPEED_RAMP: SpeedRamp = {
   enabled: false,
   keyframes: [
     { id: 'start', time: 0, speed: 1, easeCurve: EASE_PRESETS[4] },
-    { id: 'end', time: 1, speed: 1, easeCurve: EASE_PRESETS[4] }
+    { id: 'end', time: 1, speed: 1, easeCurve: EASE_PRESETS[4] },
   ],
-  reverse: false
+  reverse: false,
 }
 
 interface SpeedRampEditorProps {
@@ -49,7 +50,10 @@ function getSpeedAtTime(speedRamp: SpeedRamp, normalizedTime: number): number {
   let nextKf = sortedKeyframes[sortedKeyframes.length - 1]
 
   for (let i = 0; i < sortedKeyframes.length - 1; i++) {
-    if (sortedKeyframes[i].time <= normalizedTime && sortedKeyframes[i + 1].time >= normalizedTime) {
+    if (
+      sortedKeyframes[i].time <= normalizedTime &&
+      sortedKeyframes[i + 1].time >= normalizedTime
+    ) {
       prevKf = sortedKeyframes[i]
       nextKf = sortedKeyframes[i + 1]
       break
@@ -74,7 +78,7 @@ export function SpeedRampEditor({
   onSpeedRampChange,
   clipDuration,
   clipName,
-  clipThumbnail
+  clipThumbnail,
 }: SpeedRampEditorProps) {
   const [localRamp, setLocalRamp] = useState<SpeedRamp>(speedRamp)
   const [selectedKeyframeId, setSelectedKeyframeId] = useState<string | null>(null)
@@ -120,8 +124,8 @@ export function SpeedRampEditor({
 
     // Horizontal lines (speed levels)
     const speedLevels = [0.25, 0.5, 1, 2, 4, 8]
-    speedLevels.forEach(speed => {
-      const y = PADDING + graphHeight - (Math.log2(speed) + 3) / 6.5 * graphHeight
+    speedLevels.forEach((speed) => {
+      const y = PADDING + graphHeight - ((Math.log2(speed) + 3) / 6.5) * graphHeight
       if (y >= PADDING && y <= CANVAS_HEIGHT - PADDING) {
         ctx.beginPath()
         ctx.setLineDash(speed === 1 ? [] : [5, 5])
@@ -181,7 +185,7 @@ export function SpeedRampEditor({
 
     // Draw keyframes
     const sortedKeyframes = [...localRamp.keyframes].sort((a, b) => a.time - b.time)
-    sortedKeyframes.forEach(kf => {
+    sortedKeyframes.forEach((kf) => {
       const x = PADDING + kf.time * graphWidth
       const y = speedToY(kf.speed)
 
@@ -216,8 +220,15 @@ export function SpeedRampEditor({
     ctx.font = 'bold 12px monospace'
     ctx.textAlign = 'left'
     ctx.fillText(`${currentSpeed.toFixed(2)}x`, CANVAS_WIDTH - PADDING - 50, PADDING - 10)
-
-  }, [localRamp, clipDuration, previewTime, selectedKeyframeId, CANVAS_WIDTH, CANVAS_HEIGHT, PADDING])
+  }, [
+    localRamp,
+    clipDuration,
+    previewTime,
+    selectedKeyframeId,
+    CANVAS_WIDTH,
+    CANVAS_HEIGHT,
+    PADDING,
+  ])
 
   // Redraw on changes
   useEffect(() => {
@@ -251,65 +262,71 @@ export function SpeedRampEditor({
   }, [isPreviewPlaying, clipDuration])
 
   // Handle canvas mouse events
-  const handleCanvasMouseDown = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-    const rect = canvas.getBoundingClientRect()
-    const x = (e.clientX - rect.left) / (rect.width / CANVAS_WIDTH)
-    const graphWidth = CANVAS_WIDTH - PADDING * 2
+  const handleCanvasMouseDown = useCallback(
+    (e: React.MouseEvent<HTMLCanvasElement>) => {
+      const canvas = canvasRef.current
+      if (!canvas) return
+      const rect = canvas.getBoundingClientRect()
+      const x = (e.clientX - rect.left) / (rect.width / CANVAS_WIDTH)
+      const graphWidth = CANVAS_WIDTH - PADDING * 2
 
-    // Check if clicking on a keyframe
-    const clickT = (x - PADDING) / graphWidth
-    const sortedKeyframes = [...localRamp.keyframes].sort((a, b) => a.time - b.time)
+      // Check if clicking on a keyframe
+      const clickT = (x - PADDING) / graphWidth
+      const sortedKeyframes = [...localRamp.keyframes].sort((a, b) => a.time - b.time)
 
-    for (const kf of sortedKeyframes) {
-      if (Math.abs(kf.time - clickT) < 0.03) {
-        setSelectedKeyframeId(kf.id)
-        setDraggingKeyframe(kf.id)
-        return
-      }
-    }
-
-    // Deselect
-    setSelectedKeyframeId(null)
-  }, [localRamp.keyframes, CANVAS_WIDTH, PADDING])
-
-  const handleCanvasMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!draggingKeyframe) return
-
-    const canvas = canvasRef.current
-    if (!canvas) return
-    const rect = canvas.getBoundingClientRect()
-    const x = (e.clientX - rect.left) / (rect.width / CANVAS_WIDTH)
-    const y = (e.clientY - rect.top) / (rect.height / CANVAS_HEIGHT)
-
-    const graphWidth = CANVAS_WIDTH - PADDING * 2
-    const graphHeight = CANVAS_HEIGHT - PADDING * 2
-
-    // Calculate new time and speed
-    const newT = Math.max(0, Math.min(1, (x - PADDING) / graphWidth))
-    const normalizedY = Math.max(0, Math.min(1, (y - PADDING) / graphHeight))
-    // Convert Y to log speed
-    const logSpeed = (1 - normalizedY) * 6.64 - 3.32
-    const newSpeed = Math.max(0.1, Math.min(10, Math.pow(2, logSpeed)))
-
-    // Don't allow moving start/end keyframe times
-    const isEndpoint = draggingKeyframe === 'start' || draggingKeyframe === 'end'
-
-    setLocalRamp(prev => ({
-      ...prev,
-      keyframes: prev.keyframes.map(kf => {
-        if (kf.id === draggingKeyframe) {
-          return {
-            ...kf,
-            time: isEndpoint ? kf.time : newT,
-            speed: Math.round(newSpeed * 10) / 10
-          }
+      for (const kf of sortedKeyframes) {
+        if (Math.abs(kf.time - clickT) < 0.03) {
+          setSelectedKeyframeId(kf.id)
+          setDraggingKeyframe(kf.id)
+          return
         }
-        return kf
-      })
-    }))
-  }, [draggingKeyframe, CANVAS_WIDTH, CANVAS_HEIGHT, PADDING])
+      }
+
+      // Deselect
+      setSelectedKeyframeId(null)
+    },
+    [localRamp.keyframes, CANVAS_WIDTH, PADDING],
+  )
+
+  const handleCanvasMouseMove = useCallback(
+    (e: React.MouseEvent<HTMLCanvasElement>) => {
+      if (!draggingKeyframe) return
+
+      const canvas = canvasRef.current
+      if (!canvas) return
+      const rect = canvas.getBoundingClientRect()
+      const x = (e.clientX - rect.left) / (rect.width / CANVAS_WIDTH)
+      const y = (e.clientY - rect.top) / (rect.height / CANVAS_HEIGHT)
+
+      const graphWidth = CANVAS_WIDTH - PADDING * 2
+      const graphHeight = CANVAS_HEIGHT - PADDING * 2
+
+      // Calculate new time and speed
+      const newT = Math.max(0, Math.min(1, (x - PADDING) / graphWidth))
+      const normalizedY = Math.max(0, Math.min(1, (y - PADDING) / graphHeight))
+      // Convert Y to log speed
+      const logSpeed = (1 - normalizedY) * 6.64 - 3.32
+      const newSpeed = Math.max(0.1, Math.min(10, Math.pow(2, logSpeed)))
+
+      // Don't allow moving start/end keyframe times
+      const isEndpoint = draggingKeyframe === 'start' || draggingKeyframe === 'end'
+
+      setLocalRamp((prev) => ({
+        ...prev,
+        keyframes: prev.keyframes.map((kf) => {
+          if (kf.id === draggingKeyframe) {
+            return {
+              ...kf,
+              time: isEndpoint ? kf.time : newT,
+              speed: Math.round(newSpeed * 10) / 10,
+            }
+          }
+          return kf
+        }),
+      }))
+    },
+    [draggingKeyframe, CANVAS_WIDTH, CANVAS_HEIGHT, PADDING],
+  )
 
   const handleCanvasMouseUp = useCallback(() => {
     setDraggingKeyframe(null)
@@ -322,21 +339,22 @@ export function SpeedRampEditor({
       id,
       time: 0.5,
       speed: 1,
-      easeCurve: EASE_PRESETS[4]
+      easeCurve: EASE_PRESETS[4],
     }
-    setLocalRamp(prev => ({
+    setLocalRamp((prev) => ({
       ...prev,
-      keyframes: [...prev.keyframes, newKf]
+      keyframes: [...prev.keyframes, newKf],
     }))
     setSelectedKeyframeId(id)
   }, [])
 
   // Delete selected keyframe
   const deleteSelectedKeyframe = useCallback(() => {
-    if (!selectedKeyframeId || selectedKeyframeId === 'start' || selectedKeyframeId === 'end') return
-    setLocalRamp(prev => ({
+    if (!selectedKeyframeId || selectedKeyframeId === 'start' || selectedKeyframeId === 'end')
+      return
+    setLocalRamp((prev) => ({
       ...prev,
-      keyframes: prev.keyframes.filter(kf => kf.id !== selectedKeyframeId)
+      keyframes: prev.keyframes.filter((kf) => kf.id !== selectedKeyframeId),
     }))
     setSelectedKeyframeId(null)
   }, [selectedKeyframeId])
@@ -349,39 +367,45 @@ export function SpeedRampEditor({
 
   // Toggle reverse
   const toggleReverse = useCallback(() => {
-    setLocalRamp(prev => ({ ...prev, reverse: !prev.reverse }))
+    setLocalRamp((prev) => ({ ...prev, reverse: !prev.reverse }))
   }, [])
 
   // Toggle enabled
   const toggleEnabled = useCallback(() => {
-    setLocalRamp(prev => ({ ...prev, enabled: !prev.enabled }))
+    setLocalRamp((prev) => ({ ...prev, enabled: !prev.enabled }))
   }, [])
 
   // Update selected keyframe speed
-  const updateSelectedSpeed = useCallback((speed: number) => {
-    if (!selectedKeyframeId) return
-    setLocalRamp(prev => ({
-      ...prev,
-      keyframes: prev.keyframes.map(kf =>
-        kf.id === selectedKeyframeId ? { ...kf, speed } : kf
-      )
-    }))
-  }, [selectedKeyframeId])
+  const updateSelectedSpeed = useCallback(
+    (speed: number) => {
+      if (!selectedKeyframeId) return
+      setLocalRamp((prev) => ({
+        ...prev,
+        keyframes: prev.keyframes.map((kf) =>
+          kf.id === selectedKeyframeId ? { ...kf, speed } : kf,
+        ),
+      }))
+    },
+    [selectedKeyframeId],
+  )
 
   // Update selected keyframe ease
-  const updateSelectedEase = useCallback((easeCurveId: string) => {
-    if (!selectedKeyframeId) return
-    const preset = EASE_PRESETS.find(p => p.id === easeCurveId)
-    if (!preset) return
-    setLocalRamp(prev => ({
-      ...prev,
-      keyframes: prev.keyframes.map(kf =>
-        kf.id === selectedKeyframeId ? { ...kf, easeCurve: preset } : kf
-      )
-    }))
-  }, [selectedKeyframeId])
+  const updateSelectedEase = useCallback(
+    (easeCurveId: string) => {
+      if (!selectedKeyframeId) return
+      const preset = EASE_PRESETS.find((p) => p.id === easeCurveId)
+      if (!preset) return
+      setLocalRamp((prev) => ({
+        ...prev,
+        keyframes: prev.keyframes.map((kf) =>
+          kf.id === selectedKeyframeId ? { ...kf, easeCurve: preset } : kf,
+        ),
+      }))
+    },
+    [selectedKeyframeId],
+  )
 
-  const selectedKeyframe = localRamp.keyframes.find(kf => kf.id === selectedKeyframeId)
+  const selectedKeyframe = localRamp.keyframes.find((kf) => kf.id === selectedKeyframeId)
 
   if (!isOpen) return null
 
@@ -454,7 +478,11 @@ export function SpeedRampEditor({
                 </button>
                 <button
                   onClick={deleteSelectedKeyframe}
-                  disabled={!selectedKeyframeId || selectedKeyframeId === 'start' || selectedKeyframeId === 'end'}
+                  disabled={
+                    !selectedKeyframeId ||
+                    selectedKeyframeId === 'start' ||
+                    selectedKeyframeId === 'end'
+                  }
                   className="flex items-center gap-1 px-3 py-1.5 bg-gray-700 text-gray-300 rounded text-sm hover:bg-gray-600 disabled:opacity-50"
                 >
                   <Trash2 size={14} />
@@ -468,7 +496,11 @@ export function SpeedRampEditor({
                 ref={canvasRef}
                 width={CANVAS_WIDTH}
                 height={CANVAS_HEIGHT}
-                style={{ width: CANVAS_WIDTH, height: CANVAS_HEIGHT, cursor: localRamp.enabled ? 'crosshair' : 'default' }}
+                style={{
+                  width: CANVAS_WIDTH,
+                  height: CANVAS_HEIGHT,
+                  cursor: localRamp.enabled ? 'crosshair' : 'default',
+                }}
                 className="max-w-full"
                 onMouseDown={handleCanvasMouseDown}
                 onMouseMove={handleCanvasMouseMove}
@@ -491,7 +523,7 @@ export function SpeedRampEditor({
                 max={1}
                 step={0.001}
                 value={previewTime}
-                onChange={e => {
+                onChange={(e) => {
                   setIsPreviewPlaying(false)
                   setPreviewTime(parseFloat(e.target.value))
                 }}
@@ -507,7 +539,12 @@ export function SpeedRampEditor({
           {selectedKeyframe && (
             <div className="bg-[#0d0d0d] rounded p-4 border border-gray-800">
               <div className="text-xs text-gray-500 uppercase tracking-wide mb-3">
-                Keyframe: {selectedKeyframeId === 'start' ? 'Start' : selectedKeyframeId === 'end' ? 'End' : 'Custom'}
+                Keyframe:{' '}
+                {selectedKeyframeId === 'start'
+                  ? 'Start'
+                  : selectedKeyframeId === 'end'
+                    ? 'End'
+                    : 'Custom'}
               </div>
 
               <div className="grid grid-cols-3 gap-4">
@@ -530,7 +567,7 @@ export function SpeedRampEditor({
                       max={10}
                       step={0.1}
                       value={selectedKeyframe.speed}
-                      onChange={e => updateSelectedSpeed(parseFloat(e.target.value))}
+                      onChange={(e) => updateSelectedSpeed(parseFloat(e.target.value))}
                       className="flex-1"
                     />
                     <span className="text-sm text-white w-12 text-right">
@@ -543,11 +580,13 @@ export function SpeedRampEditor({
                   <label className="text-sm text-gray-400 mb-2 block">Ease Curve</label>
                   <select
                     value={selectedKeyframe.easeCurve.id}
-                    onChange={e => updateSelectedEase(e.target.value)}
+                    onChange={(e) => updateSelectedEase(e.target.value)}
                     className="w-full bg-[#1a1a1a] border border-gray-600 rounded px-3 py-2 text-sm text-white"
                   >
-                    {EASE_PRESETS.map(preset => (
-                      <option key={preset.id} value={preset.id}>{preset.name}</option>
+                    {EASE_PRESETS.map((preset) => (
+                      <option key={preset.id} value={preset.id}>
+                        {preset.name}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -555,7 +594,7 @@ export function SpeedRampEditor({
 
               {/* Preset speed buttons */}
               <div className="mt-3 flex gap-2">
-                {[0.25, 0.5, 1, 2, 4, 8].map(speed => (
+                {[0.25, 0.5, 1, 2, 4, 8].map((speed) => (
                   <button
                     key={speed}
                     onClick={() => updateSelectedSpeed(speed)}
@@ -624,7 +663,7 @@ export function calculateEffectiveDuration(originalDuration: number, speedRamp: 
   for (let i = 0; i < samples; i++) {
     const t = i / samples
     const speed = getSpeedAtTime(speedRamp, t)
-    effectiveDuration += (originalDuration / samples) / speed
+    effectiveDuration += originalDuration / samples / speed
   }
 
   return effectiveDuration

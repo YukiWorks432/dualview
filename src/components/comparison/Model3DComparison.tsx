@@ -1,14 +1,15 @@
-import { useRef, Suspense, useEffect, useMemo, useState, useCallback } from 'react'
-import { Canvas, useThree, useFrame } from '@react-three/fiber'
 import { OrbitControls, useGLTF, Environment, ContactShadows, Grid } from '@react-three/drei'
-import { useTimelineStore } from '../../stores/timelineStore'
-import { useMediaStore } from '../../stores/mediaStore'
-import { usePlaybackStore } from '../../stores/playbackStore'
-import { useDropZone } from '../../hooks/useDropZone'
-import { cn } from '../../lib/utils'
+import { Canvas, useThree, useFrame } from '@react-three/fiber'
 import { Box, Camera, Loader2, RotateCw } from 'lucide-react'
+import { useRef, Suspense, useEffect, useMemo, useState, useCallback } from 'react'
 import * as THREE from 'three'
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js'
+
+import { useDropZone } from '../../hooks/useDropZone'
+import { cn } from '../../lib/utils'
+import { useMediaStore } from '../../stores/mediaStore'
+import { usePlaybackStore } from '../../stores/playbackStore'
+import { useTimelineStore } from '../../stores/timelineStore'
 
 // Shared camera state for synchronization between viewers
 const sharedCameraState = {
@@ -56,7 +57,7 @@ function Model({ url, turntableRotation = 0 }: { url: string; turntableRotation?
       clonedScene: cloned,
       centerOffset: centerOff,
       yOffset: yOff,
-      scale: targetScale
+      scale: targetScale,
     }
   }, [scene])
 
@@ -252,7 +253,11 @@ function ExportPanel({ canvasRef, modelUrl, side }: ExportPanelProps) {
         className="p-2 bg-black/60 backdrop-blur-sm hover:bg-black/80 text-white rounded transition-colors disabled:opacity-50"
         title="Screenshot"
       >
-        {isCapturing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4" />}
+        {isCapturing ? (
+          <Loader2 className="w-4 h-4 animate-spin" />
+        ) : (
+          <Camera className="w-4 h-4" />
+        )}
       </button>
     </div>
   )
@@ -295,8 +300,8 @@ export function Model3DComparison() {
   const [rotationsPerCycle, setRotationsPerCycle] = useState(1)
 
   // Get model clips from timeline
-  const trackA = tracks.find(t => t.type === 'a')
-  const trackB = tracks.find(t => t.type === 'b')
+  const trackA = tracks.find((t) => t.type === 'a')
+  const trackB = tracks.find((t) => t.type === 'b')
   const clipA = trackA?.clips[0]
   const clipB = trackB?.clips[0]
 
@@ -344,7 +349,7 @@ export function Model3DComparison() {
       <div
         className={cn(
           'flex-1 relative border-r border-border cursor-pointer',
-          dropZoneA.isDragOver && 'ring-2 ring-inset ring-accent'
+          dropZoneA.isDragOver && 'ring-2 ring-inset ring-accent',
         )}
         {...dropZoneA.dropZoneProps}
         onClick={() => !modelA && dropZoneA.openFileDialog()}
@@ -354,7 +359,9 @@ export function Model3DComparison() {
             modelUrl={modelA.url}
             isPrimary={true}
             turntableRotation={turntableRotation}
-            onCanvasReady={(canvas) => { canvasARef.current = canvas }}
+            onCanvasReady={(canvas) => {
+              canvasARef.current = canvas
+            }}
           />
         ) : (
           <EmptyState side="A" />
@@ -380,7 +387,7 @@ export function Model3DComparison() {
       <div
         className={cn(
           'flex-1 relative cursor-pointer',
-          dropZoneB.isDragOver && 'ring-2 ring-inset ring-secondary'
+          dropZoneB.isDragOver && 'ring-2 ring-inset ring-secondary',
         )}
         {...dropZoneB.dropZoneProps}
         onClick={() => !modelB && dropZoneB.openFileDialog()}
@@ -390,7 +397,9 @@ export function Model3DComparison() {
             modelUrl={modelB.url}
             isPrimary={false}
             turntableRotation={turntableRotation}
-            onCanvasReady={(canvas) => { canvasBRef.current = canvas }}
+            onCanvasReady={(canvas) => {
+              canvasBRef.current = canvas
+            }}
           />
         ) : (
           <EmptyState side="B" />
@@ -417,9 +426,7 @@ export function Model3DComparison() {
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <div className="bg-black/70 backdrop-blur-sm px-5 py-4 text-center rounded-lg">
             <p className="text-text-primary text-sm font-medium">3D Model Comparison</p>
-            <p className="text-text-muted text-xs mt-1">
-              Drop or click to load GLB/GLTF models
-            </p>
+            <p className="text-text-muted text-xs mt-1">Drop or click to load GLB/GLTF models</p>
             <p className="text-text-muted text-xs mt-1 opacity-60">
               Use timeline to control rotation
             </p>
@@ -442,7 +449,7 @@ export function Model3DComparison() {
                     'w-6 h-6 text-xs rounded transition-colors',
                     rotationsPerCycle === num
                       ? 'bg-accent text-white'
-                      : 'bg-white/10 text-text-muted hover:bg-white/20'
+                      : 'bg-white/10 text-text-muted hover:bg-white/20',
                   )}
                 >
                   {num}

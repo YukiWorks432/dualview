@@ -1,9 +1,9 @@
 /**
- * MP4 Encoder using mp4-muxer and WebCodecs API
+ * MP4 Encoder using Mediabunny and WebCodecs API
  * Hardware-accelerated, fast, no FFmpeg needed
  */
 
-import { Muxer, ArrayBufferTarget } from 'mp4-muxer'
+import { createAvcMp4Muxer } from './mp4Muxer'
 
 export interface Mp4ExportOptions {
   width: number
@@ -13,9 +13,9 @@ export interface Mp4ExportOptions {
 }
 
 const QUALITY_BITRATES = {
-  low: 2_500_000,    // 2.5 Mbps
+  low: 2_500_000, // 2.5 Mbps
   medium: 5_000_000, // 5 Mbps
-  high: 10_000_000,  // 10 Mbps
+  high: 10_000_000, // 10 Mbps
 }
 
 /**
@@ -26,7 +26,7 @@ export function isWebCodecsSupported(): boolean {
 }
 
 /**
- * Export canvas frames to MP4 using WebCodecs + mp4-muxer
+ * Export canvas frames to MP4 using WebCodecs + Mediabunny
  */
 export async function exportCanvasToMp4(
   frames: (() => HTMLCanvasElement)[],
@@ -36,7 +36,7 @@ export async function exportCanvasToMp4(
     fps: number
     quality: 'low' | 'medium' | 'high'
   },
-  onProgress: (progress: number, message: string) => void
+  onProgress: (progress: number, message: string) => void,
 ): Promise<Blob> {
   if (!isWebCodecsSupported()) {
     throw new Error('WebCodecs not supported in this browser. Try Chrome or Edge.')
@@ -49,21 +49,13 @@ export async function exportCanvasToMp4(
   onProgress(0, 'Initializing MP4 encoder...')
 
   // Create muxer
-  const muxer = new Muxer({
-    target: new ArrayBufferTarget(),
-    video: {
-      codec: 'avc',
-      width,
-      height,
-    },
-    fastStart: 'in-memory',
-  })
+  const muxer = await createAvcMp4Muxer()
 
   // Create video encoder
   let encodedFrames = 0
   const encoder = new VideoEncoder({
     output: (chunk, meta) => {
-      muxer.addVideoChunk(chunk, meta)
+      muxer.addChunk(chunk, meta)
       encodedFrames++
       const progress = 50 + (encodedFrames / totalFrames) * 45
       onProgress(progress, `Encoding frame ${encodedFrames}/${totalFrames}`)
@@ -108,7 +100,7 @@ export async function exportCanvasToMp4(
 
     // Prevent blocking
     if (i % 10 === 0) {
-      await new Promise(r => setTimeout(r, 0))
+      await new Promise((r) => setTimeout(r, 0))
     }
   }
 
@@ -117,11 +109,8 @@ export async function exportCanvasToMp4(
   await encoder.flush()
   encoder.close()
 
-  // Finalize muxer
-  muxer.finalize()
-
-  // Get the MP4 data
-  const { buffer } = muxer.target as ArrayBufferTarget
+  // Finalize muxer and get the MP4 data
+  const buffer = await muxer.finalize()
   const blob = new Blob([buffer], { type: 'video/mp4' })
 
   onProgress(100, 'MP4 export complete!')
@@ -140,7 +129,7 @@ export async function exportSweepToMp4(
     fps: number
     quality: 'low' | 'medium' | 'high'
   },
-  onProgress: (progress: number, message: string) => void
+  onProgress: (progress: number, message: string) => void,
 ): Promise<Blob> {
   // Create frame generators
   const frames = Array.from({ length: totalFrames }, (_, i) => {

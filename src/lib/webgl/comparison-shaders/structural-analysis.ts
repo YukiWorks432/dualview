@@ -175,7 +175,8 @@ export const STRUCTURAL_ANALYSIS_SHADERS: Record<string, ComparisonShader> = {
     name: 'analysis-multiscale-edge',
     label: 'Multi-Scale Edge',
     category: 'analysis',
-    description: 'Compare edges at fine (1px), medium (4px), and coarse (16px) scales using Laplacian pyramid',
+    description:
+      'Compare edges at fine (1px), medium (4px), and coarse (16px) scales using Laplacian pyramid',
     fragment: `${COMPARISON_COMMON}
 ${STRUCTURAL_ANALYSIS_UTILS}
 
@@ -256,7 +257,7 @@ void main() {
   vec3 result = mix(original, vis, u_opacity);
 
   gl_FragColor = vec4(result, 1.0);
-}`
+}`,
   },
 
   /**
@@ -270,7 +271,8 @@ void main() {
     name: 'analysis-local-contrast',
     label: 'Local Contrast Map',
     category: 'analysis',
-    description: 'Visualize micro-contrast using local standard deviation - high contrast = bright, low = dark',
+    description:
+      'Visualize micro-contrast using local standard deviation - high contrast = bright, low = dark',
     fragment: `${COMPARISON_COMMON}
 ${STRUCTURAL_ANALYSIS_UTILS}
 
@@ -358,7 +360,7 @@ void main() {
   vec3 result = mix(original, vis, u_opacity);
 
   gl_FragColor = vec4(result, 1.0);
-}`
+}`,
   },
 
   /**
@@ -374,7 +376,8 @@ void main() {
     name: 'analysis-gradient-direction',
     label: 'Gradient Direction',
     category: 'analysis',
-    description: 'Visualize edge direction as hue - horizontal=red, vertical=cyan, brightness=strength',
+    description:
+      'Visualize edge direction as hue - horizontal=red, vertical=cyan, brightness=strength',
     fragment: `${COMPARISON_COMMON}
 ${STRUCTURAL_ANALYSIS_UTILS}
 
@@ -497,7 +500,7 @@ void main() {
   vec3 result = mix(original, vis, u_opacity);
 
   gl_FragColor = vec4(result, 1.0);
-}`
+}`,
   },
 
   /**
@@ -508,7 +511,8 @@ void main() {
     name: 'analysis-direction-histogram',
     label: 'Direction Histogram',
     category: 'analysis',
-    description: 'Overlay showing dominant edge orientations - useful for detecting rotation/warping',
+    description:
+      'Overlay showing dominant edge orientations - useful for detecting rotation/warping',
     fragment: `${COMPARISON_COMMON}
 ${STRUCTURAL_ANALYSIS_UTILS}
 
@@ -626,8 +630,8 @@ void main() {
   vec3 result = mix(original, vis, u_opacity);
 
   gl_FragColor = vec4(result, 1.0);
-}`
-  }
+}`,
+  },
 }
 
 export const STRUCTURAL_ANALYSIS_VARIANTS = Object.keys(STRUCTURAL_ANALYSIS_SHADERS)

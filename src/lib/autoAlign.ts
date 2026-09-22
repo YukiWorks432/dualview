@@ -6,11 +6,11 @@
  */
 
 export interface AlignmentResult {
-  offsetX: number      // Horizontal shift in pixels
-  offsetY: number      // Vertical shift in pixels
-  scale: number        // Scale factor (1.0 = same size)
-  rotation: number     // Rotation in degrees
-  confidence: number   // 0-1 confidence score
+  offsetX: number // Horizontal shift in pixels
+  offsetY: number // Vertical shift in pixels
+  scale: number // Scale factor (1.0 = same size)
+  rotation: number // Rotation in degrees
+  confidence: number // 0-1 confidence score
 }
 
 export interface AlignmentTransform {
@@ -26,7 +26,7 @@ export interface AlignmentTransform {
 function getGrayscaleData(
   source: HTMLImageElement | HTMLVideoElement,
   targetWidth: number,
-  targetHeight: number
+  targetHeight: number,
 ): Float32Array {
   const canvas = document.createElement('canvas')
   canvas.width = targetWidth
@@ -77,7 +77,7 @@ function crossCorrelate(
   search: Float32Array,
   width: number,
   height: number,
-  searchRange: number
+  searchRange: number,
 ): { offsetX: number; offsetY: number; correlation: number } {
   const normTemplate = normalize(template)
   const normSearch = normalize(search)
@@ -160,7 +160,7 @@ function getRotatedGrayscale(
   source: HTMLImageElement | HTMLVideoElement,
   targetWidth: number,
   targetHeight: number,
-  angleDegrees: number
+  angleDegrees: number,
 ): Float32Array {
   const canvas = document.createElement('canvas')
   canvas.width = targetWidth
@@ -191,7 +191,7 @@ function getScaledGrayscale(
   source: HTMLImageElement | HTMLVideoElement,
   targetWidth: number,
   targetHeight: number,
-  scale: number
+  scale: number,
 ): Float32Array {
   const canvas = document.createElement('canvas')
   canvas.width = targetWidth
@@ -231,14 +231,14 @@ export async function autoAlign(
     maxOffset?: number
     scaleRange?: [number, number]
     rotationRange?: number
-  } = {}
+  } = {},
 ): Promise<AlignmentResult> {
   const {
     detectScale = true,
     detectRotation = true,
     maxOffset = 50,
     scaleRange = [0.9, 1.1],
-    rotationRange = 10
+    rotationRange = 10,
   } = options
 
   // Work at reduced resolution for speed
@@ -252,25 +252,25 @@ export async function autoAlign(
     offsetY: 0,
     scale: 1,
     rotation: 0,
-    confidence: 0
+    confidence: 0,
   }
 
   // Scale factors to try
-  const scales = detectScale
-    ? [1, 0.95, 1.05, 0.9, 1.1, scaleRange[0], scaleRange[1]]
-    : [1]
+  const scales = detectScale ? [1, 0.95, 1.05, 0.9, 1.1, scaleRange[0], scaleRange[1]] : [1]
 
   // Rotation angles to try
-  const rotations = detectRotation
-    ? [0, -2, 2, -5, 5, -rotationRange, rotationRange]
-    : [0]
+  const rotations = detectRotation ? [0, -2, 2, -5, 5, -rotationRange, rotationRange] : [0]
 
   // Search range based on sample size
-  const searchRange = Math.round((maxOffset / Math.max(
-    sourceA instanceof HTMLVideoElement ? sourceA.videoWidth : sourceA.naturalWidth,
-    sourceA instanceof HTMLVideoElement ? sourceA.videoHeight : sourceA.naturalHeight,
-    1
-  )) * sampleWidth)
+  const searchRange = Math.round(
+    (maxOffset /
+      Math.max(
+        sourceA instanceof HTMLVideoElement ? sourceA.videoWidth : sourceA.naturalWidth,
+        sourceA instanceof HTMLVideoElement ? sourceA.videoHeight : sourceA.naturalHeight,
+        1,
+      )) *
+      sampleWidth,
+  )
 
   for (const scale of scales) {
     for (const rotation of rotations) {
@@ -293,7 +293,10 @@ export async function autoAlign(
         grayscaleB = new Float32Array(sampleWidth * sampleHeight)
         for (let i = 0; i < grayscaleB.length; i++) {
           const idx = i * 4
-          grayscaleB[i] = 0.299 * imageData.data[idx] + 0.587 * imageData.data[idx + 1] + 0.114 * imageData.data[idx + 2]
+          grayscaleB[i] =
+            0.299 * imageData.data[idx] +
+            0.587 * imageData.data[idx + 1] +
+            0.114 * imageData.data[idx + 2]
         }
       } else if (scale !== 1) {
         grayscaleB = getScaledGrayscale(sourceB, sampleWidth, sampleHeight, scale)
@@ -308,20 +311,24 @@ export async function autoAlign(
         grayscaleB,
         sampleWidth,
         sampleHeight,
-        Math.max(searchRange, 20)
+        Math.max(searchRange, 20),
       )
 
       if (result.correlation > bestResult.confidence) {
         // Scale offset back to original image size
-        const scaleFactorX = (sourceA instanceof HTMLVideoElement ? sourceA.videoWidth : sourceA.naturalWidth) / sampleWidth
-        const scaleFactorY = (sourceA instanceof HTMLVideoElement ? sourceA.videoHeight : sourceA.naturalHeight) / sampleHeight
+        const scaleFactorX =
+          (sourceA instanceof HTMLVideoElement ? sourceA.videoWidth : sourceA.naturalWidth) /
+          sampleWidth
+        const scaleFactorY =
+          (sourceA instanceof HTMLVideoElement ? sourceA.videoHeight : sourceA.naturalHeight) /
+          sampleHeight
 
         bestResult = {
           offsetX: Math.round(result.offsetX * scaleFactorX),
           offsetY: Math.round(result.offsetY * scaleFactorY),
           scale,
           rotation,
-          confidence: result.correlation
+          confidence: result.correlation,
         }
       }
     }
@@ -336,14 +343,14 @@ export async function autoAlign(
 export async function alignVideoStartPoints(
   videoA: HTMLVideoElement,
   videoB: HTMLVideoElement,
-  searchSeconds: number = 5
+  searchSeconds: number = 5,
 ): Promise<{ offsetSeconds: number; confidence: number }> {
   const fps = 10 // Sample at 10 fps
   const maxFrames = searchSeconds * fps
 
   // Get first frame of video A
   videoA.currentTime = 0
-  await new Promise(resolve => videoA.addEventListener('seeked', resolve, { once: true }))
+  await new Promise((resolve) => videoA.addEventListener('seeked', resolve, { once: true }))
 
   const sampleWidth = 100
   const sampleHeight = 100
@@ -359,7 +366,7 @@ export async function alignVideoStartPoints(
     if (time >= videoB.duration) break
 
     videoB.currentTime = time
-    await new Promise(resolve => videoB.addEventListener('seeked', resolve, { once: true }))
+    await new Promise((resolve) => videoB.addEventListener('seeked', resolve, { once: true }))
 
     const testFrame = getGrayscaleData(videoB, sampleWidth, sampleHeight)
     const normTest = normalize(testFrame)
@@ -383,6 +390,6 @@ export async function alignVideoStartPoints(
 
   return {
     offsetSeconds: bestOffset,
-    confidence: Math.max(0, bestCorr)
+    confidence: Math.max(0, bestCorr),
   }
 }

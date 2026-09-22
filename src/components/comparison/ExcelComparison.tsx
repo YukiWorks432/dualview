@@ -1,9 +1,10 @@
+import { Table, Columns, Filter, BarChart3, FileSpreadsheet } from 'lucide-react'
 import { useState, useMemo, useRef } from 'react'
-import { useTimelineStore } from '../../stores/timelineStore'
+
+import { cn } from '../../lib/utils'
 import { useMediaStore } from '../../stores/mediaStore'
 import { usePlaybackStore } from '../../stores/playbackStore'
-import { cn } from '../../lib/utils'
-import { Table, Columns, Filter, BarChart3, FileSpreadsheet } from 'lucide-react'
+import { useTimelineStore } from '../../stores/timelineStore'
 import type { ParsedSheet } from '../../types'
 
 type ViewMode = 'side-by-side' | 'unified' | 'changes-only'
@@ -28,11 +29,11 @@ export function ExcelComparison() {
   const scrollRefB = useRef<HTMLDivElement>(null)
 
   // Get current clips at playhead
-  const trackA = tracks.find(t => t.type === 'a')
-  const trackB = tracks.find(t => t.type === 'b')
+  const trackA = tracks.find((t) => t.type === 'a')
+  const trackB = tracks.find((t) => t.type === 'b')
 
-  const clipA = trackA?.clips.find(c => currentTime >= c.startTime && currentTime < c.endTime)
-  const clipB = trackB?.clips.find(c => currentTime >= c.startTime && currentTime < c.endTime)
+  const clipA = trackA?.clips.find((c) => currentTime >= c.startTime && currentTime < c.endTime)
+  const clipB = trackB?.clips.find((c) => currentTime >= c.startTime && currentTime < c.endTime)
 
   const mediaA = clipA ? getFile(clipA.mediaId) : null
   const mediaB = clipB ? getFile(clipB.mediaId) : null
@@ -54,10 +55,7 @@ export function ExcelComparison() {
     if (!dataA && !dataB) return []
 
     const maxRows = Math.max(dataA?.data.length || 0, dataB?.data.length || 0)
-    const maxCols = Math.max(
-      dataA?.data[0]?.length || 0,
-      dataB?.data[0]?.length || 0
-    )
+    const maxCols = Math.max(dataA?.data[0]?.length || 0, dataB?.data[0]?.length || 0)
 
     const diffs: CellDiff[][] = []
 
@@ -90,13 +88,21 @@ export function ExcelComparison() {
     let modified = 0
     let unchanged = 0
 
-    cellDiffs.forEach(row => {
-      row.forEach(cell => {
+    cellDiffs.forEach((row) => {
+      row.forEach((cell) => {
         switch (cell.type) {
-          case 'added': added++; break
-          case 'removed': removed++; break
-          case 'modified': modified++; break
-          case 'unchanged': unchanged++; break
+          case 'added':
+            added++
+            break
+          case 'removed':
+            removed++
+            break
+          case 'modified':
+            modified++
+            break
+          case 'unchanged':
+            unchanged++
+            break
         }
       })
     })
@@ -113,7 +119,7 @@ export function ExcelComparison() {
       removed,
       modified,
       unchanged,
-      matchPercent
+      matchPercent,
     }
   }, [cellDiffs, dataA, dataB, sheetsA, sheetsB])
 
@@ -132,9 +138,7 @@ export function ExcelComparison() {
   // Filter rows for changes-only mode
   const filteredDiffs = useMemo(() => {
     if (viewMode !== 'changes-only') return cellDiffs
-    return cellDiffs.filter(row =>
-      row.some(cell => cell.type !== 'unchanged')
-    )
+    return cellDiffs.filter((row) => row.some((cell) => cell.type !== 'unchanged'))
   }, [cellDiffs, viewMode])
 
   // Get column letter (A, B, C, ..., AA, AB, etc.)
@@ -149,10 +153,14 @@ export function ExcelComparison() {
 
   const getCellClass = (type: CellDiff['type']) => {
     switch (type) {
-      case 'added': return 'bg-green-500/20 text-green-400'
-      case 'removed': return 'bg-red-500/20 text-red-400 line-through'
-      case 'modified': return 'bg-yellow-500/20 text-yellow-400'
-      default: return ''
+      case 'added':
+        return 'bg-green-500/20 text-green-400'
+      case 'removed':
+        return 'bg-red-500/20 text-red-400 line-through'
+      case 'modified':
+        return 'bg-yellow-500/20 text-yellow-400'
+      default:
+        return ''
     }
   }
 
@@ -181,7 +189,7 @@ export function ExcelComparison() {
                 'px-3 py-1.5 text-xs flex items-center gap-1',
                 viewMode === 'side-by-side'
                   ? 'bg-accent text-white'
-                  : 'text-text-muted hover:text-text-primary'
+                  : 'text-text-muted hover:text-text-primary',
               )}
             >
               <Columns className="w-3 h-3" />
@@ -193,7 +201,7 @@ export function ExcelComparison() {
                 'px-3 py-1.5 text-xs flex items-center gap-1',
                 viewMode === 'unified'
                   ? 'bg-accent text-white'
-                  : 'text-text-muted hover:text-text-primary'
+                  : 'text-text-muted hover:text-text-primary',
               )}
             >
               <Table className="w-3 h-3" />
@@ -205,7 +213,7 @@ export function ExcelComparison() {
                 'px-3 py-1.5 text-xs flex items-center gap-1',
                 viewMode === 'changes-only'
                   ? 'bg-accent text-white'
-                  : 'text-text-muted hover:text-text-primary'
+                  : 'text-text-muted hover:text-text-primary',
               )}
             >
               <Filter className="w-3 h-3" />
@@ -235,9 +243,13 @@ export function ExcelComparison() {
             <span className="text-green-400 font-medium">{stats.matchPercent}%</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="px-2 py-0.5 bg-green-500/20 text-green-400 rounded">+{stats.added}</span>
+            <span className="px-2 py-0.5 bg-green-500/20 text-green-400 rounded">
+              +{stats.added}
+            </span>
             <span className="px-2 py-0.5 bg-red-500/20 text-red-400 rounded">-{stats.removed}</span>
-            <span className="px-2 py-0.5 bg-yellow-500/20 text-yellow-400 rounded">~{stats.modified}</span>
+            <span className="px-2 py-0.5 bg-yellow-500/20 text-yellow-400 rounded">
+              ~{stats.modified}
+            </span>
           </div>
         </div>
       </div>
@@ -261,7 +273,10 @@ export function ExcelComparison() {
                     <tr className="border-b border-border">
                       <th className="px-2 py-1 text-text-muted font-medium w-10">#</th>
                       {Array.from({ length: cellDiffs[0]?.length || 0 }).map((_, idx) => (
-                        <th key={idx} className="px-2 py-1 text-text-muted font-medium text-center min-w-[60px]">
+                        <th
+                          key={idx}
+                          className="px-2 py-1 text-text-muted font-medium text-center min-w-[60px]"
+                        >
                           {getColumnLetter(idx)}
                         </th>
                       ))}
@@ -278,7 +293,7 @@ export function ExcelComparison() {
                             key={colIdx}
                             className={cn(
                               'px-2 py-1 border-r border-border/30 whitespace-nowrap',
-                              getCellClass(cell.type === 'added' ? 'unchanged' : cell.type)
+                              getCellClass(cell.type === 'added' ? 'unchanged' : cell.type),
                             )}
                             title={`${getColumnLetter(colIdx)}${rowIdx + 1}`}
                           >
@@ -300,7 +315,7 @@ export function ExcelComparison() {
                       'px-3 py-1 text-xs rounded whitespace-nowrap',
                       activeSheetA === idx
                         ? 'bg-orange-500/20 text-orange-400'
-                        : 'text-text-muted hover:text-text-primary hover:bg-surface'
+                        : 'text-text-muted hover:text-text-primary hover:bg-surface',
                     )}
                   >
                     {sheet.name}
@@ -324,7 +339,10 @@ export function ExcelComparison() {
                     <tr className="border-b border-border">
                       <th className="px-2 py-1 text-text-muted font-medium w-10">#</th>
                       {Array.from({ length: cellDiffs[0]?.length || 0 }).map((_, idx) => (
-                        <th key={idx} className="px-2 py-1 text-text-muted font-medium text-center min-w-[60px]">
+                        <th
+                          key={idx}
+                          className="px-2 py-1 text-text-muted font-medium text-center min-w-[60px]"
+                        >
                           {getColumnLetter(idx)}
                         </th>
                       ))}
@@ -341,7 +359,7 @@ export function ExcelComparison() {
                             key={colIdx}
                             className={cn(
                               'px-2 py-1 border-r border-border/30 whitespace-nowrap',
-                              getCellClass(cell.type === 'removed' ? 'unchanged' : cell.type)
+                              getCellClass(cell.type === 'removed' ? 'unchanged' : cell.type),
                             )}
                             title={`${getColumnLetter(colIdx)}${rowIdx + 1}`}
                           >
@@ -363,7 +381,7 @@ export function ExcelComparison() {
                       'px-3 py-1 text-xs rounded whitespace-nowrap',
                       activeSheetB === idx
                         ? 'bg-lime-400/20 text-lime-400'
-                        : 'text-text-muted hover:text-text-primary hover:bg-surface'
+                        : 'text-text-muted hover:text-text-primary hover:bg-surface',
                     )}
                   >
                     {sheet.name}
@@ -381,7 +399,10 @@ export function ExcelComparison() {
                   <tr className="border-b border-border">
                     <th className="px-2 py-2 text-left text-text-muted font-medium w-10">#</th>
                     {Array.from({ length: cellDiffs[0]?.length || 0 }).map((_, idx) => (
-                      <th key={idx} className="px-2 py-2 text-center text-text-muted font-medium min-w-[60px]">
+                      <th
+                        key={idx}
+                        className="px-2 py-2 text-center text-text-muted font-medium min-w-[60px]"
+                      >
                         {getColumnLetter(idx)}
                       </th>
                     ))}
@@ -398,7 +419,7 @@ export function ExcelComparison() {
                           key={colIdx}
                           className={cn(
                             'px-2 py-1 border-r border-border/30',
-                            getCellClass(cell.type)
+                            getCellClass(cell.type),
                           )}
                           title={`${getColumnLetter(colIdx)}${rowIdx + 1}`}
                         >
@@ -431,7 +452,7 @@ export function ExcelComparison() {
                       'px-2 py-0.5 text-xs rounded whitespace-nowrap',
                       activeSheetA === idx
                         ? 'bg-orange-500/20 text-orange-400'
-                        : 'text-text-muted hover:text-text-primary'
+                        : 'text-text-muted hover:text-text-primary',
                     )}
                   >
                     {sheet.name}
@@ -449,7 +470,7 @@ export function ExcelComparison() {
                       'px-2 py-0.5 text-xs rounded whitespace-nowrap',
                       activeSheetB === idx
                         ? 'bg-lime-400/20 text-lime-400'
-                        : 'text-text-muted hover:text-text-primary'
+                        : 'text-text-muted hover:text-text-primary',
                     )}
                   >
                     {sheet.name}
@@ -464,8 +485,12 @@ export function ExcelComparison() {
       {/* Footer stats */}
       <div className="flex items-center justify-between px-4 py-2 bg-surface-alt border-t border-border text-xs text-text-muted">
         <div className="flex items-center gap-4">
-          <span>Sheets: A={stats.sheetsA}, B={stats.sheetsB}</span>
-          <span>Rows: A={stats.rowsA}, B={stats.rowsB}</span>
+          <span>
+            Sheets: A={stats.sheetsA}, B={stats.sheetsB}
+          </span>
+          <span>
+            Rows: A={stats.rowsA}, B={stats.rowsB}
+          </span>
         </div>
         <div className="flex items-center gap-2">
           <span className="w-3 h-3 bg-green-500/20 rounded"></span>

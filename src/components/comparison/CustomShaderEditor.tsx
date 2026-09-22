@@ -3,8 +3,21 @@
  * Write and preview custom GLSL shaders for comparison
  */
 
+import {
+  Code,
+  Play,
+  Save,
+  Upload,
+  Download,
+  AlertCircle,
+  CheckCircle,
+  X,
+  RefreshCw,
+  Copy,
+  Trash2,
+} from 'lucide-react'
 import { useState, useCallback, useEffect, useRef } from 'react'
-import { Code, Play, Save, Upload, Download, AlertCircle, CheckCircle, X, RefreshCw, Copy, Trash2 } from 'lucide-react'
+
 import { COMPARISON_COMMON } from '../../lib/webgl/comparison-shaders/common'
 
 interface CustomShader {
@@ -144,15 +157,16 @@ export function CustomShaderEditor({ isOpen, onClose, onApplyShader }: CustomSha
       name: currentShaderName.trim(),
       code,
       createdAt: currentShaderId
-        ? savedShaders.find(s => s.id === currentShaderId)?.createdAt || now
+        ? savedShaders.find((s) => s.id === currentShaderId)?.createdAt || now
         : now,
-      updatedAt: now
+      updatedAt: now,
     }
 
-    const existing = savedShaders.findIndex(s => s.id === shader.id)
-    const newShaders = existing >= 0
-      ? savedShaders.map((s, i) => i === existing ? shader : s)
-      : [...savedShaders, shader]
+    const existing = savedShaders.findIndex((s) => s.id === shader.id)
+    const newShaders =
+      existing >= 0
+        ? savedShaders.map((s, i) => (i === existing ? shader : s))
+        : [...savedShaders, shader]
 
     persistShaders(newShaders)
     setCurrentShaderId(shader.id)
@@ -169,14 +183,17 @@ export function CustomShaderEditor({ isOpen, onClose, onApplyShader }: CustomSha
   }, [])
 
   // Delete a saved shader
-  const deleteShader = useCallback((id: string) => {
-    const newShaders = savedShaders.filter(s => s.id !== id)
-    persistShaders(newShaders)
-    if (currentShaderId === id) {
-      setCurrentShaderId(null)
-      setCurrentShaderName('Untitled')
-    }
-  }, [savedShaders, currentShaderId, persistShaders])
+  const deleteShader = useCallback(
+    (id: string) => {
+      const newShaders = savedShaders.filter((s) => s.id !== id)
+      persistShaders(newShaders)
+      if (currentShaderId === id) {
+        setCurrentShaderId(null)
+        setCurrentShaderName('Untitled')
+      }
+    },
+    [savedShaders, currentShaderId, persistShaders],
+  )
 
   // New shader
   const newShader = useCallback(() => {
@@ -192,7 +209,7 @@ export function CustomShaderEditor({ isOpen, onClose, onApplyShader }: CustomSha
     const data = {
       name: currentShaderName,
       code,
-      exportedAt: new Date().toISOString()
+      exportedAt: new Date().toISOString(),
     }
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
@@ -276,12 +293,14 @@ export function CustomShaderEditor({ isOpen, onClose, onApplyShader }: CustomSha
               </button>
             </div>
             <div className="flex-1 overflow-y-auto p-2">
-              <div className="text-xs text-gray-500 uppercase tracking-wide px-2 mb-2">Saved Shaders</div>
+              <div className="text-xs text-gray-500 uppercase tracking-wide px-2 mb-2">
+                Saved Shaders
+              </div>
               {savedShaders.length === 0 ? (
                 <p className="text-xs text-gray-500 px-2">No saved shaders</p>
               ) : (
                 <div className="space-y-1">
-                  {savedShaders.map(shader => (
+                  {savedShaders.map((shader) => (
                     <div
                       key={shader.id}
                       className={`flex items-center justify-between px-2 py-1.5 rounded text-sm cursor-pointer ${
@@ -389,7 +408,7 @@ export function CustomShaderEditor({ isOpen, onClose, onApplyShader }: CustomSha
               <textarea
                 ref={textareaRef}
                 value={code}
-                onChange={e => {
+                onChange={(e) => {
                   setCode(e.target.value)
                   setCompileStatus('idle')
                 }}
@@ -412,8 +431,8 @@ export function CustomShaderEditor({ isOpen, onClose, onApplyShader }: CustomSha
 
             {/* Help Panel */}
             <div className="px-4 py-2 border-t border-gray-700 text-xs text-gray-500">
-              <span className="font-medium">Available functions:</span>{' '}
-              heatmap(v), rainbow(v), getLuminance(rgb), rgbToLab(rgb), labToRgb(lab), deltaE(lab1, lab2), sobelEdge(uv)
+              <span className="font-medium">Available functions:</span> heatmap(v), rainbow(v),
+              getLuminance(rgb), rgbToLab(rgb), labToRgb(lab), deltaE(lab1, lab2), sobelEdge(uv)
             </div>
           </div>
         </div>
@@ -426,7 +445,7 @@ export function CustomShaderEditor({ isOpen, onClose, onApplyShader }: CustomSha
               <input
                 type="text"
                 value={currentShaderName}
-                onChange={e => setCurrentShaderName(e.target.value)}
+                onChange={(e) => setCurrentShaderName(e.target.value)}
                 placeholder="Shader name"
                 className="w-full bg-[#1a1a1a] border border-gray-600 rounded px-3 py-2 text-sm text-white mb-3"
                 autoFocus

@@ -8,6 +8,7 @@
  * 4. Master/slave pattern for multi-video sync
  */
 import { useRef, useEffect, useCallback } from 'react'
+
 import { usePlaybackStore } from '../stores/playbackStore'
 import type { TimelineClip } from '../types'
 
@@ -35,7 +36,7 @@ function calculateMediaTime(timelineTime: number, clip: TimelineClip): number | 
 
   // Apply speed - faster speed means we progress through media faster
   const speed = clip.speed || 1
-  let mediaTime = clip.inPoint + (relativeTime * speed)
+  let mediaTime = clip.inPoint + relativeTime * speed
 
   // Clamp to valid media range (accounts for speed making us go past outPoint)
   mediaTime = Math.min(mediaTime, clip.outPoint)
@@ -64,7 +65,7 @@ function getEffectivePlaybackRate(clip: TimelineClip | null, baseSpeed: number):
  */
 export function useOptimizedClipSync(
   videoRef: React.RefObject<HTMLVideoElement | null>,
-  clip: TimelineClip | null
+  clip: TimelineClip | null,
 ): { isVisible: boolean } {
   const syncStateRef = useRef<SyncState>({
     isPlaying: false,
@@ -255,7 +256,7 @@ export function useOptimizedClipSync(
  */
 export function useOptimizedVideoSync(
   videoRef: React.RefObject<HTMLVideoElement | null>,
-  options: { timeOffset?: number; muted?: boolean } = {}
+  options: { timeOffset?: number; muted?: boolean } = {},
 ) {
   const { timeOffset = 0, muted = true } = options
   const syncStateRef = useRef<SyncState>({
@@ -384,12 +385,15 @@ export function useOptimizedVideoSync(
     return () => window.removeEventListener('playback-speed', handleSpeed as EventListener)
   }, [videoRef])
 
-  const seekTo = useCallback((time: number) => {
-    const video = videoRef.current
-    if (!video) return
-    video.currentTime = Math.max(0, time + timeOffset)
-    usePlaybackStore.getState().seek(time)
-  }, [videoRef, timeOffset])
+  const seekTo = useCallback(
+    (time: number) => {
+      const video = videoRef.current
+      if (!video) return
+      video.currentTime = Math.max(0, time + timeOffset)
+      usePlaybackStore.getState().seek(time)
+    },
+    [videoRef, timeOffset],
+  )
 
   return { seekTo }
 }
@@ -400,7 +404,7 @@ export function useOptimizedVideoSync(
  */
 export function useOptimizedDualSync(
   videoARef: React.RefObject<HTMLVideoElement | null>,
-  videoBRef: React.RefObject<HTMLVideoElement | null>
+  videoBRef: React.RefObject<HTMLVideoElement | null>,
 ) {
   const syncA = useOptimizedVideoSync(videoARef, { timeOffset: 0 })
   const syncB = useOptimizedVideoSync(videoBRef, { timeOffset: 0 })
@@ -453,10 +457,13 @@ export function useOptimizedDualSync(
     }
   }, [videoARef, videoBRef])
 
-  const seekBoth = useCallback((time: number) => {
-    syncA.seekTo(time)
-    syncB.seekTo(time)
-  }, [syncA, syncB])
+  const seekBoth = useCallback(
+    (time: number) => {
+      syncA.seekTo(time)
+      syncB.seekTo(time)
+    },
+    [syncA, syncB],
+  )
 
   return { seekBoth, seekA: syncA.seekTo, seekB: syncB.seekTo }
 }

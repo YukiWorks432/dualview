@@ -1,19 +1,26 @@
-import { useCallback, useEffect, useState, useRef } from 'react'
+import { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react'
+
 import { Header } from './components/layout/Header'
 import { Sidebar } from './components/layout/Sidebar'
-import { ExportDialog } from './components/layout/ExportDialog'
 import { PreviewCanvas, type PreviewCanvasHandle } from './components/preview/PreviewCanvas'
-import { Timeline } from './components/timeline/Timeline'
-import { KeyboardShortcutsHelp, useKeyboardShortcutsHelp } from './components/ui/KeyboardShortcutsHelp'
-import { ScopesPanel } from './components/scopes'
 import { ProjectSelector } from './components/project'
-import { useTimelineStore } from './stores/timelineStore'
-import { usePlaybackStore } from './stores/playbackStore'
-import { useMediaStore } from './stores/mediaStore'
-import { useProjectStore } from './stores/projectStore'
-import { useHistoryStore } from './stores/historyStore'
-import { usePersistenceStore } from './stores/persistenceStore'
+import { ScopesPanel } from './components/scopes'
+import { Timeline } from './components/timeline/Timeline'
+import {
+  KeyboardShortcutsHelp,
+  useKeyboardShortcutsHelp,
+} from './components/ui/KeyboardShortcutsHelp'
 import { captureCanvasScreenshot, downloadBlob } from './lib/screenshotExport'
+import { useHistoryStore } from './stores/historyStore'
+import { useMediaStore } from './stores/mediaStore'
+import { usePersistenceStore } from './stores/persistenceStore'
+import { usePlaybackStore } from './stores/playbackStore'
+import { useProjectStore } from './stores/projectStore'
+import { useTimelineStore } from './stores/timelineStore'
+
+const ExportDialog = lazy(() =>
+  import('./components/layout/ExportDialog').then((module) => ({ default: module.ExportDialog })),
+)
 
 export default function App() {
   const [isExportOpen, setIsExportOpen] = useState(false)
@@ -28,7 +35,12 @@ export default function App() {
   const shortcutsHelp = useKeyboardShortcutsHelp()
 
   // PERSIST-001: Initialize persistence store
-  const { init: initPersistence, createNewProject, currentProjectId, saveCurrentProject } = usePersistenceStore()
+  const {
+    init: initPersistence,
+    createNewProject,
+    currentProjectId,
+    saveCurrentProject,
+  } = usePersistenceStore()
 
   // Initialize persistence and create a project if none exists
   useEffect(() => {
@@ -44,34 +56,48 @@ export default function App() {
   }, [])
 
   const {
-    zoomIn, zoomOut, setLoopIn, setLoopOut, clearLoop, addMarker,
-    shuttleForward, shuttleBackward, shuttleStop, duration
+    zoomIn,
+    zoomOut,
+    setLoopIn,
+    setLoopOut,
+    clearLoop,
+    addMarker,
+    shuttleForward,
+    shuttleBackward,
+    shuttleStop,
+    duration,
   } = useTimelineStore()
-  const {
-    togglePlay, seek, currentTime, isPlaying, stepFrame
-  } = usePlaybackStore()
+  const { togglePlay, seek, currentTime, isPlaying, stepFrame } = usePlaybackStore()
   const { addFile } = useMediaStore()
   const { addClip, tracks } = useTimelineStore()
-  const { toggleMetrics, setComparisonMode, toggleWebGLFlipAB, comparisonMode, setWebGLComparisonMode, webglComparisonSettings, toggleScopes } = useProjectStore()
+  const {
+    toggleMetrics,
+    setComparisonMode,
+    toggleWebGLFlipAB,
+    comparisonMode,
+    setWebGLComparisonMode,
+    webglComparisonSettings,
+    toggleScopes,
+  } = useProjectStore()
   const { undo, redo } = useHistoryStore()
 
   // Mode shortcuts map (Serial Position Effect - number keys for quick access)
   const modeShortcuts: Record<string, Parameters<typeof setComparisonMode>[0]> = {
-    'Digit1': 'slider',
-    'Digit2': 'side-by-side',
-    'Digit3': 'webgl-compare',
-    'Digit4': 'audio',
-    'Digit5': 'prompt-diff',
-    'Digit6': 'json-diff',
-    'Digit7': 'model-3d',
-    'Digit8': 'document',
+    Digit1: 'slider',
+    Digit2: 'side-by-side',
+    Digit3: 'webgl-compare',
+    Digit4: 'audio',
+    Digit5: 'prompt-diff',
+    Digit6: 'json-diff',
+    Digit7: 'model-3d',
+    Digit8: 'document',
   }
 
   // MODE-001 to MODE-005: Additional mode shortcuts
   const newModeShortcuts: Record<string, Parameters<typeof setComparisonMode>[0]> = {
-    'KeyQ': 'quad',           // MODE-001: Quad View
-    'KeyR': 'radial-loupe',   // MODE-002: Radial Loupe
-    'KeyG': 'grid-tile',      // MODE-003: Grid Tile
+    KeyQ: 'quad', // MODE-001: Quad View
+    KeyR: 'radial-loupe', // MODE-002: Radial Loupe
+    KeyG: 'grid-tile', // MODE-003: Grid Tile
   }
 
   // Keyboard shortcuts
@@ -179,11 +205,11 @@ export default function App() {
           break
         case 'KeyT':
           e.preventDefault()
-          setIsTimelineVisible(v => !v)
+          setIsTimelineVisible((v) => !v)
           break
         case 'KeyB':
           e.preventDefault()
-          setIsSidebarVisible(v => !v)
+          setIsSidebarVisible((v) => !v)
           break
         case 'KeyM':
           // Toggle quality metrics (VID-004) with Shift, add marker without
@@ -198,7 +224,7 @@ export default function App() {
           // Quick screenshot (Shift+S)
           if (e.shiftKey && canvasRef.current) {
             e.preventDefault()
-            captureCanvasScreenshot(canvasRef.current, 'png').then(blob => {
+            captureCanvasScreenshot(canvasRef.current, 'png').then((blob) => {
               if (blob) {
                 downloadBlob(blob, `dualview-screenshot-${Date.now()}.png`)
               }
@@ -229,7 +255,10 @@ export default function App() {
         case 'KeyP':
           e.preventDefault()
           // If already in focus-peak mode, switch back to perceptual diff
-          if (comparisonMode === 'webgl-compare' && webglComparisonSettings.mode === 'exposure-focus-peak') {
+          if (
+            comparisonMode === 'webgl-compare' &&
+            webglComparisonSettings.mode === 'exposure-focus-peak'
+          ) {
             setWebGLComparisonMode('diff-perceptual')
           } else {
             // Switch to webgl-compare mode with focus-peak
@@ -241,7 +270,10 @@ export default function App() {
         case 'KeyZ':
           e.preventDefault()
           // If already in zebra mode, switch back to perceptual diff
-          if (comparisonMode === 'webgl-compare' && webglComparisonSettings.mode === 'exposure-zebra') {
+          if (
+            comparisonMode === 'webgl-compare' &&
+            webglComparisonSettings.mode === 'exposure-zebra'
+          ) {
             setWebGLComparisonMode('diff-perceptual')
           } else {
             // Switch to webgl-compare mode with zebra
@@ -259,7 +291,32 @@ export default function App() {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [togglePlay, seek, currentTime, duration, zoomIn, zoomOut, toggleMetrics, addMarker, shuttleForward, shuttleBackward, shuttleStop, undo, redo, stepFrame, isPlaying, setComparisonMode, modeShortcuts, newModeShortcuts, toggleWebGLFlipAB, comparisonMode, setWebGLComparisonMode, webglComparisonSettings.mode, toggleScopes, saveCurrentProject])
+  }, [
+    togglePlay,
+    seek,
+    currentTime,
+    duration,
+    zoomIn,
+    zoomOut,
+    toggleMetrics,
+    addMarker,
+    shuttleForward,
+    shuttleBackward,
+    shuttleStop,
+    undo,
+    redo,
+    stepFrame,
+    isPlaying,
+    setComparisonMode,
+    modeShortcuts,
+    newModeShortcuts,
+    toggleWebGLFlipAB,
+    comparisonMode,
+    setWebGLComparisonMode,
+    webglComparisonSettings.mode,
+    toggleScopes,
+    saveCurrentProject,
+  ])
 
   // Global drag and drop
   const handleDrop = useCallback(
@@ -277,18 +334,28 @@ export default function App() {
           const mediaFile = await addFile(file)
 
           // Auto-add to timeline (respecting accepted types)
-          const trackA = tracks.find(t => t.type === 'a')
-          const trackB = tracks.find(t => t.type === 'b')
+          const trackA = tracks.find((t) => t.type === 'a')
+          const trackB = tracks.find((t) => t.type === 'b')
 
-          if (i === 0 && trackA && trackA.clips.length === 0 && trackA.acceptedTypes.includes(mediaFile.type)) {
+          if (
+            i === 0 &&
+            trackA &&
+            trackA.clips.length === 0 &&
+            trackA.acceptedTypes.includes(mediaFile.type)
+          ) {
             addClip(trackA.id, mediaFile.id, 0, mediaFile.duration || 10)
-          } else if (i === 1 && trackB && trackB.clips.length === 0 && trackB.acceptedTypes.includes(mediaFile.type)) {
+          } else if (
+            i === 1 &&
+            trackB &&
+            trackB.clips.length === 0 &&
+            trackB.acceptedTypes.includes(mediaFile.type)
+          ) {
             addClip(trackB.id, mediaFile.id, 0, mediaFile.duration || 10)
           }
         }
       }
     },
-    [addFile, addClip, tracks]
+    [addFile, addClip, tracks],
   )
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -336,12 +403,16 @@ export default function App() {
         )}
 
         <main className="flex-1 flex flex-col overflow-hidden relative">
-          <PreviewCanvas ref={previewRef} canvasRef={canvasRef} isTimelineVisible={isTimelineVisible} />
+          <PreviewCanvas
+            ref={previewRef}
+            canvasRef={canvasRef}
+            isTimelineVisible={isTimelineVisible}
+          />
           {isTimelineVisible && <Timeline />}
 
           {/* Timeline toggle button */}
           <button
-            onClick={() => setIsTimelineVisible(v => !v)}
+            onClick={() => setIsTimelineVisible((v) => !v)}
             className="absolute bottom-2 right-2 z-50 bg-surface hover:bg-surface-hover border border-border px-2 py-1 text-xs text-text-secondary hide-mobile"
             title="Toggle Timeline (T)"
           >
@@ -350,17 +421,16 @@ export default function App() {
         </main>
       </div>
 
-
       {/* SCOPE-001, SCOPE-002, SCOPE-003: Video Scopes Panel */}
       <ScopesPanel />
 
-      <ExportDialog
-        isOpen={isExportOpen}
-        onClose={() => setIsExportOpen(false)}
-        canvasRef={canvasRef}
-      />
+      {isExportOpen && (
+        <Suspense fallback={null}>
+          <ExportDialog isOpen onClose={() => setIsExportOpen(false)} canvasRef={canvasRef} />
+        </Suspense>
+      )}
       <KeyboardShortcutsHelp isOpen={shortcutsHelp.isOpen} onClose={shortcutsHelp.close} />
-      
+
       {/* PERSIST-003: Project selector modal */}
       <ProjectSelector
         isOpen={isProjectSelectorOpen}

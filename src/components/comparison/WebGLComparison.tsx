@@ -7,24 +7,48 @@
  * WEBGL-008: A/B Flip Toggle
  */
 
+import {
+  BarChart3,
+  Ruler,
+  FlipHorizontal,
+  ZoomIn,
+  ZoomOut,
+  RotateCcw,
+  Crosshair,
+  Camera,
+  Copy,
+  Scan,
+  X,
+  LineChart,
+  FileText,
+  Palette,
+  AlertTriangle,
+  Activity,
+  Image,
+  Video,
+} from 'lucide-react'
 import { useEffect, useRef, useCallback, useState, useMemo } from 'react'
-import { useProjectStore } from '../../stores/projectStore'
-import { useMediaStore } from '../../stores/mediaStore'
-import { useTimelineStore } from '../../stores/timelineStore'
-import { usePlaybackStore } from '../../stores/playbackStore'
-import { WebGLComparisonRenderer } from '../../lib/webgl/WebGLComparisonRenderer'
-import { getComparisonModeInfo } from '../../lib/webgl/comparison-shaders'
+
 import { useOptimizedClipSync } from '../../hooks/useOptimizedVideoSync'
+import {
+  generatePDFReport,
+  downloadBlob,
+  captureCanvasScreenshot,
+} from '../../lib/screenshotExport'
+import { getComparisonModeInfo } from '../../lib/webgl/comparison-shaders'
 import { computeMetricsFromWebGLCanvas } from '../../lib/webgl/metricsComputation'
-import { BarChart3, Ruler, FlipHorizontal, ZoomIn, ZoomOut, RotateCcw, Crosshair, Camera, Copy, Scan, X, LineChart, FileText, Palette, AlertTriangle, Activity, Image, Video } from 'lucide-react'
+import { WebGLComparisonRenderer } from '../../lib/webgl/WebGLComparisonRenderer'
+import { useMediaStore } from '../../stores/mediaStore'
+import { usePlaybackStore } from '../../stores/playbackStore'
+import { useProjectStore } from '../../stores/projectStore'
+import { useTimelineStore } from '../../stores/timelineStore'
 import type { ROIRect } from '../../types'
-import { TemporalDiffGraph } from './TemporalDiffGraph'
-import { WebGLSplitView, SplitViewToggle } from './WebGLSplitView'
-import { WebGLPresetsPanel, PresetsToggle } from './WebGLPresetsPanel'
+import { HistogramPanel, ColorWheelPanel, GamutWarningOverlay } from '../scopes'
 import { BatchComparison, BatchComparisonToggle } from './BatchComparison'
 import { CustomShaderEditor, ShaderEditorToggle } from './CustomShaderEditor'
-import { generatePDFReport, downloadBlob, captureCanvasScreenshot } from '../../lib/screenshotExport'
-import { HistogramPanel, ColorWheelPanel, GamutWarningOverlay } from '../scopes'
+import { TemporalDiffGraph } from './TemporalDiffGraph'
+import { WebGLPresetsPanel, PresetsToggle } from './WebGLPresetsPanel'
+import { WebGLSplitView, SplitViewToggle } from './WebGLSplitView'
 
 export function WebGLComparison() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -45,8 +69,8 @@ export function WebGLComparison() {
   const [isDragging, setIsDragging] = useState(false)
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
   const [cursorPixelInfo, setCursorPixelInfo] = useState<{
-    a: { r: number; g: number; b: number } | null;
-    b: { r: number; g: number; b: number } | null;
+    a: { r: number; g: number; b: number } | null
+    b: { r: number; g: number; b: number } | null
   }>({ a: null, b: null })
 
   // WEBGL-004: ROI drawing state
@@ -91,12 +115,12 @@ export function WebGLComparison() {
     resetWebGLZoom,
     setROI,
     clearROI,
-    toggleROIControls
+    toggleROIControls,
   } = useProjectStore()
   const { addFile } = useMediaStore()
   const { tracks, addClip } = useTimelineStore()
   // Subscribe to files to trigger re-renders when files are added/updated
-  const mediaFiles = useMediaStore(state => state.files)
+  const mediaFiles = useMediaStore((state) => state.files)
 
   // File upload refs for empty state
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -104,8 +128,8 @@ export function WebGLComparison() {
   const { currentTime } = usePlaybackStore()
 
   // Get active media from tracks
-  const trackA = tracks.find(t => t.type === 'a')
-  const trackB = tracks.find(t => t.type === 'b')
+  const trackA = tracks.find((t) => t.type === 'a')
+  const trackB = tracks.find((t) => t.type === 'b')
 
   // Get first clip for display
   const firstClipA = trackA?.clips[0] || null
@@ -114,22 +138,32 @@ export function WebGLComparison() {
   // Find clip that contains current time for proper sync
   const activeClipA = useMemo(() => {
     if (!trackA) return null
-    return trackA.clips.find(c => currentTime >= c.startTime && currentTime < c.endTime) || null
+    return trackA.clips.find((c) => currentTime >= c.startTime && currentTime < c.endTime) || null
   }, [trackA, currentTime])
 
   const activeClipB = useMemo(() => {
     if (!trackB) return null
-    return trackB.clips.find(c => currentTime >= c.startTime && currentTime < c.endTime) || null
+    return trackB.clips.find((c) => currentTime >= c.startTime && currentTime < c.endTime) || null
   }, [trackB, currentTime])
 
   // Get media files - use active clip (clip at current time), fallback to first clip
   const displayClipA = activeClipA || firstClipA
   const displayClipB = activeClipB || firstClipB
-  const rawMediaA = displayClipA ? mediaFiles.find(f => f.id === displayClipA.mediaId) : null
-  const rawMediaB = displayClipB ? mediaFiles.find(f => f.id === displayClipB.mediaId) : null
+  const rawMediaA = displayClipA ? mediaFiles.find((f) => f.id === displayClipA.mediaId) : null
+  const rawMediaB = displayClipB ? mediaFiles.find((f) => f.id === displayClipB.mediaId) : null
   // Only use media that is ready (has URL) and is image or video type
-  const stableMediaA = rawMediaA?.type === 'video' || rawMediaA?.type === 'image' ? (rawMediaA.url ? rawMediaA : null) : null
-  const stableMediaB = rawMediaB?.type === 'video' || rawMediaB?.type === 'image' ? (rawMediaB.url ? rawMediaB : null) : null
+  const stableMediaA =
+    rawMediaA?.type === 'video' || rawMediaA?.type === 'image'
+      ? rawMediaA.url
+        ? rawMediaA
+        : null
+      : null
+  const stableMediaB =
+    rawMediaB?.type === 'video' || rawMediaB?.type === 'image'
+      ? rawMediaB.url
+        ? rawMediaB
+        : null
+      : null
 
   // WEBGL-008: A/B Flip - only affects which source maps to which WebGL texture
   // Video elements keep stable src, we just swap which ref maps to which texture
@@ -154,10 +188,10 @@ export function WebGLComparison() {
     const videoB = videoBRef.current
 
     const handleLoadedDataA = () => {
-      setVideosReady(prev => ({ ...prev, a: true }))
+      setVideosReady((prev) => ({ ...prev, a: true }))
     }
     const handleLoadedDataB = () => {
-      setVideosReady(prev => ({ ...prev, b: true }))
+      setVideosReady((prev) => ({ ...prev, b: true }))
     }
 
     // Small delay to let video elements update their src
@@ -166,13 +200,13 @@ export function WebGLComparison() {
         videoA.addEventListener('loadeddata', handleLoadedDataA)
         // If already loaded, mark as ready
         if (videoA.readyState >= 2) {
-          setVideosReady(prev => ({ ...prev, a: true }))
+          setVideosReady((prev) => ({ ...prev, a: true }))
         }
       }
       if (videoB && stableMediaB?.type === 'video') {
         videoB.addEventListener('loadeddata', handleLoadedDataB)
         if (videoB.readyState >= 2) {
-          setVideosReady(prev => ({ ...prev, b: true }))
+          setVideosReady((prev) => ({ ...prev, b: true }))
         }
       }
     }, 50)
@@ -239,7 +273,7 @@ export function WebGLComparison() {
         rendererRef.current = null
       }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []) // Intentionally empty - mode changes handled by separate effect
 
   // Update mode when settings change
@@ -263,7 +297,12 @@ export function WebGLComparison() {
 
       // Validate dimensions before setting
       if (width <= 0 || height <= 0) {
-        console.log('[WebGL Component] ResizeObserver skipping invalid dimensions:', width, 'x', height)
+        console.log(
+          '[WebGL Component] ResizeObserver skipping invalid dimensions:',
+          width,
+          'x',
+          height,
+        )
         return
       }
 
@@ -312,7 +351,12 @@ export function WebGLComparison() {
 
     // Update texture A
     if (mediaForA) {
-      if (mediaForA.type === 'video' && textureASource && textureASource.readyState >= 2 && readyA) {
+      if (
+        mediaForA.type === 'video' &&
+        textureASource &&
+        textureASource.readyState >= 2 &&
+        readyA
+      ) {
         renderer.updateTexture('A', textureASource)
       } else if (mediaForA.type === 'image' && imgASource && imgLoadedA) {
         renderer.updateTexture('A', imgASource)
@@ -321,7 +365,12 @@ export function WebGLComparison() {
 
     // Update texture B
     if (mediaForB) {
-      if (mediaForB.type === 'video' && textureBSource && textureBSource.readyState >= 2 && readyB) {
+      if (
+        mediaForB.type === 'video' &&
+        textureBSource &&
+        textureBSource.readyState >= 2 &&
+        readyB
+      ) {
         renderer.updateTexture('B', textureBSource)
       } else if (mediaForB.type === 'image' && imgBSource && imgLoadedB) {
         renderer.updateTexture('B', imgBSource)
@@ -329,8 +378,10 @@ export function WebGLComparison() {
     }
 
     // Get media dimensions for aspect ratio correction
-    let textureAWidth = 1920, textureAHeight = 1080
-    let textureBWidth = 1920, textureBHeight = 1080
+    let textureAWidth = 1920,
+      textureAHeight = 1080
+    let textureBWidth = 1920,
+      textureBHeight = 1080
 
     if (mediaForA?.type === 'video' && textureASource) {
       textureAWidth = textureASource.videoWidth || 1920
@@ -368,7 +419,7 @@ export function WebGLComparison() {
       textureAWidth,
       textureAHeight,
       textureBWidth,
-      textureBHeight
+      textureBHeight,
     })
 
     // Continue animation loop
@@ -440,7 +491,7 @@ export function WebGLComparison() {
             sourceA,
             sourceB,
             Math.round(webglComparisonSettings.threshold * 255),
-            webglComparisonSettings.roi // WEBGL-004: Pass ROI for localized metrics
+            webglComparisonSettings.roi, // WEBGL-004: Pass ROI for localized metrics
           )
           setWebGLAnalysisMetrics(metrics)
         }
@@ -456,113 +507,151 @@ export function WebGLComparison() {
         cancelAnimationFrame(metricsTimerRef.current)
       }
     }
-  }, [webglComparisonSettings.showMetricsOverlay, webglComparisonSettings.threshold, webglComparisonSettings.roi, stableMediaA, stableMediaB, imagesLoaded, setWebGLAnalysisMetrics])
+  }, [
+    webglComparisonSettings.showMetricsOverlay,
+    webglComparisonSettings.threshold,
+    webglComparisonSettings.roi,
+    stableMediaA,
+    stableMediaB,
+    imagesLoaded,
+    setWebGLAnalysisMetrics,
+  ])
 
   // Handle mouse move for interactive modes
-  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect()
-    const x = (e.clientX - rect.left) / rect.width
-    const y = 1.0 - (e.clientY - rect.top) / rect.height // Flip Y for WebGL
-    const yScreen = (e.clientY - rect.top) / rect.height // Normal Y for ROI
-    setMousePos({ x, y })
-    setScreenMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top })
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      const rect = e.currentTarget.getBoundingClientRect()
+      const x = (e.clientX - rect.left) / rect.width
+      const y = 1.0 - (e.clientY - rect.top) / rect.height // Flip Y for WebGL
+      const yScreen = (e.clientY - rect.top) / rect.height // Normal Y for ROI
+      setMousePos({ x, y })
+      setScreenMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top })
 
-    // WEBGL-004: Handle ROI drawing
-    if (isDrawingROI) {
-      const roiX = Math.min(roiStart.x, x)
-      const roiY = Math.min(roiStart.y, yScreen)
-      const roiWidth = Math.abs(x - roiStart.x)
-      const roiHeight = Math.abs(yScreen - roiStart.y)
-      setTempROI({ x: roiX, y: roiY, width: roiWidth, height: roiHeight })
-      return
-    }
-
-    // WEBGL-007: Handle pan dragging
-    if (isDragging && webglComparisonSettings.webglZoom > 1) {
-      const dx = (e.clientX - dragStart.x) / rect.width
-      const dy = (e.clientY - dragStart.y) / rect.height
-      setWebGLPan(
-        webglComparisonSettings.webglPanX + dx * 2,
-        webglComparisonSettings.webglPanY - dy * 2
-      )
-      setDragStart({ x: e.clientX, y: e.clientY })
-    }
-
-    // WEBGL-003: Sample pixel values at cursor position
-    // Use stable sources with flipAB handling for correct A/B mapping
-    if (webglComparisonSettings.showCursorInspector) {
-      const sampleCanvas = document.createElement('canvas')
-      sampleCanvas.width = 1
-      sampleCanvas.height = 1
-      const ctx = sampleCanvas.getContext('2d')
-
-      if (ctx) {
-        let pixelA: { r: number; g: number; b: number } | null = null
-        let pixelB: { r: number; g: number; b: number } | null = null
-
-        // Respect flipAB for correct A/B mapping
-        const flipAB = webglComparisonSettings.flipAB
-        const mediaForA = flipAB ? stableMediaB : stableMediaA
-        const mediaForB = flipAB ? stableMediaA : stableMediaB
-        const videoRefA = flipAB ? videoBRef : videoARef
-        const videoRefB = flipAB ? videoARef : videoBRef
-        const imgRefA = flipAB ? imgBRef : imgARef
-        const imgRefB = flipAB ? imgARef : imgBRef
-
-        // Sample from source A
-        const sourceA = mediaForA?.type === 'video' ? videoRefA.current :
-                       mediaForA?.type === 'image' ? imgRefA.current : null
-        if (sourceA) {
-          const srcWidth = 'videoWidth' in sourceA ? sourceA.videoWidth : sourceA.naturalWidth
-          const srcHeight = 'videoHeight' in sourceA ? sourceA.videoHeight : sourceA.naturalHeight
-          ctx.drawImage(sourceA, x * srcWidth, (1 - y) * srcHeight, 1, 1, 0, 0, 1, 1)
-          const data = ctx.getImageData(0, 0, 1, 1).data
-          pixelA = { r: data[0], g: data[1], b: data[2] }
-        }
-
-        // Sample from source B
-        const sourceB = mediaForB?.type === 'video' ? videoRefB.current :
-                       mediaForB?.type === 'image' ? imgRefB.current : null
-        if (sourceB) {
-          const srcWidth = 'videoWidth' in sourceB ? sourceB.videoWidth : sourceB.naturalWidth
-          const srcHeight = 'videoHeight' in sourceB ? sourceB.videoHeight : sourceB.naturalHeight
-          ctx.drawImage(sourceB, x * srcWidth, (1 - y) * srcHeight, 1, 1, 0, 0, 1, 1)
-          const data = ctx.getImageData(0, 0, 1, 1).data
-          pixelB = { r: data[0], g: data[1], b: data[2] }
-        }
-
-        setCursorPixelInfo({ a: pixelA, b: pixelB })
+      // WEBGL-004: Handle ROI drawing
+      if (isDrawingROI) {
+        const roiX = Math.min(roiStart.x, x)
+        const roiY = Math.min(roiStart.y, yScreen)
+        const roiWidth = Math.abs(x - roiStart.x)
+        const roiHeight = Math.abs(yScreen - roiStart.y)
+        setTempROI({ x: roiX, y: roiY, width: roiWidth, height: roiHeight })
+        return
       }
-    }
-  }, [isDragging, dragStart, isDrawingROI, roiStart, webglComparisonSettings.webglZoom, webglComparisonSettings.webglPanX, webglComparisonSettings.webglPanY, webglComparisonSettings.showCursorInspector, webglComparisonSettings.flipAB, setWebGLPan, stableMediaA, stableMediaB])
+
+      // WEBGL-007: Handle pan dragging
+      if (isDragging && webglComparisonSettings.webglZoom > 1) {
+        const dx = (e.clientX - dragStart.x) / rect.width
+        const dy = (e.clientY - dragStart.y) / rect.height
+        setWebGLPan(
+          webglComparisonSettings.webglPanX + dx * 2,
+          webglComparisonSettings.webglPanY - dy * 2,
+        )
+        setDragStart({ x: e.clientX, y: e.clientY })
+      }
+
+      // WEBGL-003: Sample pixel values at cursor position
+      // Use stable sources with flipAB handling for correct A/B mapping
+      if (webglComparisonSettings.showCursorInspector) {
+        const sampleCanvas = document.createElement('canvas')
+        sampleCanvas.width = 1
+        sampleCanvas.height = 1
+        const ctx = sampleCanvas.getContext('2d')
+
+        if (ctx) {
+          let pixelA: { r: number; g: number; b: number } | null = null
+          let pixelB: { r: number; g: number; b: number } | null = null
+
+          // Respect flipAB for correct A/B mapping
+          const flipAB = webglComparisonSettings.flipAB
+          const mediaForA = flipAB ? stableMediaB : stableMediaA
+          const mediaForB = flipAB ? stableMediaA : stableMediaB
+          const videoRefA = flipAB ? videoBRef : videoARef
+          const videoRefB = flipAB ? videoARef : videoBRef
+          const imgRefA = flipAB ? imgBRef : imgARef
+          const imgRefB = flipAB ? imgARef : imgBRef
+
+          // Sample from source A
+          const sourceA =
+            mediaForA?.type === 'video'
+              ? videoRefA.current
+              : mediaForA?.type === 'image'
+                ? imgRefA.current
+                : null
+          if (sourceA) {
+            const srcWidth = 'videoWidth' in sourceA ? sourceA.videoWidth : sourceA.naturalWidth
+            const srcHeight = 'videoHeight' in sourceA ? sourceA.videoHeight : sourceA.naturalHeight
+            ctx.drawImage(sourceA, x * srcWidth, (1 - y) * srcHeight, 1, 1, 0, 0, 1, 1)
+            const data = ctx.getImageData(0, 0, 1, 1).data
+            pixelA = { r: data[0], g: data[1], b: data[2] }
+          }
+
+          // Sample from source B
+          const sourceB =
+            mediaForB?.type === 'video'
+              ? videoRefB.current
+              : mediaForB?.type === 'image'
+                ? imgRefB.current
+                : null
+          if (sourceB) {
+            const srcWidth = 'videoWidth' in sourceB ? sourceB.videoWidth : sourceB.naturalWidth
+            const srcHeight = 'videoHeight' in sourceB ? sourceB.videoHeight : sourceB.naturalHeight
+            ctx.drawImage(sourceB, x * srcWidth, (1 - y) * srcHeight, 1, 1, 0, 0, 1, 1)
+            const data = ctx.getImageData(0, 0, 1, 1).data
+            pixelB = { r: data[0], g: data[1], b: data[2] }
+          }
+
+          setCursorPixelInfo({ a: pixelA, b: pixelB })
+        }
+      }
+    },
+    [
+      isDragging,
+      dragStart,
+      isDrawingROI,
+      roiStart,
+      webglComparisonSettings.webglZoom,
+      webglComparisonSettings.webglPanX,
+      webglComparisonSettings.webglPanY,
+      webglComparisonSettings.showCursorInspector,
+      webglComparisonSettings.flipAB,
+      setWebGLPan,
+      stableMediaA,
+      stableMediaB,
+    ],
+  )
 
   // WEBGL-007: Handle mouse wheel for zoom
-  const handleWheel = useCallback((e: React.WheelEvent<HTMLDivElement>) => {
-    e.preventDefault()
-    const delta = e.deltaY > 0 ? -0.5 : 0.5
-    setWebGLZoom(webglComparisonSettings.webglZoom + delta)
-  }, [webglComparisonSettings.webglZoom, setWebGLZoom])
+  const handleWheel = useCallback(
+    (e: React.WheelEvent<HTMLDivElement>) => {
+      e.preventDefault()
+      const delta = e.deltaY > 0 ? -0.5 : 0.5
+      setWebGLZoom(webglComparisonSettings.webglZoom + delta)
+    },
+    [webglComparisonSettings.webglZoom, setWebGLZoom],
+  )
 
   // WEBGL-007: Handle mouse down for pan / WEBGL-004: Handle mouse down for ROI
-  const handleMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect()
-    const x = (e.clientX - rect.left) / rect.width
-    const y = (e.clientY - rect.top) / rect.height
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      const rect = e.currentTarget.getBoundingClientRect()
+      const x = (e.clientX - rect.left) / rect.width
+      const y = (e.clientY - rect.top) / rect.height
 
-    // WEBGL-004: Start ROI drawing if ROI controls are enabled
-    if (webglComparisonSettings.showROIControls) {
-      setIsDrawingROI(true)
-      setROIStart({ x, y })
-      setTempROI({ x, y, width: 0, height: 0 })
-      return
-    }
+      // WEBGL-004: Start ROI drawing if ROI controls are enabled
+      if (webglComparisonSettings.showROIControls) {
+        setIsDrawingROI(true)
+        setROIStart({ x, y })
+        setTempROI({ x, y, width: 0, height: 0 })
+        return
+      }
 
-    // WEBGL-007: Start panning if zoomed
-    if (webglComparisonSettings.webglZoom > 1) {
-      setIsDragging(true)
-      setDragStart({ x: e.clientX, y: e.clientY })
-    }
-  }, [webglComparisonSettings.webglZoom, webglComparisonSettings.showROIControls])
+      // WEBGL-007: Start panning if zoomed
+      if (webglComparisonSettings.webglZoom > 1) {
+        setIsDragging(true)
+        setDragStart({ x: e.clientX, y: e.clientY })
+      }
+    },
+    [webglComparisonSettings.webglZoom, webglComparisonSettings.showROIControls],
+  )
 
   // WEBGL-007: Handle mouse up / WEBGL-004: Commit ROI
   const handleMouseUp = useCallback(() => {
@@ -595,7 +684,7 @@ export function WebGLComparison() {
 
       if (e.code === 'KeyG' && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
         e.preventDefault()
-        setShowGamutWarning(prev => !prev)
+        setShowGamutWarning((prev) => !prev)
       }
     }
 
@@ -604,90 +693,95 @@ export function WebGLComparison() {
   }, [])
 
   // WEBGL-005: Export Analysis Screenshot
-  const exportScreenshot = useCallback(async (copyToClipboard: boolean = false) => {
-    if (!canvasRef.current || !containerRef.current) return
+  const exportScreenshot = useCallback(
+    async (copyToClipboard: boolean = false) => {
+      if (!canvasRef.current || !containerRef.current) return
 
-    // Create a canvas that includes the WebGL content and overlays
-    const exportCanvas = document.createElement('canvas')
-    const scale = 2 // 2x resolution for quality
-    const width = containerRef.current.offsetWidth * scale
-    const height = containerRef.current.offsetHeight * scale
-    exportCanvas.width = width
-    exportCanvas.height = height
+      // Create a canvas that includes the WebGL content and overlays
+      const exportCanvas = document.createElement('canvas')
+      const scale = 2 // 2x resolution for quality
+      const width = containerRef.current.offsetWidth * scale
+      const height = containerRef.current.offsetHeight * scale
+      exportCanvas.width = width
+      exportCanvas.height = height
 
-    const ctx = exportCanvas.getContext('2d')
-    if (!ctx) return
+      const ctx = exportCanvas.getContext('2d')
+      if (!ctx) return
 
-    // Draw the WebGL canvas
-    ctx.drawImage(canvasRef.current, 0, 0, width, height)
+      // Draw the WebGL canvas
+      ctx.drawImage(canvasRef.current, 0, 0, width, height)
 
-    // Get mode info for label
-    const currentModeInfo = getComparisonModeInfo(webglComparisonSettings.mode)
+      // Get mode info for label
+      const currentModeInfo = getComparisonModeInfo(webglComparisonSettings.mode)
 
-    // Draw mode indicator
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)'
-    ctx.fillRect(16 * scale, 16 * scale, 200 * scale, 30 * scale)
-    ctx.fillStyle = '#888888'
-    ctx.font = `${14 * scale}px system-ui`
-    ctx.fillText('Mode: ', 24 * scale, 36 * scale)
-    ctx.fillStyle = '#cddc39'
-    ctx.fillText(currentModeInfo?.label || webglComparisonSettings.mode, 70 * scale, 36 * scale)
-
-    // Draw metrics if visible
-    if (webglComparisonSettings.showMetricsOverlay && webglAnalysisMetrics) {
-      const metricsX = width - 200 * scale
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.8)'
-      ctx.fillRect(metricsX, 16 * scale, 180 * scale, 140 * scale)
-
+      // Draw mode indicator
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.7)'
+      ctx.fillRect(16 * scale, 16 * scale, 200 * scale, 30 * scale)
       ctx.fillStyle = '#888888'
-      ctx.font = `bold ${10 * scale}px system-ui`
-      ctx.fillText('ANALYSIS METRICS', metricsX + 16 * scale, 36 * scale)
+      ctx.font = `${14 * scale}px system-ui`
+      ctx.fillText('Mode: ', 24 * scale, 36 * scale)
+      ctx.fillStyle = '#cddc39'
+      ctx.fillText(currentModeInfo?.label || webglComparisonSettings.mode, 70 * scale, 36 * scale)
 
-      ctx.font = `${12 * scale}px monospace`
-      const metrics = [
-        { label: 'SSIM:', value: webglAnalysisMetrics.ssim.toFixed(4) },
-        { label: 'Delta E:', value: webglAnalysisMetrics.deltaE.toFixed(2) },
-        { label: 'Diff Pixels:', value: `${webglAnalysisMetrics.diffPixelPercent.toFixed(1)}%` },
-        { label: 'Peak Diff:', value: webglAnalysisMetrics.peakDifference.toFixed(0) },
-        { label: 'Mean Diff:', value: webglAnalysisMetrics.meanDifference.toFixed(1) }
-      ]
+      // Draw metrics if visible
+      if (webglComparisonSettings.showMetricsOverlay && webglAnalysisMetrics) {
+        const metricsX = width - 200 * scale
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.8)'
+        ctx.fillRect(metricsX, 16 * scale, 180 * scale, 140 * scale)
 
-      metrics.forEach((m, i) => {
         ctx.fillStyle = '#888888'
-        ctx.fillText(m.label, metricsX + 16 * scale, (56 + i * 20) * scale)
-        ctx.fillStyle = '#ffffff'
-        ctx.fillText(m.value, metricsX + 100 * scale, (56 + i * 20) * scale)
-      })
-    }
+        ctx.font = `bold ${10 * scale}px system-ui`
+        ctx.fillText('ANALYSIS METRICS', metricsX + 16 * scale, 36 * scale)
 
-    // Draw timestamp
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)'
-    ctx.fillRect(16 * scale, height - 46 * scale, 250 * scale, 30 * scale)
-    ctx.fillStyle = '#888888'
-    ctx.font = `${12 * scale}px system-ui`
-    ctx.fillText(`DualView Analysis • ${new Date().toISOString().replace('T', ' ').slice(0, 19)}`, 24 * scale, height - 26 * scale)
+        ctx.font = `${12 * scale}px monospace`
+        const metrics = [
+          { label: 'SSIM:', value: webglAnalysisMetrics.ssim.toFixed(4) },
+          { label: 'Delta E:', value: webglAnalysisMetrics.deltaE.toFixed(2) },
+          { label: 'Diff Pixels:', value: `${webglAnalysisMetrics.diffPixelPercent.toFixed(1)}%` },
+          { label: 'Peak Diff:', value: webglAnalysisMetrics.peakDifference.toFixed(0) },
+          { label: 'Mean Diff:', value: webglAnalysisMetrics.meanDifference.toFixed(1) },
+        ]
 
-    // Export
-    if (copyToClipboard) {
-      try {
-        const blob = await new Promise<Blob | null>((resolve) => {
-          exportCanvas.toBlob(resolve, 'image/png')
+        metrics.forEach((m, i) => {
+          ctx.fillStyle = '#888888'
+          ctx.fillText(m.label, metricsX + 16 * scale, (56 + i * 20) * scale)
+          ctx.fillStyle = '#ffffff'
+          ctx.fillText(m.value, metricsX + 100 * scale, (56 + i * 20) * scale)
         })
-        if (blob) {
-          await navigator.clipboard.write([
-            new ClipboardItem({ 'image/png': blob })
-          ])
-        }
-      } catch (err) {
-        console.error('Failed to copy to clipboard:', err)
       }
-    } else {
-      const link = document.createElement('a')
-      link.download = `dualview-analysis-${webglComparisonSettings.mode}-${Date.now()}.png`
-      link.href = exportCanvas.toDataURL('image/png')
-      link.click()
-    }
-  }, [webglComparisonSettings, webglAnalysisMetrics])
+
+      // Draw timestamp
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.7)'
+      ctx.fillRect(16 * scale, height - 46 * scale, 250 * scale, 30 * scale)
+      ctx.fillStyle = '#888888'
+      ctx.font = `${12 * scale}px system-ui`
+      ctx.fillText(
+        `DualView Analysis • ${new Date().toISOString().replace('T', ' ').slice(0, 19)}`,
+        24 * scale,
+        height - 26 * scale,
+      )
+
+      // Export
+      if (copyToClipboard) {
+        try {
+          const blob = await new Promise<Blob | null>((resolve) => {
+            exportCanvas.toBlob(resolve, 'image/png')
+          })
+          if (blob) {
+            await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
+          }
+        } catch (err) {
+          console.error('Failed to copy to clipboard:', err)
+        }
+      } else {
+        const link = document.createElement('a')
+        link.download = `dualview-analysis-${webglComparisonSettings.mode}-${Date.now()}.png`
+        link.href = exportCanvas.toDataURL('image/png')
+        link.click()
+      }
+    },
+    [webglComparisonSettings, webglAnalysisMetrics],
+  )
 
   // WEBGL-010: Export PDF Analysis Report
   const exportPDFReport = useCallback(async () => {
@@ -718,28 +812,36 @@ export function WebGLComparison() {
       comparisonMode: 'webgl-compare',
       webglMode: currentModeInfo?.label || webglComparisonSettings.mode,
       threshold: webglComparisonSettings.threshold,
-      mediaA: mediaA ? {
-        name: mediaA.name,
-        type: mediaA.type,
-        size: formatSize(mediaA.file?.size),
-        dimensions: mediaA.width && mediaA.height ? `${mediaA.width}×${mediaA.height}` : undefined
-      } : undefined,
-      mediaB: mediaB ? {
-        name: mediaB.name,
-        type: mediaB.type,
-        size: formatSize(mediaB.file?.size),
-        dimensions: mediaB.width && mediaB.height ? `${mediaB.width}×${mediaB.height}` : undefined
-      } : undefined,
-      webglMetrics: webglAnalysisMetrics ? {
-        ssim: webglAnalysisMetrics.ssim,
-        deltaE: webglAnalysisMetrics.deltaE,
-        diffPixelPercent: webglAnalysisMetrics.diffPixelPercent,
-        peakDifference: webglAnalysisMetrics.peakDifference,
-        meanDifference: webglAnalysisMetrics.meanDifference,
-        passPixelCount: webglAnalysisMetrics.passPixelCount,
-        failPixelCount: webglAnalysisMetrics.failPixelCount,
-        totalPixelCount: webglAnalysisMetrics.totalPixelCount
-      } : undefined
+      mediaA: mediaA
+        ? {
+            name: mediaA.name,
+            type: mediaA.type,
+            size: formatSize(mediaA.file?.size),
+            dimensions:
+              mediaA.width && mediaA.height ? `${mediaA.width}×${mediaA.height}` : undefined,
+          }
+        : undefined,
+      mediaB: mediaB
+        ? {
+            name: mediaB.name,
+            type: mediaB.type,
+            size: formatSize(mediaB.file?.size),
+            dimensions:
+              mediaB.width && mediaB.height ? `${mediaB.width}×${mediaB.height}` : undefined,
+          }
+        : undefined,
+      webglMetrics: webglAnalysisMetrics
+        ? {
+            ssim: webglAnalysisMetrics.ssim,
+            deltaE: webglAnalysisMetrics.deltaE,
+            diffPixelPercent: webglAnalysisMetrics.diffPixelPercent,
+            peakDifference: webglAnalysisMetrics.peakDifference,
+            meanDifference: webglAnalysisMetrics.meanDifference,
+            passPixelCount: webglAnalysisMetrics.passPixelCount,
+            failPixelCount: webglAnalysisMetrics.failPixelCount,
+            totalPixelCount: webglAnalysisMetrics.totalPixelCount,
+          }
+        : undefined,
     })
 
     // Download
@@ -748,32 +850,35 @@ export function WebGLComparison() {
 
   // Handle image load
   const handleImageALoad = useCallback(() => {
-    setImagesLoaded(prev => ({ ...prev, a: true }))
+    setImagesLoaded((prev) => ({ ...prev, a: true }))
   }, [])
 
   const handleImageBLoad = useCallback(() => {
-    setImagesLoaded(prev => ({ ...prev, b: true }))
+    setImagesLoaded((prev) => ({ ...prev, b: true }))
   }, [])
 
   // Handle file upload for empty state
-  const handleUpload = useCallback(async (files: FileList | null, targetTrack: 'a' | 'b') => {
-    if (!files || files.length === 0) return
+  const handleUpload = useCallback(
+    async (files: FileList | null, targetTrack: 'a' | 'b') => {
+      if (!files || files.length === 0) return
 
-    const file = files[0]
-    try {
-      const mediaFile = await addFile(file)
-      // Get fresh track references from the store to avoid stale closures
-      const currentTracks = useTimelineStore.getState().tracks
-      const track = currentTracks.find(t => t.type === targetTrack)
+      const file = files[0]
+      try {
+        const mediaFile = await addFile(file)
+        // Get fresh track references from the store to avoid stale closures
+        const currentTracks = useTimelineStore.getState().tracks
+        const track = currentTracks.find((t) => t.type === targetTrack)
 
-      if (track) {
-        const duration = mediaFile.duration || 10
-        addClip(track.id, mediaFile.id, 0, duration)
+        if (track) {
+          const duration = mediaFile.duration || 10
+          addClip(track.id, mediaFile.id, 0, duration)
+        }
+      } catch (error) {
+        console.error('Failed to upload media:', error)
       }
-    } catch (error) {
-      console.error('Failed to upload media:', error)
-    }
-  }, [addFile, addClip])
+    },
+    [addFile, addClip],
+  )
 
   // Trigger file input
   const triggerUpload = useCallback((track: 'a' | 'b') => {
@@ -784,12 +889,15 @@ export function WebGLComparison() {
   }, [])
 
   // Handle file input change
-  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    if (currentUploadTarget.current) {
-      handleUpload(e.target.files, currentUploadTarget.current.track)
-      e.target.value = '' // Reset for re-upload
-    }
-  }, [handleUpload])
+  const handleFileChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (currentUploadTarget.current) {
+        handleUpload(e.target.files, currentUploadTarget.current.track)
+        e.target.value = '' // Reset for re-upload
+      }
+    },
+    [handleUpload],
+  )
 
   // Get current mode info
   const modeInfo = getComparisonModeInfo(webglComparisonSettings.mode)
@@ -801,7 +909,8 @@ export function WebGLComparison() {
           <div className="text-4xl mb-4">⚠️</div>
           <h3 className="text-xl font-bold text-white mb-2">WebGL Not Supported</h3>
           <p className="text-gray-400">
-            Your browser doesn't support WebGL, which is required for GPU-accelerated comparison modes.
+            Your browser doesn't support WebGL, which is required for GPU-accelerated comparison
+            modes.
           </p>
           <p className="text-gray-500 mt-2 text-sm">
             Try using a modern browser like Chrome, Firefox, or Edge.
@@ -885,7 +994,10 @@ export function WebGLComparison() {
           </div>
 
           <p className="text-[10px] text-gray-500 mt-3">
-            Current mode: <span className="text-[#cddc39]">{modeInfo?.label || webglComparisonSettings.mode}</span>
+            Current mode:{' '}
+            <span className="text-[#cddc39]">
+              {modeInfo?.label || webglComparisonSettings.mode}
+            </span>
           </p>
         </div>
       </div>
@@ -902,13 +1014,30 @@ export function WebGLComparison() {
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
       onDoubleClick={handleDoubleClick}
-      style={{ cursor: isDrawingROI ? 'crosshair' : webglComparisonSettings.showROIControls ? 'crosshair' : isDragging ? 'grabbing' : webglComparisonSettings.webglZoom > 1 ? 'grab' : 'default' }}
+      style={{
+        cursor: isDrawingROI
+          ? 'crosshair'
+          : webglComparisonSettings.showROIControls
+            ? 'crosshair'
+            : isDragging
+              ? 'grabbing'
+              : webglComparisonSettings.webglZoom > 1
+                ? 'grab'
+                : 'default',
+      }}
     >
       {/* Video elements for texture sources - STABLE sources, never swapped by flipAB */}
       <video
         ref={videoARef}
         src={stableMediaA?.type === 'video' ? stableMediaA.url : undefined}
-        style={{ position: 'absolute', width: '1px', height: '1px', opacity: 0, pointerEvents: 'none', zIndex: -1 }}
+        style={{
+          position: 'absolute',
+          width: '1px',
+          height: '1px',
+          opacity: 0,
+          pointerEvents: 'none',
+          zIndex: -1,
+        }}
         muted
         playsInline
         loop
@@ -917,7 +1046,14 @@ export function WebGLComparison() {
       <video
         ref={videoBRef}
         src={stableMediaB?.type === 'video' ? stableMediaB.url : undefined}
-        style={{ position: 'absolute', width: '1px', height: '1px', opacity: 0, pointerEvents: 'none', zIndex: -1 }}
+        style={{
+          position: 'absolute',
+          width: '1px',
+          height: '1px',
+          opacity: 0,
+          pointerEvents: 'none',
+          zIndex: -1,
+        }}
         muted
         playsInline
         loop
@@ -951,15 +1087,17 @@ export function WebGLComparison() {
         style={{
           minWidth: '640px',
           minHeight: '480px',
-          transform: `scale(${webglComparisonSettings.webglZoom}) translate(${webglComparisonSettings.webglPanX * 50 / webglComparisonSettings.webglZoom}%, ${-webglComparisonSettings.webglPanY * 50 / webglComparisonSettings.webglZoom}%)`,
-          transformOrigin: 'center center'
+          transform: `scale(${webglComparisonSettings.webglZoom}) translate(${(webglComparisonSettings.webglPanX * 50) / webglComparisonSettings.webglZoom}%, ${(-webglComparisonSettings.webglPanY * 50) / webglComparisonSettings.webglZoom}%)`,
+          transformOrigin: 'center center',
         }}
       />
 
       {/* Mode indicator */}
       <div className="absolute top-4 left-4 bg-black/70 px-3 py-1.5 rounded text-sm">
         <span className="text-gray-400">Mode:</span>
-        <span className="text-[#cddc39] ml-2 font-medium">{modeInfo?.label || webglComparisonSettings.mode}</span>
+        <span className="text-[#cddc39] ml-2 font-medium">
+          {modeInfo?.label || webglComparisonSettings.mode}
+        </span>
         {webglComparisonSettings.flipAB && (
           <span className="text-orange-400 ml-2">(A/B Flipped)</span>
         )}
@@ -968,46 +1106,68 @@ export function WebGLComparison() {
       {/* WEBGL-001: Metrics Overlay */}
       {webglComparisonSettings.showMetricsOverlay && webglAnalysisMetrics && (
         <div className="absolute top-4 right-4 bg-black/80 px-4 py-3 rounded text-sm font-mono">
-          <div className="text-gray-300 font-semibold mb-2 text-xs uppercase tracking-wider">Analysis Metrics</div>
+          <div className="text-gray-300 font-semibold mb-2 text-xs uppercase tracking-wider">
+            Analysis Metrics
+          </div>
           <div className="space-y-1">
             <div className="flex justify-between gap-4">
               <span className="text-gray-400">SSIM:</span>
-              <span className={`font-medium ${webglAnalysisMetrics.ssim > 0.95 ? 'text-green-400' : webglAnalysisMetrics.ssim > 0.8 ? 'text-yellow-400' : 'text-red-400'}`}>
+              <span
+                className={`font-medium ${webglAnalysisMetrics.ssim > 0.95 ? 'text-green-400' : webglAnalysisMetrics.ssim > 0.8 ? 'text-yellow-400' : 'text-red-400'}`}
+              >
                 {webglAnalysisMetrics.ssim.toFixed(4)}
               </span>
             </div>
             <div className="flex justify-between gap-4">
               <span className="text-gray-400">Delta E:</span>
-              <span className={`font-medium ${webglAnalysisMetrics.deltaE < 1 ? 'text-green-400' : webglAnalysisMetrics.deltaE < 5 ? 'text-yellow-400' : 'text-red-400'}`}>
+              <span
+                className={`font-medium ${webglAnalysisMetrics.deltaE < 1 ? 'text-green-400' : webglAnalysisMetrics.deltaE < 5 ? 'text-yellow-400' : 'text-red-400'}`}
+              >
                 {webglAnalysisMetrics.deltaE.toFixed(2)}
               </span>
             </div>
             <div className="flex justify-between gap-4">
               <span className="text-gray-400">Diff Pixels:</span>
-              <span className={`font-medium ${webglAnalysisMetrics.diffPixelPercent < 1 ? 'text-green-400' : webglAnalysisMetrics.diffPixelPercent < 10 ? 'text-yellow-400' : 'text-red-400'}`}>
+              <span
+                className={`font-medium ${webglAnalysisMetrics.diffPixelPercent < 1 ? 'text-green-400' : webglAnalysisMetrics.diffPixelPercent < 10 ? 'text-yellow-400' : 'text-red-400'}`}
+              >
                 {webglAnalysisMetrics.diffPixelPercent.toFixed(1)}%
               </span>
             </div>
             <div className="flex justify-between gap-4">
               <span className="text-gray-400">Peak Diff:</span>
-              <span className="text-gray-200 font-medium">{webglAnalysisMetrics.peakDifference.toFixed(0)}</span>
+              <span className="text-gray-200 font-medium">
+                {webglAnalysisMetrics.peakDifference.toFixed(0)}
+              </span>
             </div>
             <div className="flex justify-between gap-4">
               <span className="text-gray-400">Mean Diff:</span>
-              <span className="text-gray-200 font-medium">{webglAnalysisMetrics.meanDifference.toFixed(1)}</span>
+              <span className="text-gray-200 font-medium">
+                {webglAnalysisMetrics.meanDifference.toFixed(1)}
+              </span>
             </div>
             {/* WEBGL-006: Threshold Pass/Fail Stats */}
             <div className="border-t border-gray-600 mt-2 pt-2">
               <div className="flex justify-between gap-4">
                 <span className="text-gray-400">Pass:</span>
                 <span className="text-green-400 font-medium">
-                  {webglAnalysisMetrics.passPixelCount.toLocaleString()} ({((webglAnalysisMetrics.passPixelCount / webglAnalysisMetrics.totalPixelCount) * 100).toFixed(1)}%)
+                  {webglAnalysisMetrics.passPixelCount.toLocaleString()} (
+                  {(
+                    (webglAnalysisMetrics.passPixelCount / webglAnalysisMetrics.totalPixelCount) *
+                    100
+                  ).toFixed(1)}
+                  %)
                 </span>
               </div>
               <div className="flex justify-between gap-4">
                 <span className="text-gray-400">Fail:</span>
                 <span className="text-red-400 font-medium">
-                  {webglAnalysisMetrics.failPixelCount.toLocaleString()} ({((webglAnalysisMetrics.failPixelCount / webglAnalysisMetrics.totalPixelCount) * 100).toFixed(1)}%)
+                  {webglAnalysisMetrics.failPixelCount.toLocaleString()} (
+                  {(
+                    (webglAnalysisMetrics.failPixelCount / webglAnalysisMetrics.totalPixelCount) *
+                    100
+                  ).toFixed(1)}
+                  %)
                 </span>
               </div>
             </div>
@@ -1017,17 +1177,26 @@ export function WebGLComparison() {
 
       {/* WEBGL-002: Scale Bar */}
       {webglComparisonSettings.showScaleBar && (
-        <div className={`absolute ${
-          webglComparisonSettings.scaleBarPosition === 'top' ? 'top-16 left-1/2 -translate-x-1/2' :
-          webglComparisonSettings.scaleBarPosition === 'bottom' ? 'bottom-16 left-1/2 -translate-x-1/2' :
-          webglComparisonSettings.scaleBarPosition === 'left' ? 'left-4 top-1/2 -translate-y-1/2' :
-          'right-4 top-1/2 -translate-y-1/2'
-        } bg-black/70 p-2 rounded`}>
-          {(webglComparisonSettings.scaleBarPosition === 'top' || webglComparisonSettings.scaleBarPosition === 'bottom') ? (
+        <div
+          className={`absolute ${
+            webglComparisonSettings.scaleBarPosition === 'top'
+              ? 'top-16 left-1/2 -translate-x-1/2'
+              : webglComparisonSettings.scaleBarPosition === 'bottom'
+                ? 'bottom-16 left-1/2 -translate-x-1/2'
+                : webglComparisonSettings.scaleBarPosition === 'left'
+                  ? 'left-4 top-1/2 -translate-y-1/2'
+                  : 'right-4 top-1/2 -translate-y-1/2'
+          } bg-black/70 p-2 rounded`}
+        >
+          {webglComparisonSettings.scaleBarPosition === 'top' ||
+          webglComparisonSettings.scaleBarPosition === 'bottom' ? (
             <div className="flex flex-col items-center">
-              <div className="w-48 h-4 rounded" style={{
-                background: 'linear-gradient(to right, #000000, #ff0000, #ffff00, #ffffff)'
-              }} />
+              <div
+                className="w-48 h-4 rounded"
+                style={{
+                  background: 'linear-gradient(to right, #000000, #ff0000, #ffff00, #ffffff)',
+                }}
+              />
               <div className="flex justify-between w-48 text-xs text-gray-400 mt-1">
                 <span>0</span>
                 <span>Low</span>
@@ -1037,9 +1206,12 @@ export function WebGLComparison() {
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              <div className="w-4 h-48 rounded" style={{
-                background: 'linear-gradient(to top, #000000, #ff0000, #ffff00, #ffffff)'
-              }} />
+              <div
+                className="w-4 h-48 rounded"
+                style={{
+                  background: 'linear-gradient(to top, #000000, #ff0000, #ffff00, #ffffff)',
+                }}
+              />
               <div className="flex flex-col justify-between h-48 text-xs text-gray-400">
                 <span>High</span>
                 <span>Mid</span>
@@ -1064,34 +1236,52 @@ export function WebGLComparison() {
           className="absolute pointer-events-none bg-black/90 px-3 py-2 rounded text-xs font-mono z-50"
           style={{
             left: Math.min(screenMousePos.x + 20, (containerRef.current?.offsetWidth || 400) - 180),
-            top: Math.min(screenMousePos.y + 20, (containerRef.current?.offsetHeight || 300) - 120)
+            top: Math.min(screenMousePos.y + 20, (containerRef.current?.offsetHeight || 300) - 120),
           }}
         >
           <div className="text-gray-300 font-semibold mb-1">Pixel Inspector</div>
           <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
             <div className="text-gray-500">Source A:</div>
             <div className="flex items-center gap-1">
-              <span style={{ color: `rgb(${cursorPixelInfo.a.r}, 100, 100)` }}>{cursorPixelInfo.a.r}</span>
-              <span style={{ color: `rgb(100, ${cursorPixelInfo.a.g}, 100)` }}>{cursorPixelInfo.a.g}</span>
-              <span style={{ color: `rgb(100, 100, ${cursorPixelInfo.a.b})` }}>{cursorPixelInfo.a.b}</span>
+              <span style={{ color: `rgb(${cursorPixelInfo.a.r}, 100, 100)` }}>
+                {cursorPixelInfo.a.r}
+              </span>
+              <span style={{ color: `rgb(100, ${cursorPixelInfo.a.g}, 100)` }}>
+                {cursorPixelInfo.a.g}
+              </span>
+              <span style={{ color: `rgb(100, 100, ${cursorPixelInfo.a.b})` }}>
+                {cursorPixelInfo.a.b}
+              </span>
               <span
                 className="w-3 h-3 rounded-sm ml-1"
-                style={{ backgroundColor: `rgb(${cursorPixelInfo.a.r}, ${cursorPixelInfo.a.g}, ${cursorPixelInfo.a.b})` }}
+                style={{
+                  backgroundColor: `rgb(${cursorPixelInfo.a.r}, ${cursorPixelInfo.a.g}, ${cursorPixelInfo.a.b})`,
+                }}
               />
             </div>
             <div className="text-gray-500">Source B:</div>
             <div className="flex items-center gap-1">
-              <span style={{ color: `rgb(${cursorPixelInfo.b.r}, 100, 100)` }}>{cursorPixelInfo.b.r}</span>
-              <span style={{ color: `rgb(100, ${cursorPixelInfo.b.g}, 100)` }}>{cursorPixelInfo.b.g}</span>
-              <span style={{ color: `rgb(100, 100, ${cursorPixelInfo.b.b})` }}>{cursorPixelInfo.b.b}</span>
+              <span style={{ color: `rgb(${cursorPixelInfo.b.r}, 100, 100)` }}>
+                {cursorPixelInfo.b.r}
+              </span>
+              <span style={{ color: `rgb(100, ${cursorPixelInfo.b.g}, 100)` }}>
+                {cursorPixelInfo.b.g}
+              </span>
+              <span style={{ color: `rgb(100, 100, ${cursorPixelInfo.b.b})` }}>
+                {cursorPixelInfo.b.b}
+              </span>
               <span
                 className="w-3 h-3 rounded-sm ml-1"
-                style={{ backgroundColor: `rgb(${cursorPixelInfo.b.r}, ${cursorPixelInfo.b.g}, ${cursorPixelInfo.b.b})` }}
+                style={{
+                  backgroundColor: `rgb(${cursorPixelInfo.b.r}, ${cursorPixelInfo.b.g}, ${cursorPixelInfo.b.b})`,
+                }}
               />
             </div>
             <div className="text-gray-500">Diff:</div>
             <div className="text-orange-400">
-              {Math.abs(cursorPixelInfo.a.r - cursorPixelInfo.b.r)} {Math.abs(cursorPixelInfo.a.g - cursorPixelInfo.b.g)} {Math.abs(cursorPixelInfo.a.b - cursorPixelInfo.b.b)}
+              {Math.abs(cursorPixelInfo.a.r - cursorPixelInfo.b.r)}{' '}
+              {Math.abs(cursorPixelInfo.a.g - cursorPixelInfo.b.g)}{' '}
+              {Math.abs(cursorPixelInfo.a.b - cursorPixelInfo.b.b)}
             </div>
           </div>
         </div>
@@ -1102,11 +1292,11 @@ export function WebGLComparison() {
         <div
           className="absolute border-2 border-[#ff5722] pointer-events-none"
           style={{
-            left: `${((tempROI || webglComparisonSettings.roi)!.x) * 100}%`,
-            top: `${((tempROI || webglComparisonSettings.roi)!.y) * 100}%`,
-            width: `${((tempROI || webglComparisonSettings.roi)!.width) * 100}%`,
-            height: `${((tempROI || webglComparisonSettings.roi)!.height) * 100}%`,
-            boxShadow: '0 0 0 9999px rgba(0,0,0,0.5)'
+            left: `${(tempROI || webglComparisonSettings.roi)!.x * 100}%`,
+            top: `${(tempROI || webglComparisonSettings.roi)!.y * 100}%`,
+            width: `${(tempROI || webglComparisonSettings.roi)!.width * 100}%`,
+            height: `${(tempROI || webglComparisonSettings.roi)!.height * 100}%`,
+            boxShadow: '0 0 0 9999px rgba(0,0,0,0.5)',
           }}
         >
           {/* ROI corner handles */}
@@ -1117,7 +1307,8 @@ export function WebGLComparison() {
           {/* ROI label */}
           {!tempROI && (
             <div className="absolute -top-6 left-0 bg-[#ff5722] text-white text-xs px-2 py-0.5 rounded whitespace-nowrap">
-              ROI: {(webglComparisonSettings.roi!.width * 100).toFixed(0)}% × {(webglComparisonSettings.roi!.height * 100).toFixed(0)}%
+              ROI: {(webglComparisonSettings.roi!.width * 100).toFixed(0)}% ×{' '}
+              {(webglComparisonSettings.roi!.height * 100).toFixed(0)}%
             </div>
           )}
         </div>
@@ -1133,7 +1324,10 @@ export function WebGLComparison() {
       )}
 
       {/* Control buttons */}
-      <div className="absolute top-4 right-4 flex gap-1" style={{ right: webglComparisonSettings.showMetricsOverlay ? '220px' : '16px' }}>
+      <div
+        className="absolute top-4 right-4 flex gap-1"
+        style={{ right: webglComparisonSettings.showMetricsOverlay ? '220px' : '16px' }}
+      >
         {/* WEBGL-001: Toggle Metrics */}
         <button
           onClick={toggleWebGLMetricsOverlay}
@@ -1241,10 +1435,16 @@ export function WebGLComparison() {
         </button>
 
         {/* WEBGL-011: Split View Toggle */}
-        <SplitViewToggle onClick={() => setShowSplitView(!showSplitView)} isActive={showSplitView} />
+        <SplitViewToggle
+          onClick={() => setShowSplitView(!showSplitView)}
+          isActive={showSplitView}
+        />
 
         {/* WEBGL-015: Presets Toggle */}
-        <PresetsToggle onClick={() => setShowPresetsPanel(!showPresetsPanel)} isActive={showPresetsPanel} />
+        <PresetsToggle
+          onClick={() => setShowPresetsPanel(!showPresetsPanel)}
+          isActive={showPresetsPanel}
+        />
 
         {/* WEBGL-013: Batch Comparison Toggle */}
         <BatchComparisonToggle onClick={() => setShowBatchComparison(true)} />
@@ -1299,9 +1499,9 @@ export function WebGLComparison() {
 
       {/* Settings indicator */}
       <div className="absolute bottom-4 left-4 bg-black/70 px-3 py-1.5 rounded text-xs text-gray-400">
-        Amp: {webglComparisonSettings.amplification}x |
-        Threshold: {(webglComparisonSettings.threshold * 100).toFixed(0)}% |
-        Opacity: {(webglComparisonSettings.opacity * 100).toFixed(0)}%
+        Amp: {webglComparisonSettings.amplification}x | Threshold:{' '}
+        {(webglComparisonSettings.threshold * 100).toFixed(0)}% | Opacity:{' '}
+        {(webglComparisonSettings.opacity * 100).toFixed(0)}%
       </div>
 
       {/* Help text for interactive modes */}
@@ -1319,22 +1519,13 @@ export function WebGLComparison() {
       />
 
       {/* WEBGL-011: Split View */}
-      <WebGLSplitView
-        isVisible={showSplitView}
-        onToggle={() => setShowSplitView(false)}
-      />
+      <WebGLSplitView isVisible={showSplitView} onToggle={() => setShowSplitView(false)} />
 
       {/* WEBGL-015: Presets Panel */}
-      <WebGLPresetsPanel
-        isOpen={showPresetsPanel}
-        onClose={() => setShowPresetsPanel(false)}
-      />
+      <WebGLPresetsPanel isOpen={showPresetsPanel} onClose={() => setShowPresetsPanel(false)} />
 
       {/* WEBGL-013: Batch Comparison */}
-      <BatchComparison
-        isOpen={showBatchComparison}
-        onClose={() => setShowBatchComparison(false)}
-      />
+      <BatchComparison isOpen={showBatchComparison} onClose={() => setShowBatchComparison(false)} />
 
       {/* WEBGL-014: Custom Shader Editor */}
       <CustomShaderEditor

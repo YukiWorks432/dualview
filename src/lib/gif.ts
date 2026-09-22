@@ -35,7 +35,7 @@ export async function exportToGIF(
   canvas: HTMLCanvasElement,
   duration: number,
   settings: Partial<GIFExportSettings> = {},
-  onProgress?: (progress: GIFExportProgress) => void
+  onProgress?: (progress: GIFExportProgress) => void,
 ): Promise<Blob> {
   const config = { ...DEFAULT_SETTINGS, ...settings }
   const frameDelay = 1000 / config.fps
@@ -128,7 +128,7 @@ export async function exportComparisonToGIF(
   duration: number,
   settings: Partial<GIFExportSettings> = {},
   onProgress?: (progress: GIFExportProgress) => void,
-  seekTo?: (time: number) => Promise<void>
+  seekTo?: (time: number) => Promise<void>,
 ): Promise<Blob> {
   const config = { ...DEFAULT_SETTINGS, ...settings }
   const frameDelay = 1000 / config.fps
@@ -157,13 +157,13 @@ export async function exportComparisonToGIF(
     // Async frame capture
     const captureAllFrames = async () => {
       for (let i = 0; i < totalFrames; i++) {
-        const time = (i / config.fps)
+        const time = i / config.fps
 
         // Seek to the specific time if function provided
         if (seekTo) {
           await seekTo(time)
           // Small delay to let the frame render
-          await new Promise(r => setTimeout(r, 50))
+          await new Promise((r) => setTimeout(r, 50))
         }
 
         const frameData = captureFrame()

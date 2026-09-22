@@ -1,23 +1,29 @@
 import { useState, useCallback } from 'react'
-import { useProjectStore } from '../stores/projectStore'
-import { useTimelineStore } from '../stores/timelineStore'
-import { useMediaStore } from '../stores/mediaStore'
+
 import { exportComparison, downloadBlob, type ExportOptions } from '../lib/ffmpeg'
 import { exportComparisonToGIF, downloadGIF, GIF_PRESETS, type GIFPreset } from '../lib/gif'
+import { useMediaStore } from '../stores/mediaStore'
+import { useProjectStore } from '../stores/projectStore'
+import { useTimelineStore } from '../stores/timelineStore'
 
 export function useExport(captureFrame?: () => HTMLCanvasElement | null) {
   const [isExporting, setIsExporting] = useState(false)
   const [progress, setProgress] = useState(0)
   const [error, setError] = useState<string | null>(null)
 
-  const { exportSettings, setExportProgress, setSliderPosition, sliderPosition: originalSliderPosition } = useProjectStore()
+  const {
+    exportSettings,
+    setExportProgress,
+    setSliderPosition,
+    sliderPosition: originalSliderPosition,
+  } = useProjectStore()
   const { duration, seek, tracks } = useTimelineStore()
   const { getFile } = useMediaStore()
 
   // Get media durations for loop calculation
   const getMediaDurations = useCallback(() => {
-    const trackA = tracks.find(t => t.type === 'a')
-    const trackB = tracks.find(t => t.type === 'b')
+    const trackA = tracks.find((t) => t.type === 'a')
+    const trackB = tracks.find((t) => t.type === 'b')
     const clipA = trackA?.clips[0]
     const clipB = trackB?.clips[0]
     const mediaA = clipA ? getFile(clipA.mediaId) : null
@@ -49,13 +55,20 @@ export function useExport(captureFrame?: () => HTMLCanvasElement | null) {
         }
 
         // Wait for UI to update
-        await new Promise(resolve => setTimeout(resolve, 100))
+        await new Promise((resolve) => setTimeout(resolve, 100))
 
         // Calculate export duration based on loop setting
         const { durationA, durationB } = getMediaDurations()
         let exportDuration = duration
 
-        console.log('[Export] Duration A:', durationA, 'Duration B:', durationB, 'Timeline duration:', duration)
+        console.log(
+          '[Export] Duration A:',
+          durationA,
+          'Duration B:',
+          durationB,
+          'Timeline duration:',
+          duration,
+        )
 
         if (exportSettings.loopShorterVideo && durationA > 0 && durationB > 0) {
           // Use the longer duration
@@ -71,7 +84,7 @@ export function useExport(captureFrame?: () => HTMLCanvasElement | null) {
         // FIX-005: Create seekTo function for frame capture
         const seekTo = async (time: number): Promise<void> => {
           seek(time)
-          await new Promise(resolve => setTimeout(resolve, 100))
+          await new Promise((resolve) => setTimeout(resolve, 100))
         }
 
         // Use captureFrame if provided, otherwise fall back to canvas
@@ -84,7 +97,11 @@ export function useExport(captureFrame?: () => HTMLCanvasElement | null) {
 
         // Handle GIF export separately
         if (exportSettings.format === 'gif') {
-          setExportProgress({ status: 'preparing', progress: 0, message: 'Preparing GIF export...' })
+          setExportProgress({
+            status: 'preparing',
+            progress: 0,
+            message: 'Preparing GIF export...',
+          })
 
           const preset = exportSettings.gifPreset || 'medium'
           const gifSettings = GIF_PRESETS[preset as GIFPreset]
@@ -110,11 +127,16 @@ export function useExport(captureFrame?: () => HTMLCanvasElement | null) {
                 message: gifProgress.message,
               })
             },
-            seekTo
+            seekTo,
           )
 
           const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
-          const sourceSuffix = exportSettings.exportSource === 'a-only' ? '-A' : exportSettings.exportSource === 'b-only' ? '-B' : ''
+          const sourceSuffix =
+            exportSettings.exportSource === 'a-only'
+              ? '-A'
+              : exportSettings.exportSource === 'b-only'
+                ? '-B'
+                : ''
           const filename = `dualview-export${sourceSuffix}-${timestamp}.gif`
           downloadGIF(blob, filename)
 
@@ -142,11 +164,16 @@ export function useExport(captureFrame?: () => HTMLCanvasElement | null) {
               const phase = p < 70 ? 'Capturing frames' : 'Encoding video'
               setExportProgress({ progress: p, message: `${phase}... ${p}%` })
             },
-            seekTo
+            seekTo,
           )
 
           const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
-          const sourceSuffix = exportSettings.exportSource === 'a-only' ? '-A' : exportSettings.exportSource === 'b-only' ? '-B' : ''
+          const sourceSuffix =
+            exportSettings.exportSource === 'a-only'
+              ? '-A'
+              : exportSettings.exportSource === 'b-only'
+                ? '-B'
+                : ''
           const filename = `dualview-export${sourceSuffix}-${timestamp}.${options.format}`
           downloadBlob(blob, filename)
 
@@ -162,7 +189,16 @@ export function useExport(captureFrame?: () => HTMLCanvasElement | null) {
         setIsExporting(false)
       }
     },
-    [exportSettings, duration, setExportProgress, seek, setSliderPosition, originalSliderPosition, getMediaDurations, captureFrame]
+    [
+      exportSettings,
+      duration,
+      setExportProgress,
+      seek,
+      setSliderPosition,
+      originalSliderPosition,
+      getMediaDurations,
+      captureFrame,
+    ],
   )
 
   return {

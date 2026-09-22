@@ -41,7 +41,7 @@ export async function captureScreen(): Promise<CaptureResult> {
     })
 
     // Wait a frame for the video to render
-    await new Promise(resolve => requestAnimationFrame(resolve))
+    await new Promise((resolve) => requestAnimationFrame(resolve))
 
     // Capture to canvas
     const canvas = document.createElement('canvas')
@@ -54,7 +54,7 @@ export async function captureScreen(): Promise<CaptureResult> {
     const blob = await new Promise<Blob>((resolve, reject) => {
       canvas.toBlob(
         (b) => (b ? resolve(b) : reject(new Error('Failed to create blob'))),
-        'image/png'
+        'image/png',
       )
     })
 
@@ -66,7 +66,7 @@ export async function captureScreen(): Promise<CaptureResult> {
     }
   } finally {
     // Always stop the stream
-    stream.getTracks().forEach(track => track.stop())
+    stream.getTracks().forEach((track) => track.stop())
   }
 }
 
@@ -89,9 +89,9 @@ export async function captureTwoScreens(): Promise<{ fileA: File; fileB: File }>
   const fileA = new File([resultA.blob], `capture-A-${Date.now()}.png`, { type: 'image/png' })
 
   // Prompt for second capture
-  await new Promise<void>(resolve => {
+  await new Promise<void>((resolve) => {
     const confirmed = window.confirm(
-      'First screen captured! Click OK when ready to capture the second screen.'
+      'First screen captured! Click OK when ready to capture the second screen.',
     )
     if (confirmed) resolve()
   })

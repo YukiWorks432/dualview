@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
-import { cn } from '../../lib/utils'
 import { Activity, Waves } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+
+import { cn } from '../../lib/utils'
 
 interface SpectrogramViewProps {
   audioUrlA?: string
@@ -26,7 +27,9 @@ export function SpectrogramView({
   const [waveformDataB, setWaveformDataB] = useState<Float32Array | null>(null)
 
   // Analyze audio and generate spectrogram data
-  const analyzeAudio = async (url: string): Promise<{ spectrogram: Float32Array[], waveform: Float32Array }> => {
+  const analyzeAudio = async (
+    url: string,
+  ): Promise<{ spectrogram: Float32Array[]; waveform: Float32Array }> => {
     const response = await fetch(url)
     const arrayBuffer = await response.arrayBuffer()
     const audioContext = new AudioContext()
@@ -82,27 +85,28 @@ export function SpectrogramView({
 
   useEffect(() => {
     if (audioUrlA) {
-      analyzeAudio(audioUrlA).then(({ spectrogram, waveform }) => {
-        setSpectrogramDataA(spectrogram)
-        setWaveformDataA(waveform)
-      }).catch(console.error)
+      analyzeAudio(audioUrlA)
+        .then(({ spectrogram, waveform }) => {
+          setSpectrogramDataA(spectrogram)
+          setWaveformDataA(waveform)
+        })
+        .catch(console.error)
     }
   }, [audioUrlA])
 
   useEffect(() => {
     if (audioUrlB) {
-      analyzeAudio(audioUrlB).then(({ spectrogram, waveform }) => {
-        setSpectrogramDataB(spectrogram)
-        setWaveformDataB(waveform)
-      }).catch(console.error)
+      analyzeAudio(audioUrlB)
+        .then(({ spectrogram, waveform }) => {
+          setSpectrogramDataB(spectrogram)
+          setWaveformDataB(waveform)
+        })
+        .catch(console.error)
     }
   }, [audioUrlB])
 
   // Draw spectrogram
-  const drawSpectrogram = (
-    canvas: HTMLCanvasElement | null,
-    data: Float32Array[] | null
-  ) => {
+  const drawSpectrogram = (canvas: HTMLCanvasElement | null, data: Float32Array[] | null) => {
     if (!canvas || !data || data.length === 0) return
 
     const ctx = canvas.getContext('2d')
@@ -130,7 +134,7 @@ export function SpectrogramView({
           x * frameWidth,
           height - (y / freqBins) * height,
           frameWidth + 1,
-          height / freqBins + 1
+          height / freqBins + 1,
         )
       }
     }
@@ -140,7 +144,7 @@ export function SpectrogramView({
   const drawWaveform = (
     canvas: HTMLCanvasElement | null,
     data: Float32Array | null,
-    color: string
+    color: string,
   ) => {
     if (!canvas || !data) return
 
@@ -215,10 +219,10 @@ export function SpectrogramView({
           <button
             onClick={() => setViewMode('waveform')}
             className={cn(
-              "px-2 py-1 text-xs rounded flex items-center gap-1",
+              'px-2 py-1 text-xs rounded flex items-center gap-1',
               viewMode === 'waveform'
-                ? "bg-accent text-white"
-                : "bg-surface-hover text-text-muted hover:text-text-primary"
+                ? 'bg-accent text-white'
+                : 'bg-surface-hover text-text-muted hover:text-text-primary',
             )}
           >
             <Waves className="w-3 h-3" />
@@ -227,10 +231,10 @@ export function SpectrogramView({
           <button
             onClick={() => setViewMode('spectrogram')}
             className={cn(
-              "px-2 py-1 text-xs rounded flex items-center gap-1",
+              'px-2 py-1 text-xs rounded flex items-center gap-1',
               viewMode === 'spectrogram'
-                ? "bg-accent text-white"
-                : "bg-surface-hover text-text-muted hover:text-text-primary"
+                ? 'bg-accent text-white'
+                : 'bg-surface-hover text-text-muted hover:text-text-primary',
             )}
           >
             <Activity className="w-3 h-3" />
@@ -281,9 +285,13 @@ export function SpectrogramView({
       {viewMode === 'spectrogram' && (
         <div className="flex items-center justify-center gap-2 text-xs text-text-muted">
           <span>Low</span>
-          <div className="w-24 h-3 rounded" style={{
-            background: 'linear-gradient(to right, hsl(240, 100%, 5%), hsl(180, 100%, 25%), hsl(60, 100%, 35%), hsl(0, 100%, 50%))'
-          }} />
+          <div
+            className="w-24 h-3 rounded"
+            style={{
+              background:
+                'linear-gradient(to right, hsl(240, 100%, 5%), hsl(180, 100%, 25%), hsl(60, 100%, 35%), hsl(0, 100%, 50%))',
+            }}
+          />
           <span>High</span>
         </div>
       )}

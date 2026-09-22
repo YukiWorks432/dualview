@@ -1,10 +1,11 @@
 /**
  * Keyframe Store (KEYFRAME-001, KEYFRAME-002)
- * 
+ *
  * Manages keyframe data for all clips.
  */
 
 import { create } from 'zustand'
+
 import {
   type ClipKeyframes,
   type AnimatableProperty,
@@ -38,7 +39,7 @@ interface KeyframeStore {
     property: AnimatableProperty,
     time: number,
     value: number,
-    easing?: EasingType
+    easing?: EasingType,
   ) => void
 
   removeKeyframeById: (clipId: string, keyframeId: string) => void
@@ -46,7 +47,7 @@ interface KeyframeStore {
   updateKeyframeById: (
     clipId: string,
     keyframeId: string,
-    updates: Partial<Omit<Keyframe, 'id'>>
+    updates: Partial<Omit<Keyframe, 'id'>>,
   ) => void
 
   copyKeyframesAtTime: (clipId: string, time: number) => void
@@ -143,12 +144,12 @@ export const useKeyframeStore = create<KeyframeStore>((set, get) => ({
 
     for (const kf of state.clipboardKeyframes) {
       // Find which property this keyframe belongs to
-      const sourceClipKf = Array.from(state.clipKeyframes.values()).find(ckf =>
-        ckf.tracks.some(t => t.keyframes.some(k => k.id === kf.id))
+      const sourceClipKf = Array.from(state.clipKeyframes.values()).find((ckf) =>
+        ckf.tracks.some((t) => t.keyframes.some((k) => k.id === kf.id)),
       )
 
       if (sourceClipKf) {
-        const track = sourceClipKf.tracks.find(t => t.keyframes.some(k => k.id === kf.id))
+        const track = sourceClipKf.tracks.find((t) => t.keyframes.some((k) => k.id === kf.id))
         if (track) {
           clipKf = addKeyframe(clipKf, track.property, time, kf.value, kf.easing)
         }
@@ -200,12 +201,12 @@ export const useKeyframeStore = create<KeyframeStore>((set, get) => ({
 
     const updated: ClipKeyframes = {
       ...clipKf,
-      tracks: clipKf.tracks.map(track => ({
-        ...track,
-        keyframes: track.keyframes.filter(
-          kf => kf.time < startTime || kf.time > endTime
-        ),
-      })).filter(track => track.keyframes.length > 0),
+      tracks: clipKf.tracks
+        .map((track) => ({
+          ...track,
+          keyframes: track.keyframes.filter((kf) => kf.time < startTime || kf.time > endTime),
+        }))
+        .filter((track) => track.keyframes.length > 0),
     }
 
     const newMap = new Map(state.clipKeyframes)
@@ -225,9 +226,9 @@ export const useKeyframeStore = create<KeyframeStore>((set, get) => ({
 
     const updated: ClipKeyframes = {
       ...clipKf,
-      tracks: clipKf.tracks.map(track => ({
+      tracks: clipKf.tracks.map((track) => ({
         ...track,
-        keyframes: track.keyframes.map(kf => ({
+        keyframes: track.keyframes.map((kf) => ({
           ...kf,
           time: Math.max(0, kf.time + offset),
         })),

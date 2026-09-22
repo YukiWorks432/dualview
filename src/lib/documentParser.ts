@@ -4,14 +4,27 @@
  * Parses CSV, Excel, DOCX, and PDF files for comparison
  */
 
-import type { DocumentMetadata, ParsedDocumentContent, ParsedSheet, ParsedPDFPage, MediaType } from '../types'
-import Papa from 'papaparse'
-import * as XLSX from 'xlsx'
-import mammoth from 'mammoth'
-import * as pdfjsLib from 'pdfjs-dist'
+import type {
+  DocumentMetadata,
+  ParsedDocumentContent,
+  ParsedSheet,
+  ParsedPDFPage,
+  MediaType,
+} from '../types'
 
-// Configure PDF.js worker
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`
+let pdfJsPromise: Promise<typeof import('pdfjs-dist')> | null = null
+
+async function getPdfJs(): Promise<typeof import('pdfjs-dist')> {
+  pdfJsPromise ??= Promise.all([
+    import('pdfjs-dist'),
+    import('pdfjs-dist/build/pdf.worker.min.mjs?url'),
+  ]).then(([pdfjsLib, worker]) => {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = worker.default
+    return pdfjsLib
+  })
+
+  return pdfJsPromise
+}
 
 /**
  * Detect document type from file extension
@@ -37,6 +50,8 @@ export function getDocumentType(fileName: string): MediaType | null {
  * Parse CSV file
  */
 export async function parseCSV(file: File): Promise<DocumentMetadata> {
+  const { default: Papa } = await import('papaparse')
+
   return new Promise((resolve, reject) => {
     Papa.parse(file, {
       complete: (results) => {
@@ -45,23 +60,25 @@ export async function parseCSV(file: File): Promise<DocumentMetadata> {
 
         const parsedContent: ParsedDocumentContent = {
           type: 'csv',
-          sheets: [{
-            name: 'Sheet1',
-            data: data,
-            headers: headers
-          }]
+          sheets: [
+            {
+              name: 'Sheet1',
+              data: data,
+              headers: headers,
+            },
+          ],
         }
 
         resolve({
           rowCount: data.length,
           columnCount: headers.length,
           headers: headers,
-          parsedContent
+          parsedContent,
         })
       },
       error: (error) => {
         reject(new Error(`CSV parse error: ${error.message}`))
-      }
+      },
     })
   })
 }
@@ -70,7 +87,7 @@ export async function parseCSV(file: File): Promise<DocumentMetadata> {
  * Parse Excel file
  */
 export async function parseExcel(file: File): Promise<DocumentMetadata> {
-  const arrayBuffer = await file.arrayBuffer()
+  const [arrayBuffer, XLSX] = await Promise.all([file.arrayBuffer(), import('xlsx')])
   const workbook = XLSX.read(arrayBuffer, { type: 'array' })
 
   const sheets: ParsedSheet[] = []
@@ -84,8 +101,8 @@ export async function parseExcel(file: File): Promise<DocumentMetadata> {
 
     sheets.push({
       name: sheetName,
-      data: data.map(row => row.map(cell => cell?.toString() || '')),
-      headers
+      data: data.map((row) => row.map((cell) => cell?.toString() || '')),
+      headers,
     })
 
     totalRows += data.length
@@ -94,7 +111,7 @@ export async function parseExcel(file: File): Promise<DocumentMetadata> {
 
   const parsedContent: ParsedDocumentContent = {
     type: 'excel',
-    sheets
+    sheets,
   }
 
   return {
@@ -103,7 +120,7 @@ export async function parseExcel(file: File): Promise<DocumentMetadata> {
     sheetNames: workbook.SheetNames,
     sheetCount: workbook.SheetNames.length,
     headers: sheets[0]?.headers,
-    parsedContent
+    parsedContent,
   }
 }
 
@@ -111,7 +128,10 @@ export async function parseExcel(file: File): Promise<DocumentMetadata> {
  * Parse DOCX file
  */
 export async function parseDOCX(file: File): Promise<DocumentMetadata> {
-  const arrayBuffer = await file.arrayBuffer()
+  const [arrayBuffer, { default: mammoth }] = await Promise.all([
+    file.arrayBuffer(),
+    import('mammoth'),
+  ])
 
   const result = await mammoth.convertToHtml({ arrayBuffer })
   const textResult = await mammoth.extractRawText({ arrayBuffer })
@@ -120,19 +140,22 @@ export async function parseDOCX(file: File): Promise<DocumentMetadata> {
   const text = textResult.value
 
   // Count words and paragraphs
-  const words = text.trim().split(/\s+/).filter(w => w.length > 0)
-  const paragraphs = text.split(/\n\n+/).filter(p => p.trim().length > 0)
+  const words = text
+    .trim()
+    .split(/\s+/)
+    .filter((w) => w.length > 0)
+  const paragraphs = text.split(/\n\n+/).filter((p) => p.trim().length > 0)
 
   const parsedContent: ParsedDocumentContent = {
     type: 'docx',
     html,
-    text
+    text,
   }
 
   return {
     wordCount: words.length,
     paragraphCount: paragraphs.length,
-    parsedContent
+    parsedContent,
   }
 }
 
@@ -140,7 +163,7 @@ export async function parseDOCX(file: File): Promise<DocumentMetadata> {
  * Parse PDF file
  */
 export async function parsePDF(file: File): Promise<DocumentMetadata> {
-  const arrayBuffer = await file.arrayBuffer()
+  const [arrayBuffer, pdfjsLib] = await Promise.all([file.arrayBuffer(), getPdfJs()])
   const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise
 
   const pages: ParsedPDFPage[] = []
@@ -151,9 +174,7 @@ export async function parsePDF(file: File): Promise<DocumentMetadata> {
 
     // Extract text
     const textContent = await page.getTextContent()
-    const text = textContent.items
-      .map((item) => ('str' in item ? item.str : ''))
-      .join(' ')
+    const text = textContent.items.map((item) => ('str' in item ? item.str : '')).join(' ')
 
     if (text.trim().length > 0) {
       hasText = true
@@ -173,26 +194,26 @@ export async function parsePDF(file: File): Promise<DocumentMetadata> {
         canvasContext: context,
         viewport,
         // PDF.js 4.x requires the canvas property
-        canvas
+        canvas,
       } as Parameters<typeof page.render>[0]).promise
     }
 
     pages.push({
       pageNumber: i,
       text,
-      imageDataUrl: canvas.toDataURL('image/jpeg', 0.8)
+      imageDataUrl: canvas.toDataURL('image/jpeg', 0.8),
     })
   }
 
   const parsedContent: ParsedDocumentContent = {
     type: 'pdf',
-    pages
+    pages,
   }
 
   return {
     pageCount: pdf.numPages,
     hasText,
-    parsedContent
+    parsedContent,
   }
 }
 
@@ -233,7 +254,7 @@ export function generateDocumentThumbnail(docType: MediaType): string {
     csv: { bg: '#22c55e', fg: '#ffffff', icon: 'CSV' },
     excel: { bg: '#16a34a', fg: '#ffffff', icon: 'XLS' },
     docx: { bg: '#2563eb', fg: '#ffffff', icon: 'DOC' },
-    pdf: { bg: '#dc2626', fg: '#ffffff', icon: 'PDF' }
+    pdf: { bg: '#dc2626', fg: '#ffffff', icon: 'PDF' },
   }
 
   const color = colors[docType] || { bg: '#6b7280', fg: '#ffffff', icon: '?' }

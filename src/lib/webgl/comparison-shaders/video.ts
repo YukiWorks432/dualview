@@ -43,7 +43,7 @@ void main() {
   vec3 result = mix(original, vec3(1.0, 0.5, 0.0), motion * u_opacity);
 
   gl_FragColor = vec4(result, 1.0);
-}`
+}`,
   },
 
   'video-motion': {
@@ -128,7 +128,7 @@ void main() {
   vec3 result = mix(original, vis, u_opacity);
 
   gl_FragColor = vec4(result, 1.0);
-}`
+}`,
   },
 
   'video-flicker': {
@@ -172,7 +172,7 @@ void main() {
   vec3 result = mix(original, flickerColor, flickerIntensity * u_opacity);
 
   gl_FragColor = vec4(result, 1.0);
-}`
+}`,
   },
 
   'video-blend': {
@@ -228,8 +228,8 @@ void main() {
   result = clamp(result, 0.0, 1.0);
 
   gl_FragColor = vec4(result, 1.0);
-}`
-  }
+}`,
+  },
 }
 
 export const VIDEO_VARIANTS = Object.keys(VIDEO_SHADERS)

@@ -1,11 +1,10 @@
 /**
  * TemplateSelector Component (PROJECT-002)
- * 
+ *
  * Allows users to create new projects from templates,
  * save current settings as templates, and manage templates.
  */
 
-import { useState, useMemo, useCallback } from 'react'
 import {
   Layout,
   Grid,
@@ -23,7 +22,8 @@ import {
   Monitor,
   Clapperboard,
 } from 'lucide-react'
-import { cn } from '../../lib/utils'
+import { useState, useMemo, useCallback } from 'react'
+
 import {
   getAllTemplates,
   getTemplatesByCategory,
@@ -36,6 +36,7 @@ import {
   type TemplateCategory,
   type TemplateConfig,
 } from '../../lib/projectTemplates'
+import { cn } from '../../lib/utils'
 import { useProjectStore } from '../../stores/projectStore'
 import { useTimelineStore } from '../../stores/timelineStore'
 
@@ -46,11 +47,18 @@ interface TemplateSelectorProps {
 }
 
 // Category icons and labels
-const CATEGORY_CONFIG: Record<TemplateCategory, { icon: typeof Layout; label: string; description: string }> = {
-  'comparison': { icon: Columns, label: 'Comparison', description: 'Standard A/B comparison' },
-  'before-after': { icon: Clapperboard, label: 'Before & After', description: 'Reveal transitions' },
+const CATEGORY_CONFIG: Record<
+  TemplateCategory,
+  { icon: typeof Layout; label: string; description: string }
+> = {
+  comparison: { icon: Columns, label: 'Comparison', description: 'Standard A/B comparison' },
+  'before-after': {
+    icon: Clapperboard,
+    label: 'Before & After',
+    description: 'Reveal transitions',
+  },
   'ab-test': { icon: Grid, label: 'A/B Test', description: 'Multi-variant testing' },
-  'custom': { icon: Bookmark, label: 'Custom', description: 'Your saved templates' },
+  custom: { icon: Bookmark, label: 'Custom', description: 'Your saved templates' },
 }
 
 // Aspect ratio icons
@@ -71,19 +79,19 @@ export function TemplateSelector({ isOpen, onClose, onApplyTemplate }: TemplateS
   const [showSaveDialog, setShowSaveDialog] = useState(false)
   // Counter to force template refresh after save/delete
   const [templateVersion, setTemplateVersion] = useState(0)
-  
+
   // Store references for saving current as template
   const projectStore = useProjectStore()
   const timelineStore = useTimelineStore()
 
   // Force refresh templates
   const refreshTemplates = useCallback(() => {
-    setTemplateVersion(v => v + 1)
+    setTemplateVersion((v) => v + 1)
   }, [])
 
   // Get templates - re-fetch when templateVersion changes
   const allTemplates = useMemo(() => getAllTemplates(), [templateVersion])
-  
+
   const filteredTemplates = useMemo(() => {
     if (selectedCategory === 'all') return allTemplates
     return getTemplatesByCategory(selectedCategory)
@@ -137,7 +145,10 @@ export function TemplateSelector({ isOpen, onClose, onApplyTemplate }: TemplateS
         setSelectedCategory('custom') // Show the imported templates
         refreshTemplates()
       } catch (error) {
-        alert('Failed to import templates: ' + (error instanceof Error ? error.message : 'Unknown error'))
+        alert(
+          'Failed to import templates: ' +
+            (error instanceof Error ? error.message : 'Unknown error'),
+        )
       }
     }
     input.click()
@@ -190,13 +201,18 @@ export function TemplateSelector({ isOpen, onClose, onApplyTemplate }: TemplateS
               'px-3 py-1.5 text-sm rounded-lg transition-colors flex-shrink-0',
               selectedCategory === 'all'
                 ? 'bg-blue-600 text-white'
-                : 'text-zinc-400 hover:text-white hover:bg-zinc-700'
+                : 'text-zinc-400 hover:text-white hover:bg-zinc-700',
             )}
             onClick={() => setSelectedCategory('all')}
           >
             All
           </button>
-          {(Object.entries(CATEGORY_CONFIG) as [TemplateCategory, typeof CATEGORY_CONFIG[TemplateCategory]][]).map(([category, config]) => {
+          {(
+            Object.entries(CATEGORY_CONFIG) as [
+              TemplateCategory,
+              (typeof CATEGORY_CONFIG)[TemplateCategory],
+            ][]
+          ).map(([category, config]) => {
             const CategoryIcon = config.icon
             return (
               <button
@@ -205,7 +221,7 @@ export function TemplateSelector({ isOpen, onClose, onApplyTemplate }: TemplateS
                   'flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg transition-colors flex-shrink-0',
                   selectedCategory === category
                     ? 'bg-blue-600 text-white'
-                    : 'text-zinc-400 hover:text-white hover:bg-zinc-700'
+                    : 'text-zinc-400 hover:text-white hover:bg-zinc-700',
                 )}
                 onClick={() => setSelectedCategory(category)}
               >
@@ -260,8 +276,8 @@ export function TemplateSelector({ isOpen, onClose, onApplyTemplate }: TemplateS
               const config: TemplateConfig = {
                 aspectRatioSettings: projectStore.aspectRatioSettings,
                 trackCount: timelineStore.tracks.length,
-                trackNames: timelineStore.tracks.map(t => t.name),
-                trackTypes: timelineStore.tracks.map(t => t.type as 'a' | 'b' | 'c' | 'd'),
+                trackNames: timelineStore.tracks.map((t) => t.name),
+                trackTypes: timelineStore.tracks.map((t) => t.type as 'a' | 'b' | 'c' | 'd'),
                 comparisonMode: projectStore.comparisonMode,
                 blendMode: projectStore.blendMode,
                 sliderOrientation: projectStore.sliderOrientation,
@@ -367,7 +383,7 @@ function TemplateCard({
           <h3 className="font-medium text-white text-sm">{template.name}</h3>
         )}
         <p className="text-xs text-zinc-400 mt-1 line-clamp-2">{template.description}</p>
-        
+
         {/* Config summary */}
         <div className="flex items-center gap-2 mt-2 text-[10px] text-zinc-500">
           <span>{template.config.trackCount} tracks</span>
@@ -454,7 +470,7 @@ function SaveTemplateDialog({ onSave, onClose }: SaveTemplateDialogProps) {
         className="bg-zinc-800 rounded-xl p-6 w-full max-w-md shadow-2xl border border-zinc-700"
       >
         <h3 className="text-lg font-semibold text-white mb-4">Save as Template</h3>
-        
+
         <div className="space-y-4">
           <div>
             <label className="block text-xs text-zinc-400 mb-1">Template Name</label>
@@ -483,7 +499,12 @@ function SaveTemplateDialog({ onSave, onClose }: SaveTemplateDialogProps) {
           <div>
             <label className="block text-xs text-zinc-400 mb-1">Category</label>
             <div className="flex gap-2">
-              {(Object.entries(CATEGORY_CONFIG) as [TemplateCategory, typeof CATEGORY_CONFIG[TemplateCategory]][]).map(([cat, config]) => (
+              {(
+                Object.entries(CATEGORY_CONFIG) as [
+                  TemplateCategory,
+                  (typeof CATEGORY_CONFIG)[TemplateCategory],
+                ][]
+              ).map(([cat, config]) => (
                 <button
                   key={cat}
                   type="button"
@@ -491,7 +512,7 @@ function SaveTemplateDialog({ onSave, onClose }: SaveTemplateDialogProps) {
                     'flex-1 py-2 px-3 rounded text-xs transition-colors',
                     category === cat
                       ? 'bg-blue-600 text-white'
-                      : 'bg-zinc-700 text-zinc-400 hover:text-white'
+                      : 'bg-zinc-700 text-zinc-400 hover:text-white',
                   )}
                   onClick={() => setCategory(cat)}
                 >

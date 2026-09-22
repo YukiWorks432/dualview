@@ -1,5 +1,7 @@
-import { FFmpeg } from '@ffmpeg/ffmpeg'
-import { fetchFile, toBlobURL } from '@ffmpeg/util'
+import ffmpegCoreUrl from '@ffmpeg/core/dist/esm/ffmpeg-core.js?url'
+import ffmpegWasmUrl from '@ffmpeg/core/dist/esm/ffmpeg-core.wasm?url'
+import type { FFmpeg } from '@ffmpeg/ffmpeg'
+import { fetchFile } from '@ffmpeg/util'
 
 let ffmpeg: FFmpeg | null = null
 let loaded = false
@@ -14,6 +16,7 @@ export async function getFFmpeg(): Promise<FFmpeg> {
 
   loadingPromise = (async () => {
     console.log('[FFmpeg] Starting to load FFmpeg WASM...')
+    const { FFmpeg } = await import('@ffmpeg/ffmpeg')
     ffmpeg = new FFmpeg()
 
     ffmpeg.on('log', ({ message }) => {
@@ -24,14 +27,11 @@ export async function getFFmpeg(): Promise<FFmpeg> {
       console.log('[FFmpeg] Loading progress:', Math.round(progress * 100) + '%')
     })
 
-    // Load FFmpeg with CORS-enabled URLs
-    const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm'
-    console.log('[FFmpeg] Fetching FFmpeg core from CDN...')
-
+    // Keep the FFmpeg core self-hosted so exports work offline and under strict CSP.
     try {
       await ffmpeg.load({
-        coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
-        wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+        coreURL: ffmpegCoreUrl,
+        wasmURL: ffmpegWasmUrl,
       })
       console.log('[FFmpeg] FFmpeg loaded successfully!')
       loaded = true
@@ -81,7 +81,7 @@ export async function exportComparison(
   fps: number,
   options: ExportOptions,
   onProgress: (progress: number) => void,
-  seekTo?: (time: number) => Promise<void>
+  seekTo?: (time: number) => Promise<void>,
 ): Promise<Blob> {
   console.log('[Export] Starting export, duration:', duration, 'fps:', fps)
 
@@ -110,7 +110,7 @@ export async function exportComparison(
     if (seekTo) {
       await seekTo(time)
       // Wait for frame to render
-      await new Promise(resolve => setTimeout(resolve, 50))
+      await new Promise((resolve) => setTimeout(resolve, 50))
     }
 
     // Capture the current frame
@@ -120,7 +120,7 @@ export async function exportComparison(
     }
 
     const frameData = canvas.toDataURL('image/png')
-    const frameBlob = await fetch(frameData).then(r => r.blob())
+    const frameBlob = await fetch(frameData).then((r) => r.blob())
     const paddedIndex = String(i).padStart(5, '0')
     await ffmpeg.writeFile(`frame_${paddedIndex}.png`, await fetchFile(frameBlob))
 
@@ -139,21 +139,26 @@ export async function exportComparison(
   onProgress(75)
 
   await ffmpeg.exec([
-    '-framerate', fps.toString(),
-    '-i', 'frame_%05d.png',
-    '-c:v', codec,
-    '-pix_fmt', 'yuv420p',
-    '-vf', `scale=${width}:${height}`,
-    '-crf', crf.toString(),
+    '-framerate',
+    fps.toString(),
+    '-i',
+    'frame_%05d.png',
+    '-c:v',
+    codec,
+    '-pix_fmt',
+    'yuv420p',
+    '-vf',
+    `scale=${width}:${height}`,
+    '-crf',
+    crf.toString(),
     `output.${outputFormat}`,
   ])
 
   onProgress(95)
 
   const data = await ffmpeg.readFile(`output.${outputFormat}`)
-  const uint8Data = data instanceof Uint8Array
-    ? new Uint8Array(data)
-    : new TextEncoder().encode(data as string)
+  const uint8Data =
+    data instanceof Uint8Array ? new Uint8Array(data) : new TextEncoder().encode(data as string)
   const blob = new Blob([uint8Data.buffer as ArrayBuffer], {
     type: options.format === 'mp4' ? 'video/mp4' : 'video/webm',
   })
@@ -182,7 +187,7 @@ export async function exportSingleFrame(
   duration: number,
   fps: number,
   options: ExportOptions,
-  onProgress: (progress: number) => void
+  onProgress: (progress: number) => void,
 ): Promise<Blob> {
   const ffmpeg = await getFFmpeg()
   const { width, height } = resolutionMap[options.resolution]
@@ -191,30 +196,37 @@ export async function exportSingleFrame(
   onProgress(0)
 
   const frameData = canvas.toDataURL('image/png')
-  const frameBlob = await fetch(frameData).then(r => r.blob())
+  const frameBlob = await fetch(frameData).then((r) => r.blob())
   await ffmpeg.writeFile('frame.png', await fetchFile(frameBlob))
 
   const outputFormat = options.format === 'mp4' ? 'mp4' : 'webm'
   const codec = options.format === 'mp4' ? 'libx264' : 'libvpx-vp9'
 
   await ffmpeg.exec([
-    '-loop', '1',
-    '-i', 'frame.png',
-    '-c:v', codec,
-    '-t', duration.toString(),
-    '-pix_fmt', 'yuv420p',
-    '-vf', `scale=${width}:${height}`,
-    '-r', fps.toString(),
-    '-crf', crf.toString(),
+    '-loop',
+    '1',
+    '-i',
+    'frame.png',
+    '-c:v',
+    codec,
+    '-t',
+    duration.toString(),
+    '-pix_fmt',
+    'yuv420p',
+    '-vf',
+    `scale=${width}:${height}`,
+    '-r',
+    fps.toString(),
+    '-crf',
+    crf.toString(),
     `output.${outputFormat}`,
   ])
 
   onProgress(100)
 
   const data = await ffmpeg.readFile(`output.${outputFormat}`)
-  const uint8Data = data instanceof Uint8Array
-    ? new Uint8Array(data)
-    : new TextEncoder().encode(data as string)
+  const uint8Data =
+    data instanceof Uint8Array ? new Uint8Array(data) : new TextEncoder().encode(data as string)
   const blob = new Blob([uint8Data.buffer as ArrayBuffer], {
     type: options.format === 'mp4' ? 'video/mp4' : 'video/webm',
   })
@@ -242,7 +254,7 @@ export function downloadBlob(blob: Blob, filename: string) {
 export async function convertWebMToMP4(
   webmBlob: Blob,
   quality: 'low' | 'medium' | 'high',
-  onProgress: (progress: number, message: string) => void
+  onProgress: (progress: number, message: string) => void,
 ): Promise<Blob> {
   onProgress(0, 'Loading FFmpeg...')
   const ffmpeg = await getFFmpeg()
@@ -261,20 +273,24 @@ export async function convertWebMToMP4(
   })
 
   await ffmpeg.exec([
-    '-i', 'input.webm',
-    '-c:v', 'libx264',
-    '-pix_fmt', 'yuv420p',
-    '-crf', crf.toString(),
-    '-preset', 'fast',
+    '-i',
+    'input.webm',
+    '-c:v',
+    'libx264',
+    '-pix_fmt',
+    'yuv420p',
+    '-crf',
+    crf.toString(),
+    '-preset',
+    'fast',
     'output.mp4',
   ])
 
   onProgress(95, 'Finalizing...')
 
   const data = await ffmpeg.readFile('output.mp4')
-  const uint8Data = data instanceof Uint8Array
-    ? new Uint8Array(data)
-    : new TextEncoder().encode(data as string)
+  const uint8Data =
+    data instanceof Uint8Array ? new Uint8Array(data) : new TextEncoder().encode(data as string)
   const mp4Blob = new Blob([uint8Data.buffer as ArrayBuffer], { type: 'video/mp4' })
 
   // Cleanup
@@ -291,7 +307,7 @@ export async function convertWebMToMP4(
 export async function convertWebMToGIF(
   webmBlob: Blob,
   preset: 'small' | 'medium' | 'large' | 'hd',
-  onProgress: (progress: number, message: string) => void
+  onProgress: (progress: number, message: string) => void,
 ): Promise<Blob> {
   onProgress(0, 'Loading FFmpeg...')
   const ffmpeg = await getFFmpeg()
@@ -313,9 +329,12 @@ export async function convertWebMToGIF(
 
   // Generate palette for better GIF quality
   await ffmpeg.exec([
-    '-i', 'input.webm',
-    '-vf', `fps=${fps},scale=${width}:-1:flags=lanczos,palettegen=stats_mode=diff`,
-    '-y', 'palette.png',
+    '-i',
+    'input.webm',
+    '-vf',
+    `fps=${fps},scale=${width}:-1:flags=lanczos,palettegen=stats_mode=diff`,
+    '-y',
+    'palette.png',
   ])
 
   onProgress(50, 'Creating GIF...')
@@ -328,18 +347,21 @@ export async function convertWebMToGIF(
 
   // Create GIF using palette
   await ffmpeg.exec([
-    '-i', 'input.webm',
-    '-i', 'palette.png',
-    '-lavfi', `fps=${fps},scale=${width}:-1:flags=lanczos[x];[x][1:v]paletteuse=dither=bayer:bayer_scale=5`,
-    '-y', 'output.gif',
+    '-i',
+    'input.webm',
+    '-i',
+    'palette.png',
+    '-lavfi',
+    `fps=${fps},scale=${width}:-1:flags=lanczos[x];[x][1:v]paletteuse=dither=bayer:bayer_scale=5`,
+    '-y',
+    'output.gif',
   ])
 
   onProgress(98, 'Finalizing...')
 
   const data = await ffmpeg.readFile('output.gif')
-  const uint8Data = data instanceof Uint8Array
-    ? new Uint8Array(data)
-    : new TextEncoder().encode(data as string)
+  const uint8Data =
+    data instanceof Uint8Array ? new Uint8Array(data) : new TextEncoder().encode(data as string)
   const gifBlob = new Blob([uint8Data.buffer as ArrayBuffer], { type: 'image/gif' })
 
   // Cleanup

@@ -25,7 +25,7 @@ void main() {
   float morphMask = smoothstep(0.0, 0.5, morphProgress + lumDiff * 0.3 * u_intensity);
 
   gl_FragColor = mix(colorA, colorB, morphMask);
-}`
+}`,
   },
 
   warp: {
@@ -49,7 +49,7 @@ void main() {
   vec4 colorB = texture2D(u_textureB, warpedUV);
 
   gl_FragColor = mix(colorA, colorB, p);
-}`
+}`,
   },
 
   liquify: {
@@ -75,7 +75,7 @@ void main() {
   vec4 colorB = texture2D(u_textureB, liquidUV);
 
   gl_FragColor = mix(colorA, colorB, p);
-}`
+}`,
   },
 
   twist: {
@@ -99,7 +99,7 @@ void main() {
   vec4 colorB = texture2D(u_textureB, twistedUV);
 
   gl_FragColor = mix(colorA, colorB, p);
-}`
+}`,
   },
 
   bulge: {
@@ -124,7 +124,7 @@ void main() {
   vec4 colorB = texture2D(u_textureB, bulgedUV);
 
   gl_FragColor = mix(colorA, colorB, p);
-}`
+}`,
   },
 
   wave: {
@@ -147,7 +147,7 @@ void main() {
   vec4 colorB = texture2D(u_textureB, wavedUV);
 
   gl_FragColor = mix(colorA, colorB, p);
-}`
+}`,
   },
 
   ripple: {
@@ -172,7 +172,7 @@ void main() {
   vec4 colorB = texture2D(u_textureB, rippleUV);
 
   gl_FragColor = mix(colorA, colorB, p);
-}`
+}`,
   },
 
   melt: {
@@ -205,8 +205,8 @@ void main() {
   // Mix based on melt line
   float mask = smoothstep(meltLine - 0.05, meltLine + 0.05, uv.y);
   gl_FragColor = mix(colorB, colorA, mask);
-}`
-  }
+}`,
+  },
 }
 
 export const MORPH_VARIANTS = Object.keys(MORPH_SHADERS)

@@ -4,10 +4,11 @@
  * Clickable to seek, highlights peaks/anomalies
  */
 
+import { Play, Pause, BarChart2, Loader2 } from 'lucide-react'
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
+
 import { usePlaybackStore } from '../../stores/playbackStore'
 import { useTimelineStore } from '../../stores/timelineStore'
-import { Play, Pause, BarChart2, Loader2 } from 'lucide-react'
 
 interface DifferenceDataPoint {
   time: number
@@ -36,45 +37,45 @@ export function TemporalDiffGraph({ videoARef, videoBRef, isVisible }: TemporalD
   const sampleInterval = 0.5
 
   // Compute difference between two video frames
-  const computeFrameDifference = useCallback((
-    videoA: HTMLVideoElement,
-    videoB: HTMLVideoElement
-  ): { avgDiff: number; peakDiff: number } => {
-    const canvas = document.createElement('canvas')
-    const width = 160  // Sample at low resolution for speed
-    const height = 90
-    canvas.width = width
-    canvas.height = height
-    const ctx = canvas.getContext('2d')
+  const computeFrameDifference = useCallback(
+    (videoA: HTMLVideoElement, videoB: HTMLVideoElement): { avgDiff: number; peakDiff: number } => {
+      const canvas = document.createElement('canvas')
+      const width = 160 // Sample at low resolution for speed
+      const height = 90
+      canvas.width = width
+      canvas.height = height
+      const ctx = canvas.getContext('2d')
 
-    if (!ctx) return { avgDiff: 0, peakDiff: 0 }
+      if (!ctx) return { avgDiff: 0, peakDiff: 0 }
 
-    // Draw video A
-    ctx.drawImage(videoA, 0, 0, width, height)
-    const dataA = ctx.getImageData(0, 0, width, height)
+      // Draw video A
+      ctx.drawImage(videoA, 0, 0, width, height)
+      const dataA = ctx.getImageData(0, 0, width, height)
 
-    // Draw video B
-    ctx.drawImage(videoB, 0, 0, width, height)
-    const dataB = ctx.getImageData(0, 0, width, height)
+      // Draw video B
+      ctx.drawImage(videoB, 0, 0, width, height)
+      const dataB = ctx.getImageData(0, 0, width, height)
 
-    let totalDiff = 0
-    let peakDiff = 0
-    const pixelCount = width * height
+      let totalDiff = 0
+      let peakDiff = 0
+      const pixelCount = width * height
 
-    for (let i = 0; i < dataA.data.length; i += 4) {
-      const rDiff = Math.abs(dataA.data[i] - dataB.data[i])
-      const gDiff = Math.abs(dataA.data[i + 1] - dataB.data[i + 1])
-      const bDiff = Math.abs(dataA.data[i + 2] - dataB.data[i + 2])
-      const pixelDiff = (rDiff + gDiff + bDiff) / 3
-      totalDiff += pixelDiff
-      peakDiff = Math.max(peakDiff, Math.max(rDiff, gDiff, bDiff))
-    }
+      for (let i = 0; i < dataA.data.length; i += 4) {
+        const rDiff = Math.abs(dataA.data[i] - dataB.data[i])
+        const gDiff = Math.abs(dataA.data[i + 1] - dataB.data[i + 1])
+        const bDiff = Math.abs(dataA.data[i + 2] - dataB.data[i + 2])
+        const pixelDiff = (rDiff + gDiff + bDiff) / 3
+        totalDiff += pixelDiff
+        peakDiff = Math.max(peakDiff, Math.max(rDiff, gDiff, bDiff))
+      }
 
-    return {
-      avgDiff: totalDiff / pixelCount,
-      peakDiff
-    }
-  }, [])
+      return {
+        avgDiff: totalDiff / pixelCount,
+        peakDiff,
+      }
+    },
+    [],
+  )
 
   // Analyze video and build difference data
   const analyzeVideo = useCallback(async () => {
@@ -103,20 +104,20 @@ export function TemporalDiffGraph({ videoARef, videoBRef, isVisible }: TemporalD
 
       // Wait for both to seek
       await Promise.all([
-        new Promise<void>(resolve => {
+        new Promise<void>((resolve) => {
           const handler = () => {
             videoA.removeEventListener('seeked', handler)
             resolve()
           }
           videoA.addEventListener('seeked', handler)
         }),
-        new Promise<void>(resolve => {
+        new Promise<void>((resolve) => {
           const handler = () => {
             videoB.removeEventListener('seeked', handler)
             resolve()
           }
           videoB.addEventListener('seeked', handler)
-        })
+        }),
       ])
 
       // Compute difference
@@ -126,7 +127,7 @@ export function TemporalDiffGraph({ videoARef, videoBRef, isVisible }: TemporalD
       setAnalysisProgress(((i + 1) / totalSamples) * 100)
 
       // Yield to UI
-      await new Promise(resolve => setTimeout(resolve, 0))
+      await new Promise((resolve) => setTimeout(resolve, 0))
     }
 
     // Restore original time
@@ -168,7 +169,7 @@ export function TemporalDiffGraph({ videoARef, videoBRef, isVisible }: TemporalD
     if (!ctx) return
 
     const { width, height } = container.getBoundingClientRect()
-    canvas.width = width * 2  // 2x for retina
+    canvas.width = width * 2 // 2x for retina
     canvas.height = height * 2
     ctx.scale(2, 2)
 
@@ -185,7 +186,7 @@ export function TemporalDiffGraph({ videoARef, videoBRef, isVisible }: TemporalD
     }
 
     // Find max for scaling
-    const maxDiff = Math.max(...data.map(d => d.avgDiff), 1)
+    const maxDiff = Math.max(...data.map((d) => d.avgDiff), 1)
     const graphPadding = { top: 20, right: 20, bottom: 30, left: 50 }
     const graphWidth = width - graphPadding.left - graphPadding.right
     const graphHeight = height - graphPadding.top - graphPadding.bottom
@@ -239,7 +240,7 @@ export function TemporalDiffGraph({ videoARef, videoBRef, isVisible }: TemporalD
 
     // Draw peak markers
     ctx.fillStyle = '#ff0000'
-    peaks.forEach(peakIndex => {
+    peaks.forEach((peakIndex) => {
       const point = data[peakIndex]
       const x = graphPadding.left + (point.time / duration) * graphWidth
       const y = graphPadding.top + graphHeight - (point.avgDiff / maxDiff) * graphHeight
@@ -272,7 +273,7 @@ export function TemporalDiffGraph({ videoARef, videoBRef, isVisible }: TemporalD
 
       // Find closest data point
       const closestPoint = data.reduce((closest, point) =>
-        Math.abs(point.time - hoveredTime) < Math.abs(closest.time - hoveredTime) ? point : closest
+        Math.abs(point.time - hoveredTime) < Math.abs(closest.time - hoveredTime) ? point : closest,
       )
 
       // Draw tooltip
@@ -297,44 +298,49 @@ export function TemporalDiffGraph({ videoARef, videoBRef, isVisible }: TemporalD
     ctx.rotate(-Math.PI / 2)
     ctx.fillText('Avg Difference', 0, 0)
     ctx.restore()
-
   }, [data, currentTime, duration, isVisible, peaks, hoveredTime])
 
   // Handle click to seek
-  const handleClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current
-    const container = containerRef.current
-    if (!canvas || !container || !duration) return
+  const handleClick = useCallback(
+    (e: React.MouseEvent<HTMLCanvasElement>) => {
+      const canvas = canvasRef.current
+      const container = containerRef.current
+      if (!canvas || !container || !duration) return
 
-    const rect = container.getBoundingClientRect()
-    const graphPadding = { left: 50, right: 20 }
-    const graphWidth = rect.width - graphPadding.left - graphPadding.right
-    const x = e.clientX - rect.left - graphPadding.left
+      const rect = container.getBoundingClientRect()
+      const graphPadding = { left: 50, right: 20 }
+      const graphWidth = rect.width - graphPadding.left - graphPadding.right
+      const x = e.clientX - rect.left - graphPadding.left
 
-    if (x >= 0 && x <= graphWidth) {
-      const time = (x / graphWidth) * duration
-      seek(time)
-    }
-  }, [duration, seek])
+      if (x >= 0 && x <= graphWidth) {
+        const time = (x / graphWidth) * duration
+        seek(time)
+      }
+    },
+    [duration, seek],
+  )
 
   // Handle mouse move for hover
-  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current
-    const container = containerRef.current
-    if (!canvas || !container || !duration) return
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent<HTMLCanvasElement>) => {
+      const canvas = canvasRef.current
+      const container = containerRef.current
+      if (!canvas || !container || !duration) return
 
-    const rect = container.getBoundingClientRect()
-    const graphPadding = { left: 50, right: 20 }
-    const graphWidth = rect.width - graphPadding.left - graphPadding.right
-    const x = e.clientX - rect.left - graphPadding.left
+      const rect = container.getBoundingClientRect()
+      const graphPadding = { left: 50, right: 20 }
+      const graphWidth = rect.width - graphPadding.left - graphPadding.right
+      const x = e.clientX - rect.left - graphPadding.left
 
-    if (x >= 0 && x <= graphWidth) {
-      const time = (x / graphWidth) * duration
-      setHoveredTime(time)
-    } else {
-      setHoveredTime(null)
-    }
-  }, [duration])
+      if (x >= 0 && x <= graphWidth) {
+        const time = (x / graphWidth) * duration
+        setHoveredTime(time)
+      } else {
+        setHoveredTime(null)
+      }
+    },
+    [duration],
+  )
 
   const handleMouseLeave = useCallback(() => {
     setHoveredTime(null)

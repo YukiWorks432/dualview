@@ -19,7 +19,7 @@ void main() {
   float mask = smoothstep(edge - softness, edge + softness, v_texCoord.x);
 
   gl_FragColor = mix(colorB, colorA, mask);
-}`
+}`,
   },
 
   right: {
@@ -35,7 +35,7 @@ void main() {
   float mask = smoothstep(edge - softness, edge + softness, 1.0 - v_texCoord.x);
 
   gl_FragColor = mix(colorB, colorA, mask);
-}`
+}`,
   },
 
   up: {
@@ -51,7 +51,7 @@ void main() {
   float mask = smoothstep(edge - softness, edge + softness, v_texCoord.y);
 
   gl_FragColor = mix(colorB, colorA, mask);
-}`
+}`,
   },
 
   down: {
@@ -67,7 +67,7 @@ void main() {
   float mask = smoothstep(edge - softness, edge + softness, 1.0 - v_texCoord.y);
 
   gl_FragColor = mix(colorB, colorA, mask);
-}`
+}`,
   },
 
   radial: {
@@ -87,7 +87,7 @@ void main() {
   float mask = smoothstep(edge - softness, edge + softness, normalizedAngle);
 
   gl_FragColor = mix(colorB, colorA, mask);
-}`
+}`,
   },
 
   radial_ccw: {
@@ -107,7 +107,7 @@ void main() {
   float mask = smoothstep(edge - softness, edge + softness, normalizedAngle);
 
   gl_FragColor = mix(colorB, colorA, mask);
-}`
+}`,
   },
 
   spiral: {
@@ -131,7 +131,7 @@ void main() {
   float mask = smoothstep(edge - softness, edge + softness, normalizedAngle);
 
   gl_FragColor = mix(colorB, colorA, mask);
-}`
+}`,
   },
 
   clock: {
@@ -151,7 +151,7 @@ void main() {
   float mask = smoothstep(edge - softness, edge + softness, normalizedAngle);
 
   gl_FragColor = mix(colorB, colorA, mask);
-}`
+}`,
   },
 
   clock_ccw: {
@@ -171,7 +171,7 @@ void main() {
   float mask = smoothstep(edge - softness, edge + softness, normalizedAngle);
 
   gl_FragColor = mix(colorB, colorA, mask);
-}`
+}`,
   },
 
   iris: {
@@ -191,7 +191,7 @@ void main() {
   float mask = smoothstep(edge - softness, edge + softness, dist);
 
   gl_FragColor = mix(colorA, colorB, mask);
-}`
+}`,
   },
 
   blinds_h: {
@@ -210,7 +210,7 @@ void main() {
   float mask = smoothstep(edge - softness, edge + softness, blindPos);
 
   gl_FragColor = mix(colorB, colorA, mask);
-}`
+}`,
   },
 
   blinds_v: {
@@ -229,8 +229,8 @@ void main() {
   float mask = smoothstep(edge - softness, edge + softness, blindPos);
 
   gl_FragColor = mix(colorB, colorA, mask);
-}`
-  }
+}`,
+  },
 }
 
 export const WIPE_VARIANTS = Object.keys(WIPE_SHADERS)

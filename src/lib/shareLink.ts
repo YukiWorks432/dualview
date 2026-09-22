@@ -1,6 +1,6 @@
 /**
  * Share Link Utilities (SHARE-001, SHARE-002, SHARE-003)
- * 
+ *
  * Generate shareable links, embed codes, and social media export presets.
  */
 
@@ -23,7 +23,7 @@ export interface ShareLinkConfig {
 export function generateShareLink(config: ShareLinkConfig): string {
   const baseUrl = window.location.origin
   const params = new URLSearchParams()
-  
+
   params.set('mode', config.mode)
   params.set('ar', config.aspectRatio)
   params.set('sp', String(config.sliderPosition))
@@ -32,7 +32,7 @@ export function generateShareLink(config: ShareLinkConfig): string {
   if (config.loop) params.set('loop', '1')
   if (!config.showControls) params.set('nocontrols', '1')
   params.set('theme', config.theme)
-  
+
   return `${baseUrl}/share?${params.toString()}`
 }
 
@@ -41,9 +41,9 @@ export function parseShareLink(url: string): Partial<ShareLinkConfig> {
   try {
     const parsed = new URL(url)
     const params = parsed.searchParams
-    
+
     return {
-      mode: params.get('mode') as ComparisonMode || 'slider',
+      mode: (params.get('mode') as ComparisonMode) || 'slider',
       aspectRatio: params.get('ar') || '16:9',
       sliderPosition: parseInt(params.get('sp') || '50'),
       sliderOrientation: params.get('so') === 'h' ? 'horizontal' : 'vertical',
@@ -68,8 +68,9 @@ export interface EmbedConfig extends ShareLinkConfig {
 // Generate embed code for external sites
 export function generateEmbedCode(config: EmbedConfig): string {
   const shareUrl = generateShareLink(config)
-  const borderRadiusStyle = config.borderRadius > 0 ? `border-radius: ${config.borderRadius}px;` : ''
-  
+  const borderRadiusStyle =
+    config.borderRadius > 0 ? `border-radius: ${config.borderRadius}px;` : ''
+
   const iframe = `<iframe 
   src="${shareUrl}"
   width="${config.width === 'responsive' ? '100%' : config.width}"
@@ -79,7 +80,7 @@ export function generateEmbedCode(config: EmbedConfig): string {
   loading="lazy"
   title="DualView Comparison"
 ></iframe>`
-  
+
   // Clean up whitespace
   return iframe.replace(/\n\s+/g, '\n  ').trim()
 }
@@ -87,7 +88,7 @@ export function generateEmbedCode(config: EmbedConfig): string {
 // Generate responsive embed wrapper
 export function generateResponsiveEmbed(config: EmbedConfig): string {
   const shareUrl = generateShareLink(config)
-  
+
   return `<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; border-radius: ${config.borderRadius}px;">
   <iframe 
     src="${shareUrl}"
@@ -224,12 +225,14 @@ export const SOCIAL_EXPORT_PRESETS: SocialExportPreset[] = [
 
 // Get preset by ID
 export function getSocialPreset(id: string): SocialExportPreset | undefined {
-  return SOCIAL_EXPORT_PRESETS.find(p => p.id === id)
+  return SOCIAL_EXPORT_PRESETS.find((p) => p.id === id)
 }
 
 // Get presets by platform
-export function getPresetsByPlatform(platform: SocialExportPreset['platform']): SocialExportPreset[] {
-  return SOCIAL_EXPORT_PRESETS.filter(p => p.platform === platform)
+export function getPresetsByPlatform(
+  platform: SocialExportPreset['platform'],
+): SocialExportPreset[] {
+  return SOCIAL_EXPORT_PRESETS.filter((p) => p.platform === platform)
 }
 
 // QR code generation (uses external API for simplicity)
@@ -246,7 +249,7 @@ export async function copyToClipboard(text: string): Promise<boolean> {
       await navigator.clipboard.writeText(text)
       return true
     }
-    
+
     // Fallback for older browsers
     const textarea = document.createElement('textarea')
     textarea.value = text
@@ -263,7 +266,12 @@ export async function copyToClipboard(text: string): Promise<boolean> {
 }
 
 // Web Share API
-export async function shareViaWebShare(data: { title: string; text?: string; url?: string; files?: File[] }): Promise<boolean> {
+export async function shareViaWebShare(data: {
+  title: string
+  text?: string
+  url?: string
+  files?: File[]
+}): Promise<boolean> {
   if (!navigator.share) {
     return false
   }

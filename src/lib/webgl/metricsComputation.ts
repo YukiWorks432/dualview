@@ -15,7 +15,7 @@ function samplePixels(
   width: number,
   height: number,
   sampleRate: number = 4,
-  roi?: ROIRect | null
+  roi?: ROIRect | null,
 ): { r: number; g: number; b: number }[] {
   const samples: { r: number; g: number; b: number }[] = []
 
@@ -31,7 +31,7 @@ function samplePixels(
       samples.push({
         r: data[i],
         g: data[i + 1],
-        b: data[i + 2]
+        b: data[i + 2],
       })
     }
   }
@@ -55,25 +55,28 @@ function rgbToLab(r: number, g: number, b: number): { L: number; a: number; b: n
 
   // Convert to XYZ
   const x = (rn * 0.4124564 + gn * 0.3575761 + bn * 0.1804375) / 0.95047
-  const y = (rn * 0.2126729 + gn * 0.7151522 + bn * 0.0721750)
-  const z = (rn * 0.0193339 + gn * 0.1191920 + bn * 0.9503041) / 1.08883
+  const y = rn * 0.2126729 + gn * 0.7151522 + bn * 0.072175
+  const z = (rn * 0.0193339 + gn * 0.119192 + bn * 0.9503041) / 1.08883
 
   // Convert to LAB
-  const fx = x > 0.008856 ? Math.pow(x, 1/3) : (7.787 * x) + 16/116
-  const fy = y > 0.008856 ? Math.pow(y, 1/3) : (7.787 * y) + 16/116
-  const fz = z > 0.008856 ? Math.pow(z, 1/3) : (7.787 * z) + 16/116
+  const fx = x > 0.008856 ? Math.pow(x, 1 / 3) : 7.787 * x + 16 / 116
+  const fy = y > 0.008856 ? Math.pow(y, 1 / 3) : 7.787 * y + 16 / 116
+  const fz = z > 0.008856 ? Math.pow(z, 1 / 3) : 7.787 * z + 16 / 116
 
   return {
-    L: (116 * fy) - 16,
+    L: 116 * fy - 16,
     a: 500 * (fx - fy),
-    b: 200 * (fy - fz)
+    b: 200 * (fy - fz),
   }
 }
 
 /**
  * Calculate Delta E (CIE94) between two LAB colors
  */
-function deltaE94(lab1: { L: number; a: number; b: number }, lab2: { L: number; a: number; b: number }): number {
+function deltaE94(
+  lab1: { L: number; a: number; b: number },
+  lab2: { L: number; a: number; b: number },
+): number {
   const dL = lab1.L - lab2.L
   const da = lab1.a - lab2.a
   const db = lab1.b - lab2.b
@@ -105,7 +108,7 @@ function deltaE94(lab1: { L: number; a: number; b: number }, lab2: { L: number; 
  */
 function calculateSSIM(
   pixelsA: { r: number; g: number; b: number }[],
-  pixelsB: { r: number; g: number; b: number }[]
+  pixelsB: { r: number; g: number; b: number }[],
 ): number {
   if (pixelsA.length !== pixelsB.length || pixelsA.length === 0) {
     return 0
@@ -116,7 +119,8 @@ function calculateSSIM(
   const c2 = (0.03 * 255) ** 2
 
   // Calculate means
-  let meanA = 0, meanB = 0
+  let meanA = 0,
+    meanB = 0
   for (let i = 0; i < n; i++) {
     const lumA = 0.299 * pixelsA[i].r + 0.587 * pixelsA[i].g + 0.114 * pixelsA[i].b
     const lumB = 0.299 * pixelsB[i].r + 0.587 * pixelsB[i].g + 0.114 * pixelsB[i].b
@@ -127,7 +131,9 @@ function calculateSSIM(
   meanB /= n
 
   // Calculate variances and covariance
-  let varA = 0, varB = 0, covar = 0
+  let varA = 0,
+    varB = 0,
+    covar = 0
   for (let i = 0; i < n; i++) {
     const lumA = 0.299 * pixelsA[i].r + 0.587 * pixelsA[i].g + 0.114 * pixelsA[i].b
     const lumB = 0.299 * pixelsB[i].r + 0.587 * pixelsB[i].g + 0.114 * pixelsB[i].b
@@ -159,7 +165,7 @@ export function computeWebGLMetrics(
   canvasA: HTMLCanvasElement | OffscreenCanvas,
   canvasB: HTMLCanvasElement | OffscreenCanvas,
   threshold: number = 10,
-  roi?: ROIRect | null
+  roi?: ROIRect | null,
 ): WebGLAnalysisMetrics {
   const ctxA = canvasA.getContext('2d')
   const ctxB = canvasB.getContext('2d')
@@ -174,7 +180,7 @@ export function computeWebGLMetrics(
       timestamp: Date.now(),
       passPixelCount: 0,
       failPixelCount: 0,
-      totalPixelCount: 0
+      totalPixelCount: 0,
     }
   }
 
@@ -195,7 +201,7 @@ export function computeMetricsFromImageData(
   imageDataA: ImageData,
   imageDataB: ImageData,
   threshold: number = 10,
-  roi?: ROIRect | null
+  roi?: ROIRect | null,
 ): WebGLAnalysisMetrics {
   const width = imageDataA.width
   const height = imageDataA.height
@@ -254,7 +260,7 @@ export function computeMetricsFromImageData(
     // WEBGL-006: Threshold pass/fail stats
     passPixelCount,
     failPixelCount: diffPixelCount,
-    totalPixelCount: numSamples
+    totalPixelCount: numSamples,
   }
 }
 
@@ -270,7 +276,7 @@ export function computeMetricsFromWebGLCanvas(
   videoA: HTMLVideoElement | HTMLImageElement,
   videoB: HTMLVideoElement | HTMLImageElement,
   threshold: number = 10,
-  roi?: ROIRect | null
+  roi?: ROIRect | null,
 ): WebGLAnalysisMetrics {
   // Create temporary canvases to draw the video frames
   const canvasA = document.createElement('canvas')
@@ -298,7 +304,7 @@ export function computeMetricsFromWebGLCanvas(
       timestamp: Date.now(),
       passPixelCount: 0,
       failPixelCount: 0,
-      totalPixelCount: 0
+      totalPixelCount: 0,
     }
   }
 

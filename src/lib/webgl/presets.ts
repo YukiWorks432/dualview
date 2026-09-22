@@ -20,7 +20,7 @@ export const PRESET_CATEGORIES = {
   qa: 'QA & Testing',
   ai: 'AI Comparison',
   vfx: 'VFX & Post',
-  custom: 'Custom'
+  custom: 'Custom',
 } as const
 
 // Built-in presets for common use cases
@@ -34,10 +34,10 @@ export const BUILTIN_PRESETS: WebGLPreset[] = [
       mode: 'diff-absolute' as WebGLComparisonMode,
       amplification: 5,
       threshold: 0.02,
-      colorScheme: 'heat'
+      colorScheme: 'heat',
     },
     createdAt: 0,
-    isBuiltin: true
+    isBuiltin: true,
   },
   {
     id: 'preset-perceptual',
@@ -48,10 +48,10 @@ export const BUILTIN_PRESETS: WebGLPreset[] = [
       mode: 'diff-perceptual' as WebGLComparisonMode,
       amplification: 3,
       threshold: 0.01,
-      colorScheme: 'rainbow'
+      colorScheme: 'rainbow',
     },
     createdAt: 0,
-    isBuiltin: true
+    isBuiltin: true,
   },
   {
     id: 'preset-structure',
@@ -62,10 +62,10 @@ export const BUILTIN_PRESETS: WebGLPreset[] = [
       mode: 'struct-ssim' as WebGLComparisonMode,
       amplification: 5,
       threshold: 0.05,
-      colorScheme: 'heat'
+      colorScheme: 'heat',
     },
     createdAt: 0,
-    isBuiltin: true
+    isBuiltin: true,
   },
   // QA Presets
   {
@@ -78,10 +78,10 @@ export const BUILTIN_PRESETS: WebGLPreset[] = [
       amplification: 1,
       threshold: 0.01,
       colorScheme: 'redgreen',
-      showMetricsOverlay: true
+      showMetricsOverlay: true,
     },
     createdAt: 0,
-    isBuiltin: true
+    isBuiltin: true,
   },
   {
     id: 'preset-qa-tolerance',
@@ -93,10 +93,10 @@ export const BUILTIN_PRESETS: WebGLPreset[] = [
       amplification: 1,
       threshold: 0.05,
       colorScheme: 'redgreen',
-      showMetricsOverlay: true
+      showMetricsOverlay: true,
     },
     createdAt: 0,
-    isBuiltin: true
+    isBuiltin: true,
   },
   // AI Comparison Presets
   {
@@ -109,10 +109,10 @@ export const BUILTIN_PRESETS: WebGLPreset[] = [
       amplification: 20,
       threshold: 0.03,
       colorScheme: 'rainbow',
-      showMetricsOverlay: true
+      showMetricsOverlay: true,
     },
     createdAt: 0,
-    isBuiltin: true
+    isBuiltin: true,
   },
   {
     id: 'preset-ai-upscale',
@@ -123,10 +123,10 @@ export const BUILTIN_PRESETS: WebGLPreset[] = [
       mode: 'struct-edge' as WebGLComparisonMode,
       amplification: 10,
       threshold: 0.02,
-      colorScheme: 'grayscale'
+      colorScheme: 'grayscale',
     },
     createdAt: 0,
-    isBuiltin: true
+    isBuiltin: true,
   },
   // VFX Presets
   {
@@ -137,10 +137,10 @@ export const BUILTIN_PRESETS: WebGLPreset[] = [
     settings: {
       mode: 'pro-checkerboard' as WebGLComparisonMode,
       checkerSize: 32,
-      opacity: 1.0
+      opacity: 1.0,
     },
     createdAt: 0,
-    isBuiltin: true
+    isBuiltin: true,
   },
   {
     id: 'preset-vfx-color',
@@ -151,10 +151,10 @@ export const BUILTIN_PRESETS: WebGLPreset[] = [
       mode: 'color-hue' as WebGLComparisonMode,
       amplification: 5,
       colorScheme: 'rainbow',
-      showScaleBar: true
+      showScaleBar: true,
     },
     createdAt: 0,
-    isBuiltin: true
+    isBuiltin: true,
   },
   {
     id: 'preset-vfx-flicker',
@@ -164,11 +164,11 @@ export const BUILTIN_PRESETS: WebGLPreset[] = [
     settings: {
       mode: 'video-flicker' as WebGLComparisonMode,
       amplification: 15,
-      threshold: 0.03
+      threshold: 0.03,
     },
     createdAt: 0,
-    isBuiltin: true
-  }
+    isBuiltin: true,
+  },
 ]
 
 const STORAGE_KEY = 'dualview-webgl-presets'
@@ -195,12 +195,14 @@ export function loadPresets(): WebGLPreset[] {
 /**
  * Save a custom preset
  */
-export function savePreset(preset: Omit<WebGLPreset, 'id' | 'createdAt' | 'isBuiltin'>): WebGLPreset {
+export function savePreset(
+  preset: Omit<WebGLPreset, 'id' | 'createdAt' | 'isBuiltin'>,
+): WebGLPreset {
   const newPreset: WebGLPreset = {
     ...preset,
     id: `preset-custom-${Date.now()}`,
     createdAt: Date.now(),
-    isBuiltin: false
+    isBuiltin: false,
   }
 
   try {
@@ -223,7 +225,7 @@ export function deletePreset(presetId: string): boolean {
     const stored = localStorage.getItem(STORAGE_KEY)
     if (stored) {
       const customPresets: WebGLPreset[] = JSON.parse(stored)
-      const filtered = customPresets.filter(p => p.id !== presetId)
+      const filtered = customPresets.filter((p) => p.id !== presetId)
       localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered))
       return true
     }
@@ -247,11 +249,11 @@ export function importPresets(json: string): WebGLPreset[] {
   try {
     const presets: WebGLPreset[] = JSON.parse(json)
     // Validate and re-id imported presets
-    return presets.map(p => ({
+    return presets.map((p) => ({
       ...p,
       id: `preset-imported-${Date.now()}-${Math.random().toString(36).slice(2)}`,
       isBuiltin: false,
-      createdAt: Date.now()
+      createdAt: Date.now(),
     }))
   } catch (e) {
     console.error('Failed to import presets:', e)

@@ -66,7 +66,7 @@ export async function generateModelThumbnail(url: string): Promise<string> {
         // On error, return empty string
         renderer.dispose()
         resolve('')
-      }
+      },
     )
   })
 }

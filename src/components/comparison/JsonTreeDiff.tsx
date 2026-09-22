@@ -1,9 +1,3 @@
-/**
- * TXT-004: JSON Tree Diff
- * Professional side-by-side JSON comparison with tree view
- */
-import { useState, useMemo } from 'react'
-import { cn } from '../../lib/utils'
 import {
   ChevronRight,
   ChevronDown,
@@ -14,8 +8,15 @@ import {
   EyeOff,
   Layers,
   Copy,
-  Check
+  Check,
 } from 'lucide-react'
+/**
+ * TXT-004: JSON Tree Diff
+ * Professional side-by-side JSON comparison with tree view
+ */
+import { useState, useMemo } from 'react'
+
+import { cn } from '../../lib/utils'
 
 interface JsonTreeDiffProps {
   jsonA: string
@@ -63,9 +64,12 @@ function buildDiffTree(a: unknown, b: unknown, key: string = 'root', path: strin
   const type = compareValues(a, b)
 
   if (
-    a && b &&
-    typeof a === 'object' && typeof b === 'object' &&
-    !Array.isArray(a) && !Array.isArray(b)
+    a &&
+    b &&
+    typeof a === 'object' &&
+    typeof b === 'object' &&
+    !Array.isArray(a) &&
+    !Array.isArray(b)
   ) {
     const aObj = a as Record<string, unknown>
     const bObj = b as Record<string, unknown>
@@ -76,8 +80,15 @@ function buildDiffTree(a: unknown, b: unknown, key: string = 'root', path: strin
       children.push(buildDiffTree(aObj[childKey], bObj[childKey], childKey, currentPath))
     }
 
-    const hasChanges = children.some(c => c.type !== 'unchanged')
-    return { key, path: currentPath, valueA: a, valueB: b, type: hasChanges ? 'modified' : 'unchanged', children }
+    const hasChanges = children.some((c) => c.type !== 'unchanged')
+    return {
+      key,
+      path: currentPath,
+      valueA: a,
+      valueB: b,
+      type: hasChanges ? 'modified' : 'unchanged',
+      children,
+    }
   }
 
   if (Array.isArray(a) && Array.isArray(b)) {
@@ -86,8 +97,16 @@ function buildDiffTree(a: unknown, b: unknown, key: string = 'root', path: strin
     for (let i = 0; i < maxLen; i++) {
       children.push(buildDiffTree(a[i], b[i], `${i}`, currentPath))
     }
-    const hasChanges = children.some(c => c.type !== 'unchanged')
-    return { key, path: currentPath, valueA: a, valueB: b, type: hasChanges ? 'modified' : 'unchanged', children, isArray: true }
+    const hasChanges = children.some((c) => c.type !== 'unchanged')
+    return {
+      key,
+      path: currentPath,
+      valueA: a,
+      valueB: b,
+      type: hasChanges ? 'modified' : 'unchanged',
+      children,
+      isArray: true,
+    }
   }
 
   return { key, path: currentPath, valueA: a, valueB: b, type }
@@ -118,14 +137,22 @@ function getTypeColor(val: unknown): string {
 }
 
 // Tree Node Component
-function TreeNode({ node, depth = 0, showUnchanged }: { node: DiffNode; depth?: number; showUnchanged: boolean }) {
+function TreeNode({
+  node,
+  depth = 0,
+  showUnchanged,
+}: {
+  node: DiffNode
+  depth?: number
+  showUnchanged: boolean
+}) {
   const [isExpanded, setIsExpanded] = useState(depth < 3 || node.type !== 'unchanged')
   const hasChildren = node.children && node.children.length > 0
 
   if (!showUnchanged && node.type === 'unchanged' && !hasChildren) return null
 
   const filteredChildren = hasChildren
-    ? node.children!.filter(c => showUnchanged || c.type !== 'unchanged' || c.children?.length)
+    ? node.children!.filter((c) => showUnchanged || c.type !== 'unchanged' || c.children?.length)
     : []
 
   if (!showUnchanged && node.type === 'unchanged' && filteredChildren.length === 0) return null
@@ -134,14 +161,14 @@ function TreeNode({ node, depth = 0, showUnchanged }: { node: DiffNode; depth?: 
     added: 'bg-green-500/10 border-l-2 border-l-green-500',
     removed: 'bg-red-500/10 border-l-2 border-l-red-500',
     modified: 'bg-amber-500/5 border-l-2 border-l-amber-500',
-    unchanged: ''
+    unchanged: '',
   }
 
   const diffIcons = {
     added: <Plus className="w-3 h-3 text-green-400" />,
     removed: <Minus className="w-3 h-3 text-red-400" />,
     modified: <PenLine className="w-3 h-3 text-amber-400" />,
-    unchanged: null
+    unchanged: null,
   }
 
   return (
@@ -149,7 +176,7 @@ function TreeNode({ node, depth = 0, showUnchanged }: { node: DiffNode; depth?: 
       <div
         className={cn(
           'flex items-center gap-1.5 py-1 px-2 hover:bg-white/5 cursor-pointer transition-colors',
-          diffColors[node.type]
+          diffColors[node.type],
         )}
         style={{ paddingLeft: `${depth * 16 + 8}px` }}
         onClick={() => hasChildren && setIsExpanded(!isExpanded)}
@@ -157,9 +184,11 @@ function TreeNode({ node, depth = 0, showUnchanged }: { node: DiffNode; depth?: 
         {/* Expand/collapse arrow */}
         <span className="w-4 flex-shrink-0">
           {hasChildren ? (
-            isExpanded
-              ? <ChevronDown className="w-3.5 h-3.5 text-text-muted" />
-              : <ChevronRight className="w-3.5 h-3.5 text-text-muted" />
+            isExpanded ? (
+              <ChevronDown className="w-3.5 h-3.5 text-text-muted" />
+            ) : (
+              <ChevronRight className="w-3.5 h-3.5 text-text-muted" />
+            )
           ) : null}
         </span>
 
@@ -169,10 +198,7 @@ function TreeNode({ node, depth = 0, showUnchanged }: { node: DiffNode; depth?: 
         </span>
 
         {/* Key */}
-        <span className={cn(
-          'font-medium',
-          node.isArray ? 'text-blue-300' : 'text-purple-400'
-        )}>
+        <span className={cn('font-medium', node.isArray ? 'text-blue-300' : 'text-purple-400')}>
           {node.isArray ? `[${node.key}]` : node.key}
         </span>
 
@@ -187,18 +213,12 @@ function TreeNode({ node, depth = 0, showUnchanged }: { node: DiffNode; depth?: 
                 {formatValue(node.valueA)}
               </span>
             )}
-            {node.type === 'modified' && (
-              <span className="text-text-muted">→</span>
-            )}
+            {node.type === 'modified' && <span className="text-text-muted">→</span>}
             {(node.type === 'added' || node.type === 'modified') && (
-              <span className={getTypeColor(node.valueB)}>
-                {formatValue(node.valueB)}
-              </span>
+              <span className={getTypeColor(node.valueB)}>{formatValue(node.valueB)}</span>
             )}
             {node.type === 'unchanged' && (
-              <span className={getTypeColor(node.valueA)}>
-                {formatValue(node.valueA)}
-              </span>
+              <span className={getTypeColor(node.valueA)}>{formatValue(node.valueA)}</span>
             )}
           </div>
         )}
@@ -215,7 +235,12 @@ function TreeNode({ node, depth = 0, showUnchanged }: { node: DiffNode; depth?: 
       {hasChildren && isExpanded && (
         <div>
           {filteredChildren.map((child, i) => (
-            <TreeNode key={`${child.path}-${i}`} node={child} depth={depth + 1} showUnchanged={showUnchanged} />
+            <TreeNode
+              key={`${child.path}-${i}`}
+              node={child}
+              depth={depth + 1}
+              showUnchanged={showUnchanged}
+            />
           ))}
         </div>
       )}
@@ -249,19 +274,11 @@ function SideBySideView({ jsonA, jsonB }: { jsonA: string; jsonB: string }) {
             const bLine = linesB[i] || ''
             const isDiff = line !== bLine
             return (
-              <div
-                key={i}
-                className={cn(
-                  'flex',
-                  isDiff && line && 'bg-red-500/10'
-                )}
-              >
+              <div key={i} className={cn('flex', isDiff && line && 'bg-red-500/10')}>
                 <span className="w-8 text-right pr-2 text-text-muted/50 select-none border-r border-border mr-2">
                   {i + 1}
                 </span>
-                <span className={cn(
-                  isDiff && line ? 'text-red-400' : 'text-text-primary'
-                )}>
+                <span className={cn(isDiff && line ? 'text-red-400' : 'text-text-primary')}>
                   {line || ' '}
                 </span>
               </div>
@@ -281,19 +298,11 @@ function SideBySideView({ jsonA, jsonB }: { jsonA: string; jsonB: string }) {
             const lineB = linesB[i] || ''
             const isDiff = lineA !== lineB
             return (
-              <div
-                key={i}
-                className={cn(
-                  'flex',
-                  isDiff && lineB && 'bg-green-500/10'
-                )}
-              >
+              <div key={i} className={cn('flex', isDiff && lineB && 'bg-green-500/10')}>
                 <span className="w-8 text-right pr-2 text-text-muted/50 select-none border-r border-border mr-2">
                   {i + 1}
                 </span>
-                <span className={cn(
-                  isDiff && lineB ? 'text-green-400' : 'text-text-primary'
-                )}>
+                <span className={cn(isDiff && lineB ? 'text-green-400' : 'text-text-primary')}>
                   {lineB || ' '}
                 </span>
               </div>
@@ -317,14 +326,25 @@ export function JsonTreeDiff({ jsonA, jsonB }: JsonTreeDiffProps) {
   }, [jsonA, jsonB])
 
   const stats = useMemo(() => {
-    let added = 0, removed = 0, modified = 0, unchanged = 0
+    let added = 0,
+      removed = 0,
+      modified = 0,
+      unchanged = 0
     const countNodes = (node: DiffNode) => {
       if (!node.children) {
         switch (node.type) {
-          case 'added': added++; break
-          case 'removed': removed++; break
-          case 'modified': modified++; break
-          case 'unchanged': unchanged++; break
+          case 'added':
+            added++
+            break
+          case 'removed':
+            removed++
+            break
+          case 'modified':
+            modified++
+            break
+          case 'unchanged':
+            unchanged++
+            break
         }
       } else {
         node.children.forEach(countNodes)
@@ -366,9 +386,7 @@ export function JsonTreeDiff({ jsonA, jsonB }: JsonTreeDiffProps) {
             </span>
           </div>
           {stats.total > 0 && (
-            <span className="text-[10px] text-text-muted">
-              {stats.unchanged} unchanged
-            </span>
+            <span className="text-[10px] text-text-muted">{stats.unchanged} unchanged</span>
           )}
         </div>
 
@@ -380,7 +398,9 @@ export function JsonTreeDiff({ jsonA, jsonB }: JsonTreeDiffProps) {
               onClick={() => setViewMode('tree')}
               className={cn(
                 'px-2 py-1 text-[10px] font-medium transition-colors',
-                viewMode === 'tree' ? 'bg-accent text-white' : 'text-text-muted hover:text-text-primary'
+                viewMode === 'tree'
+                  ? 'bg-accent text-white'
+                  : 'text-text-muted hover:text-text-primary',
               )}
               title="Tree view"
             >
@@ -390,7 +410,9 @@ export function JsonTreeDiff({ jsonA, jsonB }: JsonTreeDiffProps) {
               onClick={() => setViewMode('side-by-side')}
               className={cn(
                 'px-2 py-1 text-[10px] font-medium transition-colors',
-                viewMode === 'side-by-side' ? 'bg-accent text-white' : 'text-text-muted hover:text-text-primary'
+                viewMode === 'side-by-side'
+                  ? 'bg-accent text-white'
+                  : 'text-text-muted hover:text-text-primary',
               )}
               title="Side by side"
             >
@@ -405,7 +427,9 @@ export function JsonTreeDiff({ jsonA, jsonB }: JsonTreeDiffProps) {
             onClick={() => setShowUnchanged(!showUnchanged)}
             className={cn(
               'flex items-center gap-1.5 px-2 py-1 text-[10px] font-medium transition-colors',
-              showUnchanged ? 'bg-accent/20 text-accent' : 'text-text-muted hover:text-text-primary'
+              showUnchanged
+                ? 'bg-accent/20 text-accent'
+                : 'text-text-muted hover:text-text-primary',
             )}
           >
             {showUnchanged ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
@@ -420,7 +444,11 @@ export function JsonTreeDiff({ jsonA, jsonB }: JsonTreeDiffProps) {
             className="flex items-center gap-1 px-2 py-1 text-[10px] text-text-muted hover:text-accent transition-colors"
             title="Copy A"
           >
-            {copied === 'a' ? <Check className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3" />}
+            {copied === 'a' ? (
+              <Check className="w-3 h-3 text-green-400" />
+            ) : (
+              <Copy className="w-3 h-3" />
+            )}
             <span className="text-accent">A</span>
           </button>
           <button
@@ -428,7 +456,11 @@ export function JsonTreeDiff({ jsonA, jsonB }: JsonTreeDiffProps) {
             className="flex items-center gap-1 px-2 py-1 text-[10px] text-text-muted hover:text-secondary transition-colors"
             title="Copy B"
           >
-            {copied === 'b' ? <Check className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3" />}
+            {copied === 'b' ? (
+              <Check className="w-3 h-3 text-green-400" />
+            ) : (
+              <Copy className="w-3 h-3" />
+            )}
             <span className="text-secondary">B</span>
           </button>
         </div>
@@ -470,6 +502,6 @@ export function isStructuredData(content: string): boolean {
     }
   }
   const lines = trimmed.split('\n')
-  const yamlLikeLines = lines.filter(line => /^\s*[a-zA-Z_][a-zA-Z0-9_]*\s*:/.test(line))
+  const yamlLikeLines = lines.filter((line) => /^\s*[a-zA-Z_][a-zA-Z0-9_]*\s*:/.test(line))
   return yamlLikeLines.length > lines.length * 0.5
 }

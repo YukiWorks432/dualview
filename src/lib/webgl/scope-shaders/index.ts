@@ -6,9 +6,9 @@
  */
 
 import { SCOPE_VERTEX_SHADER, SCOPE_COMMON } from './common'
-import { WAVEFORM_SHADER, WAVEFORM_PARADE_SHADER } from './waveform'
-import { VECTORSCOPE_SHADER } from './vectorscope'
 import { RGB_PARADE_SHADER } from './parade'
+import { VECTORSCOPE_SHADER } from './vectorscope'
+import { WAVEFORM_SHADER, WAVEFORM_PARADE_SHADER } from './waveform'
 
 // Re-export all shaders
 export { SCOPE_VERTEX_SHADER, SCOPE_COMMON }

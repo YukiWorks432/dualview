@@ -1,8 +1,9 @@
+import { Activity } from 'lucide-react'
+
 /**
  * VID-004: Video Quality Metrics Overlay
  */
 import { useProjectStore } from '../../stores/projectStore'
-import { Activity } from 'lucide-react'
 
 export function MetricsOverlay() {
   const { showMetrics, metricsSSIM, metricsPSNR, toggleMetrics } = useProjectStore()
@@ -52,10 +53,7 @@ export function MetricsOverlay() {
           <Activity className="w-3 h-3" />
           Quality Metrics
         </span>
-        <button
-          onClick={toggleMetrics}
-          className="text-text-muted hover:text-white text-xs"
-        >
+        <button onClick={toggleMetrics} className="text-text-muted hover:text-white text-xs">
           ×
         </button>
       </div>

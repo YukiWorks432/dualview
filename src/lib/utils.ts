@@ -49,7 +49,11 @@ export function getFrameDuration(fps: number = DEFAULT_FRAME_RATE): number {
 }
 
 /** Check if two times are on the same frame */
-export function isSameFrame(time1: number, time2: number, fps: number = DEFAULT_FRAME_RATE): boolean {
+export function isSameFrame(
+  time1: number,
+  time2: number,
+  fps: number = DEFAULT_FRAME_RATE,
+): boolean {
   return timeToFrame(time1, fps) === timeToFrame(time2, fps)
 }
 

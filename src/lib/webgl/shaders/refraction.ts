@@ -31,7 +31,7 @@ void main() {
   vec4 colorB = texture2D(u_textureB, lensUV);
 
   gl_FragColor = mix(colorA, colorB, u_progress);
-}`
+}`,
   },
 
   glass_ripple: {
@@ -56,7 +56,7 @@ void main() {
   vec4 colorB = texture2D(u_textureB, refractUV);
 
   gl_FragColor = mix(colorA, colorB, p);
-}`
+}`,
   },
 
   heat_haze: {
@@ -81,7 +81,7 @@ void main() {
   vec4 colorB = texture2D(u_textureB, hazeUV);
 
   gl_FragColor = mix(colorA, colorB, u_progress);
-}`
+}`,
   },
 
   water: {
@@ -109,7 +109,7 @@ void main() {
   result.rgb = mix(result.rgb, result.rgb * vec3(0.9, 0.95, 1.0), intensity * 0.3);
 
   gl_FragColor = result;
-}`
+}`,
   },
 
   crystal: {
@@ -143,7 +143,7 @@ void main() {
   result.rgb = mix(result.rgb * rainbow, result.rgb, edge);
 
   gl_FragColor = result;
-}`
+}`,
   },
 
   diamond: {
@@ -172,7 +172,7 @@ void main() {
   result.rgb += sparkle * vec3(1.0, 0.95, 0.9);
 
   gl_FragColor = result;
-}`
+}`,
   },
 
   frosted: {
@@ -200,7 +200,7 @@ void main() {
   colorB /= 8.0;
 
   gl_FragColor = mix(colorA, colorB, u_progress);
-}`
+}`,
   },
 
   bubble: {
@@ -237,8 +237,8 @@ void main() {
   vec4 colorB = texture2D(u_textureB, bubbleUV);
 
   gl_FragColor = mix(colorA, colorB, u_progress);
-}`
-  }
+}`,
+  },
 }
 
 export const REFRACTION_VARIANTS = Object.keys(REFRACTION_SHADERS)

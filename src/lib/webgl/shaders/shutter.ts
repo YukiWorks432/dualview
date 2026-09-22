@@ -33,7 +33,7 @@ void main() {
   colorB /= 5.5;
 
   gl_FragColor = mix(colorA, colorB, u_progress);
-}`
+}`,
   },
 
   frame_echo: {
@@ -62,7 +62,7 @@ void main() {
 
   vec4 base = mix(colorA, colorB, u_progress);
   gl_FragColor = mix(base, base + echo * 0.3, intensity);
-}`
+}`,
   },
 
   time_ghost: {
@@ -88,7 +88,7 @@ void main() {
   }
 
   gl_FragColor = result;
-}`
+}`,
   },
 
   trail: {
@@ -124,7 +124,7 @@ void main() {
 
   vec4 base = mix(colorA, colorB, u_progress);
   gl_FragColor = mix(base, trail, intensity * 0.7);
-}`
+}`,
   },
 
   streak: {
@@ -159,7 +159,7 @@ void main() {
   }
 
   gl_FragColor = base;
-}`
+}`,
   },
 
   motion_lines: {
@@ -188,7 +188,7 @@ void main() {
   float lineIntensity = lines * intensity * dist * 2.0;
 
   gl_FragColor = base + vec4(lineIntensity * 0.3);
-}`
+}`,
   },
 
   afterimage: {
@@ -218,7 +218,7 @@ void main() {
   }
 
   gl_FragColor = result;
-}`
+}`,
   },
 
   persistence: {
@@ -251,8 +251,8 @@ void main() {
   result.rgb += colorB.rgb * decayColor * persistB * 0.3;
 
   gl_FragColor = result;
-}`
-  }
+}`,
+  },
 }
 
 export const SHUTTER_VARIANTS = Object.keys(SHUTTER_SHADERS)

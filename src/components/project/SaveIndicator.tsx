@@ -1,10 +1,11 @@
 /**
  * SaveIndicator Component (PERSIST-002)
- * 
+ *
  * Shows the current save status with visual indicator and last saved timestamp.
  */
 
 import { Cloud, CloudOff, Loader2, Check, AlertCircle } from 'lucide-react'
+
 import { usePersistenceStore } from '../../stores/persistenceStore'
 
 export function SaveIndicator() {
@@ -12,7 +13,10 @@ export function SaveIndicator() {
 
   if (!isIndexedDBSupported) {
     return (
-      <div className="flex items-center gap-1.5 text-xs text-amber-400" title="IndexedDB not available">
+      <div
+        className="flex items-center gap-1.5 text-xs text-amber-400"
+        title="IndexedDB not available"
+      >
         <CloudOff className="w-3.5 h-3.5" />
         <span>Not saved</span>
       </div>
@@ -26,7 +30,7 @@ export function SaveIndicator() {
   const formatTime = (date: Date) => {
     const now = new Date()
     const diff = now.getTime() - date.getTime()
-    
+
     if (diff < 60000) {
       return 'Just now'
     } else if (diff < 3600000) {
@@ -51,9 +55,7 @@ export function SaveIndicator() {
       {saveStatus === 'saved' && (
         <>
           <Cloud className="w-3.5 h-3.5 text-green-400" />
-          <span className="text-zinc-400">
-            Saved {lastSavedAt ? formatTime(lastSavedAt) : ''}
-          </span>
+          <span className="text-zinc-400">Saved {lastSavedAt ? formatTime(lastSavedAt) : ''}</span>
         </>
       )}
       {saveStatus === 'unsaved' && (

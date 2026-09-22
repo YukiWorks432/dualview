@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react'
-import { useTimelineStore } from '../../stores/timelineStore'
-import { useMediaStore } from '../../stores/mediaStore'
 import { ChevronDown, FileSearch, Equal, ArrowUpDown } from 'lucide-react'
+import { useState, useEffect } from 'react'
+
 import { cn } from '../../lib/utils'
+import { useMediaStore } from '../../stores/mediaStore'
+import { useTimelineStore } from '../../stores/timelineStore'
 import type { MediaFile } from '../../types'
 
 interface ExtendedMetadata {
@@ -49,16 +50,16 @@ function formatBitrate(bytes: number, seconds: number): string {
 }
 
 function calculateAspectRatio(width: number, height: number): string {
-  const gcd = (a: number, b: number): number => b === 0 ? a : gcd(b, a % b)
+  const gcd = (a: number, b: number): number => (b === 0 ? a : gcd(b, a % b))
   const divisor = gcd(width, height)
   const w = width / divisor
   const h = height / divisor
   // Common aspect ratios
-  if (Math.abs(w/h - 16/9) < 0.01) return '16:9'
-  if (Math.abs(w/h - 4/3) < 0.01) return '4:3'
-  if (Math.abs(w/h - 21/9) < 0.01) return '21:9'
-  if (Math.abs(w/h - 1) < 0.01) return '1:1'
-  if (Math.abs(w/h - 9/16) < 0.01) return '9:16'
+  if (Math.abs(w / h - 16 / 9) < 0.01) return '16:9'
+  if (Math.abs(w / h - 4 / 3) < 0.01) return '4:3'
+  if (Math.abs(w / h - 21 / 9) < 0.01) return '21:9'
+  if (Math.abs(w / h - 1) < 0.01) return '1:1'
+  if (Math.abs(w / h - 9 / 16) < 0.01) return '9:16'
   return `${w}:${h}`
 }
 
@@ -122,7 +123,12 @@ async function extractMetadata(media: MediaFile): Promise<ExtendedMetadata> {
       const audioContext = new AudioContext()
       const audioBuffer = await audioContext.decodeAudioData(arrayBuffer)
       base.sampleRate = `${audioBuffer.sampleRate} Hz`
-      base.channels = audioBuffer.numberOfChannels === 1 ? 'Mono' : audioBuffer.numberOfChannels === 2 ? 'Stereo' : `${audioBuffer.numberOfChannels} channels`
+      base.channels =
+        audioBuffer.numberOfChannels === 1
+          ? 'Mono'
+          : audioBuffer.numberOfChannels === 2
+            ? 'Stereo'
+            : `${audioBuffer.numberOfChannels} channels`
       base.duration = formatDuration(audioBuffer.duration)
       base.durationSeconds = audioBuffer.duration
       if (media.file?.size) {
@@ -154,7 +160,8 @@ function ComparisonRow({ label, valueA, valueB, unit }: ComparisonRowProps) {
     <div className="grid grid-cols-[100px_1fr_24px_1fr] gap-2 items-center py-1.5 border-b border-border/50 last:border-0">
       <span className="text-[11px] text-text-muted font-medium">{label}</span>
       <div className="text-xs font-mono bg-surface-alt px-2 py-1 text-accent truncate" title={strA}>
-        {strA}{unit && strA !== '—' ? ` ${unit}` : ''}
+        {strA}
+        {unit && strA !== '—' ? ` ${unit}` : ''}
       </div>
       <div className="flex justify-center">
         {isSame ? (
@@ -165,11 +172,15 @@ function ComparisonRow({ label, valueA, valueB, unit }: ComparisonRowProps) {
           <span className="w-3 h-3" />
         )}
       </div>
-      <div className={cn(
-        "text-xs font-mono px-2 py-1 truncate",
-        isDifferent ? "bg-secondary/20 text-secondary" : "bg-surface-alt text-secondary"
-      )} title={strB}>
-        {strB}{unit && strB !== '—' ? ` ${unit}` : ''}
+      <div
+        className={cn(
+          'text-xs font-mono px-2 py-1 truncate',
+          isDifferent ? 'bg-secondary/20 text-secondary' : 'bg-surface-alt text-secondary',
+        )}
+        title={strB}
+      >
+        {strB}
+        {unit && strB !== '—' ? ` ${unit}` : ''}
       </div>
     </div>
   )
@@ -184,12 +195,12 @@ export function MetadataComparison() {
   const { tracks } = useTimelineStore()
   const { getFile } = useMediaStore()
 
-  const trackA = tracks.find(t => t.type === 'a')
-  const trackB = tracks.find(t => t.type === 'b')
+  const trackA = tracks.find((t) => t.type === 'a')
+  const trackB = tracks.find((t) => t.type === 'b')
   const clipA = trackA?.clips[0]
   const clipB = trackB?.clips[0]
-  const mediaA = clipA ? getFile(clipA.mediaId) ?? null : null
-  const mediaB = clipB ? getFile(clipB.mediaId) ?? null : null
+  const mediaA = clipA ? (getFile(clipA.mediaId) ?? null) : null
+  const mediaB = clipB ? (getFile(clipB.mediaId) ?? null) : null
 
   // Extract metadata when media changes
   useEffect(() => {
@@ -216,8 +227,17 @@ export function MetadataComparison() {
   const countDifferences = () => {
     if (!metadataA || !metadataB) return 0
     let count = 0
-    const keys: (keyof ExtendedMetadata)[] = ['resolution', 'duration', 'size', 'format', 'bitrate', 'aspectRatio', 'sampleRate', 'channels']
-    keys.forEach(key => {
+    const keys: (keyof ExtendedMetadata)[] = [
+      'resolution',
+      'duration',
+      'size',
+      'format',
+      'bitrate',
+      'aspectRatio',
+      'sampleRate',
+      'channels',
+    ]
+    keys.forEach((key) => {
       const vA = metadataA[key]
       const vB = metadataB[key]
       if (vA && vB && vA !== vB) count++
@@ -232,20 +252,22 @@ export function MetadataComparison() {
       <button
         onClick={() => setIsExpanded(!isExpanded)}
         className={cn(
-          "flex items-center gap-2 px-3 py-1.5 transition-colors text-sm border",
+          'flex items-center gap-2 px-3 py-1.5 transition-colors text-sm border',
           isExpanded
-            ? "bg-surface-alt border-accent/50"
-            : "bg-background hover:bg-surface-alt border-border"
+            ? 'bg-surface-alt border-accent/50'
+            : 'bg-background hover:bg-surface-alt border-border',
         )}
       >
         <FileSearch className="w-4 h-4 text-text-muted" />
         <span className="text-xs font-medium text-text-secondary hidden lg:inline">Metadata</span>
         {/* Keep header compact: avoid showing filenames / diff count here */}
 
-        <ChevronDown className={cn(
-          "w-3.5 h-3.5 text-text-muted transition-transform",
-          isExpanded && "rotate-180"
-        )} />
+        <ChevronDown
+          className={cn(
+            'w-3.5 h-3.5 text-text-muted transition-transform',
+            isExpanded && 'rotate-180',
+          )}
+        />
       </button>
 
       {isExpanded && (
@@ -283,17 +305,41 @@ export function MetadataComparison() {
             ) : (
               <div className="space-y-1">
                 {/* Common metadata */}
-                <ComparisonRow label="File Name" valueA={metadataA?.name} valueB={metadataB?.name} />
-                <ComparisonRow label="Format" valueA={metadataA?.format} valueB={metadataB?.format} />
-                <ComparisonRow label="File Size" valueA={metadataA?.size} valueB={metadataB?.size} />
-                <ComparisonRow label="Modified" valueA={metadataA?.lastModified} valueB={metadataB?.lastModified} />
+                <ComparisonRow
+                  label="File Name"
+                  valueA={metadataA?.name}
+                  valueB={metadataB?.name}
+                />
+                <ComparisonRow
+                  label="Format"
+                  valueA={metadataA?.format}
+                  valueB={metadataB?.format}
+                />
+                <ComparisonRow
+                  label="File Size"
+                  valueA={metadataA?.size}
+                  valueB={metadataB?.size}
+                />
+                <ComparisonRow
+                  label="Modified"
+                  valueA={metadataA?.lastModified}
+                  valueB={metadataB?.lastModified}
+                />
 
                 {/* Video/Image metadata */}
                 {(primaryType === 'video' || primaryType === 'image') && (
                   <>
                     <div className="h-2" />
-                    <ComparisonRow label="Resolution" valueA={metadataA?.resolution} valueB={metadataB?.resolution} />
-                    <ComparisonRow label="Aspect Ratio" valueA={metadataA?.aspectRatio} valueB={metadataB?.aspectRatio} />
+                    <ComparisonRow
+                      label="Resolution"
+                      valueA={metadataA?.resolution}
+                      valueB={metadataB?.resolution}
+                    />
+                    <ComparisonRow
+                      label="Aspect Ratio"
+                      valueA={metadataA?.aspectRatio}
+                      valueB={metadataB?.aspectRatio}
+                    />
                   </>
                 )}
 
@@ -301,16 +347,32 @@ export function MetadataComparison() {
                 {(primaryType === 'video' || primaryType === 'audio') && (
                   <>
                     <div className="h-2" />
-                    <ComparisonRow label="Duration" valueA={metadataA?.duration} valueB={metadataB?.duration} />
-                    <ComparisonRow label="Bitrate" valueA={metadataA?.bitrate} valueB={metadataB?.bitrate} />
+                    <ComparisonRow
+                      label="Duration"
+                      valueA={metadataA?.duration}
+                      valueB={metadataB?.duration}
+                    />
+                    <ComparisonRow
+                      label="Bitrate"
+                      valueA={metadataA?.bitrate}
+                      valueB={metadataB?.bitrate}
+                    />
                   </>
                 )}
 
                 {/* Audio specific */}
                 {primaryType === 'audio' && (
                   <>
-                    <ComparisonRow label="Sample Rate" valueA={metadataA?.sampleRate} valueB={metadataB?.sampleRate} />
-                    <ComparisonRow label="Channels" valueA={metadataA?.channels} valueB={metadataB?.channels} />
+                    <ComparisonRow
+                      label="Sample Rate"
+                      valueA={metadataA?.sampleRate}
+                      valueB={metadataB?.sampleRate}
+                    />
+                    <ComparisonRow
+                      label="Channels"
+                      valueA={metadataA?.channels}
+                      valueB={metadataB?.channels}
+                    />
                   </>
                 )}
               </div>

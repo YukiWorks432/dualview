@@ -19,7 +19,7 @@ void main() {
   float edge = smoothstep(threshold - 0.1, threshold, n);
 
   gl_FragColor = mix(colorB, colorA, edge);
-}`
+}`,
   },
 
   ink: {
@@ -48,7 +48,7 @@ void main() {
   result.rgb = mix(result.rgb, inkEdge, edgeMask * 0.5);
 
   gl_FragColor = result;
-}`
+}`,
   },
 
   cellular: {
@@ -69,7 +69,7 @@ void main() {
   float edge = smoothstep(0.0, 0.1, cell.x);
 
   gl_FragColor = mix(colorB, colorA, mask * edge);
-}`
+}`,
   },
 
   bokeh: {
@@ -95,7 +95,7 @@ void main() {
   float mask = smoothstep(threshold - 0.3, threshold, n + noise(v_texCoord * 5.0) * 0.3);
 
   gl_FragColor = mix(colorB, colorA, mask);
-}`
+}`,
   },
 
   fractal: {
@@ -114,7 +114,7 @@ void main() {
   float mask = smoothstep(threshold - 0.2, threshold, n);
 
   gl_FragColor = mix(colorB, colorA, mask);
-}`
+}`,
   },
 
   smoke: {
@@ -147,7 +147,7 @@ void main() {
   result.rgb += wisps * 0.2;
 
   gl_FragColor = result;
-}`
+}`,
   },
 
   sand: {
@@ -171,7 +171,7 @@ void main() {
   float mask = smoothstep(threshold - 0.1, threshold, n);
 
   gl_FragColor = mix(colorB, colorA, mask);
-}`
+}`,
   },
 
   sparkle: {
@@ -201,8 +201,8 @@ void main() {
   result.rgb += sparkle * vec3(1.0, 0.9, 0.7) * 0.5 * (1.0 - abs(u_progress - 0.5) * 2.0);
 
   gl_FragColor = result;
-}`
-  }
+}`,
+  },
 }
 
 export const DISSOLVE_VARIANTS = Object.keys(DISSOLVE_SHADERS)

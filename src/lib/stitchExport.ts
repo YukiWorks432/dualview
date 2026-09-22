@@ -5,8 +5,8 @@
  * Uses WebCodecs API for encoding.
  */
 
-import { Muxer, ArrayBufferTarget } from 'mp4-muxer'
 import type { TimelineTrack, MediaFile } from '../types'
+import { createAvcMp4Muxer } from './mp4Muxer'
 
 export interface StitchExportSettings {
   trackId: string
@@ -121,7 +121,7 @@ export async function exportStitchedVideo(
   track: TimelineTrack,
   getFile: (id: string) => MediaFile | undefined,
   settings: StitchExportSettings,
-  onProgress: (progress: StitchExportProgress) => void
+  onProgress: (progress: StitchExportProgress) => void,
 ): Promise<Blob | null> {
   // Sort clips by start time
   const sortedClips = [...track.clips].sort((a, b) => a.startTime - b.startTime)
@@ -175,23 +175,14 @@ export async function exportStitchedVideo(
   const totalFrames = Math.ceil(totalDuration * fps)
 
   // Setup MP4 muxer
-  const target = new ArrayBufferTarget()
-  const muxer = new Muxer({
-    target,
-    video: {
-      codec: 'avc',
-      width,
-      height,
-    },
-    fastStart: 'in-memory',
-  })
+  const muxer = await createAvcMp4Muxer()
 
   // Setup video encoder
   let framesEncoded = 0
 
   const encoder = new VideoEncoder({
     output: (chunk, meta) => {
-      muxer.addVideoChunk(chunk, meta)
+      muxer.addChunk(chunk, meta)
       framesEncoded++
     },
     error: (e) => {
@@ -249,7 +240,7 @@ export async function exportStitchedVideo(
       // Process each frame of the clip
       for (let frameInClip = 0; frameInClip < clipFrames; frameInClip++) {
         // Calculate source time in video
-        const sourceTime = clip.inPoint + (frameInClip * frameDuration)
+        const sourceTime = clip.inPoint + frameInClip * frameDuration
 
         // Seek video
         await seekVideoAndWait(video, sourceTime)
@@ -291,7 +282,7 @@ export async function exportStitchedVideo(
 
         // Update progress
         const overallProgress = Math.round(
-          ((clipIndex + frameInClip / clipFrames) / sortedClips.length) * 100
+          ((clipIndex + frameInClip / clipFrames) / sortedClips.length) * 100,
         )
         onProgress({
           status: 'encoding',
@@ -305,7 +296,6 @@ export async function exportStitchedVideo(
       // Cleanup video element
       video.src = ''
       video.load()
-
     } else if (media.type === 'image') {
       // Load image
       const img = new Image()
@@ -363,7 +353,7 @@ export async function exportStitchedVideo(
   encoder.close()
 
   // Finalize muxer
-  muxer.finalize()
+  const buffer = await muxer.finalize()
 
   onProgress({
     status: 'done',
@@ -374,7 +364,6 @@ export async function exportStitchedVideo(
   })
 
   // Create blob
-  const buffer = target.buffer
   return new Blob([buffer], { type: 'video/mp4' })
 }
 
@@ -397,7 +386,7 @@ export function downloadStitchedVideo(blob: Blob, filename: string = 'stitched-v
  */
 export function getTrackExportInfo(
   track: TimelineTrack,
-  getFile: (id: string) => MediaFile | undefined
+  getFile: (id: string) => MediaFile | undefined,
 ): {
   totalDuration: number
   clipCount: number

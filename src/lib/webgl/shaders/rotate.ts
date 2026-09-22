@@ -24,7 +24,7 @@ void main() {
 
   float mask = smoothstep(0.3, 0.7, p);
   gl_FragColor = mix(colorA, colorB, mask);
-}`
+}`,
   },
 
   ccw: {
@@ -45,7 +45,7 @@ void main() {
 
   float mask = smoothstep(0.3, 0.7, p);
   gl_FragColor = mix(colorA, colorB, mask);
-}`
+}`,
   },
 
   flip_h: {
@@ -71,7 +71,7 @@ void main() {
 
   float mask = step(0.5, p);
   gl_FragColor = mix(colorA, colorB, mask);
-}`
+}`,
   },
 
   flip_v: {
@@ -96,7 +96,7 @@ void main() {
 
   float mask = step(0.5, p);
   gl_FragColor = mix(colorA, colorB, mask);
-}`
+}`,
   },
 
   spin_3d: {
@@ -122,7 +122,7 @@ void main() {
   float mask = smoothstep(-0.1, 0.1, -visibility);
 
   gl_FragColor = mix(colorA, colorB, mask);
-}`
+}`,
   },
 
   swirl: {
@@ -145,7 +145,7 @@ void main() {
 
   float mask = smoothstep(0.0, 1.0, u_progress);
   gl_FragColor = mix(colorA, colorB, mask);
-}`
+}`,
   },
 
   cube: {
@@ -176,7 +176,7 @@ void main() {
   // Show A when rotating away, B when rotating in
   float showA = step(v_texCoord.x, 1.0 - p);
   gl_FragColor = mix(colorB, colorA, showA);
-}`
+}`,
   },
 
   fold: {
@@ -212,8 +212,8 @@ void main() {
 
     gl_FragColor = mix(colorA, colorB, p);
   }
-}`
-  }
+}`,
+  },
 }
 
 export const ROTATE_VARIANTS = Object.keys(ROTATE_SHADERS)

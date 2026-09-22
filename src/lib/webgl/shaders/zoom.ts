@@ -21,7 +21,7 @@ void main() {
   float mask = smoothstep(0.0, 0.3, u_progress);
 
   gl_FragColor = mix(colorA, colorB, mask);
-}`
+}`,
   },
 
   zoom_out: {
@@ -38,7 +38,7 @@ void main() {
   float mask = smoothstep(0.0, 0.3, u_progress);
 
   gl_FragColor = mix(colorA, colorB, mask);
-}`
+}`,
   },
 
   zoom_push: {
@@ -61,7 +61,7 @@ void main() {
   float mask = smoothstep(0.3, 0.7, p);
 
   gl_FragColor = mix(colorA, colorB, mask);
-}`
+}`,
   },
 
   zoom_pull: {
@@ -84,7 +84,7 @@ void main() {
   float mask = smoothstep(0.2, 0.8, p);
 
   gl_FragColor = mix(colorA, colorB, mask);
-}`
+}`,
   },
 
   zoom_blur: {
@@ -113,7 +113,7 @@ void main() {
   float mask = smoothstep(0.0, 1.0, u_progress);
 
   gl_FragColor = mix(colorA, colorB, mask);
-}`
+}`,
   },
 
   zoom_rotate: {
@@ -139,7 +139,7 @@ void main() {
   float mask = smoothstep(0.3, 0.7, p);
 
   gl_FragColor = mix(colorA, colorB, mask);
-}`
+}`,
   },
 
   zoom_bounce: {
@@ -162,7 +162,7 @@ void main() {
   float mask = smoothstep(0.0, 0.5, u_progress);
 
   gl_FragColor = mix(colorA, colorB, mask);
-}`
+}`,
   },
 
   zoom_spiral: {
@@ -190,8 +190,8 @@ void main() {
   float mask = smoothstep(0.3, 0.7, p);
 
   gl_FragColor = mix(colorA, colorB, mask);
-}`
-  }
+}`,
+  },
 }
 
 export const ZOOM_VARIANTS = Object.keys(ZOOM_SHADERS)

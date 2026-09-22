@@ -1,10 +1,19 @@
+import { diffWords } from 'diff'
+import {
+  FileText,
+  Columns,
+  AlignJustify,
+  Filter,
+  BarChart3,
+  ChevronUp,
+  ChevronDown,
+} from 'lucide-react'
 import { useState, useMemo, useRef } from 'react'
-import { useTimelineStore } from '../../stores/timelineStore'
+
+import { cn } from '../../lib/utils'
 import { useMediaStore } from '../../stores/mediaStore'
 import { usePlaybackStore } from '../../stores/playbackStore'
-import { cn } from '../../lib/utils'
-import { FileText, Columns, AlignJustify, Filter, BarChart3, ChevronUp, ChevronDown } from 'lucide-react'
-import { diffWords } from 'diff'
+import { useTimelineStore } from '../../stores/timelineStore'
 
 type ViewMode = 'side-by-side' | 'unified' | 'changes-only'
 
@@ -29,11 +38,11 @@ export function DOCXComparison() {
   const changeRefs = useRef<(HTMLSpanElement | null)[]>([])
 
   // Get current clips at playhead
-  const trackA = tracks.find(t => t.type === 'a')
-  const trackB = tracks.find(t => t.type === 'b')
+  const trackA = tracks.find((t) => t.type === 'a')
+  const trackB = tracks.find((t) => t.type === 'b')
 
-  const clipA = trackA?.clips.find(c => currentTime >= c.startTime && currentTime < c.endTime)
-  const clipB = trackB?.clips.find(c => currentTime >= c.startTime && currentTime < c.endTime)
+  const clipA = trackA?.clips.find((c) => currentTime >= c.startTime && currentTime < c.endTime)
+  const clipB = trackB?.clips.find((c) => currentTime >= c.startTime && currentTime < c.endTime)
 
   const mediaA = clipA ? getFile(clipA.mediaId) : null
   const mediaB = clipB ? getFile(clipB.mediaId) : null
@@ -75,14 +84,23 @@ export function DOCXComparison() {
     const textA = contentA?.text || ''
     const textB = contentB?.text || ''
 
-    const wordsA = textA.trim().split(/\s+/).filter(w => w.length > 0).length
-    const wordsB = textB.trim().split(/\s+/).filter(w => w.length > 0).length
+    const wordsA = textA
+      .trim()
+      .split(/\s+/)
+      .filter((w) => w.length > 0).length
+    const wordsB = textB
+      .trim()
+      .split(/\s+/)
+      .filter((w) => w.length > 0).length
 
     let added = 0
     let removed = 0
 
-    textDiffs.forEach(diff => {
-      const words = diff.value.trim().split(/\s+/).filter(w => w.length > 0).length
+    textDiffs.forEach((diff) => {
+      const words = diff.value
+        .trim()
+        .split(/\s+/)
+        .filter((w) => w.length > 0).length
       if (diff.added) added += words
       if (diff.removed) removed += words
     })
@@ -100,7 +118,7 @@ export function DOCXComparison() {
       removed,
       unchanged,
       matchPercent,
-      totalChanges: changePositions.length
+      totalChanges: changePositions.length,
     }
   }, [contentA, contentB, textDiffs, changePositions, mediaA, mediaB])
 
@@ -111,8 +129,10 @@ export function DOCXComparison() {
     const dstRef = source === 'a' ? scrollRefB : scrollRefA
 
     if (srcRef.current && dstRef.current) {
-      const scrollRatio = srcRef.current.scrollTop / (srcRef.current.scrollHeight - srcRef.current.clientHeight)
-      dstRef.current.scrollTop = scrollRatio * (dstRef.current.scrollHeight - dstRef.current.clientHeight)
+      const scrollRatio =
+        srcRef.current.scrollTop / (srcRef.current.scrollHeight - srcRef.current.clientHeight)
+      dstRef.current.scrollTop =
+        scrollRatio * (dstRef.current.scrollHeight - dstRef.current.clientHeight)
     }
   }
 
@@ -161,7 +181,7 @@ export function DOCXComparison() {
                 'px-3 py-1.5 text-xs flex items-center gap-1',
                 viewMode === 'side-by-side'
                   ? 'bg-accent text-white'
-                  : 'text-text-muted hover:text-text-primary'
+                  : 'text-text-muted hover:text-text-primary',
               )}
             >
               <Columns className="w-3 h-3" />
@@ -173,7 +193,7 @@ export function DOCXComparison() {
                 'px-3 py-1.5 text-xs flex items-center gap-1',
                 viewMode === 'unified'
                   ? 'bg-accent text-white'
-                  : 'text-text-muted hover:text-text-primary'
+                  : 'text-text-muted hover:text-text-primary',
               )}
             >
               <AlignJustify className="w-3 h-3" />
@@ -185,7 +205,7 @@ export function DOCXComparison() {
                 'px-3 py-1.5 text-xs flex items-center gap-1',
                 viewMode === 'changes-only'
                   ? 'bg-accent text-white'
-                  : 'text-text-muted hover:text-text-primary'
+                  : 'text-text-muted hover:text-text-primary',
               )}
             >
               <Filter className="w-3 h-3" />
@@ -249,7 +269,9 @@ export function DOCXComparison() {
             <span className="text-green-400 font-medium">{stats.matchPercent}%</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="px-2 py-0.5 bg-green-500/20 text-green-400 rounded">+{stats.added}</span>
+            <span className="px-2 py-0.5 bg-green-500/20 text-green-400 rounded">
+              +{stats.added}
+            </span>
             <span className="px-2 py-0.5 bg-red-500/20 text-red-400 rounded">-{stats.removed}</span>
           </div>
         </div>
@@ -262,7 +284,8 @@ export function DOCXComparison() {
             {/* Document A */}
             <div className="flex-1 flex flex-col border-r border-border">
               <div className="px-3 py-2 bg-orange-500/10 border-b border-border text-xs font-medium text-orange-400">
-                A: {mediaA?.name || 'No file'} ({stats.wordsA} words, {stats.paragraphsA} paragraphs)
+                A: {mediaA?.name || 'No file'} ({stats.wordsA} words, {stats.paragraphsA}{' '}
+                paragraphs)
               </div>
               <div
                 ref={scrollRefA}
@@ -285,7 +308,8 @@ export function DOCXComparison() {
             {/* Document B */}
             <div className="flex-1 flex flex-col">
               <div className="px-3 py-2 bg-lime-400/10 border-b border-border text-xs font-medium text-lime-400">
-                B: {mediaB?.name || 'No file'} ({stats.wordsB} words, {stats.paragraphsB} paragraphs)
+                B: {mediaB?.name || 'No file'} ({stats.wordsB} words, {stats.paragraphsB}{' '}
+                paragraphs)
               </div>
               <div
                 ref={scrollRefB}
@@ -317,7 +341,12 @@ export function DOCXComparison() {
                     if (idx > 0 && idx < textDiffs.length - 1) {
                       const prevDiff = textDiffs[idx - 1]
                       const nextDiff = textDiffs[idx + 1]
-                      if ((prevDiff.added || prevDiff.removed) || (nextDiff.added || nextDiff.removed)) {
+                      if (
+                        prevDiff.added ||
+                        prevDiff.removed ||
+                        nextDiff.added ||
+                        nextDiff.removed
+                      ) {
                         return (
                           <span key={idx} className="text-text-muted">
                             {diff.value.slice(0, 50)}...
@@ -334,11 +363,14 @@ export function DOCXComparison() {
                   return (
                     <span
                       key={idx}
-                      ref={el => { if (isChange) changeRefs.current[idx] = el }}
+                      ref={(el) => {
+                        if (isChange) changeRefs.current[idx] = el
+                      }}
                       className={cn(
                         diff.added && 'bg-green-500/20 text-green-400',
                         diff.removed && 'bg-red-500/20 text-red-400 line-through',
-                        isCurrentChange && 'ring-2 ring-accent ring-offset-2 ring-offset-background rounded'
+                        isCurrentChange &&
+                          'ring-2 ring-accent ring-offset-2 ring-offset-background rounded',
                       )}
                     >
                       {diff.value}
@@ -354,8 +386,12 @@ export function DOCXComparison() {
       {/* Footer stats */}
       <div className="flex items-center justify-between px-4 py-2 bg-surface-alt border-t border-border text-xs text-text-muted">
         <div className="flex items-center gap-4">
-          <span>Words: A={stats.wordsA}, B={stats.wordsB}</span>
-          <span>Paragraphs: A={stats.paragraphsA}, B={stats.paragraphsB}</span>
+          <span>
+            Words: A={stats.wordsA}, B={stats.wordsB}
+          </span>
+          <span>
+            Paragraphs: A={stats.paragraphsA}, B={stats.paragraphsB}
+          </span>
         </div>
         <div className="flex items-center gap-2">
           <span className="w-3 h-3 bg-green-500/20 rounded"></span>

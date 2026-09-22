@@ -1,10 +1,20 @@
+import { diffWords } from 'diff'
+import {
+  FileText,
+  Columns,
+  Layers,
+  Eye,
+  ChevronLeft,
+  ChevronRight,
+  BarChart3,
+  AlertTriangle,
+} from 'lucide-react'
 import { useState, useMemo, useRef } from 'react'
-import { useTimelineStore } from '../../stores/timelineStore'
+
+import { cn } from '../../lib/utils'
 import { useMediaStore } from '../../stores/mediaStore'
 import { usePlaybackStore } from '../../stores/playbackStore'
-import { cn } from '../../lib/utils'
-import { FileText, Columns, Layers, Eye, ChevronLeft, ChevronRight, BarChart3, AlertTriangle } from 'lucide-react'
-import { diffWords } from 'diff'
+import { useTimelineStore } from '../../stores/timelineStore'
 import type { ParsedPDFPage } from '../../types'
 
 type ViewMode = 'side-by-side' | 'overlay' | 'slider' | 'text'
@@ -29,11 +39,11 @@ export function PDFComparison() {
   const containerRef = useRef<HTMLDivElement>(null)
 
   // Get current clips at playhead
-  const trackA = tracks.find(t => t.type === 'a')
-  const trackB = tracks.find(t => t.type === 'b')
+  const trackA = tracks.find((t) => t.type === 'a')
+  const trackB = tracks.find((t) => t.type === 'b')
 
-  const clipA = trackA?.clips.find(c => currentTime >= c.startTime && currentTime < c.endTime)
-  const clipB = trackB?.clips.find(c => currentTime >= c.startTime && currentTime < c.endTime)
+  const clipA = trackA?.clips.find((c) => currentTime >= c.startTime && currentTime < c.endTime)
+  const clipB = trackB?.clips.find((c) => currentTime >= c.startTime && currentTime < c.endTime)
 
   const mediaA = clipA ? getFile(clipA.mediaId) : null
   const mediaB = clipB ? getFile(clipB.mediaId) : null
@@ -64,7 +74,7 @@ export function PDFComparison() {
       // Simple text similarity
       const wordsA = new Set(textA.toLowerCase().split(/\s+/))
       const wordsB = new Set(textB.toLowerCase().split(/\s+/))
-      const intersection = new Set([...wordsA].filter(x => wordsB.has(x)))
+      const intersection = new Set([...wordsA].filter((x) => wordsB.has(x)))
       const union = new Set([...wordsA, ...wordsB])
       const similarity = union.size > 0 ? (intersection.size / union.size) * 100 : 100
 
@@ -73,7 +83,7 @@ export function PDFComparison() {
       diffs.push({
         pageNumber: i + 1,
         similarity,
-        hasTextChanges
+        hasTextChanges,
       })
     }
 
@@ -95,7 +105,7 @@ export function PDFComparison() {
     let changedPages = 0
     let avgSimilarity = 0
 
-    pageDiffs.forEach(diff => {
+    pageDiffs.forEach((diff) => {
       if (diff.hasTextChanges) changedPages++
       avgSimilarity += diff.similarity
     })
@@ -108,7 +118,7 @@ export function PDFComparison() {
       hasTextA,
       hasTextB,
       changedPages,
-      avgSimilarity: avgSimilarity.toFixed(1)
+      avgSimilarity: avgSimilarity.toFixed(1),
     }
   }, [pagesA, pagesB, pageDiffs, maxPages, mediaA, mediaB])
 
@@ -137,7 +147,7 @@ export function PDFComparison() {
                 'px-3 py-1.5 text-xs flex items-center gap-1',
                 viewMode === 'side-by-side'
                   ? 'bg-accent text-white'
-                  : 'text-text-muted hover:text-text-primary'
+                  : 'text-text-muted hover:text-text-primary',
               )}
             >
               <Columns className="w-3 h-3" />
@@ -149,7 +159,7 @@ export function PDFComparison() {
                 'px-3 py-1.5 text-xs flex items-center gap-1',
                 viewMode === 'overlay'
                   ? 'bg-accent text-white'
-                  : 'text-text-muted hover:text-text-primary'
+                  : 'text-text-muted hover:text-text-primary',
               )}
             >
               <Layers className="w-3 h-3" />
@@ -161,7 +171,7 @@ export function PDFComparison() {
                 'px-3 py-1.5 text-xs flex items-center gap-1',
                 viewMode === 'slider'
                   ? 'bg-accent text-white'
-                  : 'text-text-muted hover:text-text-primary'
+                  : 'text-text-muted hover:text-text-primary',
               )}
             >
               <Eye className="w-3 h-3" />
@@ -173,7 +183,7 @@ export function PDFComparison() {
                 'px-3 py-1.5 text-xs flex items-center gap-1',
                 viewMode === 'text'
                   ? 'bg-accent text-white'
-                  : 'text-text-muted hover:text-text-primary'
+                  : 'text-text-muted hover:text-text-primary',
               )}
             >
               <FileText className="w-3 h-3" />
@@ -200,7 +210,7 @@ export function PDFComparison() {
           {/* Page navigation */}
           <div className="flex items-center gap-1 ml-2">
             <button
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage <= 1}
               className="p-1 text-text-muted hover:text-text-primary hover:bg-surface rounded disabled:opacity-30"
             >
@@ -210,7 +220,7 @@ export function PDFComparison() {
               Page {currentPage} / {maxPages}
             </span>
             <button
-              onClick={() => setCurrentPage(p => Math.min(maxPages, p + 1))}
+              onClick={() => setCurrentPage((p) => Math.min(maxPages, p + 1))}
               disabled={currentPage >= maxPages}
               className="p-1 text-text-muted hover:text-text-primary hover:bg-surface rounded disabled:opacity-30"
             >
@@ -260,7 +270,7 @@ export function PDFComparison() {
                       ? 'border-accent'
                       : diff?.hasTextChanges
                         ? 'border-yellow-500/50 hover:border-yellow-500'
-                        : 'border-border hover:border-text-muted'
+                        : 'border-border hover:border-text-muted',
                   )}
                 >
                   <div className="relative aspect-[3/4] bg-white rounded overflow-hidden">
@@ -275,9 +285,7 @@ export function PDFComparison() {
                       <div className="absolute top-0.5 right-0.5 w-2 h-2 bg-yellow-500 rounded-full" />
                     )}
                   </div>
-                  <div className="text-[10px] text-text-muted text-center mt-1">
-                    {pageNum}
-                  </div>
+                  <div className="text-[10px] text-text-muted text-center mt-1">{pageNum}</div>
                 </button>
               )
             })}
@@ -413,7 +421,7 @@ export function PDFComparison() {
                       key={idx}
                       className={cn(
                         part.added && 'bg-green-500/20 text-green-400',
-                        part.removed && 'bg-red-500/20 text-red-400 line-through'
+                        part.removed && 'bg-red-500/20 text-red-400 line-through',
                       )}
                     >
                       {part.value}
@@ -429,7 +437,9 @@ export function PDFComparison() {
       {/* Footer */}
       <div className="flex items-center justify-between px-4 py-2 bg-surface-alt border-t border-border text-xs text-text-muted">
         <div className="flex items-center gap-4">
-          <span>Pages: A={stats.pagesA}, B={stats.pagesB}</span>
+          <span>
+            Pages: A={stats.pagesA}, B={stats.pagesB}
+          </span>
           <button
             onClick={() => setShowThumbnails(!showThumbnails)}
             className="text-text-muted hover:text-text-primary"

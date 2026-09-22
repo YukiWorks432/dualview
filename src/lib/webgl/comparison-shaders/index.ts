@@ -4,18 +4,17 @@
  */
 
 import type { WebGLComparisonMode, WebGLComparisonCategory } from '../../../types'
+import { ANALYSIS_SHADERS, ANALYSIS_VARIANTS } from './analysis'
+import { COLOR_SHADERS, COLOR_VARIANTS } from './color'
 import type { ComparisonShader } from './common'
-
 // Import all shader collections
 import { DIFFERENCE_SHADERS, DIFFERENCE_VARIANTS } from './difference'
-import { STRUCTURAL_SHADERS, STRUCTURAL_VARIANTS } from './structural'
-import { COLOR_SHADERS, COLOR_VARIANTS } from './color'
+import { EXPOSURE_SHADERS, EXPOSURE_VARIANTS } from './exposure'
 import { PROFESSIONAL_SHADERS, PROFESSIONAL_VARIANTS } from './professional'
+import { STRUCTURAL_SHADERS, STRUCTURAL_VARIANTS } from './structural'
+import { STRUCTURAL_ANALYSIS_SHADERS, STRUCTURAL_ANALYSIS_VARIANTS } from './structural-analysis'
 import { VIDEO_SHADERS, VIDEO_VARIANTS } from './video'
 import { WEIGHTING_SHADERS, WEIGHTING_VARIANTS } from './weighting'
-import { STRUCTURAL_ANALYSIS_SHADERS, STRUCTURAL_ANALYSIS_VARIANTS } from './structural-analysis'
-import { ANALYSIS_SHADERS, ANALYSIS_VARIANTS } from './analysis'
-import { EXPOSURE_SHADERS, EXPOSURE_VARIANTS } from './exposure'
 
 // Merge all analysis shaders (ANALYSIS-001 to 003 from structural-analysis + ANALYSIS-004 to 008 from analysis)
 const MERGED_ANALYSIS_SHADERS = { ...STRUCTURAL_ANALYSIS_SHADERS, ...ANALYSIS_SHADERS }
@@ -33,7 +32,7 @@ const SHADER_COLLECTIONS: Record<WebGLComparisonCategory, Record<string, Compari
   video: VIDEO_SHADERS,
   weighting: WEIGHTING_SHADERS,
   analysis: MERGED_ANALYSIS_SHADERS,
-  exposure: EXPOSURE_SHADERS
+  exposure: EXPOSURE_SHADERS,
 }
 
 // Map categories to variant lists
@@ -45,7 +44,7 @@ const VARIANT_LISTS: Record<WebGLComparisonCategory, string[]> = {
   video: VIDEO_VARIANTS,
   weighting: WEIGHTING_VARIANTS,
   analysis: MERGED_ANALYSIS_VARIANTS,
-  exposure: EXPOSURE_VARIANTS
+  exposure: EXPOSURE_VARIANTS,
 }
 
 // All shaders in a flat map
@@ -57,7 +56,7 @@ const ALL_SHADERS: Record<string, ComparisonShader> = {
   ...VIDEO_SHADERS,
   ...WEIGHTING_SHADERS,
   ...MERGED_ANALYSIS_SHADERS,
-  ...EXPOSURE_SHADERS
+  ...EXPOSURE_SHADERS,
 }
 
 /**
@@ -110,57 +109,58 @@ export function getAllComparisonCategories(): ComparisonCategoryInfo[] {
       label: 'Difference',
       icon: '◐',
       description: 'Pixel and perceptual difference analysis',
-      modes: DIFFERENCE_VARIANTS as WebGLComparisonMode[]
+      modes: DIFFERENCE_VARIANTS as WebGLComparisonMode[],
     },
     {
       id: 'structural',
       label: 'Structural',
       icon: '▦',
       description: 'Structure, edges, and quality metrics',
-      modes: STRUCTURAL_VARIANTS as WebGLComparisonMode[]
+      modes: STRUCTURAL_VARIANTS as WebGLComparisonMode[],
     },
     {
       id: 'color',
       label: 'Color',
       icon: '◈',
       description: 'Color space and channel analysis',
-      modes: COLOR_VARIANTS as WebGLComparisonMode[]
+      modes: COLOR_VARIANTS as WebGLComparisonMode[],
     },
     {
       id: 'professional',
       label: 'Professional',
       icon: '◎',
       description: 'Advanced tools for professionals',
-      modes: PROFESSIONAL_VARIANTS as WebGLComparisonMode[]
+      modes: PROFESSIONAL_VARIANTS as WebGLComparisonMode[],
     },
     {
       id: 'video',
       label: 'Video',
       icon: '▶',
       description: 'Video-specific analysis tools',
-      modes: VIDEO_VARIANTS as WebGLComparisonMode[]
+      modes: VIDEO_VARIANTS as WebGLComparisonMode[],
     },
     {
       id: 'weighting',
       label: 'Weighted',
       icon: '⚖',
       description: 'Perceptual importance weighting (WEBGL-012)',
-      modes: WEIGHTING_VARIANTS as WebGLComparisonMode[]
+      modes: WEIGHTING_VARIANTS as WebGLComparisonMode[],
     },
     {
       id: 'analysis',
       label: 'Analysis',
       icon: '🔬',
-      description: 'Advanced analysis: optical flow, FFT spectrum, band-pass filters, temporal noise, motion history',
-      modes: MERGED_ANALYSIS_VARIANTS as WebGLComparisonMode[]
+      description:
+        'Advanced analysis: optical flow, FFT spectrum, band-pass filters, temporal noise, motion history',
+      modes: MERGED_ANALYSIS_VARIANTS as WebGLComparisonMode[],
     },
     {
       id: 'exposure',
       label: 'Exposure',
       icon: '☀',
       description: 'Exposure analysis: false color, zebras, focus peaking, zone system',
-      modes: EXPOSURE_VARIANTS as WebGLComparisonMode[]
-    }
+      modes: EXPOSURE_VARIANTS as WebGLComparisonMode[],
+    },
   ]
 }
 
@@ -185,7 +185,7 @@ export function getComparisonModeInfo(mode: WebGLComparisonMode): ComparisonMode
     id: mode,
     label: shader.label,
     category: shader.category,
-    description: shader.description
+    description: shader.description,
   }
 }
 
@@ -193,11 +193,11 @@ export function getComparisonModeInfo(mode: WebGLComparisonMode): ComparisonMode
  * Get all modes with their info
  */
 export function getAllComparisonModes(): ComparisonModeInfo[] {
-  return Object.values(ALL_SHADERS).map(shader => ({
+  return Object.values(ALL_SHADERS).map((shader) => ({
     id: shader.name as WebGLComparisonMode,
     label: shader.label,
     category: shader.category,
-    description: shader.description
+    description: shader.description,
   }))
 }
 
@@ -213,5 +213,5 @@ export {
   ANALYSIS_SHADERS,
   EXPOSURE_SHADERS,
   MERGED_ANALYSIS_SHADERS,
-  MERGED_ANALYSIS_VARIANTS
+  MERGED_ANALYSIS_VARIANTS,
 }

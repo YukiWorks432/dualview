@@ -1,10 +1,11 @@
+import { X, Keyboard } from 'lucide-react'
 /**
  * Keyboard Shortcuts Help Modal (OpenCut Pattern)
  *
  * Shows all available keyboard shortcuts in a categorized modal
  */
 import { useEffect, useState } from 'react'
-import { X, Keyboard } from 'lucide-react'
+
 import { cn } from '../../lib/utils'
 
 interface ShortcutItem {
@@ -101,9 +102,7 @@ const SHORTCUT_CATEGORIES: ShortcutCategory[] = [
   },
   {
     title: 'Scopes (Difference Mode)',
-    shortcuts: [
-      { keys: ['G'], description: 'Toggle Gamut Warning overlay' },
-    ],
+    shortcuts: [{ keys: ['G'], description: 'Toggle Gamut Warning overlay' }],
   },
 ]
 
@@ -129,10 +128,7 @@ export function KeyboardShortcutsHelp({ isOpen, onClose }: KeyboardShortcutsHelp
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/60"
-        onClick={onClose}
-      />
+      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
 
       {/* Modal */}
       <div className="relative bg-surface border border-border rounded-lg shadow-2xl max-w-3xl w-full max-h-[80vh] overflow-hidden">
@@ -155,25 +151,20 @@ export function KeyboardShortcutsHelp({ isOpen, onClose }: KeyboardShortcutsHelp
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {SHORTCUT_CATEGORIES.map((category) => (
               <div key={category.title}>
-                <h3 className="text-sm font-medium text-accent mb-3">
-                  {category.title}
-                </h3>
+                <h3 className="text-sm font-medium text-accent mb-3">{category.title}</h3>
                 <div className="space-y-2">
                   {category.shortcuts.map((shortcut, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between py-1"
-                    >
-                      <span className="text-sm text-text-secondary">
-                        {shortcut.description}
-                      </span>
+                    <div key={index} className="flex items-center justify-between py-1">
+                      <span className="text-sm text-text-secondary">{shortcut.description}</span>
                       <div className="flex gap-1">
                         {shortcut.keys.map((key, keyIndex) => (
                           <span key={keyIndex}>
-                            <kbd className={cn(
-                              "px-2 py-0.5 text-xs font-mono rounded",
-                              "bg-background border border-border text-text-primary"
-                            )}>
+                            <kbd
+                              className={cn(
+                                'px-2 py-0.5 text-xs font-mono rounded',
+                                'bg-background border border-border text-text-primary',
+                              )}
+                            >
                               {key}
                             </kbd>
                             {keyIndex < shortcut.keys.length - 1 && (
@@ -193,7 +184,11 @@ export function KeyboardShortcutsHelp({ isOpen, onClose }: KeyboardShortcutsHelp
         {/* Footer */}
         <div className="p-3 border-t border-border bg-surface-hover">
           <p className="text-xs text-text-muted text-center">
-            Press <kbd className="px-1.5 py-0.5 text-xs font-mono bg-background border border-border rounded">?</kbd> to toggle this help
+            Press{' '}
+            <kbd className="px-1.5 py-0.5 text-xs font-mono bg-background border border-border rounded">
+              ?
+            </kbd>{' '}
+            to toggle this help
           </p>
         </div>
       </div>
@@ -215,7 +210,7 @@ export function useKeyboardShortcutsHelp() {
       // Toggle with ? key
       if (e.key === '?' || (e.shiftKey && e.key === '/')) {
         e.preventDefault()
-        setIsOpen(prev => !prev)
+        setIsOpen((prev) => !prev)
       }
     }
 
@@ -227,6 +222,6 @@ export function useKeyboardShortcutsHelp() {
     isOpen,
     open: () => setIsOpen(true),
     close: () => setIsOpen(false),
-    toggle: () => setIsOpen(prev => !prev),
+    toggle: () => setIsOpen((prev) => !prev),
   }
 }

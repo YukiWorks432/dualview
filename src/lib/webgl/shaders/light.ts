@@ -30,7 +30,7 @@ void main() {
   result.rgb = min(result.rgb, 1.0);
 
   gl_FragColor = result;
-}`
+}`,
   },
 
   hard_leak: {
@@ -56,7 +56,7 @@ void main() {
   result.rgb = min(result.rgb, 1.0);
 
   gl_FragColor = result;
-}`
+}`,
   },
 
   glow_veil: {
@@ -79,7 +79,7 @@ void main() {
   result.rgb = mix(result.rgb, glowColor, veil * gradient * 0.6 * u_intensity);
 
   gl_FragColor = result;
-}`
+}`,
   },
 
   flare: {
@@ -114,7 +114,7 @@ void main() {
   result.rgb = min(result.rgb, 1.0);
 
   gl_FragColor = result;
-}`
+}`,
   },
 
   flash: {
@@ -143,7 +143,7 @@ void main() {
   result.rgb = mix(result.rgb, vec3(1.0), flash);
 
   gl_FragColor = result;
-}`
+}`,
   },
 
   rays: {
@@ -178,7 +178,7 @@ void main() {
   result.rgb = min(result.rgb, 1.0);
 
   gl_FragColor = result;
-}`
+}`,
   },
 
   burn: {
@@ -210,7 +210,7 @@ void main() {
   result.rgb = mix(result.rgb, burnColor, burn * intensity * 0.8);
 
   gl_FragColor = result;
-}`
+}`,
   },
 
   fade_white: {
@@ -236,8 +236,8 @@ void main() {
   }
 
   gl_FragColor = result;
-}`
-  }
+}`,
+  },
 }
 
 export const LIGHT_VARIANTS = Object.keys(LIGHT_SHADERS)

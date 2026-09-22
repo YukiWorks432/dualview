@@ -7,11 +7,6 @@
  * Professional video scopes for color grading and exposure analysis
  */
 
-import { useEffect, useRef, useCallback, useState } from 'react'
-import { useProjectStore } from '../../stores/projectStore'
-import { useMediaStore } from '../../stores/mediaStore'
-import { useTimelineStore } from '../../stores/timelineStore'
-import { ScopesRenderer } from '../../lib/webgl/ScopesRenderer'
 import {
   Activity,
   Target,
@@ -21,8 +16,14 @@ import {
   X,
   Settings,
   Minus,
-  Plus
+  Plus,
 } from 'lucide-react'
+import { useEffect, useRef, useCallback, useState } from 'react'
+
+import { ScopesRenderer } from '../../lib/webgl/ScopesRenderer'
+import { useMediaStore } from '../../stores/mediaStore'
+import { useProjectStore } from '../../stores/projectStore'
+import { useTimelineStore } from '../../stores/timelineStore'
 
 interface ScopeCanvasProps {
   type: 'waveform' | 'vectorscope' | 'parade'
@@ -81,7 +82,7 @@ function ScopeCanvas({ type, source, settings, width, height }: ScopeCanvasProps
         intensity: settings.intensity,
         zoom: settings.zoom,
         showSkinTone: settings.showSkinTone,
-        isolatedChannel: settings.isolatedChannel
+        isolatedChannel: settings.isolatedChannel,
       })
 
       animationRef.current = requestAnimationFrame(render)
@@ -96,13 +97,7 @@ function ScopeCanvas({ type, source, settings, width, height }: ScopeCanvasProps
     }
   }, [type, source, settings])
 
-  return (
-    <canvas
-      ref={canvasRef}
-      className="w-full h-full rounded"
-      style={{ minHeight: '150px' }}
-    />
-  )
+  return <canvas ref={canvasRef} className="w-full h-full rounded" style={{ minHeight: '150px' }} />
 }
 
 export function ScopesPanel() {
@@ -118,7 +113,7 @@ export function ScopesPanel() {
     setVectorscopeZoom,
     setScopeIntensity,
     setScopeSource,
-    setScopesSettings
+    setScopesSettings,
   } = useProjectStore()
 
   const { getFile } = useMediaStore()
@@ -129,17 +124,20 @@ export function ScopesPanel() {
   const sourceImageRef = useRef<HTMLImageElement>(null)
 
   // Get source media based on selection
-  const trackA = tracks.find(t => t.type === 'a')
-  const trackB = tracks.find(t => t.type === 'b')
+  const trackA = tracks.find((t) => t.type === 'a')
+  const trackB = tracks.find((t) => t.type === 'b')
   const firstClipA = trackA?.clips[0] || null
   const firstClipB = trackB?.clips[0] || null
   const mediaA = firstClipA ? getFile(firstClipA.mediaId) : null
   const mediaB = firstClipB ? getFile(firstClipB.mediaId) : null
 
   // Choose source based on setting
-  const selectedMedia = scopesSettings.scopeSource === 'a' ? mediaA :
-                        scopesSettings.scopeSource === 'b' ? mediaB :
-                        mediaA // Comparison uses A for now
+  const selectedMedia =
+    scopesSettings.scopeSource === 'a'
+      ? mediaA
+      : scopesSettings.scopeSource === 'b'
+        ? mediaB
+        : mediaA // Comparison uses A for now
 
   // Track video/image loading
   const [sourceLoaded, setSourceLoaded] = useState(false)
@@ -172,7 +170,7 @@ export function ScopesPanel() {
   const activeScopeCount = [
     scopesSettings.showWaveform,
     scopesSettings.showVectorscope,
-    scopesSettings.showParade
+    scopesSettings.showParade,
   ].filter(Boolean).length
 
   return (
@@ -182,7 +180,13 @@ export function ScopesPanel() {
         <video
           ref={sourceVideoRef}
           src={selectedMedia.url}
-          style={{ position: 'absolute', width: '1px', height: '1px', opacity: 0, pointerEvents: 'none' }}
+          style={{
+            position: 'absolute',
+            width: '1px',
+            height: '1px',
+            opacity: 0,
+            pointerEvents: 'none',
+          }}
           muted
           playsInline
           autoPlay
@@ -194,7 +198,13 @@ export function ScopesPanel() {
         <img
           ref={sourceImageRef}
           src={selectedMedia.url}
-          style={{ position: 'absolute', width: '1px', height: '1px', opacity: 0, pointerEvents: 'none' }}
+          style={{
+            position: 'absolute',
+            width: '1px',
+            height: '1px',
+            opacity: 0,
+            pointerEvents: 'none',
+          }}
           onLoad={() => setSourceLoaded(true)}
           alt=""
         />
@@ -273,7 +283,9 @@ export function ScopesPanel() {
               <button
                 onClick={() => setShowSettings(!showSettings)}
                 className={`p-1.5 rounded transition-colors ${
-                  showSettings ? 'bg-[#ff5722] text-white' : 'bg-[#252525] text-gray-400 hover:text-white'
+                  showSettings
+                    ? 'bg-[#ff5722] text-white'
+                    : 'bg-[#252525] text-gray-400 hover:text-white'
                 }`}
                 title="Settings"
               >
@@ -381,7 +393,7 @@ export function ScopesPanel() {
                   type="waveform"
                   source={getSourceElement()}
                   settings={{
-                    intensity: scopesSettings.scopeIntensity
+                    intensity: scopesSettings.scopeIntensity,
                   }}
                   width={scopeWidth}
                   height={scopeHeight}
@@ -412,7 +424,7 @@ export function ScopesPanel() {
                   settings={{
                     intensity: scopesSettings.scopeIntensity,
                     zoom: scopesSettings.vectorscopeZoom,
-                    showSkinTone: scopesSettings.showSkinToneLine
+                    showSkinTone: scopesSettings.showSkinToneLine,
                   }}
                   width={scopeHeight}
                   height={scopeHeight}
@@ -438,9 +450,14 @@ export function ScopesPanel() {
                   source={getSourceElement()}
                   settings={{
                     intensity: scopesSettings.scopeIntensity,
-                    isolatedChannel: scopesSettings.paradeChannelIsolation === 'all' ? 0 :
-                                     scopesSettings.paradeChannelIsolation === 'r' ? 1 :
-                                     scopesSettings.paradeChannelIsolation === 'g' ? 2 : 3
+                    isolatedChannel:
+                      scopesSettings.paradeChannelIsolation === 'all'
+                        ? 0
+                        : scopesSettings.paradeChannelIsolation === 'r'
+                          ? 1
+                          : scopesSettings.paradeChannelIsolation === 'g'
+                            ? 2
+                            : 3,
                   }}
                   width={Math.round(scopeWidth * 1.2)}
                   height={scopeHeight}
@@ -469,7 +486,8 @@ export function ScopesPanel() {
       {/* Collapsed state */}
       {isCollapsed && (
         <div className="px-4 py-1 text-xs text-gray-500">
-          {activeScopeCount} scope{activeScopeCount !== 1 ? 's' : ''} active | Source: {scopesSettings.scopeSource.toUpperCase()}
+          {activeScopeCount} scope{activeScopeCount !== 1 ? 's' : ''} active | Source:{' '}
+          {scopesSettings.scopeSource.toUpperCase()}
         </div>
       )}
     </div>

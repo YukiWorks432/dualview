@@ -3,12 +3,13 @@
  * Alternates between images/videos A and B for spotting differences
  */
 import { useRef, useState, useEffect, useCallback, useMemo } from 'react'
-import { useTimelineStore } from '../../stores/timelineStore'
-import { usePlaybackStore } from '../../stores/playbackStore'
-import { useMediaStore } from '../../stores/mediaStore'
-import { useSyncedZoom } from '../../hooks/useSyncedZoom'
+
 import { useOptimizedClipSync } from '../../hooks/useOptimizedVideoSync'
+import { useSyncedZoom } from '../../hooks/useSyncedZoom'
 import { cn } from '../../lib/utils'
+import { useMediaStore } from '../../stores/mediaStore'
+import { usePlaybackStore } from '../../stores/playbackStore'
+import { useTimelineStore } from '../../stores/timelineStore'
 
 export function FlickerComparison() {
   const videoARef = useRef<HTMLVideoElement>(null)
@@ -23,8 +24,8 @@ export function FlickerComparison() {
   const { zoom, resetZoom, getTransformStyle, containerProps } = useSyncedZoom()
 
   // Get tracks
-  const trackA = tracks.find(t => t.type === 'a')
-  const trackB = tracks.find(t => t.type === 'b')
+  const trackA = tracks.find((t) => t.type === 'a')
+  const trackB = tracks.find((t) => t.type === 'b')
 
   // Get first clip for display
   const firstClipA = trackA?.clips[0] || null
@@ -33,12 +34,12 @@ export function FlickerComparison() {
   // Find clip that contains current time
   const activeClipA = useMemo(() => {
     if (!trackA) return null
-    return trackA.clips.find(c => currentTime >= c.startTime && currentTime < c.endTime) || null
+    return trackA.clips.find((c) => currentTime >= c.startTime && currentTime < c.endTime) || null
   }, [trackA, currentTime])
 
   const activeClipB = useMemo(() => {
     if (!trackB) return null
-    return trackB.clips.find(c => currentTime >= c.startTime && currentTime < c.endTime) || null
+    return trackB.clips.find((c) => currentTime >= c.startTime && currentTime < c.endTime) || null
   }, [trackB, currentTime])
 
   // Use active clip's media for display (clip at current time), fallback to first clip
@@ -55,7 +56,7 @@ export function FlickerComparison() {
 
   // Toggle manually
   const toggle = useCallback(() => {
-    setShowA(prev => !prev)
+    setShowA((prev) => !prev)
   }, [])
 
   // Auto flicker
@@ -89,7 +90,11 @@ export function FlickerComparison() {
 
   const transformStyle = getTransformStyle()
 
-  const renderMedia = (media: typeof mediaA, ref: React.RefObject<HTMLVideoElement | null>, track: 'a' | 'b') => {
+  const renderMedia = (
+    media: typeof mediaA,
+    ref: React.RefObject<HTMLVideoElement | null>,
+    track: 'a' | 'b',
+  ) => {
     if (!media) {
       return (
         <div className="w-full h-full flex items-center justify-center text-text-muted bg-surface">
@@ -112,7 +117,13 @@ export function FlickerComparison() {
     }
 
     return (
-      <img src={media.url} className="w-full h-full object-contain" alt="" data-track={track} draggable={false} />
+      <img
+        src={media.url}
+        className="w-full h-full object-contain"
+        alt=""
+        data-track={track}
+        draggable={false}
+      />
     )
   }
 
@@ -123,7 +134,10 @@ export function FlickerComparison() {
         <div className="absolute top-4 right-4 z-20 bg-black/70 backdrop-blur-sm px-3 py-1 flex items-center gap-2">
           <span className="text-xs text-text-primary font-medium">{Math.round(zoom * 100)}%</span>
           <button
-            onClick={(e) => { e.stopPropagation(); resetZoom() }}
+            onClick={(e) => {
+              e.stopPropagation()
+              resetZoom()
+            }}
             className="text-[10px] text-text-muted hover:text-text-primary"
           >
             Reset
@@ -132,34 +146,39 @@ export function FlickerComparison() {
       )}
 
       {/* Layer A */}
-      <div className={cn(
-        'absolute inset-0 transition-opacity duration-75 overflow-hidden',
-        showA ? 'opacity-100' : 'opacity-0'
-      )}>
+      <div
+        className={cn(
+          'absolute inset-0 transition-opacity duration-75 overflow-hidden',
+          showA ? 'opacity-100' : 'opacity-0',
+        )}
+      >
         <div className="w-full h-full" style={transformStyle}>
           {renderMedia(mediaA, videoARef, 'a')}
         </div>
       </div>
 
       {/* Layer B */}
-      <div className={cn(
-        'absolute inset-0 transition-opacity duration-75 overflow-hidden',
-        showA ? 'opacity-0' : 'opacity-100'
-      )}>
+      <div
+        className={cn(
+          'absolute inset-0 transition-opacity duration-75 overflow-hidden',
+          showA ? 'opacity-0' : 'opacity-100',
+        )}
+      >
         <div className="w-full h-full" style={transformStyle}>
           {renderMedia(mediaB, videoBRef, 'b')}
         </div>
       </div>
 
-
       {/* Controls */}
       <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-sm p-3 space-y-2 z-10">
         <div className="flex items-center gap-2">
           <button
-            onClick={() => setAutoFlicker(prev => !prev)}
+            onClick={() => setAutoFlicker((prev) => !prev)}
             className={cn(
               'px-2 py-1 text-xs transition-colors',
-              autoFlicker ? 'bg-accent text-white' : 'bg-surface text-text-primary hover:bg-surface-hover'
+              autoFlicker
+                ? 'bg-accent text-white'
+                : 'bg-surface text-text-primary hover:bg-surface-hover',
             )}
           >
             {autoFlicker ? 'Auto' : 'Manual'}
@@ -176,7 +195,7 @@ export function FlickerComparison() {
         {autoFlicker && (
           <div className="flex items-center gap-2">
             <span className="text-[10px] text-text-muted">Speed:</span>
-            {[250, 500, 1000, 2000].map(speed => (
+            {[250, 500, 1000, 2000].map((speed) => (
               <button
                 key={speed}
                 onClick={() => setFlickerSpeed(speed)}
@@ -184,7 +203,7 @@ export function FlickerComparison() {
                   'px-1.5 py-0.5 text-[10px] transition-colors',
                   flickerSpeed === speed
                     ? 'bg-accent text-white'
-                    : 'bg-surface/50 text-text-muted hover:text-text-primary'
+                    : 'bg-surface/50 text-text-muted hover:text-text-primary',
                 )}
               >
                 {speed}ms

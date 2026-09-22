@@ -1,11 +1,27 @@
+import {
+  Film,
+  Image,
+  Music,
+  Trash2,
+  Plus,
+  Box,
+  FileText,
+  Layers,
+  X,
+  Search,
+  Loader2,
+  AlertCircle,
+  RotateCcw,
+  Clock,
+} from 'lucide-react'
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import type { DragEvent } from 'react'
+
+import { cn, formatTime } from '../../lib/utils'
 import { useMediaStore } from '../../stores/mediaStore'
 import { useTimelineStore } from '../../stores/timelineStore'
-import { cn, formatTime } from '../../lib/utils'
-import { Film, Image, Music, Trash2, Plus, Box, FileText, Layers, X, Search, Loader2, AlertCircle, RotateCcw, Clock } from 'lucide-react'
-import { Button } from '../ui'
 import type { MediaType, MediaStatus } from '../../types'
+import { Button } from '../ui'
 
 // Drag data type for media items
 export const MEDIA_DRAG_TYPE = 'application/x-dualview-media'
@@ -37,7 +53,15 @@ const FILTER_CONFIG: FilterConfig[] = [
 ]
 
 // MEDIA-012: Status indicator component
-function StatusIndicator({ status, message, onRetry }: { status: MediaStatus; message?: string; onRetry?: () => void }) {
+function StatusIndicator({
+  status,
+  message,
+  onRetry,
+}: {
+  status: MediaStatus
+  message?: string
+  onRetry?: () => void
+}) {
   if (status === 'pending') {
     return (
       <div className="flex items-center gap-1 text-amber-400" title="Waiting to process">
@@ -58,7 +82,10 @@ function StatusIndicator({ status, message, onRetry }: { status: MediaStatus; me
         <AlertCircle className="w-3 h-3 text-red-400" />
         {onRetry && (
           <button
-            onClick={(e) => { e.stopPropagation(); onRetry(); }}
+            onClick={(e) => {
+              e.stopPropagation()
+              onRetry()
+            }}
             className="p-0.5 hover:bg-zinc-700 rounded"
             title="Retry"
           >
@@ -73,7 +100,8 @@ function StatusIndicator({ status, message, onRetry }: { status: MediaStatus; me
 }
 
 export function MediaLibrary() {
-  const { files, removeFile, selectedIds, selectFile, deselectFile, retryProcessing } = useMediaStore()
+  const { files, removeFile, selectedIds, selectFile, deselectFile, retryProcessing } =
+    useMediaStore()
   const { addClip, tracks } = useTimelineStore()
 
   // Filter state - supports multiple selection
@@ -96,7 +124,13 @@ export function MediaLibrary() {
 
   // MEDIA-012: Calculate counts for each status
   const statusCounts = useMemo(() => {
-    const counts: Record<string, number> = { all: files.length, pending: 0, processing: 0, ready: 0, error: 0 }
+    const counts: Record<string, number> = {
+      all: files.length,
+      pending: 0,
+      processing: 0,
+      ready: 0,
+      error: 0,
+    }
     for (const file of files) {
       counts[file.status] = (counts[file.status] || 0) + 1
     }
@@ -109,18 +143,18 @@ export function MediaLibrary() {
 
     // Apply type filter
     if (!activeFilters.has('all')) {
-      result = result.filter(file => activeFilters.has(file.type))
+      result = result.filter((file) => activeFilters.has(file.type))
     }
 
     // MEDIA-012: Apply status filter
     if (statusFilter !== 'all') {
-      result = result.filter(file => file.status === statusFilter)
+      result = result.filter((file) => file.status === statusFilter)
     }
 
     // Apply search filter
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim()
-      result = result.filter(file => file.name.toLowerCase().includes(query))
+      result = result.filter((file) => file.name.toLowerCase().includes(query))
     }
 
     return result
@@ -151,7 +185,7 @@ export function MediaLibrary() {
 
   // Handle filter click
   const handleFilterClick = useCallback((filterType: FilterType, ctrlKey: boolean) => {
-    setActiveFilters(prev => {
+    setActiveFilters((prev) => {
       const newFilters = new Set(prev)
 
       if (filterType === 'all') {
@@ -187,7 +221,7 @@ export function MediaLibrary() {
       if (!e.altKey) return
 
       // Find matching filter config
-      const config = FILTER_CONFIG.find(f => f.shortcut === e.key)
+      const config = FILTER_CONFIG.find((f) => f.shortcut === e.key)
       if (config) {
         e.preventDefault()
         handleFilterClick(config.type, e.ctrlKey || e.metaKey)
@@ -199,8 +233,8 @@ export function MediaLibrary() {
   }, [handleFilterClick])
 
   const handleAddToTimeline = (mediaId: string, trackType: 'a' | 'b') => {
-    const media = files.find(f => f.id === mediaId)
-    const track = tracks.find(t => t.type === trackType)
+    const media = files.find((f) => f.id === mediaId)
+    const track = tracks.find((t) => t.type === trackType)
 
     if (media && track) {
       // Check if track accepts this media type
@@ -209,16 +243,13 @@ export function MediaLibrary() {
       }
 
       // Find end of existing clips
-      const lastClipEnd = track.clips.reduce(
-        (max, clip) => Math.max(max, clip.endTime),
-        0
-      )
+      const lastClipEnd = track.clips.reduce((max, clip) => Math.max(max, clip.endTime), 0)
       addClip(track.id, mediaId, lastClipEnd, media.duration || 10)
     }
   }
 
   const canAddToTrack = (mediaType: string, trackType: 'a' | 'b') => {
-    const track = tracks.find(t => t.type === trackType)
+    const track = tracks.find((t) => t.type === trackType)
     return track?.acceptedTypes.includes(mediaType as 'video' | 'image' | 'audio' | 'model')
   }
 
@@ -227,7 +258,8 @@ export function MediaLibrary() {
   const hasActiveFilter = !activeFilters.has('all')
 
   // Determine if we're showing a filtered/search empty state
-  const showFilterEmptyState = files.length > 0 && filteredFiles.length === 0 && (hasActiveSearch || hasActiveFilter)
+  const showFilterEmptyState =
+    files.length > 0 && filteredFiles.length === 0 && (hasActiveSearch || hasActiveFilter)
 
   if (files.length === 0) {
     return (
@@ -259,7 +291,7 @@ export function MediaLibrary() {
             'w-full pl-7 pr-7 py-1.5 rounded text-xs bg-surface-alt border border-transparent',
             'placeholder:text-text-muted text-text-primary',
             'focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20',
-            'transition-colors'
+            'transition-colors',
           )}
         />
         {hasActiveSearch && (
@@ -289,7 +321,7 @@ export function MediaLibrary() {
                 'flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium transition-colors',
                 isActive
                   ? 'bg-accent text-white'
-                  : 'bg-surface-alt text-text-muted hover:bg-surface-hover hover:text-text-primary'
+                  : 'bg-surface-alt text-text-muted hover:bg-surface-hover hover:text-text-primary',
               )}
               onClick={(e) => handleFilterClick(config.type, e.ctrlKey || e.metaKey)}
               title={`${config.label} (Alt+${config.shortcut})${
@@ -298,10 +330,7 @@ export function MediaLibrary() {
             >
               {config.icon}
               <span>{config.label}</span>
-              <span className={cn(
-                'px-1 rounded-sm',
-                isActive ? 'bg-white/20' : 'bg-background'
-              )}>
+              <span className={cn('px-1 rounded-sm', isActive ? 'bg-white/20' : 'bg-background')}>
                 {count}
               </span>
             </button>
@@ -329,7 +358,7 @@ export function MediaLibrary() {
                   'flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium transition-colors',
                   statusFilter === 'error'
                     ? 'bg-red-500/20 text-red-400'
-                    : 'text-text-muted hover:bg-surface-hover hover:text-red-400'
+                    : 'text-text-muted hover:bg-surface-hover hover:text-red-400',
                 )}
                 onClick={() => setStatusFilter(statusFilter === 'error' ? 'all' : 'error')}
                 title="Show failed files"
@@ -344,9 +373,11 @@ export function MediaLibrary() {
                   'flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium transition-colors',
                   statusFilter === 'processing'
                     ? 'bg-blue-500/20 text-blue-400'
-                    : 'text-text-muted hover:bg-surface-hover hover:text-blue-400'
+                    : 'text-text-muted hover:bg-surface-hover hover:text-blue-400',
                 )}
-                onClick={() => setStatusFilter(statusFilter === 'processing' ? 'all' : 'processing')}
+                onClick={() =>
+                  setStatusFilter(statusFilter === 'processing' ? 'all' : 'processing')
+                }
                 title="Show processing files"
               >
                 <Loader2 className="w-3 h-3 animate-spin" />
@@ -359,7 +390,7 @@ export function MediaLibrary() {
                   'flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium transition-colors',
                   statusFilter === 'pending'
                     ? 'bg-amber-500/20 text-amber-400'
-                    : 'text-text-muted hover:bg-surface-hover hover:text-amber-400'
+                    : 'text-text-muted hover:bg-surface-hover hover:text-amber-400',
                 )}
                 onClick={() => setStatusFilter(statusFilter === 'pending' ? 'all' : 'pending')}
                 title="Show pending files"
@@ -379,11 +410,14 @@ export function MediaLibrary() {
           <p className="text-sm font-medium text-text-secondary">No matching media</p>
           <p className="text-xs">
             {hasActiveSearch && hasActiveFilter
-              ? `No ${Array.from(activeFilters).filter(f => f !== 'all').join(' or ')} files matching "${searchQuery}"`
+              ? `No ${Array.from(activeFilters)
+                  .filter((f) => f !== 'all')
+                  .join(' or ')} files matching "${searchQuery}"`
               : hasActiveSearch
                 ? `No files matching "${searchQuery}"`
-                : `No ${Array.from(activeFilters).filter(f => f !== 'all').join(' or ')} files found`
-            }
+                : `No ${Array.from(activeFilters)
+                    .filter((f) => f !== 'all')
+                    .join(' or ')} files found`}
           </p>
           <button
             className="text-xs text-accent hover:underline"
@@ -392,7 +426,12 @@ export function MediaLibrary() {
               setActiveFilters(new Set(['all']))
             }}
           >
-            Clear {hasActiveSearch && hasActiveFilter ? 'search & filters' : hasActiveSearch ? 'search' : 'filters'}
+            Clear{' '}
+            {hasActiveSearch && hasActiveFilter
+              ? 'search & filters'
+              : hasActiveSearch
+                ? 'search'
+                : 'filters'}
           </button>
         </div>
       )}
@@ -433,7 +472,7 @@ export function MediaLibrary() {
             className={cn(
               'group relative rounded-lg overflow-hidden bg-surface-hover border transition-colors',
               canDrag ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer',
-              isSelected ? 'border-accent' : 'border-transparent hover:border-border-hover'
+              isSelected ? 'border-accent' : 'border-transparent hover:border-border-hover',
             )}
             onClick={() => (isSelected ? deselectFile(file.id) : selectFile(file.id))}
           >
@@ -474,8 +513,8 @@ export function MediaLibrary() {
                     {highlightMatch(file.name, searchQuery)}
                   </p>
                   {/* MEDIA-012: Status indicator */}
-                  <StatusIndicator 
-                    status={file.status} 
+                  <StatusIndicator
+                    status={file.status}
                     message={file.statusMessage}
                     onRetry={file.status === 'error' ? () => retryProcessing(file.id) : undefined}
                   />
@@ -508,9 +547,18 @@ export function MediaLibrary() {
                     e.stopPropagation()
                     handleAddToTimeline(file.id, 'a')
                   }}
-                  title={canAddToTrack(file.type, 'a') ? 'Add to Track A' : 'Track A does not accept this media type'}
+                  title={
+                    canAddToTrack(file.type, 'a')
+                      ? 'Add to Track A'
+                      : 'Track A does not accept this media type'
+                  }
                 >
-                  <Plus className={cn("w-3 h-3", canAddToTrack(file.type, 'a') ? "text-orange-500" : "text-text-muted")} />
+                  <Plus
+                    className={cn(
+                      'w-3 h-3',
+                      canAddToTrack(file.type, 'a') ? 'text-orange-500' : 'text-text-muted',
+                    )}
+                  />
                 </Button>
                 <Button
                   variant="ghost"
@@ -521,9 +569,18 @@ export function MediaLibrary() {
                     e.stopPropagation()
                     handleAddToTimeline(file.id, 'b')
                   }}
-                  title={canAddToTrack(file.type, 'b') ? 'Add to Track B' : 'Track B does not accept this media type'}
+                  title={
+                    canAddToTrack(file.type, 'b')
+                      ? 'Add to Track B'
+                      : 'Track B does not accept this media type'
+                  }
                 >
-                  <Plus className={cn("w-3 h-3", canAddToTrack(file.type, 'b') ? "text-lime-400" : "text-text-muted")} />
+                  <Plus
+                    className={cn(
+                      'w-3 h-3',
+                      canAddToTrack(file.type, 'b') ? 'text-lime-400' : 'text-text-muted',
+                    )}
+                  />
                 </Button>
                 <Button
                   variant="ghost"

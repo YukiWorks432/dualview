@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
-import { cn } from '../../lib/utils'
 import { BarChart3, X } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+
+import { cn } from '../../lib/utils'
 
 interface HistogramOverlayProps {
   videoARef: React.RefObject<HTMLVideoElement | null>
@@ -57,7 +58,7 @@ export function HistogramOverlay({
 
   const getImageData = (
     source: HTMLVideoElement | HTMLImageElement | null,
-    canvas: HTMLCanvasElement | null
+    canvas: HTMLCanvasElement | null,
   ): ImageData | null => {
     if (!source || !canvas) return null
 
@@ -146,14 +147,16 @@ export function HistogramOverlay({
             <button
               onClick={() => setDisplayMode(displayMode === 'rgb' ? 'luminance' : 'rgb')}
               className={cn(
-                "px-2 py-0.5 text-xs rounded",
-                "bg-surface-hover text-text-muted hover:text-text-primary"
+                'px-2 py-0.5 text-xs rounded',
+                'bg-surface-hover text-text-muted hover:text-text-primary',
               )}
             >
               {displayMode === 'rgb' ? 'RGB' : 'Lum'}
             </button>
             <button
-              onClick={() => setOverlayMode(overlayMode === 'side-by-side' ? 'overlay' : 'side-by-side')}
+              onClick={() =>
+                setOverlayMode(overlayMode === 'side-by-side' ? 'overlay' : 'side-by-side')
+              }
               className="px-2 py-0.5 text-xs rounded bg-surface-hover text-text-muted hover:text-text-primary"
             >
               {overlayMode === 'side-by-side' ? 'Split' : 'Overlay'}
@@ -221,14 +224,7 @@ function HistogramCanvas({
     drawHistogramData(ctx, histogram, width, height, displayMode)
   }, [histogram, displayMode])
 
-  return (
-    <canvas
-      ref={canvasRef}
-      width={120}
-      height={60}
-      className="w-full h-[60px] rounded"
-    />
-  )
+  return <canvas ref={canvasRef} width={120} height={60} className="w-full h-[60px] rounded" />
 }
 
 function HistogramCanvasOverlay({
@@ -264,14 +260,7 @@ function HistogramCanvasOverlay({
     }
   }, [histogramA, histogramB, displayMode])
 
-  return (
-    <canvas
-      ref={canvasRef}
-      width={256}
-      height={80}
-      className="w-full h-[80px] rounded"
-    />
-  )
+  return <canvas ref={canvasRef} width={256} height={80} className="w-full h-[80px] rounded" />
 }
 
 function drawHistogramData(
@@ -280,7 +269,7 @@ function drawHistogramData(
   width: number,
   height: number,
   displayMode: 'rgb' | 'luminance',
-  overrideColor?: string
+  overrideColor?: string,
 ) {
   const channels = displayMode === 'luminance' ? ['luminance'] : ['r', 'g', 'b']
   const colors: Record<string, string> = overrideColor

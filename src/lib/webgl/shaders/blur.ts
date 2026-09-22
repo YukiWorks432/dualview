@@ -32,7 +32,7 @@ void main() {
 
   float mask = smoothstep(0.0, 1.0, u_progress);
   gl_FragColor = mix(colorA, colorB, mask);
-}`
+}`,
   },
 
   motion: {
@@ -58,7 +58,7 @@ void main() {
 
   float mask = smoothstep(0.0, 1.0, u_progress);
   gl_FragColor = mix(colorA, colorB, mask);
-}`
+}`,
   },
 
   radial: {
@@ -86,7 +86,7 @@ void main() {
 
   float mask = smoothstep(0.0, 1.0, u_progress);
   gl_FragColor = mix(colorA, colorB, mask);
-}`
+}`,
   },
 
   dreamy: {
@@ -118,7 +118,7 @@ void main() {
 
   float mask = smoothstep(0.0, 1.0, u_progress);
   gl_FragColor = mix(colorA, colorB, mask);
-}`
+}`,
   },
 
   bokeh_blur: {
@@ -154,7 +154,7 @@ void main() {
 
   float mask = smoothstep(0.0, 1.0, u_progress);
   gl_FragColor = mix(colorA, colorB, mask);
-}`
+}`,
   },
 
   directional: {
@@ -180,7 +180,7 @@ void main() {
 
   float mask = smoothstep(0.0, 1.0, u_progress);
   gl_FragColor = mix(colorA, colorB, mask);
-}`
+}`,
   },
 
   spin: {
@@ -207,7 +207,7 @@ void main() {
 
   float mask = smoothstep(0.0, 1.0, u_progress);
   gl_FragColor = mix(colorA, colorB, mask);
-}`
+}`,
   },
 
   focus: {
@@ -236,8 +236,8 @@ void main() {
 
   float mask = smoothstep(0.0, 1.0, u_progress);
   gl_FragColor = mix(colorA, colorB, mask);
-}`
-  }
+}`,
+  },
 }
 
 export const BLUR_VARIANTS = Object.keys(BLUR_SHADERS)

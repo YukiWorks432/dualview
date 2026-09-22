@@ -35,7 +35,7 @@ function evictOldestFrames(count: number = 30): void {
   if (frameCache.size < MAX_CACHE_SIZE) return
 
   const keysToDelete = Array.from(frameCache.keys()).slice(0, count)
-  keysToDelete.forEach(key => frameCache.delete(key))
+  keysToDelete.forEach((key) => frameCache.delete(key))
 }
 
 /**
@@ -107,33 +107,36 @@ export function useFrameCache(options: UseFrameCacheOptions) {
   const preRenderNearbyFrames = (
     currentTime: number,
     rangeSeconds: number,
-    renderFn: (time: number) => ImageData | null
+    renderFn: (time: number) => ImageData | null,
   ): void => {
     if (!enabled || typeof requestIdleCallback === 'undefined') return
 
-    requestIdleCallback((deadline) => {
-      const startFrame = Math.floor((currentTime - rangeSeconds) * FRAME_BUCKET_FPS)
-      const endFrame = Math.ceil((currentTime + rangeSeconds) * FRAME_BUCKET_FPS)
+    requestIdleCallback(
+      (deadline) => {
+        const startFrame = Math.floor((currentTime - rangeSeconds) * FRAME_BUCKET_FPS)
+        const endFrame = Math.ceil((currentTime + rangeSeconds) * FRAME_BUCKET_FPS)
 
-      for (let f = startFrame; f <= endFrame; f++) {
-        // Stop if we're out of idle time
-        if (deadline.timeRemaining() < 5) break
+        for (let f = startFrame; f <= endFrame; f++) {
+          // Stop if we're out of idle time
+          if (deadline.timeRemaining() < 5) break
 
-        const time = f / FRAME_BUCKET_FPS
-        const key = getCacheKey(time, contentHash)
+          const time = f / FRAME_BUCKET_FPS
+          const key = getCacheKey(time, contentHash)
 
-        // Skip if already cached
-        if (frameCache.has(key)) continue
+          // Skip if already cached
+          if (frameCache.has(key)) continue
 
-        // Stop if cache is full
-        if (frameCache.size >= MAX_CACHE_SIZE) break
+          // Stop if cache is full
+          if (frameCache.size >= MAX_CACHE_SIZE) break
 
-        const imageData = renderFn(time)
-        if (imageData) {
-          frameCache.set(key, imageData)
+          const imageData = renderFn(time)
+          if (imageData) {
+            frameCache.set(key, imageData)
+          }
         }
-      }
-    }, { timeout: 100 })
+      },
+      { timeout: 100 },
+    )
   }
 
   /**
@@ -169,11 +172,14 @@ export function useFrameCache(options: UseFrameCacheOptions) {
  * Specialized cache for video frames with intelligent seeking
  */
 class VideoFrameCache {
-  private canvasCache = new Map<string, {
-    canvas: HTMLCanvasElement
-    ctx: CanvasRenderingContext2D
-    currentTime: number
-  }>()
+  private canvasCache = new Map<
+    string,
+    {
+      canvas: HTMLCanvasElement
+      ctx: CanvasRenderingContext2D
+      currentTime: number
+    }
+  >()
 
   /**
    * Get a frame from a video element
@@ -181,7 +187,7 @@ class VideoFrameCache {
   async getFrame(
     video: HTMLVideoElement,
     targetTime: number,
-    videoId: string
+    videoId: string,
   ): Promise<ImageData | null> {
     if (!video.videoWidth || !video.videoHeight) return null
 

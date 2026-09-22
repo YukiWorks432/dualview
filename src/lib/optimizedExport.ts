@@ -13,10 +13,7 @@ import type { TimelineClip } from '../types'
  * Calculate the media time for a clip at a given timeline time
  * Applies speed and reverse properties for export
  */
-export function calculateExportMediaTime(
-  timelineTime: number,
-  clip: TimelineClip
-): number | null {
+export function calculateExportMediaTime(timelineTime: number, clip: TimelineClip): number | null {
   // Check if timeline time is within clip bounds
   if (timelineTime < clip.startTime || timelineTime >= clip.endTime) {
     return null
@@ -26,7 +23,7 @@ export function calculateExportMediaTime(
 
   // Apply speed - faster speed means we progress through media faster
   const speed = clip.speed || 1
-  let mediaTime = clip.inPoint + (relativeTime * speed)
+  let mediaTime = clip.inPoint + relativeTime * speed
 
   // Clamp to valid media range
   mediaTime = Math.min(mediaTime, clip.outPoint)
@@ -75,17 +72,17 @@ export function seekVideoTo(video: HTMLVideoElement, time: number): Promise<void
  */
 export async function seekVideosTo(
   videos: (HTMLVideoElement | null)[],
-  time: number
+  time: number,
 ): Promise<void> {
   const validVideos = videos.filter((v): v is HTMLVideoElement => v !== null)
 
   if (validVideos.length === 0) return
 
   // Pause all videos first
-  validVideos.forEach(v => v.pause())
+  validVideos.forEach((v) => v.pause())
 
   // Seek all in parallel
-  await Promise.all(validVideos.map(v => seekVideoTo(v, time)))
+  await Promise.all(validVideos.map((v) => seekVideoTo(v, time)))
 }
 
 /**
@@ -97,7 +94,7 @@ export async function seekVideosForExport(
   videoB: HTMLVideoElement | null,
   timelineTime: number,
   clipA: TimelineClip | null,
-  clipB: TimelineClip | null
+  clipB: TimelineClip | null,
 ): Promise<void> {
   const promises: Promise<void>[] = []
 
@@ -123,9 +120,7 @@ export async function seekVideosForExport(
 /**
  * Prepare videos for export by pausing and buffering
  */
-export async function prepareVideosForExport(
-  videos: (HTMLVideoElement | null)[]
-): Promise<void> {
+export async function prepareVideosForExport(videos: (HTMLVideoElement | null)[]): Promise<void> {
   const validVideos = videos.filter((v): v is HTMLVideoElement => v !== null)
 
   for (const video of validVideos) {
@@ -152,7 +147,7 @@ export async function prepareVideosForExport(
 export async function captureFrameAtTime(
   refs: VideoExportRefs,
   time: number,
-  renderToCanvas: () => void
+  renderToCanvas: () => void,
 ): Promise<void> {
   const videos = [refs.videoA, refs.videoB].filter((v): v is HTMLVideoElement => v !== null)
 
@@ -174,7 +169,7 @@ export async function captureFrameSequence(
   fps: number,
   renderToCanvas: () => void,
   onFrame: (frameIndex: number, totalFrames: number, canvas: HTMLCanvasElement) => Promise<void>,
-  onProgress?: (progress: number) => void
+  onProgress?: (progress: number) => void,
 ): Promise<void> {
   const frameTime = 1 / fps
   const totalFrames = Math.ceil((endTime - startTime) * fps)
@@ -200,7 +195,7 @@ export async function captureFrameSequence(
 
     // Yield to prevent blocking
     if (i % 5 === 0) {
-      await new Promise(r => setTimeout(r, 0))
+      await new Promise((r) => setTimeout(r, 0))
     }
   }
 }
@@ -210,8 +205,8 @@ export async function captureFrameSequence(
  * Drop-in replacement for the timeout-based approach
  */
 export function createOptimizedSeekFn(
-  videoRefs: (React.RefObject<HTMLVideoElement | null>)[],
-  timelineSeek: (time: number) => void
+  videoRefs: React.RefObject<HTMLVideoElement | null>[],
+  timelineSeek: (time: number) => void,
 ): (time: number) => Promise<void> {
   return async (time: number) => {
     // First, update the timeline state
@@ -219,23 +214,23 @@ export function createOptimizedSeekFn(
 
     // Get all valid video elements
     const videos = videoRefs
-      .map(ref => ref.current)
+      .map((ref) => ref.current)
       .filter((v): v is HTMLVideoElement => v !== null)
 
     if (videos.length === 0) {
       // No videos, just wait a frame for UI to update
-      await new Promise(r => requestAnimationFrame(r))
+      await new Promise((r) => requestAnimationFrame(r))
       return
     }
 
     // Pause and seek all videos
-    videos.forEach(v => v.pause())
+    videos.forEach((v) => v.pause())
 
     // Seek all videos and wait for them to complete
-    await Promise.all(videos.map(v => seekVideoTo(v, time)))
+    await Promise.all(videos.map((v) => seekVideoTo(v, time)))
 
     // Extra frame to ensure canvas is updated
-    await new Promise(r => requestAnimationFrame(r))
+    await new Promise((r) => requestAnimationFrame(r))
   }
 }
 
@@ -246,7 +241,7 @@ export function createOptimizedSeekFn(
 export async function captureFramesWithWebCodecs(
   video: HTMLVideoElement,
   times: number[],
-  onFrame: (frame: VideoFrame, index: number) => Promise<void>
+  onFrame: (frame: VideoFrame, index: number) => Promise<void>,
 ): Promise<void> {
   if (typeof VideoFrame === 'undefined') {
     throw new Error('WebCodecs VideoFrame not supported')
@@ -272,7 +267,9 @@ export async function captureFramesWithWebCodecs(
  * Check if we can use the optimized WebCodecs path
  */
 export function canUseWebCodecs(): boolean {
-  return typeof VideoEncoder !== 'undefined' &&
-         typeof VideoFrame !== 'undefined' &&
-         typeof VideoDecoder !== 'undefined'
+  return (
+    typeof VideoEncoder !== 'undefined' &&
+    typeof VideoFrame !== 'undefined' &&
+    typeof VideoDecoder !== 'undefined'
+  )
 }

@@ -10,9 +10,9 @@ export interface SweepExportOptions {
 }
 
 const QUALITY_BITRATES = {
-  low: 2_500_000,    // 2.5 Mbps
+  low: 2_500_000, // 2.5 Mbps
   medium: 5_000_000, // 5 Mbps
-  high: 10_000_000,  // 10 Mbps
+  high: 10_000_000, // 10 Mbps
 }
 
 /**
@@ -25,7 +25,7 @@ export async function exportSweepVideo(
   options: SweepExportOptions,
   setSliderPosition: (pos: number) => void,
   onProgress: (progress: number, message: string) => void,
-  videoElements: { videoA: HTMLVideoElement | null; videoB: HTMLVideoElement | null }
+  videoElements: { videoA: HTMLVideoElement | null; videoB: HTMLVideoElement | null },
 ): Promise<Blob> {
   return new Promise((resolve, reject) => {
     const { loopCount, format, quality } = options
@@ -40,9 +40,10 @@ export async function exportSweepVideo(
     const stream = canvas.captureStream(30) // 30fps
 
     // Determine codec based on format
-    const mimeType = format === 'mp4'
-      ? 'video/webm;codecs=vp9' // We'll record as webm, browser doesn't support mp4 recording
-      : 'video/webm;codecs=vp9'
+    const mimeType =
+      format === 'mp4'
+        ? 'video/webm;codecs=vp9' // We'll record as webm, browser doesn't support mp4 recording
+        : 'video/webm;codecs=vp9'
 
     if (!MediaRecorder.isTypeSupported(mimeType)) {
       reject(new Error('Video recording not supported in this browser'))
@@ -132,7 +133,7 @@ export async function exportSingleSweep(
   quality: 'low' | 'medium' | 'high',
   setSliderPosition: (pos: number) => void,
   onProgress: (progress: number, message: string) => void,
-  videoElements: { videoA: HTMLVideoElement | null; videoB: HTMLVideoElement | null }
+  videoElements: { videoA: HTMLVideoElement | null; videoB: HTMLVideoElement | null },
 ): Promise<Blob> {
   return exportSweepVideo(
     canvas,
@@ -140,7 +141,7 @@ export async function exportSingleSweep(
     { loopCount: 1, format: 'webm', quality },
     setSliderPosition,
     onProgress,
-    videoElements
+    videoElements,
   )
 }
 

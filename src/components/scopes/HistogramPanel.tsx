@@ -3,8 +3,8 @@
  * Real-time histogram computed in WebGL with A/B comparison
  */
 
-import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import { X, BarChart3, Layers, Scale } from 'lucide-react'
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 
 interface HistogramPanelProps {
   videoARef: React.RefObject<HTMLVideoElement | null>
@@ -22,8 +22,8 @@ interface HistogramData {
   lum: Uint32Array
   mean: { r: number; g: number; b: number; lum: number }
   median: { r: number; g: number; b: number; lum: number }
-  clippedShadows: number  // Percentage of pixels at 0
-  clippedHighlights: number  // Percentage of pixels at 255
+  clippedShadows: number // Percentage of pixels at 0
+  clippedHighlights: number // Percentage of pixels at 255
   totalPixels: number
 }
 
@@ -35,7 +35,7 @@ export function HistogramPanel({
   imageARef,
   imageBRef,
   isVisible,
-  onClose
+  onClose,
 }: HistogramPanelProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const sampleCanvasARef = useRef<HTMLCanvasElement>(null)
@@ -58,7 +58,10 @@ export function HistogramPanel({
     const data = imageData.data
     const pixelCount = data.length / 4
 
-    let rSum = 0, gSum = 0, bSum = 0, lumSum = 0
+    let rSum = 0,
+      gSum = 0,
+      bSum = 0,
+      lumSum = 0
 
     for (let i = 0; i < data.length; i += 4) {
       const rVal = data[i]
@@ -82,7 +85,7 @@ export function HistogramPanel({
       r: rSum / pixelCount,
       g: gSum / pixelCount,
       b: bSum / pixelCount,
-      lum: lumSum / pixelCount
+      lum: lumSum / pixelCount,
     }
 
     // Calculate median (find value where cumulative count reaches 50%)
@@ -100,163 +103,187 @@ export function HistogramPanel({
       r: findMedian(r),
       g: findMedian(g),
       b: findMedian(b),
-      lum: findMedian(lum)
+      lum: findMedian(lum),
     }
 
     // Calculate clipping
     const clippedShadows = ((r[0] + g[0] + b[0]) / 3 / pixelCount) * 100
     const clippedHighlights = ((r[255] + g[255] + b[255]) / 3 / pixelCount) * 100
 
-    return { r, g, b, lum, mean, median, clippedShadows, clippedHighlights, totalPixels: pixelCount }
+    return {
+      r,
+      g,
+      b,
+      lum,
+      mean,
+      median,
+      clippedShadows,
+      clippedHighlights,
+      totalPixels: pixelCount,
+    }
   }, [])
 
   // Get image data from source
-  const getImageData = useCallback((
-    videoRef: React.RefObject<HTMLVideoElement | null>,
-    imageRef?: React.RefObject<HTMLImageElement | null>,
-    sampleCanvas?: HTMLCanvasElement | null
-  ): ImageData | null => {
-    if (!sampleCanvas) return null
+  const getImageData = useCallback(
+    (
+      videoRef: React.RefObject<HTMLVideoElement | null>,
+      imageRef?: React.RefObject<HTMLImageElement | null>,
+      sampleCanvas?: HTMLCanvasElement | null,
+    ): ImageData | null => {
+      if (!sampleCanvas) return null
 
-    const ctx = sampleCanvas.getContext('2d', { willReadFrequently: true })
-    if (!ctx) return null
+      const ctx = sampleCanvas.getContext('2d', { willReadFrequently: true })
+      if (!ctx) return null
 
-    const source = videoRef?.current || imageRef?.current
-    if (!source) return null
+      const source = videoRef?.current || imageRef?.current
+      if (!source) return null
 
-    let width: number, height: number
-    if (source instanceof HTMLVideoElement) {
-      if (source.readyState < 2) return null
-      width = source.videoWidth
-      height = source.videoHeight
-    } else {
-      width = source.naturalWidth
-      height = source.naturalHeight
-    }
+      let width: number, height: number
+      if (source instanceof HTMLVideoElement) {
+        if (source.readyState < 2) return null
+        width = source.videoWidth
+        height = source.videoHeight
+      } else {
+        width = source.naturalWidth
+        height = source.naturalHeight
+      }
 
-    if (width === 0 || height === 0) return null
+      if (width === 0 || height === 0) return null
 
-    // Sample at reduced resolution for performance
-    const sampleWidth = Math.min(width, 400)
-    const sampleHeight = Math.min(height, 300)
-    sampleCanvas.width = sampleWidth
-    sampleCanvas.height = sampleHeight
+      // Sample at reduced resolution for performance
+      const sampleWidth = Math.min(width, 400)
+      const sampleHeight = Math.min(height, 300)
+      sampleCanvas.width = sampleWidth
+      sampleCanvas.height = sampleHeight
 
-    ctx.drawImage(source, 0, 0, sampleWidth, sampleHeight)
-    return ctx.getImageData(0, 0, sampleWidth, sampleHeight)
-  }, [])
+      ctx.drawImage(source, 0, 0, sampleWidth, sampleHeight)
+      return ctx.getImageData(0, 0, sampleWidth, sampleHeight)
+    },
+    [],
+  )
 
   // Render histogram
-  const renderHistogram = useCallback((
-    ctx: CanvasRenderingContext2D,
-    histogram: HistogramData,
-    x: number,
-    y: number,
-    width: number,
-    height: number,
-    color: string,
-    showMeanMedian: boolean = true
-  ) => {
-    const data = displayMode === 'luminance' ? histogram.lum :
-                 displayMode === 'rgb-separate' ? histogram.lum : histogram.r
+  const renderHistogram = useCallback(
+    (
+      ctx: CanvasRenderingContext2D,
+      histogram: HistogramData,
+      x: number,
+      y: number,
+      width: number,
+      height: number,
+      color: string,
+      showMeanMedian: boolean = true,
+    ) => {
+      const data =
+        displayMode === 'luminance'
+          ? histogram.lum
+          : displayMode === 'rgb-separate'
+            ? histogram.lum
+            : histogram.r
 
-    // Find max value for scaling
-    let maxVal = 0
-    for (let i = 0; i < 256; i++) {
-      if (displayMode === 'rgb-overlay') {
-        maxVal = Math.max(maxVal, histogram.r[i], histogram.g[i], histogram.b[i])
-      } else {
-        maxVal = Math.max(maxVal, data[i])
+      // Find max value for scaling
+      let maxVal = 0
+      for (let i = 0; i < 256; i++) {
+        if (displayMode === 'rgb-overlay') {
+          maxVal = Math.max(maxVal, histogram.r[i], histogram.g[i], histogram.b[i])
+        } else {
+          maxVal = Math.max(maxVal, data[i])
+        }
       }
-    }
 
-    if (maxVal === 0) return
+      if (maxVal === 0) return
 
-    const barWidth = width / 256
+      const barWidth = width / 256
 
-    // Apply log scale if enabled
-    const scaleValue = (val: number) => {
-      if (!useLogScale) return val / maxVal
-      return Math.log1p(val) / Math.log1p(maxVal)
-    }
+      // Apply log scale if enabled
+      const scaleValue = (val: number) => {
+        if (!useLogScale) return val / maxVal
+        return Math.log1p(val) / Math.log1p(maxVal)
+      }
 
-    // Draw RGB channels
-    if (displayMode === 'rgb-overlay' || displayMode === 'rgb-separate') {
-      const channels = [
-        { data: histogram.r, color: 'rgba(255, 80, 80, 0.6)' },
-        { data: histogram.g, color: 'rgba(80, 255, 80, 0.6)' },
-        { data: histogram.b, color: 'rgba(80, 80, 255, 0.6)' }
-      ]
+      // Draw RGB channels
+      if (displayMode === 'rgb-overlay' || displayMode === 'rgb-separate') {
+        const channels = [
+          { data: histogram.r, color: 'rgba(255, 80, 80, 0.6)' },
+          { data: histogram.g, color: 'rgba(80, 255, 80, 0.6)' },
+          { data: histogram.b, color: 'rgba(80, 80, 255, 0.6)' },
+        ]
 
-      channels.forEach(channel => {
-        ctx.fillStyle = channel.color
+        channels.forEach((channel) => {
+          ctx.fillStyle = channel.color
+          ctx.beginPath()
+          ctx.moveTo(x, y + height)
+
+          for (let i = 0; i < 256; i++) {
+            const barX = x + i * barWidth
+            const barHeight = scaleValue(channel.data[i]) * height * 0.95
+            ctx.lineTo(barX, y + height - barHeight)
+          }
+
+          ctx.lineTo(x + width, y + height)
+          ctx.closePath()
+          ctx.fill()
+        })
+      } else {
+        // Luminance only
+        ctx.fillStyle = color
         ctx.beginPath()
         ctx.moveTo(x, y + height)
 
         for (let i = 0; i < 256; i++) {
           const barX = x + i * barWidth
-          const barHeight = scaleValue(channel.data[i]) * height * 0.95
+          const barHeight = scaleValue(histogram.lum[i]) * height * 0.95
           ctx.lineTo(barX, y + height - barHeight)
         }
 
         ctx.lineTo(x + width, y + height)
         ctx.closePath()
         ctx.fill()
-      })
-    } else {
-      // Luminance only
-      ctx.fillStyle = color
-      ctx.beginPath()
-      ctx.moveTo(x, y + height)
-
-      for (let i = 0; i < 256; i++) {
-        const barX = x + i * barWidth
-        const barHeight = scaleValue(histogram.lum[i]) * height * 0.95
-        ctx.lineTo(barX, y + height - barHeight)
       }
 
-      ctx.lineTo(x + width, y + height)
-      ctx.closePath()
-      ctx.fill()
-    }
+      // Draw mean and median markers
+      if (showMeanMedian) {
+        const meanVal =
+          displayMode === 'luminance'
+            ? histogram.mean.lum
+            : (histogram.mean.r + histogram.mean.g + histogram.mean.b) / 3
+        const medianVal =
+          displayMode === 'luminance'
+            ? histogram.median.lum
+            : (histogram.median.r + histogram.median.g + histogram.median.b) / 3
 
-    // Draw mean and median markers
-    if (showMeanMedian) {
-      const meanVal = displayMode === 'luminance' ? histogram.mean.lum :
-                     (histogram.mean.r + histogram.mean.g + histogram.mean.b) / 3
-      const medianVal = displayMode === 'luminance' ? histogram.median.lum :
-                       (histogram.median.r + histogram.median.g + histogram.median.b) / 3
+        // Mean marker (dashed)
+        ctx.strokeStyle = '#ff5722'
+        ctx.setLineDash([4, 4])
+        ctx.lineWidth = 2
+        const meanX = x + (meanVal / 255) * width
+        ctx.beginPath()
+        ctx.moveTo(meanX, y)
+        ctx.lineTo(meanX, y + height)
+        ctx.stroke()
 
-      // Mean marker (dashed)
-      ctx.strokeStyle = '#ff5722'
-      ctx.setLineDash([4, 4])
-      ctx.lineWidth = 2
-      const meanX = x + (meanVal / 255) * width
-      ctx.beginPath()
-      ctx.moveTo(meanX, y)
-      ctx.lineTo(meanX, y + height)
-      ctx.stroke()
+        // Median marker (solid)
+        ctx.strokeStyle = '#cddc39'
+        ctx.setLineDash([])
+        const medianX = x + (medianVal / 255) * width
+        ctx.beginPath()
+        ctx.moveTo(medianX, y)
+        ctx.lineTo(medianX, y + height)
+        ctx.stroke()
+      }
 
-      // Median marker (solid)
-      ctx.strokeStyle = '#cddc39'
-      ctx.setLineDash([])
-      const medianX = x + (medianVal / 255) * width
-      ctx.beginPath()
-      ctx.moveTo(medianX, y)
-      ctx.lineTo(medianX, y + height)
-      ctx.stroke()
-    }
-
-    // Draw clipping indicators
-    if (histogram.clippedShadows > 0.1) {
-      ctx.fillStyle = '#ff0000'
-      ctx.fillRect(x, y, 4, 4)
-    }
-    if (histogram.clippedHighlights > 0.1) {
-      ctx.fillStyle = '#ff0000'
-      ctx.fillRect(x + width - 4, y, 4, 4)
-    }
-  }, [displayMode, useLogScale])
+      // Draw clipping indicators
+      if (histogram.clippedShadows > 0.1) {
+        ctx.fillStyle = '#ff0000'
+        ctx.fillRect(x, y, 4, 4)
+      }
+      if (histogram.clippedHighlights > 0.1) {
+        ctx.fillStyle = '#ff0000'
+        ctx.fillRect(x + width - 4, y, 4, 4)
+      }
+    },
+    [displayMode, useLogScale],
+  )
 
   // Main render loop
   useEffect(() => {
@@ -344,7 +371,15 @@ export function HistogramPanel({
 
       // Draw histogram B
       if (histogramB) {
-        renderHistogram(ctx, histogramB, width / 2 + 10, 10, panelWidth, panelHeight, 'rgba(150, 255, 50, 0.7)')
+        renderHistogram(
+          ctx,
+          histogramB,
+          width / 2 + 10,
+          10,
+          panelWidth,
+          panelHeight,
+          'rgba(150, 255, 50, 0.7)',
+        )
       }
 
       // Labels
@@ -367,10 +402,28 @@ export function HistogramPanel({
       const panelHeight = height - 60
 
       if (histogramA) {
-        renderHistogram(ctx, histogramA, 0, 10, width, panelHeight, 'rgba(255, 150, 50, 0.5)', false)
+        renderHistogram(
+          ctx,
+          histogramA,
+          0,
+          10,
+          width,
+          panelHeight,
+          'rgba(255, 150, 50, 0.5)',
+          false,
+        )
       }
       if (histogramB) {
-        renderHistogram(ctx, histogramB, 0, 10, width, panelHeight, 'rgba(150, 255, 50, 0.5)', false)
+        renderHistogram(
+          ctx,
+          histogramB,
+          0,
+          10,
+          width,
+          panelHeight,
+          'rgba(150, 255, 50, 0.5)',
+          false,
+        )
       }
     }
 
@@ -378,8 +431,8 @@ export function HistogramPanel({
     ctx.fillStyle = '#666'
     ctx.font = '10px system-ui'
     ctx.fillText('0', 2, height - 5)
-    ctx.fillText('128', showSideBySide ? (width / 4 - 10) : (width / 2 - 10), height - 5)
-    ctx.fillText('255', showSideBySide ? (width / 2 - 25) : (width - 25), height - 5)
+    ctx.fillText('128', showSideBySide ? width / 4 - 10 : width / 2 - 10, height - 5)
+    ctx.fillText('255', showSideBySide ? width / 2 - 25 : width - 25, height - 5)
 
     if (showSideBySide) {
       ctx.fillText('0', width / 2 + 12, height - 5)
@@ -397,7 +450,6 @@ export function HistogramPanel({
     ctx.fillStyle = '#cddc39'
     ctx.fillRect(55, height - 22, 8, 8)
     ctx.fillText('Median', 66, height - 15)
-
   }, [histogramA, histogramB, isVisible, displayMode, useLogScale, showSideBySide, renderHistogram])
 
   // Statistics display
@@ -405,18 +457,22 @@ export function HistogramPanel({
     if (!histogramA && !histogramB) return null
 
     return {
-      a: histogramA ? {
-        mean: Math.round(histogramA.mean.lum),
-        median: histogramA.median.lum,
-        shadows: histogramA.clippedShadows.toFixed(1),
-        highlights: histogramA.clippedHighlights.toFixed(1)
-      } : null,
-      b: histogramB ? {
-        mean: Math.round(histogramB.mean.lum),
-        median: histogramB.median.lum,
-        shadows: histogramB.clippedShadows.toFixed(1),
-        highlights: histogramB.clippedHighlights.toFixed(1)
-      } : null
+      a: histogramA
+        ? {
+            mean: Math.round(histogramA.mean.lum),
+            median: histogramA.median.lum,
+            shadows: histogramA.clippedShadows.toFixed(1),
+            highlights: histogramA.clippedHighlights.toFixed(1),
+          }
+        : null,
+      b: histogramB
+        ? {
+            mean: Math.round(histogramB.mean.lum),
+            median: histogramB.median.lum,
+            shadows: histogramB.clippedShadows.toFixed(1),
+            highlights: histogramB.clippedHighlights.toFixed(1),
+          }
+        : null,
     }
   }, [histogramA, histogramB])
 
@@ -437,7 +493,15 @@ export function HistogramPanel({
         <div className="flex items-center gap-1">
           {/* Display mode toggle */}
           <button
-            onClick={() => setDisplayMode(displayMode === 'rgb-overlay' ? 'rgb-separate' : displayMode === 'rgb-separate' ? 'luminance' : 'rgb-overlay')}
+            onClick={() =>
+              setDisplayMode(
+                displayMode === 'rgb-overlay'
+                  ? 'rgb-separate'
+                  : displayMode === 'rgb-separate'
+                    ? 'luminance'
+                    : 'rgb-overlay',
+              )
+            }
             className="p-1.5 rounded text-xs bg-surface-hover text-text-muted hover:text-text-primary"
             title="Toggle display mode"
           >
@@ -465,12 +529,7 @@ export function HistogramPanel({
       </div>
 
       {/* Histogram canvas */}
-      <canvas
-        ref={canvasRef}
-        width={380}
-        height={160}
-        className="w-full"
-      />
+      <canvas ref={canvasRef} width={380} height={160} className="w-full" />
 
       {/* Statistics */}
       {stats && (
@@ -490,7 +549,9 @@ export function HistogramPanel({
                 </div>
                 <div className="flex justify-between">
                   <span className="text-text-muted">Clipped:</span>
-                  <span className={`${Number(stats.a.shadows) > 1 || Number(stats.a.highlights) > 1 ? 'text-red-400' : 'text-text-primary'}`}>
+                  <span
+                    className={`${Number(stats.a.shadows) > 1 || Number(stats.a.highlights) > 1 ? 'text-red-400' : 'text-text-primary'}`}
+                  >
                     S:{stats.a.shadows}% H:{stats.a.highlights}%
                   </span>
                 </div>
@@ -515,7 +576,9 @@ export function HistogramPanel({
                 </div>
                 <div className="flex justify-between">
                   <span className="text-text-muted">Clipped:</span>
-                  <span className={`${Number(stats.b.shadows) > 1 || Number(stats.b.highlights) > 1 ? 'text-red-400' : 'text-text-primary'}`}>
+                  <span
+                    className={`${Number(stats.b.shadows) > 1 || Number(stats.b.highlights) > 1 ? 'text-red-400' : 'text-text-primary'}`}
+                  >
                     S:{stats.b.shadows}% H:{stats.b.highlights}%
                   </span>
                 </div>
@@ -529,7 +592,12 @@ export function HistogramPanel({
 
       {/* Mode indicator */}
       <div className="px-2 pb-2 text-[9px] text-text-muted">
-        Mode: {displayMode === 'rgb-overlay' ? 'RGB Overlay' : displayMode === 'rgb-separate' ? 'RGB Separate' : 'Luminance'}
+        Mode:{' '}
+        {displayMode === 'rgb-overlay'
+          ? 'RGB Overlay'
+          : displayMode === 'rgb-separate'
+            ? 'RGB Separate'
+            : 'Luminance'}
         {useLogScale && ' (Log)'}
       </div>
     </div>

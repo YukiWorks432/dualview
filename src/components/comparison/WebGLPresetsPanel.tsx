@@ -3,8 +3,18 @@
  * UI for saving, loading, and managing presets
  */
 
+import {
+  Bookmark,
+  Save,
+  Trash2,
+  Download,
+  Upload,
+  ChevronDown,
+  ChevronRight,
+  X,
+} from 'lucide-react'
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { useProjectStore } from '../../stores/projectStore'
+
 import {
   loadPresets,
   savePreset,
@@ -13,9 +23,9 @@ import {
   importPresets,
   saveImportedPresets,
   PRESET_CATEGORIES,
-  type WebGLPreset
+  type WebGLPreset,
 } from '../../lib/webgl/presets'
-import { Bookmark, Save, Trash2, Download, Upload, ChevronDown, ChevronRight, X } from 'lucide-react'
+import { useProjectStore } from '../../stores/projectStore'
 
 interface WebGLPresetsPanelProps {
   isOpen: boolean
@@ -24,11 +34,15 @@ interface WebGLPresetsPanelProps {
 
 export function WebGLPresetsPanel({ isOpen, onClose }: WebGLPresetsPanelProps) {
   const [presets, setPresets] = useState<WebGLPreset[]>([])
-  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(['builtin', 'custom']))
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
+    new Set(['builtin', 'custom']),
+  )
   const [showSaveDialog, setShowSaveDialog] = useState(false)
   const [newPresetName, setNewPresetName] = useState('')
   const [newPresetDescription, setNewPresetDescription] = useState('')
-  const [newPresetCategory, setNewPresetCategory] = useState<'qa' | 'ai' | 'vfx' | 'custom'>('custom')
+  const [newPresetCategory, setNewPresetCategory] = useState<'qa' | 'ai' | 'vfx' | 'custom'>(
+    'custom',
+  )
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const { webglComparisonSettings, setWebGLComparisonSettings } = useProjectStore()
@@ -39,16 +53,22 @@ export function WebGLPresetsPanel({ isOpen, onClose }: WebGLPresetsPanelProps) {
   }, [])
 
   // Group presets by category
-  const presetsByCategory = presets.reduce((acc, preset) => {
-    if (!acc[preset.category]) acc[preset.category] = []
-    acc[preset.category].push(preset)
-    return acc
-  }, {} as Record<string, WebGLPreset[]>)
+  const presetsByCategory = presets.reduce(
+    (acc, preset) => {
+      if (!acc[preset.category]) acc[preset.category] = []
+      acc[preset.category].push(preset)
+      return acc
+    },
+    {} as Record<string, WebGLPreset[]>,
+  )
 
   // Apply preset
-  const applyPreset = useCallback((preset: WebGLPreset) => {
-    setWebGLComparisonSettings(preset.settings)
-  }, [setWebGLComparisonSettings])
+  const applyPreset = useCallback(
+    (preset: WebGLPreset) => {
+      setWebGLComparisonSettings(preset.settings)
+    },
+    [setWebGLComparisonSettings],
+  )
 
   // Save current settings as preset
   const handleSavePreset = useCallback(() => {
@@ -70,8 +90,8 @@ export function WebGLPresetsPanel({ isOpen, onClose }: WebGLPresetsPanelProps) {
         checkerSize: webglComparisonSettings.checkerSize,
         onionOpacity: webglComparisonSettings.onionOpacity,
         showMetricsOverlay: webglComparisonSettings.showMetricsOverlay,
-        showScaleBar: webglComparisonSettings.showScaleBar
-      }
+        showScaleBar: webglComparisonSettings.showScaleBar,
+      },
     })
 
     setPresets(loadPresets())
@@ -88,7 +108,7 @@ export function WebGLPresetsPanel({ isOpen, onClose }: WebGLPresetsPanelProps) {
 
   // Export presets
   const handleExport = useCallback(() => {
-    const customPresets = presets.filter(p => !p.isBuiltin)
+    const customPresets = presets.filter((p) => !p.isBuiltin)
     const json = exportPresets(customPresets)
     const blob = new Blob([json], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
@@ -119,7 +139,7 @@ export function WebGLPresetsPanel({ isOpen, onClose }: WebGLPresetsPanelProps) {
 
   // Toggle category
   const toggleCategory = useCallback((category: string) => {
-    setExpandedCategories(prev => {
+    setExpandedCategories((prev) => {
       const next = new Set(prev)
       if (next.has(category)) {
         next.delete(category)
@@ -242,7 +262,11 @@ export function WebGLPresetsPanel({ isOpen, onClose }: WebGLPresetsPanelProps) {
                 <span className="text-sm text-gray-300 font-medium">{label}</span>
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-gray-500">{categoryPresets.length}</span>
-                  {isExpanded ? <ChevronDown size={14} className="text-gray-500" /> : <ChevronRight size={14} className="text-gray-500" />}
+                  {isExpanded ? (
+                    <ChevronDown size={14} className="text-gray-500" />
+                  ) : (
+                    <ChevronRight size={14} className="text-gray-500" />
+                  )}
                 </div>
               </button>
 
