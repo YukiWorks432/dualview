@@ -1,26 +1,69 @@
-import { useRef, useImperativeHandle, forwardRef } from 'react'
+import {
+  Suspense,
+  forwardRef,
+  lazy,
+  useImperativeHandle,
+  useRef,
+} from 'react'
 
 import { useProjectStore } from '../../stores/projectStore'
-import {
-  SliderComparison,
-  SideBySide,
-  BlendModes,
-  SplitScreen,
-  FlickerComparison,
-  PromptDiff,
-  DifferenceHeatmap,
-  JsonDiffView,
-  Model3DComparison,
-  WebGLComparison,
-  AudioComparison,
-  // MODE-001 to MODE-005: New comparison modes
-  QuadComparison,
-  RadialLoupeComparison,
-  GridTileComparison,
-  MorphologicalView,
-  // Document comparison
-  DocumentComparison,
-} from '../comparison'
+import { BlendModes } from '../comparison/BlendModes'
+import { FlickerComparison } from '../comparison/FlickerComparison'
+import { SideBySide } from '../comparison/SideBySide'
+import { SliderComparison } from '../comparison/SliderComparison'
+import { SplitScreen } from '../comparison/SplitScreen'
+
+const PromptDiff = lazy(() =>
+  import('../comparison/PromptDiff').then((module) => ({ default: module.PromptDiff })),
+)
+const DifferenceHeatmap = lazy(() =>
+  import('../comparison/DifferenceHeatmap').then((module) => ({
+    default: module.DifferenceHeatmap,
+  })),
+)
+const JsonDiffView = lazy(() =>
+  import('../comparison/JsonDiffView').then((module) => ({ default: module.JsonDiffView })),
+)
+const AudioComparison = lazy(() =>
+  import('../comparison/AudioComparison').then((module) => ({
+    default: module.AudioComparison,
+  })),
+)
+const Model3DComparison = lazy(() =>
+  import('../comparison/Model3DComparison').then((module) => ({
+    default: module.Model3DComparison,
+  })),
+)
+const WebGLComparison = lazy(() =>
+  import('../comparison/WebGLComparison').then((module) => ({
+    default: module.WebGLComparison,
+  })),
+)
+const QuadComparison = lazy(() =>
+  import('../comparison/QuadComparison').then((module) => ({
+    default: module.QuadComparison,
+  })),
+)
+const RadialLoupeComparison = lazy(() =>
+  import('../comparison/RadialLoupeComparison').then((module) => ({
+    default: module.RadialLoupeComparison,
+  })),
+)
+const GridTileComparison = lazy(() =>
+  import('../comparison/GridTileComparison').then((module) => ({
+    default: module.GridTileComparison,
+  })),
+)
+const MorphologicalView = lazy(() =>
+  import('../comparison/MorphologicalView').then((module) => ({
+    default: module.MorphologicalView,
+  })),
+)
+const DocumentComparison = lazy(() =>
+  import('../comparison/DocumentComparison').then((module) => ({
+    default: module.DocumentComparison,
+  })),
+)
 
 export interface PreviewCanvasHandle {
   captureFrame: () => HTMLCanvasElement | null
@@ -29,6 +72,14 @@ export interface PreviewCanvasHandle {
 interface PreviewCanvasProps {
   canvasRef?: React.RefObject<HTMLCanvasElement | null>
   isTimelineVisible?: boolean
+}
+
+function ComparisonLoadingFallback() {
+  return (
+    <div className="w-full h-full flex items-center justify-center bg-surface text-text-muted text-sm">
+      Loading comparison mode…
+    </div>
+  )
 }
 
 export const PreviewCanvas = forwardRef<PreviewCanvasHandle, PreviewCanvasProps>(
@@ -81,12 +132,12 @@ export const PreviewCanvas = forwardRef<PreviewCanvasHandle, PreviewCanvasProps>
         }
 
         // Draw in order: videos first, then images, then canvases
-        videos.forEach((v) => {
-          if (!v.classList.contains('hidden')) drawMedia(v)
+        videos.forEach((video) => {
+          if (!video.classList.contains('hidden')) drawMedia(video)
         })
-        images.forEach((i) => drawMedia(i))
-        canvases.forEach((c) => {
-          if (c !== canvas) drawMedia(c)
+        images.forEach((image) => drawMedia(image))
+        canvases.forEach((childCanvas) => {
+          if (childCanvas !== canvas) drawMedia(childCanvas)
         })
 
         return canvas
@@ -97,32 +148,33 @@ export const PreviewCanvas = forwardRef<PreviewCanvasHandle, PreviewCanvasProps>
       <div className="flex-1 bg-black flex items-center justify-center overflow-hidden relative">
         <div
           ref={containerRef}
-          className={`w-full h-full max-w-[1920px] relative ${isTimelineVisible && comparisonMode !== 'document' ? 'max-h-[1080px] aspect-video' : ''}`}
+          className={`w-full h-full max-w-[1920px] relative ${
+            isTimelineVisible && comparisonMode !== 'document'
+              ? 'max-h-[1080px] aspect-video'
+              : ''
+          }`}
         >
-          {comparisonMode === 'slider' && <SliderComparison />}
-          {comparisonMode === 'side-by-side' && <SideBySide />}
-          {comparisonMode === 'blend' && <BlendModes />}
-          {comparisonMode === 'split' && <SplitScreen />}
-          {comparisonMode === 'flicker' && <FlickerComparison />}
-          {comparisonMode === 'prompt-diff' && <PromptDiff />}
-          {comparisonMode === 'json-diff' && <JsonDiffView />}
-          {comparisonMode === 'heatmap' && <DifferenceHeatmap />}
-          {comparisonMode === 'audio' && <AudioComparison />}
-          {comparisonMode === 'model-3d' && <Model3DComparison />}
-          {comparisonMode === 'webgl-compare' && <WebGLComparison />}
-          {/* MODE-001 to MODE-005: New comparison modes */}
-          {comparisonMode === 'quad' && <QuadComparison />}
-          {comparisonMode === 'radial-loupe' && <RadialLoupeComparison />}
-          {comparisonMode === 'grid-tile' && <GridTileComparison />}
-          {comparisonMode === 'morphological' && <MorphologicalView />}
-          {/* Document comparison */}
-          {comparisonMode === 'document' && <DocumentComparison />}
+          <Suspense fallback={<ComparisonLoadingFallback />}>
+            {comparisonMode === 'slider' && <SliderComparison />}
+            {comparisonMode === 'side-by-side' && <SideBySide />}
+            {comparisonMode === 'blend' && <BlendModes />}
+            {comparisonMode === 'split' && <SplitScreen />}
+            {comparisonMode === 'flicker' && <FlickerComparison />}
+            {comparisonMode === 'prompt-diff' && <PromptDiff />}
+            {comparisonMode === 'json-diff' && <JsonDiffView />}
+            {comparisonMode === 'heatmap' && <DifferenceHeatmap />}
+            {comparisonMode === 'audio' && <AudioComparison />}
+            {comparisonMode === 'model-3d' && <Model3DComparison />}
+            {comparisonMode === 'webgl-compare' && <WebGLComparison />}
+            {comparisonMode === 'quad' && <QuadComparison />}
+            {comparisonMode === 'radial-loupe' && <RadialLoupeComparison />}
+            {comparisonMode === 'grid-tile' && <GridTileComparison />}
+            {comparisonMode === 'morphological' && <MorphologicalView />}
+            {comparisonMode === 'document' && <DocumentComparison />}
+          </Suspense>
         </div>
 
-        {/* Hidden canvas for export frame capture */}
         <canvas ref={exportCanvasRef} className="hidden" width={1920} height={1080} />
-
-        {/* Legacy canvas ref support */}
         {canvasRef && <canvas ref={canvasRef} className="hidden" width={1920} height={1080} />}
       </div>
     )
