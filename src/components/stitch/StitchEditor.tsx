@@ -3,18 +3,33 @@
  * Upload, reorder, and stitch multiple video clips
  */
 
-import { useState, useCallback, useRef, useEffect } from 'react'
-import { useMediaStore } from '../../stores/mediaStore'
 import {
-  Film, Upload, GripVertical, Play, Pause, Trash2, X, ChevronUp, ChevronDown,
-  Download, Settings, Clock, Ratio, Spline, Sparkles, Gauge
+  Film,
+  Upload,
+  GripVertical,
+  Play,
+  Pause,
+  Trash2,
+  X,
+  ChevronUp,
+  ChevronDown,
+  Download,
+  Settings,
+  Clock,
+  Ratio,
+  Spline,
+  Sparkles,
+  Gauge,
 } from 'lucide-react'
+import { useState, useCallback, useRef, useEffect } from 'react'
+
+import { useMediaStore } from '../../stores/mediaStore'
 import { EaseCurveEditor, EASE_PRESETS } from './EaseCurveEditor'
 import type { EaseCurve } from './EaseCurveEditor'
-import { TransitionEditor, DEFAULT_TRANSITION } from './TransitionEditor'
-import type { ClipTransition } from './TransitionEditor'
 import { SpeedRampEditor, DEFAULT_SPEED_RAMP } from './SpeedRampEditor'
 import type { SpeedRamp } from './SpeedRampEditor'
+import { TransitionEditor, DEFAULT_TRANSITION } from './TransitionEditor'
+import type { ClipTransition } from './TransitionEditor'
 
 interface StitchClip {
   id: string
@@ -51,7 +66,7 @@ export function StitchEditor({ isOpen, onClose, onExport }: StitchEditorProps) {
   const [settings, setSettings] = useState<StitchSettings>({
     outputAspectRatio: 'original',
     fitMode: 'fit',
-    outputFrameRate: 30
+    outputFrameRate: 30,
   })
   const [showSettings, setShowSettings] = useState(false)
   const [draggedClipId, setDraggedClipId] = useState<string | null>(null)
@@ -66,46 +81,52 @@ export function StitchEditor({ isOpen, onClose, onExport }: StitchEditorProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Filter to only video files
-  const videoFiles = files.filter(f => f.type === 'video')
+  const videoFiles = files.filter((f) => f.type === 'video')
 
   // Total duration
   const totalDuration = clips.reduce((sum, clip) => sum + clip.duration, 0)
 
   // Add clip from library
-  const addClipFromLibrary = useCallback((mediaId: string) => {
-    const file = files.find(f => f.id === mediaId)
-    if (!file || file.type !== 'video') return
+  const addClipFromLibrary = useCallback(
+    (mediaId: string) => {
+      const file = files.find((f) => f.id === mediaId)
+      if (!file || file.type !== 'video') return
 
-    const newClip: StitchClip = {
-      id: `stitch-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-      mediaId: file.id,
-      name: file.name,
-      duration: file.duration || 0,
-      url: file.url,
-      thumbnail: file.thumbnail,
-      order: clips.length,
-      aspectRatio: file.width && file.height ? file.width / file.height : undefined,
-      frameRate: 30 // Default, would need to extract from video metadata
-    }
+      const newClip: StitchClip = {
+        id: `stitch-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        mediaId: file.id,
+        name: file.name,
+        duration: file.duration || 0,
+        url: file.url,
+        thumbnail: file.thumbnail,
+        order: clips.length,
+        aspectRatio: file.width && file.height ? file.width / file.height : undefined,
+        frameRate: 30, // Default, would need to extract from video metadata
+      }
 
-    setClips(prev => [...prev, newClip])
-  }, [files, clips.length])
+      setClips((prev) => [...prev, newClip])
+    },
+    [files, clips.length],
+  )
 
   // Remove clip
-  const removeClip = useCallback((clipId: string) => {
-    setClips(prev => {
-      const filtered = prev.filter(c => c.id !== clipId)
-      return filtered.map((c, i) => ({ ...c, order: i }))
-    })
-    if (currentClipIndex >= clips.length - 1) {
-      setCurrentClipIndex(Math.max(0, clips.length - 2))
-    }
-  }, [clips.length, currentClipIndex])
+  const removeClip = useCallback(
+    (clipId: string) => {
+      setClips((prev) => {
+        const filtered = prev.filter((c) => c.id !== clipId)
+        return filtered.map((c, i) => ({ ...c, order: i }))
+      })
+      if (currentClipIndex >= clips.length - 1) {
+        setCurrentClipIndex(Math.max(0, clips.length - 2))
+      }
+    },
+    [clips.length, currentClipIndex],
+  )
 
   // Move clip up/down
   const moveClip = useCallback((clipId: string, direction: 'up' | 'down') => {
-    setClips(prev => {
-      const idx = prev.findIndex(c => c.id === clipId)
+    setClips((prev) => {
+      const idx = prev.findIndex((c) => c.id === clipId)
       if (idx < 0) return prev
       if (direction === 'up' && idx === 0) return prev
       if (direction === 'down' && idx === prev.length - 1) return prev
@@ -124,21 +145,24 @@ export function StitchEditor({ isOpen, onClose, onExport }: StitchEditorProps) {
     setDraggedClipId(clipId)
   }, [])
 
-  const handleDragOver = useCallback((e: React.DragEvent, targetClipId: string) => {
-    e.preventDefault()
-    if (!draggedClipId || draggedClipId === targetClipId) return
+  const handleDragOver = useCallback(
+    (e: React.DragEvent, targetClipId: string) => {
+      e.preventDefault()
+      if (!draggedClipId || draggedClipId === targetClipId) return
 
-    setClips(prev => {
-      const fromIdx = prev.findIndex(c => c.id === draggedClipId)
-      const toIdx = prev.findIndex(c => c.id === targetClipId)
-      if (fromIdx < 0 || toIdx < 0) return prev
+      setClips((prev) => {
+        const fromIdx = prev.findIndex((c) => c.id === draggedClipId)
+        const toIdx = prev.findIndex((c) => c.id === targetClipId)
+        if (fromIdx < 0 || toIdx < 0) return prev
 
-      const newClips = [...prev]
-      const [moved] = newClips.splice(fromIdx, 1)
-      newClips.splice(toIdx, 0, moved)
-      return newClips.map((c, i) => ({ ...c, order: i }))
-    })
-  }, [draggedClipId])
+        const newClips = [...prev]
+        const [moved] = newClips.splice(fromIdx, 1)
+        newClips.splice(toIdx, 0, moved)
+        return newClips.map((c, i) => ({ ...c, order: i }))
+      })
+    },
+    [draggedClipId],
+  )
 
   const handleDragEnd = useCallback(() => {
     setDraggedClipId(null)
@@ -146,7 +170,7 @@ export function StitchEditor({ isOpen, onClose, onExport }: StitchEditorProps) {
 
   // Playback control
   const togglePlay = useCallback(() => {
-    setIsPlaying(prev => !prev)
+    setIsPlaying((prev) => !prev)
   }, [])
 
   // Update current time based on video playback
@@ -169,7 +193,7 @@ export function StitchEditor({ isOpen, onClose, onExport }: StitchEditorProps) {
     const handleEnded = () => {
       // Move to next clip
       if (currentClipIndex < clips.length - 1) {
-        setCurrentClipIndex(prev => prev + 1)
+        setCurrentClipIndex((prev) => prev + 1)
       } else {
         // Loop back to start
         setCurrentClipIndex(0)
@@ -213,20 +237,23 @@ export function StitchEditor({ isOpen, onClose, onExport }: StitchEditorProps) {
   }, [currentClipIndex, clips, isPlaying])
 
   // Seek to specific time
-  const seekToTime = useCallback((time: number) => {
-    let remaining = time
-    for (let i = 0; i < clips.length; i++) {
-      if (remaining <= clips[i].duration) {
-        setCurrentClipIndex(i)
-        setCurrentTime(time)
-        if (videoRef.current) {
-          videoRef.current.currentTime = remaining
+  const seekToTime = useCallback(
+    (time: number) => {
+      let remaining = time
+      for (let i = 0; i < clips.length; i++) {
+        if (remaining <= clips[i].duration) {
+          setCurrentClipIndex(i)
+          setCurrentTime(time)
+          if (videoRef.current) {
+            videoRef.current.currentTime = remaining
+          }
+          return
         }
-        return
+        remaining -= clips[i].duration
       }
-      remaining -= clips[i].duration
-    }
-  }, [clips])
+    },
+    [clips],
+  )
 
   // Format time
   const formatTime = (seconds: number) => {
@@ -244,32 +271,36 @@ export function StitchEditor({ isOpen, onClose, onExport }: StitchEditorProps) {
 
   // Update ease curve for a clip
   const updateClipEaseCurve = useCallback((clipId: string, curve: EaseCurve) => {
-    setClips(prev => prev.map(c =>
-      c.id === clipId ? { ...c, easeCurve: curve } : c
-    ))
+    setClips((prev) => prev.map((c) => (c.id === clipId ? { ...c, easeCurve: curve } : c)))
   }, [])
 
   // Get clip being edited for ease curve
   const editingEaseClip = editingEaseCurveClipId
-    ? clips.find(c => c.id === editingEaseCurveClipId)
+    ? clips.find((c) => c.id === editingEaseCurveClipId)
     : null
 
   // STITCH-003: Get or create transition between two clips
   const getTransitionKey = (fromIdx: number, toIdx: number) => `${fromIdx}-${toIdx}`
 
-  const getTransition = useCallback((fromIdx: number, toIdx: number): ClipTransition => {
-    const key = getTransitionKey(fromIdx, toIdx)
-    return transitions.get(key) || DEFAULT_TRANSITION
-  }, [transitions])
+  const getTransition = useCallback(
+    (fromIdx: number, toIdx: number): ClipTransition => {
+      const key = getTransitionKey(fromIdx, toIdx)
+      return transitions.get(key) || DEFAULT_TRANSITION
+    },
+    [transitions],
+  )
 
-  const updateTransition = useCallback((fromIdx: number, toIdx: number, transition: ClipTransition) => {
-    const key = getTransitionKey(fromIdx, toIdx)
-    setTransitions(prev => {
-      const newMap = new Map(prev)
-      newMap.set(key, transition)
-      return newMap
-    })
-  }, [])
+  const updateTransition = useCallback(
+    (fromIdx: number, toIdx: number, transition: ClipTransition) => {
+      const key = getTransitionKey(fromIdx, toIdx)
+      setTransitions((prev) => {
+        const newMap = new Map(prev)
+        newMap.set(key, transition)
+        return newMap
+      })
+    },
+    [],
+  )
 
   // Get clips for currently editing transition
   const editingTransitionClips = editingTransitionKey
@@ -279,21 +310,19 @@ export function StitchEditor({ isOpen, onClose, onExport }: StitchEditorProps) {
           from: clips[fromIdx],
           to: clips[toIdx],
           fromIdx,
-          toIdx
+          toIdx,
         }
       })()
     : null
 
   // STITCH-004: Update speed ramp for a clip
   const updateClipSpeedRamp = useCallback((clipId: string, speedRamp: SpeedRamp) => {
-    setClips(prev => prev.map(c =>
-      c.id === clipId ? { ...c, speedRamp } : c
-    ))
+    setClips((prev) => prev.map((c) => (c.id === clipId ? { ...c, speedRamp } : c)))
   }, [])
 
   // Get clip being edited for speed ramp
   const editingSpeedRampClip = editingSpeedRampClipId
-    ? clips.find(c => c.id === editingSpeedRampClipId)
+    ? clips.find((c) => c.id === editingSpeedRampClipId)
     : null
 
   if (!isOpen) return null
@@ -306,7 +335,9 @@ export function StitchEditor({ isOpen, onClose, onExport }: StitchEditorProps) {
           <Film size={20} className="text-[#ff5722]" />
           <h2 className="text-lg font-semibold text-white">Video Stitcher (STITCH-001)</h2>
           <span className="text-sm text-gray-500">•</span>
-          <span className="text-sm text-gray-400">{clips.length} clips • {formatTime(totalDuration)}</span>
+          <span className="text-sm text-gray-400">
+            {clips.length} clips • {formatTime(totalDuration)}
+          </span>
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -344,7 +375,7 @@ export function StitchEditor({ isOpen, onClose, onExport }: StitchEditorProps) {
               </div>
             ) : (
               <div className="space-y-1">
-                {videoFiles.map(file => (
+                {videoFiles.map((file) => (
                   <button
                     key={file.id}
                     onClick={() => addClipFromLibrary(file.id)}
@@ -379,8 +410,12 @@ export function StitchEditor({ isOpen, onClose, onExport }: StitchEditorProps) {
                   ref={videoRef}
                   className="max-w-full max-h-full"
                   style={{
-                    objectFit: settings.fitMode === 'fit' ? 'contain' :
-                              settings.fitMode === 'fill' ? 'cover' : 'fill'
+                    objectFit:
+                      settings.fitMode === 'fit'
+                        ? 'contain'
+                        : settings.fitMode === 'fill'
+                          ? 'cover'
+                          : 'fill',
                   }}
                   muted
                   playsInline
@@ -412,7 +447,7 @@ export function StitchEditor({ isOpen, onClose, onExport }: StitchEditorProps) {
                   min={0}
                   max={totalDuration || 1}
                   value={currentTime}
-                  onChange={e => seekToTime(parseFloat(e.target.value))}
+                  onChange={(e) => seekToTime(parseFloat(e.target.value))}
                   className="w-full"
                 />
               </div>
@@ -440,68 +475,81 @@ export function StitchEditor({ isOpen, onClose, onExport }: StitchEditorProps) {
                       onDragEnd={handleDragEnd}
                       onClick={() => setCurrentClipIndex(idx)}
                       className={`flex flex-col w-40 rounded overflow-hidden cursor-pointer ${
-                        idx === currentClipIndex
-                          ? 'ring-2 ring-[#ff5722]'
-                          : 'ring-1 ring-gray-700'
+                        idx === currentClipIndex ? 'ring-2 ring-[#ff5722]' : 'ring-1 ring-gray-700'
                       } ${draggedClipId === clip.id ? 'opacity-50' : ''}`}
                     >
-                    {/* Thumbnail */}
-                    <div className="relative h-20 bg-gray-800">
-                      {clip.thumbnail && (
-                        <img src={clip.thumbnail} alt="" className="w-full h-full object-cover" />
-                      )}
-                      <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 bg-black/50 transition-opacity">
-                        <GripVertical size={20} className="text-white" />
+                      {/* Thumbnail */}
+                      <div className="relative h-20 bg-gray-800">
+                        {clip.thumbnail && (
+                          <img src={clip.thumbnail} alt="" className="w-full h-full object-cover" />
+                        )}
+                        <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 bg-black/50 transition-opacity">
+                          <GripVertical size={20} className="text-white" />
+                        </div>
+                        <div className="absolute bottom-1 right-1 bg-black/70 px-1 text-xs text-white rounded">
+                          {formatTime(clip.duration)}
+                        </div>
                       </div>
-                      <div className="absolute bottom-1 right-1 bg-black/70 px-1 text-xs text-white rounded">
-                        {formatTime(clip.duration)}
-                      </div>
-                    </div>
 
-                    {/* Info */}
-                    <div className="p-2 bg-gray-800">
-                      <div className="text-xs text-white truncate">{clip.name}</div>
-                      <div className="flex items-center justify-between mt-1">
-                        <div className="flex gap-1">
+                      {/* Info */}
+                      <div className="p-2 bg-gray-800">
+                        <div className="text-xs text-white truncate">{clip.name}</div>
+                        <div className="flex items-center justify-between mt-1">
+                          <div className="flex gap-1">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                moveClip(clip.id, 'up')
+                              }}
+                              disabled={idx === 0}
+                              className="p-0.5 text-gray-500 hover:text-white disabled:opacity-30"
+                              title="Move up"
+                            >
+                              <ChevronUp size={14} />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                moveClip(clip.id, 'down')
+                              }}
+                              disabled={idx === clips.length - 1}
+                              className="p-0.5 text-gray-500 hover:text-white disabled:opacity-30"
+                              title="Move down"
+                            >
+                              <ChevronDown size={14} />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setEditingEaseCurveClipId(clip.id)
+                              }}
+                              className={`p-0.5 ${clip.easeCurve && clip.easeCurve.id !== 'linear' ? 'text-[#ff5722]' : 'text-gray-500'} hover:text-[#ff5722]`}
+                              title={`Ease Curve: ${clip.easeCurve?.name || 'Linear'}`}
+                            >
+                              <Spline size={14} />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setEditingSpeedRampClipId(clip.id)
+                              }}
+                              className={`p-0.5 ${clip.speedRamp?.enabled ? 'text-[#ff5722]' : 'text-gray-500'} hover:text-[#ff5722]`}
+                              title={`Speed Ramp: ${clip.speedRamp?.enabled ? 'Enabled' : 'Disabled'}`}
+                            >
+                              <Gauge size={14} />
+                            </button>
+                          </div>
                           <button
-                            onClick={(e) => { e.stopPropagation(); moveClip(clip.id, 'up') }}
-                            disabled={idx === 0}
-                            className="p-0.5 text-gray-500 hover:text-white disabled:opacity-30"
-                            title="Move up"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              removeClip(clip.id)
+                            }}
+                            className="p-0.5 text-gray-500 hover:text-red-400"
+                            title="Remove clip"
                           >
-                            <ChevronUp size={14} />
-                          </button>
-                          <button
-                            onClick={(e) => { e.stopPropagation(); moveClip(clip.id, 'down') }}
-                            disabled={idx === clips.length - 1}
-                            className="p-0.5 text-gray-500 hover:text-white disabled:opacity-30"
-                            title="Move down"
-                          >
-                            <ChevronDown size={14} />
-                          </button>
-                          <button
-                            onClick={(e) => { e.stopPropagation(); setEditingEaseCurveClipId(clip.id) }}
-                            className={`p-0.5 ${clip.easeCurve && clip.easeCurve.id !== 'linear' ? 'text-[#ff5722]' : 'text-gray-500'} hover:text-[#ff5722]`}
-                            title={`Ease Curve: ${clip.easeCurve?.name || 'Linear'}`}
-                          >
-                            <Spline size={14} />
-                          </button>
-                          <button
-                            onClick={(e) => { e.stopPropagation(); setEditingSpeedRampClipId(clip.id) }}
-                            className={`p-0.5 ${clip.speedRamp?.enabled ? 'text-[#ff5722]' : 'text-gray-500'} hover:text-[#ff5722]`}
-                            title={`Speed Ramp: ${clip.speedRamp?.enabled ? 'Enabled' : 'Disabled'}`}
-                          >
-                            <Gauge size={14} />
+                            <Trash2 size={14} />
                           </button>
                         </div>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); removeClip(clip.id) }}
-                          className="p-0.5 text-gray-500 hover:text-red-400"
-                          title="Remove clip"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
                       </div>
                     </div>
                   </div>
@@ -533,7 +581,12 @@ export function StitchEditor({ isOpen, onClose, onExport }: StitchEditorProps) {
                 </label>
                 <select
                   value={settings.outputAspectRatio}
-                  onChange={e => setSettings(prev => ({ ...prev, outputAspectRatio: e.target.value as StitchSettings['outputAspectRatio'] }))}
+                  onChange={(e) =>
+                    setSettings((prev) => ({
+                      ...prev,
+                      outputAspectRatio: e.target.value as StitchSettings['outputAspectRatio'],
+                    }))
+                  }
                   className="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 text-sm text-white"
                 >
                   <option value="original">Original (varied)</option>
@@ -548,7 +601,12 @@ export function StitchEditor({ isOpen, onClose, onExport }: StitchEditorProps) {
                 <label className="text-sm text-gray-400 mb-2 block">Fit Mode</label>
                 <select
                   value={settings.fitMode}
-                  onChange={e => setSettings(prev => ({ ...prev, fitMode: e.target.value as StitchSettings['fitMode'] }))}
+                  onChange={(e) =>
+                    setSettings((prev) => ({
+                      ...prev,
+                      fitMode: e.target.value as StitchSettings['fitMode'],
+                    }))
+                  }
                   className="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 text-sm text-white"
                 >
                   <option value="fit">Fit (letterbox)</option>
@@ -564,7 +622,14 @@ export function StitchEditor({ isOpen, onClose, onExport }: StitchEditorProps) {
                 </label>
                 <select
                   value={settings.outputFrameRate}
-                  onChange={e => setSettings(prev => ({ ...prev, outputFrameRate: parseInt(e.target.value) as StitchSettings['outputFrameRate'] }))}
+                  onChange={(e) =>
+                    setSettings((prev) => ({
+                      ...prev,
+                      outputFrameRate: parseInt(
+                        e.target.value,
+                      ) as StitchSettings['outputFrameRate'],
+                    }))
+                  }
                   className="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 text-sm text-white"
                 >
                   <option value={24}>24 fps (Film)</option>
@@ -614,13 +679,18 @@ export function StitchEditor({ isOpen, onClose, onExport }: StitchEditorProps) {
           onClose={() => setEditingTransitionKey(null)}
           transition={getTransition(editingTransitionClips.fromIdx, editingTransitionClips.toIdx)}
           onTransitionChange={(transition) => {
-            updateTransition(editingTransitionClips.fromIdx, editingTransitionClips.toIdx, transition)
+            updateTransition(
+              editingTransitionClips.fromIdx,
+              editingTransitionClips.toIdx,
+              transition,
+            )
           }}
           fromThumbnail={editingTransitionClips.from?.thumbnail}
           toThumbnail={editingTransitionClips.to?.thumbnail}
           clipNames={{
-            from: editingTransitionClips.from?.name || 'Clip ' + (editingTransitionClips.fromIdx + 1),
-            to: editingTransitionClips.to?.name || 'Clip ' + (editingTransitionClips.toIdx + 1)
+            from:
+              editingTransitionClips.from?.name || 'Clip ' + (editingTransitionClips.fromIdx + 1),
+            to: editingTransitionClips.to?.name || 'Clip ' + (editingTransitionClips.toIdx + 1),
           }}
         />
       )}

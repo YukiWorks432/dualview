@@ -242,7 +242,7 @@ export class WebGLGoniometerRenderer {
     decay: 0.95,
     showGrid: true,
     showCorrelation: true,
-    brightness: 1.0
+    brightness: 1.0,
   }
 
   // Ring buffer for audio samples
@@ -269,7 +269,7 @@ export class WebGLGoniometerRenderer {
     const gl = this.canvas.getContext('webgl', {
       antialias: true,
       preserveDrawingBuffer: true,
-      alpha: true
+      alpha: true,
     })
 
     if (!gl) {
@@ -352,7 +352,9 @@ export class WebGLGoniometerRenderer {
     const numSamples = Math.min(left.length, right.length)
 
     // Calculate correlation for this block
-    let sumLR = 0, sumLL = 0, sumRR = 0
+    let sumLR = 0,
+      sumLL = 0,
+      sumRR = 0
     for (let i = 0; i < numSamples; i++) {
       sumLR += left[i] * right[i]
       sumLL += left[i] * left[i]
@@ -378,7 +380,9 @@ export class WebGLGoniometerRenderer {
 
       // Rough frequency estimation (zero-crossing rate)
       // This is a simplified approximation
-      const freqNorm = Math.abs(left[i] - (this.positions[((idx - 1 + this.bufferSize) % this.bufferSize) * 2] || 0))
+      const freqNorm = Math.abs(
+        left[i] - (this.positions[((idx - 1 + this.bufferSize) % this.bufferSize) * 2] || 0),
+      )
       this.frequencies[idx] = Math.min(1.0, freqNorm * 10)
 
       this.writeIndex++
@@ -388,15 +392,17 @@ export class WebGLGoniometerRenderer {
   /**
    * Process audio buffer and update visualization
    */
-  processAudioBuffer(audioBuffer: AudioBuffer, currentTime: number, windowSize: number = 0.1): void {
+  processAudioBuffer(
+    audioBuffer: AudioBuffer,
+    currentTime: number,
+    windowSize: number = 0.1,
+  ): void {
     const sampleRate = audioBuffer.sampleRate
     const startSample = Math.floor(currentTime * sampleRate)
     const numSamples = Math.floor(windowSize * sampleRate)
 
     const left = audioBuffer.getChannelData(0)
-    const right = audioBuffer.numberOfChannels > 1
-      ? audioBuffer.getChannelData(1)
-      : left
+    const right = audioBuffer.numberOfChannels > 1 ? audioBuffer.getChannelData(1) : left
 
     const leftSlice = left.slice(startSample, startSample + numSamples)
     const rightSlice = right.slice(startSample, startSample + numSamples)
@@ -478,7 +484,11 @@ export class WebGLGoniometerRenderer {
 
     // Set uniforms
     gl.uniform1f(gl.getUniformLocation(this.pointProgram, 'u_zoom'), this.config.zoom)
-    gl.uniform2f(gl.getUniformLocation(this.pointProgram, 'u_resolution'), this.canvas.width, this.canvas.height)
+    gl.uniform2f(
+      gl.getUniformLocation(this.pointProgram, 'u_resolution'),
+      this.canvas.width,
+      this.canvas.height,
+    )
     gl.uniform1i(gl.getUniformLocation(this.pointProgram, 'u_mode'), this.getModeIndex())
     gl.uniform1i(gl.getUniformLocation(this.pointProgram, 'u_colorMode'), this.getColorModeIndex())
     gl.uniform1f(gl.getUniformLocation(this.pointProgram, 'u_brightness'), this.config.brightness)
@@ -508,7 +518,11 @@ export class WebGLGoniometerRenderer {
     gl.enableVertexAttribArray(posLoc)
     gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0)
 
-    gl.uniform2f(gl.getUniformLocation(this.gridProgram, 'u_resolution'), this.canvas.width, this.canvas.height)
+    gl.uniform2f(
+      gl.getUniformLocation(this.gridProgram, 'u_resolution'),
+      this.canvas.width,
+      this.canvas.height,
+    )
     gl.uniform1i(gl.getUniformLocation(this.gridProgram, 'u_mode'), this.getModeIndex())
 
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
@@ -531,7 +545,11 @@ export class WebGLGoniometerRenderer {
     gl.enableVertexAttribArray(posLoc)
     gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0)
 
-    gl.uniform2f(gl.getUniformLocation(this.correlationProgram, 'u_resolution'), this.canvas.width, this.canvas.height)
+    gl.uniform2f(
+      gl.getUniformLocation(this.correlationProgram, 'u_resolution'),
+      this.canvas.width,
+      this.canvas.height,
+    )
     gl.uniform1f(gl.getUniformLocation(this.correlationProgram, 'u_correlation'), this.correlation)
 
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)

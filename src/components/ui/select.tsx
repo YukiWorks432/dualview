@@ -1,6 +1,7 @@
-import { forwardRef, type SelectHTMLAttributes } from 'react'
-import { cn } from '../../lib/utils'
 import { ChevronDown } from 'lucide-react'
+import { forwardRef, type SelectHTMLAttributes } from 'react'
+
+import { cn } from '../../lib/utils'
 
 export interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   label?: string
@@ -11,14 +12,12 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
   ({ className, label, options, ...props }, ref) => {
     return (
       <div className="flex flex-col gap-1">
-        {label && (
-          <label className="text-xs text-text-secondary">{label}</label>
-        )}
+        {label && <label className="text-xs text-text-secondary">{label}</label>}
         <div className="relative">
           <select
             className={cn(
               'w-full h-9 px-3 pr-8 bg-surface border border-border rounded-md text-sm text-text-primary appearance-none cursor-pointer hover:border-border-hover focus:outline-none focus:border-accent',
-              className
+              className,
             )}
             ref={ref}
             {...props}
@@ -33,7 +32,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
         </div>
       </div>
     )
-  }
+  },
 )
 Select.displayName = 'Select'
 

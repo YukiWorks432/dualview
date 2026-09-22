@@ -3,8 +3,9 @@
  * Apply WebGL transition effects between stitched clips
  */
 
-import { useState, useCallback, useRef, useEffect } from 'react'
 import { Sparkles, Play, Pause, X, Clock, Zap, Layers, Slice } from 'lucide-react'
+import { useState, useCallback, useRef, useEffect } from 'react'
+
 import type { ClipTransition } from '../../types'
 import { EASE_PRESETS, evaluateEaseCurve } from './EaseCurveEditor'
 
@@ -23,7 +24,7 @@ export interface TransitionEffect {
 export const DEFAULT_TRANSITION: ClipTransition = {
   effectId: 'dissolve',
   duration: 0.5,
-  easeCurve: EASE_PRESETS[4] // ease-in-out
+  easeCurve: EASE_PRESETS[4], // ease-in-out
 }
 
 // Vertex shader for transitions
@@ -71,7 +72,7 @@ export const TRANSITION_EFFECTS: TransitionEffect[] = [
         vec4 colorTo = texture2D(u_textureTo, v_texCoord);
         gl_FragColor = u_progress < 0.5 ? colorFrom : colorTo;
       }
-    `
+    `,
   },
   {
     id: 'dissolve',
@@ -84,7 +85,7 @@ export const TRANSITION_EFFECTS: TransitionEffect[] = [
         vec4 colorTo = texture2D(u_textureTo, v_texCoord);
         gl_FragColor = mix(colorFrom, colorTo, u_progress);
       }
-    `
+    `,
   },
 
   // Wipes
@@ -100,7 +101,7 @@ export const TRANSITION_EFFECTS: TransitionEffect[] = [
         float edge = u_progress;
         gl_FragColor = v_texCoord.x < edge ? colorTo : colorFrom;
       }
-    `
+    `,
   },
   {
     id: 'wipe-right',
@@ -114,7 +115,7 @@ export const TRANSITION_EFFECTS: TransitionEffect[] = [
         float edge = 1.0 - u_progress;
         gl_FragColor = v_texCoord.x > edge ? colorTo : colorFrom;
       }
-    `
+    `,
   },
   {
     id: 'wipe-up',
@@ -128,7 +129,7 @@ export const TRANSITION_EFFECTS: TransitionEffect[] = [
         float edge = 1.0 - u_progress;
         gl_FragColor = v_texCoord.y > edge ? colorTo : colorFrom;
       }
-    `
+    `,
   },
   {
     id: 'wipe-down',
@@ -142,7 +143,7 @@ export const TRANSITION_EFFECTS: TransitionEffect[] = [
         float edge = u_progress;
         gl_FragColor = v_texCoord.y < edge ? colorTo : colorFrom;
       }
-    `
+    `,
   },
   {
     id: 'wipe-diagonal',
@@ -156,7 +157,7 @@ export const TRANSITION_EFFECTS: TransitionEffect[] = [
         float diag = (v_texCoord.x + v_texCoord.y) * 0.5;
         gl_FragColor = diag < u_progress ? colorTo : colorFrom;
       }
-    `
+    `,
   },
 
   // Geometric
@@ -174,7 +175,7 @@ export const TRANSITION_EFFECTS: TransitionEffect[] = [
         float radius = u_progress * 1.5;
         gl_FragColor = dist < radius ? colorTo : colorFrom;
       }
-    `
+    `,
   },
   {
     id: 'circle-contract',
@@ -190,7 +191,7 @@ export const TRANSITION_EFFECTS: TransitionEffect[] = [
         float radius = (1.0 - u_progress) * 1.5;
         gl_FragColor = dist > radius ? colorTo : colorFrom;
       }
-    `
+    `,
   },
   {
     id: 'rectangle-expand',
@@ -207,7 +208,7 @@ export const TRANSITION_EFFECTS: TransitionEffect[] = [
         float radius = u_progress * 0.8;
         gl_FragColor = dist < radius ? colorTo : colorFrom;
       }
-    `
+    `,
   },
   {
     id: 'blinds-h',
@@ -222,7 +223,7 @@ export const TRANSITION_EFFECTS: TransitionEffect[] = [
         float y = fract(v_texCoord.y * blinds);
         gl_FragColor = y < u_progress ? colorTo : colorFrom;
       }
-    `
+    `,
   },
   {
     id: 'blinds-v',
@@ -237,7 +238,7 @@ export const TRANSITION_EFFECTS: TransitionEffect[] = [
         float x = fract(v_texCoord.x * blinds);
         gl_FragColor = x < u_progress ? colorTo : colorFrom;
       }
-    `
+    `,
   },
   {
     id: 'checkerboard',
@@ -255,7 +256,7 @@ export const TRANSITION_EFFECTS: TransitionEffect[] = [
         float threshold = isOdd > 0.5 ? u_progress * 2.0 : u_progress * 2.0 - 1.0;
         gl_FragColor = threshold > 0.0 ? colorTo : colorFrom;
       }
-    `
+    `,
   },
 
   // Dissolve variations
@@ -272,7 +273,7 @@ export const TRANSITION_EFFECTS: TransitionEffect[] = [
         float t = smoothstep(0.0, 1.0, u_progress);
         gl_FragColor = noise < t ? colorTo : colorFrom;
       }
-    `
+    `,
   },
   {
     id: 'pixelate',
@@ -287,7 +288,7 @@ export const TRANSITION_EFFECTS: TransitionEffect[] = [
         vec4 colorTo = texture2D(u_textureTo, pixelCoord);
         gl_FragColor = mix(colorFrom, colorTo, u_progress);
       }
-    `
+    `,
   },
 
   // Blur
@@ -312,7 +313,7 @@ export const TRANSITION_EFFECTS: TransitionEffect[] = [
         colorTo /= 25.0;
         gl_FragColor = mix(colorFrom, colorTo, u_progress);
       }
-    `
+    `,
   },
 
   // Color effects
@@ -333,7 +334,7 @@ export const TRANSITION_EFFECTS: TransitionEffect[] = [
           gl_FragColor = mix(white, colorTo, t - 1.0);
         }
       }
-    `
+    `,
   },
   {
     id: 'fade-black',
@@ -352,7 +353,7 @@ export const TRANSITION_EFFECTS: TransitionEffect[] = [
           gl_FragColor = mix(black, colorTo, t - 1.0);
         }
       }
-    `
+    `,
   },
 
   // Distortion
@@ -370,7 +371,7 @@ export const TRANSITION_EFFECTS: TransitionEffect[] = [
         vec4 colorTo = texture2D(u_textureTo, v_texCoord);
         gl_FragColor = mix(colorFrom, colorTo, u_progress);
       }
-    `
+    `,
   },
   {
     id: 'zoom-out',
@@ -386,7 +387,7 @@ export const TRANSITION_EFFECTS: TransitionEffect[] = [
         vec4 colorTo = texture2D(u_textureTo, zoomedCoord);
         gl_FragColor = mix(colorFrom, colorTo, u_progress);
       }
-    `
+    `,
   },
   {
     id: 'rotate',
@@ -405,7 +406,7 @@ export const TRANSITION_EFFECTS: TransitionEffect[] = [
         vec4 colorTo = texture2D(u_textureTo, rotated);
         gl_FragColor = mix(colorFrom, colorTo, u_progress);
       }
-    `
+    `,
   },
   {
     id: 'swirl',
@@ -425,7 +426,7 @@ export const TRANSITION_EFFECTS: TransitionEffect[] = [
         vec4 colorTo = texture2D(u_textureTo, swirled);
         gl_FragColor = mix(colorFrom, colorTo, u_progress);
       }
-    `
+    `,
   },
   {
     id: 'wave',
@@ -442,7 +443,7 @@ export const TRANSITION_EFFECTS: TransitionEffect[] = [
         vec4 colorTo = texture2D(u_textureTo, distorted);
         gl_FragColor = mix(colorFrom, colorTo, u_progress);
       }
-    `
+    `,
   },
   {
     id: 'slide-left',
@@ -457,7 +458,7 @@ export const TRANSITION_EFFECTS: TransitionEffect[] = [
         vec4 colorTo = texture2D(u_textureTo, toCoord);
         gl_FragColor = v_texCoord.x < u_progress ? colorTo : colorFrom;
       }
-    `
+    `,
   },
   {
     id: 'slide-right',
@@ -472,14 +473,14 @@ export const TRANSITION_EFFECTS: TransitionEffect[] = [
         vec4 colorTo = texture2D(u_textureTo, toCoord);
         gl_FragColor = v_texCoord.x > 1.0 - u_progress ? colorTo : colorFrom;
       }
-    `
+    `,
   },
 ]
 
 // Group effects by category
 function getEffectsByCategory(): Map<string, TransitionEffect[]> {
   const map = new Map<string, TransitionEffect[]>()
-  TRANSITION_EFFECTS.forEach(effect => {
+  TRANSITION_EFFECTS.forEach((effect) => {
     const list = map.get(effect.category) || []
     list.push(effect)
     map.set(effect.category, list)
@@ -504,7 +505,7 @@ export function TransitionEditor({
   onTransitionChange,
   fromThumbnail,
   toThumbnail,
-  clipNames
+  clipNames,
 }: TransitionEditorProps) {
   const [localTransition, setLocalTransition] = useState<ClipTransition>(transition)
   const [isPreviewPlaying, setIsPreviewPlaying] = useState(false)
@@ -516,7 +517,8 @@ export function TransitionEditor({
   const startTimeRef = useRef<number | undefined>(undefined)
 
   const effectsByCategory = getEffectsByCategory()
-  const selectedEffect = TRANSITION_EFFECTS.find(e => e.id === localTransition.effectId) || TRANSITION_EFFECTS[1]
+  const selectedEffect =
+    TRANSITION_EFFECTS.find((e) => e.id === localTransition.effectId) || TRANSITION_EFFECTS[1]
 
   // Sync with prop
   useEffect(() => {
@@ -623,11 +625,16 @@ export function TransitionEditor({
   // Category icons
   const getCategoryIcon = (category: string) => {
     switch (category) {
-      case 'wipe': return Slice
-      case 'geometric': return Layers
-      case 'dissolve': return Sparkles
-      case 'distortion': return Zap
-      default: return Sparkles
+      case 'wipe':
+        return Slice
+      case 'geometric':
+        return Layers
+      case 'dissolve':
+        return Sparkles
+      case 'distortion':
+        return Zap
+      default:
+        return Sparkles
     }
   }
 
@@ -644,7 +651,9 @@ export function TransitionEditor({
             {clipNames && (
               <>
                 <span className="text-sm text-gray-500">•</span>
-                <span className="text-sm text-gray-400">{clipNames.from} → {clipNames.to}</span>
+                <span className="text-sm text-gray-400">
+                  {clipNames.from} → {clipNames.to}
+                </span>
               </>
             )}
           </div>
@@ -666,11 +675,11 @@ export function TransitionEditor({
                       {category}
                     </div>
                   </div>
-                  {effects.map(effect => (
+                  {effects.map((effect) => (
                     <button
                       key={effect.id}
                       onClick={() => {
-                        setLocalTransition(prev => ({ ...prev, effectId: effect.id }))
+                        setLocalTransition((prev) => ({ ...prev, effectId: effect.id }))
                       }}
                       className={`w-full px-3 py-2 text-sm text-left ${
                         localTransition.effectId === effect.id
@@ -737,7 +746,7 @@ export function TransitionEditor({
                   max={1}
                   step={0.01}
                   value={previewProgress}
-                  onChange={e => {
+                  onChange={(e) => {
                     setIsPreviewPlaying(false)
                     const val = parseFloat(e.target.value)
                     setPreviewProgress(val)
@@ -765,10 +774,12 @@ export function TransitionEditor({
                       max={3}
                       step={0.1}
                       value={localTransition.duration}
-                      onChange={e => setLocalTransition(prev => ({
-                        ...prev,
-                        duration: parseFloat(e.target.value)
-                      }))}
+                      onChange={(e) =>
+                        setLocalTransition((prev) => ({
+                          ...prev,
+                          duration: parseFloat(e.target.value),
+                        }))
+                      }
                       className="flex-1"
                     />
                     <span className="text-sm text-white w-12 text-right">
@@ -781,16 +792,18 @@ export function TransitionEditor({
                   <label className="text-sm text-gray-400 mb-2 block">Ease Curve</label>
                   <select
                     value={localTransition.easeCurve.id}
-                    onChange={e => {
-                      const preset = EASE_PRESETS.find(p => p.id === e.target.value)
+                    onChange={(e) => {
+                      const preset = EASE_PRESETS.find((p) => p.id === e.target.value)
                       if (preset) {
-                        setLocalTransition(prev => ({ ...prev, easeCurve: preset }))
+                        setLocalTransition((prev) => ({ ...prev, easeCurve: preset }))
                       }
                     }}
                     className="w-full bg-[#1a1a1a] border border-gray-600 rounded px-3 py-2 text-sm text-white"
                   >
-                    {EASE_PRESETS.map(preset => (
-                      <option key={preset.id} value={preset.id}>{preset.name}</option>
+                    {EASE_PRESETS.map((preset) => (
+                      <option key={preset.id} value={preset.id}>
+                        {preset.name}
+                      </option>
                     ))}
                   </select>
                 </div>

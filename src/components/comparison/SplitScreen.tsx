@@ -1,9 +1,10 @@
 import { useRef, useEffect, useCallback } from 'react'
-import { useProjectStore } from '../../stores/projectStore'
-import { useTimelineStore } from '../../stores/timelineStore'
-import { useMediaStore } from '../../stores/mediaStore'
+
 import { useSyncedZoom } from '../../hooks/useSyncedZoom'
 import { cn } from '../../lib/utils'
+import { useMediaStore } from '../../stores/mediaStore'
+import { useProjectStore } from '../../stores/projectStore'
+import { useTimelineStore } from '../../stores/timelineStore'
 import type { SplitLayout } from '../../types'
 
 const layoutClasses: Record<SplitLayout, string> = {
@@ -23,8 +24,8 @@ export function SplitScreen() {
   const { getFile } = useMediaStore()
   const { zoom, resetZoom, getTransformStyle, containerProps } = useSyncedZoom()
 
-  const trackA = tracks.find(t => t.type === 'a')
-  const trackB = tracks.find(t => t.type === 'b')
+  const trackA = tracks.find((t) => t.type === 'a')
+  const trackB = tracks.find((t) => t.type === 'b')
   const clipA = trackA?.clips[0]
   const clipB = trackB?.clips[0]
   // Only use video/image, not audio
@@ -46,10 +47,13 @@ export function SplitScreen() {
   }, [])
 
   // Convert media time back to timeline time
-  const getTimelineTimeFromA = useCallback((mediaTime: number) => {
-    if (!clipA) return mediaTime
-    return clipA.startTime + (mediaTime - clipA.inPoint)
-  }, [clipA])
+  const getTimelineTimeFromA = useCallback(
+    (mediaTime: number) => {
+      if (!clipA) return mediaTime
+      return clipA.startTime + (mediaTime - clipA.inPoint)
+    },
+    [clipA],
+  )
 
   // Apply playback speed (VID-002)
   useEffect(() => {
@@ -98,13 +102,19 @@ export function SplitScreen() {
   const transformStyle = getTransformStyle()
 
   return (
-    <div className={cn('w-full h-full grid gap-1 bg-black relative', layoutClasses[splitLayout])} {...containerProps}>
+    <div
+      className={cn('w-full h-full grid gap-1 bg-black relative', layoutClasses[splitLayout])}
+      {...containerProps}
+    >
       {/* Zoom indicator (IMG-002) */}
       {zoom > 1 && (
         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 bg-black/70 backdrop-blur-sm px-3 py-1 flex items-center gap-2">
           <span className="text-xs text-text-primary font-medium">{Math.round(zoom * 100)}%</span>
           <button
-            onClick={(e) => { e.stopPropagation(); resetZoom() }}
+            onClick={(e) => {
+              e.stopPropagation()
+              resetZoom()
+            }}
             className="text-[10px] text-text-muted hover:text-text-primary"
           >
             Reset
@@ -126,7 +136,12 @@ export function SplitScreen() {
                   loop
                 />
               ) : (
-                <img src={media.url} className="w-full h-full object-contain" alt={`Slot ${index + 1}`} draggable={false} />
+                <img
+                  src={media.url}
+                  className="w-full h-full object-contain"
+                  alt={`Slot ${index + 1}`}
+                  draggable={false}
+                />
               )
             ) : (
               <div className="w-full h-full flex items-center justify-center text-text-muted">

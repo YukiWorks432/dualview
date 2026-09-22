@@ -9,16 +9,27 @@
  * - Side-by-side comparison with original
  */
 
-import { useRef, useEffect, useState, useCallback, useMemo } from 'react'
-import { useTimelineStore } from '../../stores/timelineStore'
-import { usePlaybackStore } from '../../stores/playbackStore'
-import { useMediaStore } from '../../stores/mediaStore'
-import { useProjectStore } from '../../stores/projectStore'
-import { useOptimizedClipSync } from '../../hooks/useOptimizedVideoSync'
-import type { MorphOperation, MorphElementSize, MorphElementShape } from '../../types'
 import {
-  Shrink, Expand, Minus, Plus, Circle, Square, X, Trash2, Eye, EyeOff, ArrowRight
+  Shrink,
+  Expand,
+  Minus,
+  Plus,
+  Circle,
+  Square,
+  X,
+  Trash2,
+  Eye,
+  EyeOff,
+  ArrowRight,
 } from 'lucide-react'
+import { useRef, useEffect, useState, useCallback, useMemo } from 'react'
+
+import { useOptimizedClipSync } from '../../hooks/useOptimizedVideoSync'
+import { useMediaStore } from '../../stores/mediaStore'
+import { usePlaybackStore } from '../../stores/playbackStore'
+import { useProjectStore } from '../../stores/projectStore'
+import { useTimelineStore } from '../../stores/timelineStore'
+import type { MorphOperation, MorphElementSize, MorphElementShape } from '../../types'
 
 // Generate structuring element kernel
 function generateKernel(size: MorphElementSize, shape: MorphElementShape): number[][] {
@@ -52,18 +63,16 @@ function generateKernel(size: MorphElementSize, shape: MorphElementShape): numbe
 }
 
 // Apply erosion: minimum filter within kernel
-function applyErosion(
-  imageData: ImageData,
-  kernel: number[][],
-  kernelSize: number
-): ImageData {
+function applyErosion(imageData: ImageData, kernel: number[][], kernelSize: number): ImageData {
   const { data, width, height } = imageData
   const output = new ImageData(width, height)
   const center = Math.floor(kernelSize / 2)
 
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
-      let minR = 255, minG = 255, minB = 255
+      let minR = 255,
+        minG = 255,
+        minB = 255
 
       for (let ky = 0; ky < kernelSize; ky++) {
         for (let kx = 0; kx < kernelSize; kx++) {
@@ -93,18 +102,16 @@ function applyErosion(
 }
 
 // Apply dilation: maximum filter within kernel
-function applyDilation(
-  imageData: ImageData,
-  kernel: number[][],
-  kernelSize: number
-): ImageData {
+function applyDilation(imageData: ImageData, kernel: number[][], kernelSize: number): ImageData {
   const { data, width, height } = imageData
   const output = new ImageData(width, height)
   const center = Math.floor(kernelSize / 2)
 
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
-      let maxR = 0, maxG = 0, maxB = 0
+      let maxR = 0,
+        maxG = 0,
+        maxB = 0
 
       for (let ky = 0; ky < kernelSize; ky++) {
         for (let kx = 0; kx < kernelSize; kx++) {
@@ -134,11 +141,7 @@ function applyDilation(
 }
 
 // Apply morphological gradient (dilation - erosion)
-function applyGradient(
-  imageData: ImageData,
-  kernel: number[][],
-  kernelSize: number
-): ImageData {
+function applyGradient(imageData: ImageData, kernel: number[][], kernelSize: number): ImageData {
   const dilated = applyDilation(imageData, kernel, kernelSize)
   const eroded = applyErosion(imageData, kernel, kernelSize)
   const { width, height } = imageData
@@ -170,20 +173,20 @@ export function MorphologicalView() {
     setMorphologicalSettings,
     addMorphOperation,
     removeMorphOperation,
-    clearMorphOperations
+    clearMorphOperations,
   } = useProjectStore()
   const { getFile } = useMediaStore()
   const { tracks } = useTimelineStore()
   const { currentTime } = usePlaybackStore()
 
   // Get tracks and clips
-  const trackA = tracks.find(t => t.type === 'a')
+  const trackA = tracks.find((t) => t.type === 'a')
   const firstClipA = trackA?.clips[0] || null
 
   // Find active clip
   const activeClipA = useMemo(() => {
     if (!trackA) return null
-    return trackA.clips.find(c => currentTime >= c.startTime && currentTime < c.endTime) || null
+    return trackA.clips.find((c) => currentTime >= c.startTime && currentTime < c.endTime) || null
   }, [trackA, currentTime])
 
   // Get media files - use active clip (clip at current time), fallback to first clip
@@ -196,7 +199,7 @@ export function MorphologicalView() {
 
   // Handle image load
   const handleImageALoad = useCallback(() => {
-    setImagesLoaded(prev => ({ ...prev, a: true }))
+    setImagesLoaded((prev) => ({ ...prev, a: true }))
   }, [])
 
   // Generate kernel based on settings
@@ -205,49 +208,57 @@ export function MorphologicalView() {
   }, [morphologicalSettings.elementSize, morphologicalSettings.elementShape])
 
   // Apply operations chain
-  const applyOperations = useCallback((imageData: ImageData, operations: MorphOperation[]): ImageData => {
-    let result = imageData
+  const applyOperations = useCallback(
+    (imageData: ImageData, operations: MorphOperation[]): ImageData => {
+      let result = imageData
 
-    for (const op of operations) {
-      switch (op) {
-        case 'erosion':
-          result = applyErosion(result, kernel, morphologicalSettings.elementSize)
-          break
-        case 'dilation':
-          result = applyDilation(result, kernel, morphologicalSettings.elementSize)
-          break
-        case 'opening':
-          // Opening = erosion then dilation
-          result = applyErosion(result, kernel, morphologicalSettings.elementSize)
-          result = applyDilation(result, kernel, morphologicalSettings.elementSize)
-          break
-        case 'closing':
-          // Closing = dilation then erosion
-          result = applyDilation(result, kernel, morphologicalSettings.elementSize)
-          result = applyErosion(result, kernel, morphologicalSettings.elementSize)
-          break
-        case 'gradient':
-          result = applyGradient(result, kernel, morphologicalSettings.elementSize)
-          break
+      for (const op of operations) {
+        switch (op) {
+          case 'erosion':
+            result = applyErosion(result, kernel, morphologicalSettings.elementSize)
+            break
+          case 'dilation':
+            result = applyDilation(result, kernel, morphologicalSettings.elementSize)
+            break
+          case 'opening':
+            // Opening = erosion then dilation
+            result = applyErosion(result, kernel, morphologicalSettings.elementSize)
+            result = applyDilation(result, kernel, morphologicalSettings.elementSize)
+            break
+          case 'closing':
+            // Closing = dilation then erosion
+            result = applyDilation(result, kernel, morphologicalSettings.elementSize)
+            result = applyErosion(result, kernel, morphologicalSettings.elementSize)
+            break
+          case 'gradient':
+            result = applyGradient(result, kernel, morphologicalSettings.elementSize)
+            break
+        }
       }
-    }
 
-    return result
-  }, [kernel, morphologicalSettings.elementSize])
+      return result
+    },
+    [kernel, morphologicalSettings.elementSize],
+  )
 
   // Process image when operations or source changes
   useEffect(() => {
-    const source = mediaA?.type === 'video' ? videoARef.current :
-                   mediaA?.type === 'image' ? imgARef.current : null
+    const source =
+      mediaA?.type === 'video'
+        ? videoARef.current
+        : mediaA?.type === 'image'
+          ? imgARef.current
+          : null
 
     if (!source) {
       processedImageRef.current = null
       return
     }
 
-    const isReady = mediaA?.type === 'video' ?
-      (videoARef.current?.readyState || 0) >= 2 :
-      mediaA?.type === 'image' && imagesLoaded.a
+    const isReady =
+      mediaA?.type === 'video'
+        ? (videoARef.current?.readyState || 0) >= 2
+        : mediaA?.type === 'image' && imagesLoaded.a
 
     if (!isReady || morphologicalSettings.operations.length === 0) {
       processedImageRef.current = null
@@ -313,13 +324,18 @@ export function MorphologicalView() {
     ctx.clearRect(0, 0, width, height)
 
     // Get source
-    const sourceA = mediaA?.type === 'video' ? videoARef.current :
-                   mediaA?.type === 'image' ? imgARef.current : null
+    const sourceA =
+      mediaA?.type === 'video'
+        ? videoARef.current
+        : mediaA?.type === 'image'
+          ? imgARef.current
+          : null
 
-    const sourceAReady = sourceA && (
-      mediaA?.type === 'video' ? (videoARef.current?.readyState || 0) >= 2 :
-      mediaA?.type === 'image' && imagesLoaded.a
-    )
+    const sourceAReady =
+      sourceA &&
+      (mediaA?.type === 'video'
+        ? (videoARef.current?.readyState || 0) >= 2
+        : mediaA?.type === 'image' && imagesLoaded.a)
 
     if (!sourceA || !sourceAReady) {
       ctx.fillStyle = '#1a1a1a'
@@ -377,7 +393,12 @@ export function MorphologicalView() {
     }
 
     animationRef.current = requestAnimationFrame(render)
-  }, [mediaA, morphologicalSettings.showOriginal, morphologicalSettings.operations.length, imagesLoaded])
+  }, [
+    mediaA,
+    morphologicalSettings.showOriginal,
+    morphologicalSettings.operations.length,
+    imagesLoaded,
+  ])
 
   // Start render loop
   useEffect(() => {
@@ -390,19 +411,49 @@ export function MorphologicalView() {
   }, [render])
 
   // Operation buttons config
-  const operations: { id: MorphOperation; label: string; icon: React.ReactNode; description: string }[] = [
-    { id: 'erosion', label: 'Erosion', icon: <Shrink size={14} />, description: 'Min filter - shrinks bright regions' },
-    { id: 'dilation', label: 'Dilation', icon: <Expand size={14} />, description: 'Max filter - expands bright regions' },
-    { id: 'opening', label: 'Opening', icon: <Minus size={14} />, description: 'Erosion + Dilation - removes noise' },
-    { id: 'closing', label: 'Closing', icon: <Plus size={14} />, description: 'Dilation + Erosion - fills gaps' },
-    { id: 'gradient', label: 'Gradient', icon: <ArrowRight size={14} />, description: 'Dilation - Erosion - finds edges' }
+  const operations: {
+    id: MorphOperation
+    label: string
+    icon: React.ReactNode
+    description: string
+  }[] = [
+    {
+      id: 'erosion',
+      label: 'Erosion',
+      icon: <Shrink size={14} />,
+      description: 'Min filter - shrinks bright regions',
+    },
+    {
+      id: 'dilation',
+      label: 'Dilation',
+      icon: <Expand size={14} />,
+      description: 'Max filter - expands bright regions',
+    },
+    {
+      id: 'opening',
+      label: 'Opening',
+      icon: <Minus size={14} />,
+      description: 'Erosion + Dilation - removes noise',
+    },
+    {
+      id: 'closing',
+      label: 'Closing',
+      icon: <Plus size={14} />,
+      description: 'Dilation + Erosion - fills gaps',
+    },
+    {
+      id: 'gradient',
+      label: 'Gradient',
+      icon: <ArrowRight size={14} />,
+      description: 'Dilation - Erosion - finds edges',
+    },
   ]
 
   // Shape buttons config
   const shapes: { id: MorphElementShape; label: string; icon: React.ReactNode }[] = [
     { id: 'square', label: 'Square', icon: <Square size={14} /> },
     { id: 'circle', label: 'Circle', icon: <Circle size={14} /> },
-    { id: 'cross', label: 'Cross', icon: <Plus size={14} /> }
+    { id: 'cross', label: 'Cross', icon: <Plus size={14} /> },
   ]
 
   // Empty state
@@ -412,9 +463,7 @@ export function MorphologicalView() {
         <div className="text-center p-8">
           <Shrink className="w-16 h-16 mx-auto mb-4 text-text-muted" />
           <h3 className="text-xl font-bold text-text-primary mb-2">Morphological Operations</h3>
-          <p className="text-text-muted">
-            Add media to Track A to apply morphological transforms.
-          </p>
+          <p className="text-text-muted">Add media to Track A to apply morphological transforms.</p>
           <p className="text-sm text-text-muted mt-4">
             Use erosion, dilation, opening, closing, and gradient operations.
           </p>
@@ -424,15 +473,18 @@ export function MorphologicalView() {
   }
 
   return (
-    <div
-      ref={containerRef}
-      className="w-full h-full relative bg-black overflow-hidden"
-    >
+    <div ref={containerRef} className="w-full h-full relative bg-black overflow-hidden">
       {/* Hidden video element */}
       <video
         ref={videoARef}
         src={mediaA?.type === 'video' ? mediaA.url : undefined}
-        style={{ position: 'absolute', width: '1px', height: '1px', opacity: 0, pointerEvents: 'none' }}
+        style={{
+          position: 'absolute',
+          width: '1px',
+          height: '1px',
+          opacity: 0,
+          pointerEvents: 'none',
+        }}
         muted
         playsInline
         loop
@@ -441,20 +493,11 @@ export function MorphologicalView() {
 
       {/* Hidden image element */}
       {mediaA?.type === 'image' && (
-        <img
-          ref={imgARef}
-          src={mediaA.url}
-          className="hidden"
-          onLoad={handleImageALoad}
-          alt=""
-        />
+        <img ref={imgARef} src={mediaA.url} className="hidden" onLoad={handleImageALoad} alt="" />
       )}
 
       {/* Canvas */}
-      <canvas
-        ref={canvasRef}
-        className="w-full h-full"
-      />
+      <canvas ref={canvasRef} className="w-full h-full" />
 
       {/* Processing indicator */}
       {processing && (
@@ -505,9 +548,13 @@ export function MorphologicalView() {
       <div className="absolute right-4 top-4 flex flex-col gap-3">
         {/* Show original toggle */}
         <button
-          onClick={() => setMorphologicalSettings({ showOriginal: !morphologicalSettings.showOriginal })}
+          onClick={() =>
+            setMorphologicalSettings({ showOriginal: !morphologicalSettings.showOriginal })
+          }
           className={`p-2 rounded transition-colors ${morphologicalSettings.showOriginal ? 'bg-accent text-white' : 'bg-black/70 text-gray-400 hover:text-white'}`}
-          title={morphologicalSettings.showOriginal ? 'Hide original' : 'Show original side-by-side'}
+          title={
+            morphologicalSettings.showOriginal ? 'Hide original' : 'Show original side-by-side'
+          }
         >
           {morphologicalSettings.showOriginal ? <Eye size={16} /> : <EyeOff size={16} />}
         </button>
@@ -515,7 +562,7 @@ export function MorphologicalView() {
 
       {/* Operation buttons */}
       <div className="absolute bottom-20 left-4 right-4 flex justify-center gap-2">
-        {operations.map(op => (
+        {operations.map((op) => (
           <button
             key={op.id}
             onClick={() => addMorphOperation(op.id)}
@@ -534,7 +581,7 @@ export function MorphologicalView() {
         <div>
           <label className="text-xs text-gray-400 block mb-1">Size</label>
           <div className="flex gap-1">
-            {([3, 5, 7] as MorphElementSize[]).map(size => (
+            {([3, 5, 7] as MorphElementSize[]).map((size) => (
               <button
                 key={size}
                 onClick={() => setMorphologicalSettings({ elementSize: size })}
@@ -550,7 +597,7 @@ export function MorphologicalView() {
         <div>
           <label className="text-xs text-gray-400 block mb-1">Shape</label>
           <div className="flex gap-1">
-            {shapes.map(shape => (
+            {shapes.map((shape) => (
               <button
                 key={shape.id}
                 onClick={() => setMorphologicalSettings({ elementShape: shape.id })}
@@ -571,10 +618,7 @@ export function MorphologicalView() {
           {kernel.map((row, y) => (
             <div key={y} className="flex gap-px">
               {row.map((val, x) => (
-                <div
-                  key={`${x}-${y}`}
-                  className={`w-3 h-3 ${val ? 'bg-accent' : 'bg-surface'}`}
-                />
+                <div key={`${x}-${y}`} className={`w-3 h-3 ${val ? 'bg-accent' : 'bg-surface'}`} />
               ))}
             </div>
           ))}

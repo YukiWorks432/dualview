@@ -222,7 +222,7 @@ export class WebGLSpectrogramRenderer {
     minDb: -90,
     maxDb: 0,
     melScale: false,
-    showFrequencyLabels: true
+    showFrequencyLabels: true,
   }
 
   constructor(canvas: HTMLCanvasElement) {
@@ -233,7 +233,7 @@ export class WebGLSpectrogramRenderer {
   private initWebGL(): void {
     const gl = this.canvas.getContext('webgl', {
       antialias: false,
-      preserveDrawingBuffer: true
+      preserveDrawingBuffer: true,
     })
 
     if (!gl) {
@@ -265,12 +265,7 @@ export class WebGLSpectrogramRenderer {
     this.program = program
 
     // Create fullscreen quad
-    const positions = new Float32Array([
-      -1, -1,
-       1, -1,
-      -1,  1,
-       1,  1
-    ])
+    const positions = new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1])
 
     const positionBuffer = gl.createBuffer()
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer)
@@ -409,7 +404,12 @@ export class WebGLSpectrogramRenderer {
     this.uploadTexture(this.textureB, data, width, height)
   }
 
-  private uploadTexture(texture: WebGLTexture | null, data: Float32Array, width: number, height: number): void {
+  private uploadTexture(
+    texture: WebGLTexture | null,
+    data: Float32Array,
+    width: number,
+    height: number,
+  ): void {
     const gl = this.gl
     if (!gl || !texture) return
 
@@ -431,7 +431,7 @@ export class WebGLSpectrogramRenderer {
       0,
       gl.LUMINANCE,
       gl.FLOAT,
-      normalizedData
+      normalizedData,
     )
   }
 
@@ -465,7 +465,11 @@ export class WebGLSpectrogramRenderer {
     gl.uniform1i(gl.getUniformLocation(program, 'u_colorMap'), this.getColorMapIndex())
     gl.uniform1f(gl.getUniformLocation(program, 'u_playhead'), playheadPosition)
     gl.uniform1i(gl.getUniformLocation(program, 'u_melScale'), this.config.melScale ? 1 : 0)
-    gl.uniform2f(gl.getUniformLocation(program, 'u_resolution'), this.canvas.width, this.canvas.height)
+    gl.uniform2f(
+      gl.getUniformLocation(program, 'u_resolution'),
+      this.canvas.width,
+      this.canvas.height,
+    )
 
     // Draw
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
@@ -477,7 +481,14 @@ export class WebGLSpectrogramRenderer {
   }
 
   private getColorMapIndex(): number {
-    const maps: SpectrogramColorMap[] = ['viridis', 'magma', 'inferno', 'plasma', 'grayscale', 'heat']
+    const maps: SpectrogramColorMap[] = [
+      'viridis',
+      'magma',
+      'inferno',
+      'plasma',
+      'grayscale',
+      'heat',
+    ]
     return maps.indexOf(this.config.colorMap)
   }
 

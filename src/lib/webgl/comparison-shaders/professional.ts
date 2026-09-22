@@ -33,7 +33,7 @@ void main() {
   vec3 result = mix(original, anaglyph, u_opacity);
 
   gl_FragColor = vec4(result, 1.0);
-}`
+}`,
   },
 
   'pro-checkerboard': {
@@ -69,7 +69,7 @@ void main() {
   vis = mix(vis, vec3(0.5), boundary * 0.3 * u_opacity);
 
   gl_FragColor = vec4(vis, 1.0);
-}`
+}`,
   },
 
   'pro-onion': {
@@ -104,7 +104,7 @@ void main() {
   result = mix(result, vec3(1.0, 0.3, 0.3), edgeB * u_opacity * 0.5);
 
   gl_FragColor = vec4(result, 1.0);
-}`
+}`,
   },
 
   'pro-loupe': {
@@ -176,7 +176,7 @@ void main() {
   }
 
   gl_FragColor = vec4(result, 1.0);
-}`
+}`,
   },
 
   'pro-frequency': {
@@ -236,7 +236,7 @@ void main() {
   result = mix(result, highFreqDiff, 0.3);
 
   gl_FragColor = vec4(result, 1.0);
-}`
+}`,
   },
 
   'pro-mask': {
@@ -269,8 +269,8 @@ void main() {
   result = mix(result * 0.7, result, mask);
 
   gl_FragColor = vec4(result, 1.0);
-}`
-  }
+}`,
+  },
 }
 
 export const PROFESSIONAL_VARIANTS = Object.keys(PROFESSIONAL_SHADERS)

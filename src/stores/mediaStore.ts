@@ -1,9 +1,10 @@
 import { create } from 'zustand'
-import type { MediaFile, MediaType } from '../types'
-import { generateId } from '../lib/utils'
-import { useTimelineStore } from './timelineStore'
-import { generateModelThumbnail } from '../lib/modelThumbnail'
+
 import { getDocumentType, parseDocument, generateDocumentThumbnail } from '../lib/documentParser'
+import { generateModelThumbnail } from '../lib/modelThumbnail'
+import { generateId } from '../lib/utils'
+import type { MediaFile, MediaType } from '../types'
+import { useTimelineStore } from './timelineStore'
 
 interface MediaStore {
   files: MediaFile[]
@@ -185,7 +186,7 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
   addFile: async (file: File) => {
     // MEDIA-012: Create pending entry first
     const pendingId = generateId()
-    
+
     // Detect file type including 3D models and documents (same logic as processFile)
     const extension = file.name.toLowerCase().split('.').pop()
     const isModel = extension === 'glb' || extension === 'gltf'
@@ -201,7 +202,7 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
             : file.type.startsWith('audio/')
               ? 'audio'
               : 'model'
-    
+
     const pendingFile: MediaFile = {
       id: pendingId,
       name: file.name,
@@ -218,10 +219,8 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
 
     // Update status to processing
     set((state) => ({
-      files: state.files.map(f => 
-        f.id === pendingId 
-          ? { ...f, status: 'processing' as const, processingProgress: 10 }
-          : f
+      files: state.files.map((f) =>
+        f.id === pendingId ? { ...f, status: 'processing' as const, processingProgress: 10 } : f,
       ),
     }))
 
@@ -229,16 +228,20 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
       const mediaFile = await processFile(file)
       // Replace pending with processed file, keeping the pending ID
       set((state) => ({
-        files: state.files.map(f => f.id === pendingId ? { ...mediaFile, id: pendingId } : f),
+        files: state.files.map((f) => (f.id === pendingId ? { ...mediaFile, id: pendingId } : f)),
       }))
       return { ...mediaFile, id: pendingId }
     } catch (error) {
       // MEDIA-012: Mark as error
       set((state) => ({
-        files: state.files.map(f => 
-          f.id === pendingId 
-            ? { ...f, status: 'error' as const, statusMessage: error instanceof Error ? error.message : 'Processing failed' }
-            : f
+        files: state.files.map((f) =>
+          f.id === pendingId
+            ? {
+                ...f,
+                status: 'error' as const,
+                statusMessage: error instanceof Error ? error.message : 'Processing failed',
+              }
+            : f,
         ),
       }))
       throw error
@@ -269,7 +272,7 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
   },
 
   removeFile: (id: string) => {
-    const file = get().files.find(f => f.id === id)
+    const file = get().files.find((f) => f.id === id)
     if (file) {
       URL.revokeObjectURL(file.url)
     }
@@ -285,9 +288,7 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
 
   selectFile: (id: string) => {
     set((state) => ({
-      selectedIds: state.selectedIds.includes(id)
-        ? state.selectedIds
-        : [...state.selectedIds, id],
+      selectedIds: state.selectedIds.includes(id) ? state.selectedIds : [...state.selectedIds, id],
     }))
   },
 
@@ -307,7 +308,7 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
 
   clearFiles: () => {
     // Revoke all blob URLs
-    get().files.forEach(file => {
+    get().files.forEach((file) => {
       if (file.url.startsWith('blob:')) {
         URL.revokeObjectURL(file.url)
       }
@@ -318,43 +319,43 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
   // MEDIA-012: Update file status
   updateStatus: (id: string, status: MediaFile['status'], message?: string) => {
     set((state) => ({
-      files: state.files.map(f =>
-        f.id === id
-          ? { ...f, status, statusMessage: message }
-          : f
-      ),
+      files: state.files.map((f) => (f.id === id ? { ...f, status, statusMessage: message } : f)),
     }))
   },
 
   // MEDIA-012: Retry failed processing
   retryProcessing: async (id: string) => {
-    const file = get().files.find(f => f.id === id)
+    const file = get().files.find((f) => f.id === id)
     if (!file || file.status !== 'error') return
 
     // Mark as pending
     set((state) => ({
-      files: state.files.map(f =>
+      files: state.files.map((f) =>
         f.id === id
           ? { ...f, status: 'pending' as const, statusMessage: undefined, processingProgress: 0 }
-          : f
+          : f,
       ),
     }))
 
     try {
       const newMediaFile = await processFile(file.file)
       set((state) => ({
-        files: state.files.map(f =>
+        files: state.files.map((f) =>
           f.id === id
             ? { ...newMediaFile, id } // Keep original ID
-            : f
+            : f,
         ),
       }))
     } catch (error) {
       set((state) => ({
-        files: state.files.map(f =>
+        files: state.files.map((f) =>
           f.id === id
-            ? { ...f, status: 'error' as const, statusMessage: error instanceof Error ? error.message : 'Retry failed' }
-            : f
+            ? {
+                ...f,
+                status: 'error' as const,
+                statusMessage: error instanceof Error ? error.message : 'Retry failed',
+              }
+            : f,
         ),
       }))
     }

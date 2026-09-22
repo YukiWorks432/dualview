@@ -31,7 +31,7 @@ void main() {
   vec4 colorB = texture2D(u_textureB, kaleidoUV);
 
   gl_FragColor = mix(colorA, colorB, u_progress);
-}`
+}`,
   },
 
   liquid_metal: {
@@ -63,7 +63,7 @@ void main() {
   vec3 metalColor = mix(base.rgb, vec3(0.8, 0.85, 0.9), highlight * intensity * 0.5);
 
   gl_FragColor = vec4(metalColor, 1.0);
-}`
+}`,
   },
 
   neon_dreams: {
@@ -92,7 +92,7 @@ void main() {
   neon += glow * vec3(1.0, 0.2, 0.8) * 0.3;
 
   gl_FragColor = vec4(neon, 1.0);
-}`
+}`,
   },
 
   aurora: {
@@ -126,7 +126,7 @@ void main() {
   vec3 result = mix(base.rgb, base.rgb + aurora * 0.4, auroraMask);
 
   gl_FragColor = vec4(result, 1.0);
-}`
+}`,
   },
 
   matrix: {
@@ -156,7 +156,7 @@ void main() {
   vec3 result = mix(base.rgb, base.rgb * matrixColor + matrixColor * 0.2, rain * intensity);
 
   gl_FragColor = vec4(result, 1.0);
-}`
+}`,
   },
 
   film_burn: {
@@ -185,7 +185,7 @@ void main() {
   vec3 result = mix(base.rgb, burnColor, burn * intensity);
 
   gl_FragColor = vec4(result, 1.0);
-}`
+}`,
   },
 
   tv_static: {
@@ -219,7 +219,7 @@ void main() {
   base.rgb *= 0.95 + scanline * 0.05 * intensity;
 
   gl_FragColor = base;
-}`
+}`,
   },
 
   comic: {
@@ -253,7 +253,7 @@ void main() {
   vec3 result = mix(posterized, vec3(0.0), edge * intensity);
 
   gl_FragColor = vec4(result, 1.0);
-}`
+}`,
   },
 
   sketch: {
@@ -295,7 +295,7 @@ void main() {
   vec3 result = mix(base.rgb, vec3(sketch), intensity);
 
   gl_FragColor = vec4(result, 1.0);
-}`
+}`,
   },
 
   negative: {
@@ -317,7 +317,7 @@ void main() {
   vec4 mixedB = mix(colorB, negB, intensity);
 
   gl_FragColor = mix(mixedA, mixedB, u_progress);
-}`
+}`,
   },
 
   solarize: {
@@ -345,7 +345,7 @@ void main() {
   vec3 result = mix(base.rgb, solarized, intensity);
 
   gl_FragColor = vec4(result, 1.0);
-}`
+}`,
   },
 
   crossfade: {
@@ -358,8 +358,8 @@ void main() {
 
   float p = easeInOutCubic(u_progress);
   gl_FragColor = mix(colorA, colorB, p);
-}`
-  }
+}`,
+  },
 }
 
 export const OTHER_VARIANTS = Object.keys(OTHER_SHADERS)

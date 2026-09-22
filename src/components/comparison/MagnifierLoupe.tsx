@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
 import { Search } from 'lucide-react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 
 interface MagnifierLoupeProps {
   sourceARef: React.RefObject<HTMLImageElement | HTMLVideoElement | null>
@@ -30,71 +30,77 @@ export function MagnifierLoupe({
   const canvasARef = useRef<HTMLCanvasElement>(null)
   const canvasBRef = useRef<HTMLCanvasElement>(null)
 
-  const updateLoupe = useCallback((e: MouseEvent) => {
-    if (!containerRef.current) return
+  const updateLoupe = useCallback(
+    (e: MouseEvent) => {
+      if (!containerRef.current) return
 
-    const rect = containerRef.current.getBoundingClientRect()
-    const x = e.clientX - rect.left
-    const y = e.clientY - rect.top
+      const rect = containerRef.current.getBoundingClientRect()
+      const x = e.clientX - rect.left
+      const y = e.clientY - rect.top
 
-    // Calculate source coordinates (normalized 0-1)
-    const sourceX = x / rect.width
-    const sourceY = y / rect.height
+      // Calculate source coordinates (normalized 0-1)
+      const sourceX = x / rect.width
+      const sourceY = y / rect.height
 
-    setPosition({ x, y, sourceX, sourceY })
-  }, [containerRef])
+      setPosition({ x, y, sourceX, sourceY })
+    },
+    [containerRef],
+  )
 
-  const drawLoupe = useCallback((
-    canvas: HTMLCanvasElement | null,
-    source: HTMLImageElement | HTMLVideoElement | null,
-    sourceX: number,
-    sourceY: number
-  ) => {
-    if (!canvas || !source) return
+  const drawLoupe = useCallback(
+    (
+      canvas: HTMLCanvasElement | null,
+      source: HTMLImageElement | HTMLVideoElement | null,
+      sourceX: number,
+      sourceY: number,
+    ) => {
+      if (!canvas || !source) return
 
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
+      const ctx = canvas.getContext('2d')
+      if (!ctx) return
 
-    let sourceWidth: number, sourceHeight: number
-    if (source instanceof HTMLVideoElement) {
-      sourceWidth = source.videoWidth
-      sourceHeight = source.videoHeight
-    } else {
-      sourceWidth = source.naturalWidth
-      sourceHeight = source.naturalHeight
-    }
+      let sourceWidth: number, sourceHeight: number
+      if (source instanceof HTMLVideoElement) {
+        sourceWidth = source.videoWidth
+        sourceHeight = source.videoHeight
+      } else {
+        sourceWidth = source.naturalWidth
+        sourceHeight = source.naturalHeight
+      }
 
-    if (sourceWidth === 0 || sourceHeight === 0) return
+      if (sourceWidth === 0 || sourceHeight === 0) return
 
-    // Calculate the region to magnify
-    const regionSize = LOUPE_SIZE / ZOOM_LEVEL
-    const sx = sourceX * sourceWidth - regionSize / 2
-    const sy = sourceY * sourceHeight - regionSize / 2
+      // Calculate the region to magnify
+      const regionSize = LOUPE_SIZE / ZOOM_LEVEL
+      const sx = sourceX * sourceWidth - regionSize / 2
+      const sy = sourceY * sourceHeight - regionSize / 2
 
-    // Clear and draw
-    ctx.clearRect(0, 0, LOUPE_SIZE, LOUPE_SIZE)
-    ctx.drawImage(
-      source,
-      Math.max(0, sx),
-      Math.max(0, sy),
-      regionSize,
-      regionSize,
-      0,
-      0,
-      LOUPE_SIZE,
-      LOUPE_SIZE
-    )
+      // Clear and draw
+      ctx.clearRect(0, 0, LOUPE_SIZE, LOUPE_SIZE)
+      ctx.drawImage(
+        source,
+        Math.max(0, sx),
+        Math.max(0, sy),
+        regionSize,
+        regionSize,
+        0,
+        0,
+        LOUPE_SIZE,
+        LOUPE_SIZE,
+      )
 
-    // Draw crosshair
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)'
-    ctx.lineWidth = 1
-    ctx.beginPath()
-    ctx.moveTo(LOUPE_SIZE / 2, 0)
-    ctx.lineTo(LOUPE_SIZE / 2, LOUPE_SIZE)
-    ctx.moveTo(0, LOUPE_SIZE / 2)
-    ctx.lineTo(LOUPE_SIZE, LOUPE_SIZE / 2)
-    ctx.stroke()
-  }, [])
+      // Draw crosshair
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)'
+      ctx.lineWidth = 1
+      ctx.beginPath()
+      ctx.moveTo(LOUPE_SIZE / 2, 0)
+      ctx.lineTo(LOUPE_SIZE / 2, LOUPE_SIZE)
+      ctx.moveTo(0, LOUPE_SIZE / 2)
+      ctx.lineTo(LOUPE_SIZE, LOUPE_SIZE / 2)
+      ctx.stroke()
+    },
+    [],
+  )
 
   useEffect(() => {
     if (!isEnabled || !position) return
@@ -149,7 +155,10 @@ export function MagnifierLoupe({
           className="fixed pointer-events-none z-50 flex gap-1"
           style={{
             left: position.x + (containerRef.current?.getBoundingClientRect().left || 0) + 20,
-            top: position.y + (containerRef.current?.getBoundingClientRect().top || 0) - LOUPE_SIZE / 2,
+            top:
+              position.y +
+              (containerRef.current?.getBoundingClientRect().top || 0) -
+              LOUPE_SIZE / 2,
           }}
         >
           {/* Loupe A */}
@@ -194,7 +203,7 @@ export function MagnifierLoupe({
 export function useMagnifier() {
   const [isEnabled, setIsEnabled] = useState(false)
 
-  const toggle = useCallback(() => setIsEnabled(prev => !prev), [])
+  const toggle = useCallback(() => setIsEnabled((prev) => !prev), [])
 
   return {
     isEnabled,

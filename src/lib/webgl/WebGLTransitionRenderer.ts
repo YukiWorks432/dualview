@@ -65,7 +65,7 @@ export class WebGLTransitionRenderer {
     const gl = this.canvas.getContext('webgl', {
       premultipliedAlpha: false,
       preserveDrawingBuffer: true,
-      alpha: false
+      alpha: false,
     })
 
     if (!gl) {
@@ -114,22 +114,12 @@ export class WebGLTransitionRenderer {
     // Position buffer (fullscreen quad)
     this.positionBuffer = gl.createBuffer()
     gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer)
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-      -1, -1,
-       1, -1,
-      -1,  1,
-       1,  1,
-    ]), gl.STATIC_DRAW)
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW)
 
     // Texture coordinate buffer
     this.texCoordBuffer = gl.createBuffer()
     gl.bindBuffer(gl.ARRAY_BUFFER, this.texCoordBuffer)
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-      0, 1,
-      1, 1,
-      0, 0,
-      1, 0,
-    ]), gl.STATIC_DRAW)
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([0, 1, 1, 1, 0, 0, 1, 0]), gl.STATIC_DRAW)
   }
 
   /**
@@ -256,7 +246,10 @@ export class WebGLTransitionRenderer {
   /**
    * Update a texture from a video or image element
    */
-  updateTexture(which: 'A' | 'B', source: HTMLVideoElement | HTMLImageElement | HTMLCanvasElement): void {
+  updateTexture(
+    which: 'A' | 'B',
+    source: HTMLVideoElement | HTMLImageElement | HTMLCanvasElement,
+  ): void {
     const gl = this.gl
     const texture = which === 'A' ? this.textureA : this.textureB
 

@@ -1,11 +1,12 @@
 /**
  * ProjectMetadataEditor Component (PROJECT-001)
- * 
+ *
  * Editable fields for project name, description, and tags.
  */
 
-import { useState, useEffect, useRef } from 'react'
 import { Edit2, X, Plus, Check } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+
 import { usePersistenceStore } from '../../stores/persistenceStore'
 
 interface ProjectMetadataEditorProps {
@@ -14,14 +15,14 @@ interface ProjectMetadataEditorProps {
 
 export function ProjectMetadataEditor({ compact = false }: ProjectMetadataEditorProps) {
   const { projectMetadata, updateProjectMetadata } = usePersistenceStore()
-  
+
   const [isEditingName, setIsEditingName] = useState(false)
   const [isEditingDescription, setIsEditingDescription] = useState(false)
   const [tempName, setTempName] = useState('')
   const [tempDescription, setTempDescription] = useState('')
   const [newTag, setNewTag] = useState('')
   const [showTagInput, setShowTagInput] = useState(false)
-  
+
   const nameInputRef = useRef<HTMLInputElement>(null)
   const descInputRef = useRef<HTMLTextAreaElement>(null)
   const tagInputRef = useRef<HTMLInputElement>(null)
@@ -78,7 +79,7 @@ export function ProjectMetadataEditor({ compact = false }: ProjectMetadataEditor
   }
 
   const handleRemoveTag = (tagToRemove: string) => {
-    updateProjectMetadata({ tags: projectMetadata.tags.filter(t => t !== tagToRemove) })
+    updateProjectMetadata({ tags: projectMetadata.tags.filter((t) => t !== tagToRemove) })
   }
 
   const handleKeyDown = (e: React.KeyboardEvent, saveHandler: () => void) => {
@@ -207,9 +208,7 @@ export function ProjectMetadataEditor({ compact = false }: ProjectMetadataEditor
 
       {/* Tags */}
       <div>
-        <label className="text-xs text-zinc-500 uppercase tracking-wide mb-1 block">
-          Tags
-        </label>
+        <label className="text-xs text-zinc-500 uppercase tracking-wide mb-1 block">Tags</label>
         <div className="flex flex-wrap gap-2">
           {projectMetadata.tags.map((tag) => (
             <span

@@ -1,18 +1,12 @@
+import { Upload, Copy, Trash2, Check, Braces, ArrowLeftRight } from 'lucide-react'
 /**
  * JSON Diff View - Dedicated JSON comparison mode
  */
 import { useState, useRef } from 'react'
-import { useProjectStore } from '../../stores/projectStore'
+
 import { cn } from '../../lib/utils'
+import { useProjectStore } from '../../stores/projectStore'
 import { JsonTreeDiff } from './JsonTreeDiff'
-import {
-  Upload,
-  Copy,
-  Trash2,
-  Check,
-  Braces,
-  ArrowLeftRight
-} from 'lucide-react'
 
 export function JsonDiffView() {
   const { promptA, promptB, setPromptA, setPromptB } = useProjectStore()
@@ -79,7 +73,9 @@ export function JsonDiffView() {
         <div className="flex-1 flex flex-col border-r border-border">
           <div className="h-10 bg-surface border-b border-border flex items-center justify-between px-3">
             <div className="flex items-center gap-2">
-              <span className="w-6 h-6 bg-accent flex items-center justify-center text-white text-xs font-bold">A</span>
+              <span className="w-6 h-6 bg-accent flex items-center justify-center text-white text-xs font-bold">
+                A
+              </span>
               <span className="text-xs font-medium text-text-secondary">Original JSON</span>
             </div>
             <div className="flex items-center gap-1">
@@ -101,8 +97,10 @@ export function JsonDiffView() {
                 onClick={() => handleFormat('a')}
                 disabled={!promptA}
                 className={cn(
-                  "p-1.5 transition-colors",
-                  promptA ? "text-text-muted hover:text-accent hover:bg-surface-hover" : "text-text-muted/30"
+                  'p-1.5 transition-colors',
+                  promptA
+                    ? 'text-text-muted hover:text-accent hover:bg-surface-hover'
+                    : 'text-text-muted/30',
                 )}
                 title="Format JSON"
               >
@@ -112,19 +110,27 @@ export function JsonDiffView() {
                 onClick={() => handleCopy(promptA || '', 'a')}
                 disabled={!promptA}
                 className={cn(
-                  "p-1.5 transition-colors",
-                  promptA ? "text-text-muted hover:text-text-primary hover:bg-surface-hover" : "text-text-muted/30"
+                  'p-1.5 transition-colors',
+                  promptA
+                    ? 'text-text-muted hover:text-text-primary hover:bg-surface-hover'
+                    : 'text-text-muted/30',
                 )}
                 title="Copy"
               >
-                {copiedA ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
+                {copiedA ? (
+                  <Check className="w-3.5 h-3.5 text-green-400" />
+                ) : (
+                  <Copy className="w-3.5 h-3.5" />
+                )}
               </button>
               <button
                 onClick={() => setPromptA('')}
                 disabled={!promptA}
                 className={cn(
-                  "p-1.5 transition-colors",
-                  promptA ? "text-text-muted hover:text-error hover:bg-surface-hover" : "text-text-muted/30"
+                  'p-1.5 transition-colors',
+                  promptA
+                    ? 'text-text-muted hover:text-error hover:bg-surface-hover'
+                    : 'text-text-muted/30',
                 )}
                 title="Clear"
               >
@@ -166,7 +172,9 @@ export function JsonDiffView() {
         <div className="flex-1 flex flex-col">
           <div className="h-10 bg-surface border-b border-border flex items-center justify-between px-3">
             <div className="flex items-center gap-2">
-              <span className="w-6 h-6 bg-secondary flex items-center justify-center text-black text-xs font-bold">B</span>
+              <span className="w-6 h-6 bg-secondary flex items-center justify-center text-black text-xs font-bold">
+                B
+              </span>
               <span className="text-xs font-medium text-text-secondary">Modified JSON</span>
             </div>
             <div className="flex items-center gap-1">
@@ -188,8 +196,10 @@ export function JsonDiffView() {
                 onClick={() => handleFormat('b')}
                 disabled={!promptB}
                 className={cn(
-                  "p-1.5 transition-colors",
-                  promptB ? "text-text-muted hover:text-secondary hover:bg-surface-hover" : "text-text-muted/30"
+                  'p-1.5 transition-colors',
+                  promptB
+                    ? 'text-text-muted hover:text-secondary hover:bg-surface-hover'
+                    : 'text-text-muted/30',
                 )}
                 title="Format JSON"
               >
@@ -199,19 +209,27 @@ export function JsonDiffView() {
                 onClick={() => handleCopy(promptB || '', 'b')}
                 disabled={!promptB}
                 className={cn(
-                  "p-1.5 transition-colors",
-                  promptB ? "text-text-muted hover:text-text-primary hover:bg-surface-hover" : "text-text-muted/30"
+                  'p-1.5 transition-colors',
+                  promptB
+                    ? 'text-text-muted hover:text-text-primary hover:bg-surface-hover'
+                    : 'text-text-muted/30',
                 )}
                 title="Copy"
               >
-                {copiedB ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
+                {copiedB ? (
+                  <Check className="w-3.5 h-3.5 text-green-400" />
+                ) : (
+                  <Copy className="w-3.5 h-3.5" />
+                )}
               </button>
               <button
                 onClick={() => setPromptB('')}
                 disabled={!promptB}
                 className={cn(
-                  "p-1.5 transition-colors",
-                  promptB ? "text-text-muted hover:text-error hover:bg-surface-hover" : "text-text-muted/30"
+                  'p-1.5 transition-colors',
+                  promptB
+                    ? 'text-text-muted hover:text-error hover:bg-surface-hover'
+                    : 'text-text-muted/30',
                 )}
                 title="Clear"
               >

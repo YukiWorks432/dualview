@@ -1,14 +1,15 @@
 import { create } from 'zustand'
-import type { TimelineTrack, TimelineClip, MediaType, TrackType } from '../types'
+
 import { generateId, snapTimeToFrame } from '../lib/utils'
+import type { TimelineTrack, TimelineClip, MediaType, TrackType } from '../types'
 
 // Track colors for visual distinction
 const TRACK_COLORS: Record<TrackType, string> = {
-  'a': '#f97316', // orange
-  'b': '#a3e635', // lime
-  'audio': '#60a5fa', // blue
-  'text': '#c084fc', // purple
-  'media': '#4ade80', // green
+  a: '#f97316', // orange
+  b: '#a3e635', // lime
+  audio: '#60a5fa', // blue
+  text: '#c084fc', // purple
+  media: '#4ade80', // green
 }
 
 // Helper to calculate the maximum end time from all clips
@@ -117,8 +118,18 @@ interface TimelineStore {
   getZoomAwareSnapThreshold: () => number // Snap threshold adjusted for zoom level
 
   // Overlap detection
-  checkOverlap: (trackId: string, startTime: number, endTime: number, excludeClipId?: string) => boolean
-  getOverlappingClips: (trackId: string, startTime: number, endTime: number, excludeClipId?: string) => TimelineClip[]
+  checkOverlap: (
+    trackId: string,
+    startTime: number,
+    endTime: number,
+    excludeClipId?: string,
+  ) => boolean
+  getOverlappingClips: (
+    trackId: string,
+    startTime: number,
+    endTime: number,
+    excludeClipId?: string,
+  ) => TimelineClip[]
 
   // TL-004: Multi-clip selection
   selectClips: (clipIds: string[]) => void
@@ -147,8 +158,24 @@ interface TimelineStore {
 
 export const useTimelineStore = create<TimelineStore>((set, get) => ({
   tracks: [
-    { id: 'track-a', name: 'Track A', type: 'a', acceptedTypes: ['video', 'image', 'audio', 'model'], clips: [], muted: false, locked: false },
-    { id: 'track-b', name: 'Track B', type: 'b', acceptedTypes: ['video', 'image', 'audio', 'model'], clips: [], muted: false, locked: false },
+    {
+      id: 'track-a',
+      name: 'Track A',
+      type: 'a',
+      acceptedTypes: ['video', 'image', 'audio', 'model'],
+      clips: [],
+      muted: false,
+      locked: false,
+    },
+    {
+      id: 'track-b',
+      name: 'Track B',
+      type: 'b',
+      acceptedTypes: ['video', 'image', 'audio', 'model'],
+      clips: [],
+      muted: false,
+      locked: false,
+    },
   ],
   currentTime: 0,
   duration: 30,
@@ -258,26 +285,38 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
   // Add new track
   addTrack: (type: TrackType, name?: string) => {
     const state = get()
-    const existingTracks = state.tracks.filter(t => t.type === type || (type === 'media' && !['a', 'b'].includes(t.type)))
+    const existingTracks = state.tracks.filter(
+      (t) => t.type === type || (type === 'media' && !['a', 'b'].includes(t.type)),
+    )
     const trackNumber = existingTracks.length + 1
 
     // Generate track name if not provided
-    const trackName = name || (() => {
-      switch (type) {
-        case 'media': return `Track ${state.tracks.length + 1}`
-        case 'audio': return `Audio ${trackNumber}`
-        case 'text': return `Text ${trackNumber}`
-        default: return `Track ${trackNumber}`
-      }
-    })()
+    const trackName =
+      name ||
+      (() => {
+        switch (type) {
+          case 'media':
+            return `Track ${state.tracks.length + 1}`
+          case 'audio':
+            return `Audio ${trackNumber}`
+          case 'text':
+            return `Text ${trackNumber}`
+          default:
+            return `Track ${trackNumber}`
+        }
+      })()
 
     // Determine accepted types based on track type
     const acceptedTypes: MediaType[] = (() => {
       switch (type) {
-        case 'audio': return ['audio']
-        case 'text': return ['prompt'] // Text/prompts for captions
-        case 'media': return ['video', 'image', 'model']
-        default: return ['video', 'image', 'audio', 'model']
+        case 'audio':
+          return ['audio']
+        case 'text':
+          return ['prompt'] // Text/prompts for captions
+        case 'media':
+          return ['video', 'image', 'model']
+        default:
+          return ['video', 'image', 'audio', 'model']
       }
     })()
 
@@ -299,9 +338,9 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
   removeTrack: (id: string) => {
     const state = get()
     // Prevent removing the last comparison track
-    const track = state.tracks.find(t => t.id === id)
+    const track = state.tracks.find((t) => t.id === id)
     if (track && (track.type === 'a' || track.type === 'b')) {
-      const comparisonTracks = state.tracks.filter(t => t.type === 'a' || t.type === 'b')
+      const comparisonTracks = state.tracks.filter((t) => t.type === 'a' || t.type === 'b')
       if (comparisonTracks.length <= 2) {
         console.warn('Cannot remove comparison tracks A or B')
         return
@@ -312,33 +351,25 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
 
   toggleTrackMute: (id: string) => {
     set((state) => ({
-      tracks: state.tracks.map((t) =>
-        t.id === id ? { ...t, muted: !t.muted } : t
-      ),
+      tracks: state.tracks.map((t) => (t.id === id ? { ...t, muted: !t.muted } : t)),
     }))
   },
 
   toggleTrackLock: (id: string) => {
     set((state) => ({
-      tracks: state.tracks.map((t) =>
-        t.id === id ? { ...t, locked: !t.locked } : t
-      ),
+      tracks: state.tracks.map((t) => (t.id === id ? { ...t, locked: !t.locked } : t)),
     }))
   },
 
   setTrackAcceptedTypes: (id: string, types: MediaType[]) => {
     set((state) => ({
-      tracks: state.tracks.map((t) =>
-        t.id === id ? { ...t, acceptedTypes: types } : t
-      ),
+      tracks: state.tracks.map((t) => (t.id === id ? { ...t, acceptedTypes: types } : t)),
     }))
   },
 
   renameTrack: (id: string, name: string) => {
     set((state) => ({
-      tracks: state.tracks.map((t) =>
-        t.id === id ? { ...t, name } : t
-      ),
+      tracks: state.tracks.map((t) => (t.id === id ? { ...t, name } : t)),
     }))
   },
 
@@ -367,7 +398,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
     }
 
     const updatedTracks = get().tracks.map((t) =>
-      t.id === trackId ? { ...t, clips: [...t.clips, clip] } : t
+      t.id === trackId ? { ...t, clips: [...t.clips, clip] } : t,
     )
 
     // Recalculate duration based on all clips
@@ -385,7 +416,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
     let removedTrackId: string | undefined
 
     for (const track of state.tracks) {
-      const clip = track.clips.find(c => c.id === clipId)
+      const clip = track.clips.find((c) => c.id === clipId)
       if (clip) {
         removedClip = clip
         removedTrackId = track.id
@@ -400,7 +431,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
       // TL-012: Ripple edit - shift subsequent clips left on same track
       if (state.rippleEnabled && removedClip && t.id === removedTrackId) {
         const removedDuration = removedClip.endTime - removedClip.startTime
-        clips = clips.map(c => {
+        clips = clips.map((c) => {
           if (c.startTime >= removedClip!.endTime) {
             // Shift clip left by the removed clip's duration
             return {
@@ -430,9 +461,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
     set((state) => ({
       tracks: state.tracks.map((t) => ({
         ...t,
-        clips: t.clips.map((c) =>
-          c.id === clipId ? { ...c, ...updates } : c
-        ),
+        clips: t.clips.map((c) => (c.id === clipId ? { ...c, ...updates } : c)),
       })),
     }))
   },
@@ -466,7 +495,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
 
     // Add to new track
     const updatedTracks = tracks.map((t) =>
-      t.id === newTrackId ? { ...t, clips: [...t.clips, clip!] } : t
+      t.id === newTrackId ? { ...t, clips: [...t.clips, clip!] } : t,
     )
 
     // Recalculate duration based on all clips
@@ -485,7 +514,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
     let clipTrackId: string | undefined
 
     for (const track of state.tracks) {
-      const clip = track.clips.find(c => c.id === clipId)
+      const clip = track.clips.find((c) => c.id === clipId)
       if (clip) {
         originalClip = clip
         clipTrackId = track.id
@@ -508,7 +537,13 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
       ...t,
       clips: t.clips.map((c) => {
         // TL-012: Ripple edit - shift subsequent clips when trimming end
-        if (c.id !== clipId && rippleEnabled && t.id === clipTrackId && side === 'end' && c.startTime >= originalClip!.endTime) {
+        if (
+          c.id !== clipId &&
+          rippleEnabled &&
+          t.id === clipTrackId &&
+          side === 'end' &&
+          c.startTime >= originalClip!.endTime
+        ) {
           return {
             ...c,
             startTime: Math.max(0, c.startTime + trimDelta),
@@ -571,7 +606,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
 
     // Find the clip and its track
     for (const track of state.tracks) {
-      const clip = track.clips.find(c => c.id === clipId)
+      const clip = track.clips.find((c) => c.id === clipId)
       if (!clip) continue
 
       // Check if split time is within the clip
@@ -596,12 +631,12 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
 
       // Update first clip (before split) and add new clip
       set({
-        tracks: state.tracks.map(t => {
+        tracks: state.tracks.map((t) => {
           if (t.id !== track.id) return t
           return {
             ...t,
             clips: [
-              ...t.clips.map(c => {
+              ...t.clips.map((c) => {
                 if (c.id !== clipId) return c
                 return {
                   ...c,
@@ -629,7 +664,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
 
     // Find the clip
     for (const track of state.tracks) {
-      const clip = track.clips.find(c => c.id === clipId)
+      const clip = track.clips.find((c) => c.id === clipId)
       if (!clip) continue
 
       // Check if split time is within the clip
@@ -643,11 +678,11 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
 
       // Update clip to end at split point
       set({
-        tracks: state.tracks.map(t => {
+        tracks: state.tracks.map((t) => {
           if (t.id !== track.id) return t
           return {
             ...t,
-            clips: t.clips.map(c => {
+            clips: t.clips.map((c) => {
               if (c.id !== clipId) return c
               return {
                 ...c,
@@ -671,7 +706,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
 
     // Find the clip
     for (const track of state.tracks) {
-      const clip = track.clips.find(c => c.id === clipId)
+      const clip = track.clips.find((c) => c.id === clipId)
       if (!clip) continue
 
       // Check if split time is within the clip
@@ -685,11 +720,11 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
 
       // Update clip to start at split point
       set({
-        tracks: state.tracks.map(t => {
+        tracks: state.tracks.map((t) => {
           if (t.id !== track.id) return t
           return {
             ...t,
-            clips: t.clips.map(c => {
+            clips: t.clips.map((c) => {
               if (c.id !== clipId) return c
               // If ripple is enabled, keep the clip at its original start and shift the in point
               if (rippleEnabled) {
@@ -720,7 +755,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
     let newClip: TimelineClip | null = null
 
     for (const track of state.tracks) {
-      const clip = track.clips.find(c => c.id === clipId)
+      const clip = track.clips.find((c) => c.id === clipId)
       if (!clip) continue
 
       // Create duplicate immediately after the original
@@ -735,7 +770,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
       }
 
       set({
-        tracks: state.tracks.map(t => {
+        tracks: state.tracks.map((t) => {
           if (t.id !== track.id) return t
           return {
             ...t,
@@ -766,7 +801,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
 
     // Find the original clip
     for (const track of state.tracks) {
-      const clip = track.clips.find(c => c.id === state.clipboardClipId)
+      const clip = track.clips.find((c) => c.id === state.clipboardClipId)
       if (!clip) continue
 
       const newClip: TimelineClip = {
@@ -780,7 +815,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
       }
 
       set({
-        tracks: state.tracks.map(t => {
+        tracks: state.tracks.map((t) => {
           if (t.id !== trackId) return t
           return { ...t, clips: [...t.clips, newClip] }
         }),
@@ -803,26 +838,24 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
 
     // Find the original clip and its track type
     for (const track of state.tracks) {
-      const clip = track.clips.find(c => c.id === state.clipboardClipId)
+      const clip = track.clips.find((c) => c.id === state.clipboardClipId)
       if (!clip) continue
 
       // Find a compatible track (same type or first available)
-      const targetTrack = state.tracks.find(t => t.type === track.type) || state.tracks[0]
+      const targetTrack = state.tracks.find((t) => t.type === track.type) || state.tracks[0]
       if (!targetTrack) return null
 
       const clipDuration = clip.endTime - clip.startTime
       let pasteTime = state.currentTime
 
       // Check for overlaps and nudge forward if needed
-      const overlappingClips = targetTrack.clips.filter(c =>
-        c.id !== clip.id &&
-        c.startTime < pasteTime + clipDuration &&
-        c.endTime > pasteTime
+      const overlappingClips = targetTrack.clips.filter(
+        (c) => c.id !== clip.id && c.startTime < pasteTime + clipDuration && c.endTime > pasteTime,
       )
 
       if (overlappingClips.length > 0) {
         // Find the latest end time of overlapping clips
-        const latestEnd = Math.max(...overlappingClips.map(c => c.endTime))
+        const latestEnd = Math.max(...overlappingClips.map((c) => c.endTime))
         pasteTime = latestEnd
       }
 
@@ -836,7 +869,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
         outPoint: clip.outPoint,
       }
 
-      const updatedTracks = state.tracks.map(t => {
+      const updatedTracks = state.tracks.map((t) => {
         if (t.id !== targetTrack.id) return t
         return { ...t, clips: [...t.clips, newClip] }
       })
@@ -855,9 +888,9 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
     const state = get()
 
     set({
-      tracks: state.tracks.map(track => ({
+      tracks: state.tracks.map((track) => ({
         ...track,
-        clips: track.clips.map(clip => {
+        clips: track.clips.map((clip) => {
           if (clip.id !== clipId) return clip
 
           // Keep position, update media and optionally duration
@@ -868,7 +901,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
               ...clip,
               mediaId: newMediaId,
               outPoint: newDuration,
-              endTime: clip.startTime + (clipDuration * scale),
+              endTime: clip.startTime + clipDuration * scale,
             }
           }
 
@@ -890,7 +923,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
     let sourceTrack: TimelineTrack | undefined
 
     for (const track of state.tracks) {
-      const clip = track.clips.find(c => c.id === clipId)
+      const clip = track.clips.find((c) => c.id === clipId)
       if (clip) {
         sourceClip = clip
         sourceTrack = track
@@ -901,7 +934,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
     if (!sourceClip || !sourceTrack) return null
 
     // Find or create an audio track
-    let audioTrack = state.tracks.find(t => t.type === 'audio')
+    let audioTrack = state.tracks.find((t) => t.type === 'audio')
 
     if (!audioTrack) {
       // Create a new audio track
@@ -930,11 +963,11 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
     }
 
     // Update tracks
-    const existingAudioTrack = state.tracks.find(t => t.type === 'audio')
+    const existingAudioTrack = state.tracks.find((t) => t.type === 'audio')
     let updatedTracks: TimelineTrack[]
 
     if (existingAudioTrack) {
-      updatedTracks = state.tracks.map(t => {
+      updatedTracks = state.tracks.map((t) => {
         if (t.id === audioTrack!.id) {
           return { ...t, clips: [...t.clips, newClip] }
         }
@@ -961,7 +994,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
     const snapPoints: number[] = [
       0, // Start of timeline
       state.currentTime, // Playhead
-      ...state.markers.map(m => m.time), // Markers
+      ...state.markers.map((m) => m.time), // Markers
     ]
 
     // Add clip edges
@@ -993,31 +1026,33 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
   // Check if a time range overlaps with existing clips on a track
   checkOverlap: (trackId: string, startTime: number, endTime: number, excludeClipId?: string) => {
     const state = get()
-    const track = state.tracks.find(t => t.id === trackId)
+    const track = state.tracks.find((t) => t.id === trackId)
     if (!track) return false
 
-    return track.clips.some(clip =>
-      clip.id !== excludeClipId &&
-      clip.startTime < endTime &&
-      clip.endTime > startTime
+    return track.clips.some(
+      (clip) => clip.id !== excludeClipId && clip.startTime < endTime && clip.endTime > startTime,
     )
   },
 
   // Get all clips that overlap with a time range
-  getOverlappingClips: (trackId: string, startTime: number, endTime: number, excludeClipId?: string) => {
+  getOverlappingClips: (
+    trackId: string,
+    startTime: number,
+    endTime: number,
+    excludeClipId?: string,
+  ) => {
     const state = get()
-    const track = state.tracks.find(t => t.id === trackId)
+    const track = state.tracks.find((t) => t.id === trackId)
     if (!track) return []
 
-    return track.clips.filter(clip =>
-      clip.id !== excludeClipId &&
-      clip.startTime < endTime &&
-      clip.endTime > startTime
+    return track.clips.filter(
+      (clip) => clip.id !== excludeClipId && clip.startTime < endTime && clip.endTime > startTime,
     )
   },
 
   // TL-004: Multi-clip selection
-  selectClips: (clipIds: string[]) => set({ selectedClipIds: clipIds, selectedClipId: clipIds[0] || null }),
+  selectClips: (clipIds: string[]) =>
+    set({ selectedClipIds: clipIds, selectedClipId: clipIds[0] || null }),
 
   addToSelection: (clipId: string) => {
     const { selectedClipIds } = get()
@@ -1029,7 +1064,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
   toggleSelection: (clipId: string) => {
     const { selectedClipIds } = get()
     if (selectedClipIds.includes(clipId)) {
-      const newSelection = selectedClipIds.filter(id => id !== clipId)
+      const newSelection = selectedClipIds.filter((id) => id !== clipId)
       set({ selectedClipIds: newSelection, selectedClipId: newSelection[0] || null })
     } else {
       set({ selectedClipIds: [...selectedClipIds, clipId], selectedClipId: clipId })
@@ -1038,7 +1073,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
 
   selectAllClips: () => {
     const { tracks } = get()
-    const allClipIds = tracks.flatMap(t => t.clips.map(c => c.id))
+    const allClipIds = tracks.flatMap((t) => t.clips.map((c) => c.id))
     set({ selectedClipIds: allClipIds, selectedClipId: allClipIds[0] || null })
   },
 
@@ -1052,17 +1087,19 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
     const state = get()
 
     // Find all clip IDs that use this media and clear from selection
-    const clipIdsToRemove = state.tracks.flatMap(t =>
-      t.clips.filter(c => c.mediaId === mediaId).map(c => c.id)
+    const clipIdsToRemove = state.tracks.flatMap((t) =>
+      t.clips.filter((c) => c.mediaId === mediaId).map((c) => c.id),
     )
 
     set({
-      tracks: state.tracks.map(track => ({
+      tracks: state.tracks.map((track) => ({
         ...track,
-        clips: track.clips.filter(c => c.mediaId !== mediaId),
+        clips: track.clips.filter((c) => c.mediaId !== mediaId),
       })),
-      selectedClipId: clipIdsToRemove.includes(state.selectedClipId || '') ? null : state.selectedClipId,
-      selectedClipIds: state.selectedClipIds.filter(id => !clipIdsToRemove.includes(id)),
+      selectedClipId: clipIdsToRemove.includes(state.selectedClipId || '')
+        ? null
+        : state.selectedClipId,
+      selectedClipIds: state.selectedClipIds.filter((id) => !clipIdsToRemove.includes(id)),
     })
   },
 
@@ -1095,9 +1132,9 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
 
   updateMarker: (id: string, updates: Partial<TimelineMarker>) => {
     set((state) => ({
-      markers: state.markers.map((m) =>
-        m.id === id ? { ...m, ...updates } : m
-      ).sort((a, b) => a.time - b.time),
+      markers: state.markers
+        .map((m) => (m.id === id ? { ...m, ...updates } : m))
+        .sort((a, b) => a.time - b.time),
     }))
   },
 

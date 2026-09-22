@@ -1,10 +1,11 @@
 import { useRef, useEffect, useCallback, useMemo } from 'react'
+
+import { useOptimizedClipSync } from '../../hooks/useOptimizedVideoSync'
+import { useSyncedZoom } from '../../hooks/useSyncedZoom'
+import { useMediaStore } from '../../stores/mediaStore'
+import { usePlaybackStore } from '../../stores/playbackStore'
 import { useProjectStore } from '../../stores/projectStore'
 import { useTimelineStore } from '../../stores/timelineStore'
-import { usePlaybackStore } from '../../stores/playbackStore'
-import { useMediaStore } from '../../stores/mediaStore'
-import { useSyncedZoom } from '../../hooks/useSyncedZoom'
-import { useOptimizedClipSync } from '../../hooks/useOptimizedVideoSync'
 import type { BlendMode } from '../../types'
 
 const blendModeMap: Record<BlendMode, GlobalCompositeOperation> = {
@@ -27,8 +28,8 @@ export function BlendModes() {
   const { zoom, panX, panY, resetZoom, containerProps } = useSyncedZoom()
 
   // Get tracks
-  const trackA = tracks.find(t => t.type === 'a')
-  const trackB = tracks.find(t => t.type === 'b')
+  const trackA = tracks.find((t) => t.type === 'a')
+  const trackB = tracks.find((t) => t.type === 'b')
 
   // Get first clip for display
   const firstClipA = trackA?.clips[0] || null
@@ -37,12 +38,12 @@ export function BlendModes() {
   // Find clip that contains current time
   const activeClipA = useMemo(() => {
     if (!trackA) return null
-    return trackA.clips.find(c => currentTime >= c.startTime && currentTime < c.endTime) || null
+    return trackA.clips.find((c) => currentTime >= c.startTime && currentTime < c.endTime) || null
   }, [trackA, currentTime])
 
   const activeClipB = useMemo(() => {
     if (!trackB) return null
-    return trackB.clips.find(c => currentTime >= c.startTime && currentTime < c.endTime) || null
+    return trackB.clips.find((c) => currentTime >= c.startTime && currentTime < c.endTime) || null
   }, [trackB, currentTime])
 
   // Use active clip's media for display (clip at current time), fallback to first clip
@@ -138,7 +139,10 @@ export function BlendModes() {
         <div className="absolute top-4 right-4 z-20 bg-black/70 backdrop-blur-sm px-3 py-1 flex items-center gap-2">
           <span className="text-xs text-text-primary font-medium">{Math.round(zoom * 100)}%</span>
           <button
-            onClick={(e) => { e.stopPropagation(); resetZoom() }}
+            onClick={(e) => {
+              e.stopPropagation()
+              resetZoom()
+            }}
             className="text-[10px] text-text-muted hover:text-text-primary"
           >
             Reset
@@ -176,7 +180,6 @@ export function BlendModes() {
           <span>Drop videos to compare with blend modes</span>
         </div>
       )}
-
 
       {/* Blend mode label */}
       <div className="absolute top-4 left-4 bg-black/60 px-2 py-1 text-xs text-white capitalize">

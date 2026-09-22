@@ -1,6 +1,6 @@
 /**
  * Persistence Store (PERSIST-001, PERSIST-002, PERSIST-003, PERSIST-004, PROJECT-001)
- * 
+ *
  * Manages project persistence to IndexedDB with:
  * - Auto-save with debouncing
  * - Project load/restore
@@ -8,8 +8,9 @@
  * - Project metadata (title, description, tags)
  */
 
-import { create } from 'zustand'
 import { v4 as uuidv4 } from 'uuid'
+import { create } from 'zustand'
+
 import {
   initDB,
   saveProject,
@@ -23,11 +24,11 @@ import {
   type ProjectRecord,
   type MediaManifestEntry,
 } from '../lib/indexedDB'
-import { useTimelineStore } from './timelineStore'
-import { useProjectStore } from './projectStore'
-import { useMediaStore } from './mediaStore'
-import { useKeyframeStore } from './keyframeStore'
 import type { ClipKeyframes } from '../lib/keyframes'
+import { useKeyframeStore } from './keyframeStore'
+import { useMediaStore } from './mediaStore'
+import { useProjectStore } from './projectStore'
+import { useTimelineStore } from './timelineStore'
 
 export type SaveStatus = 'saved' | 'saving' | 'unsaved' | 'error'
 
@@ -64,10 +65,12 @@ interface PersistenceStore {
   loadProject: (projectId: string) => Promise<void>
   deleteProject: (projectId: string) => Promise<void>
   duplicateProject: (projectId: string) => Promise<string>
-  updateProjectMetadata: (updates: Partial<Pick<ProjectMetadata, 'name' | 'description' | 'tags'>>) => void
+  updateProjectMetadata: (
+    updates: Partial<Pick<ProjectMetadata, 'name' | 'description' | 'tags'>>,
+  ) => void
   refreshProjectList: () => Promise<void>
   updateStorageUsage: () => Promise<void>
-  
+
   // Export/Import
   exportProject: (projectId?: string) => Promise<Blob>
   importProject: (file: File) => Promise<string>
@@ -154,7 +157,7 @@ function deserializeKeyframeData(json: string): Map<string, ClipKeyframes> {
 // Get media manifest (metadata without blobs)
 function getMediaManifest(): MediaManifestEntry[] {
   const files = useMediaStore.getState().files
-  return files.map(f => ({
+  return files.map((f) => ({
     id: f.id,
     name: f.name,
     type: f.type,
@@ -200,7 +203,7 @@ export const usePersistenceStore = create<PersistenceStore>((set, get) => ({
   createNewProject: async (name?: string) => {
     const projectId = uuidv4()
     const now = new Date()
-    
+
     const metadata: ProjectMetadata = {
       id: projectId,
       name: name || `Project ${now.toLocaleDateString()}`,
@@ -222,8 +225,24 @@ export const usePersistenceStore = create<PersistenceStore>((set, get) => ({
     useMediaStore.getState().clearFiles()
     useTimelineStore.setState({
       tracks: [
-        { id: 'track-a', name: 'Track A', type: 'a', acceptedTypes: ['video', 'image', 'audio', 'model'], clips: [], muted: false, locked: false },
-        { id: 'track-b', name: 'Track B', type: 'b', acceptedTypes: ['video', 'image', 'audio', 'model'], clips: [], muted: false, locked: false },
+        {
+          id: 'track-a',
+          name: 'Track A',
+          type: 'a',
+          acceptedTypes: ['video', 'image', 'audio', 'model'],
+          clips: [],
+          muted: false,
+          locked: false,
+        },
+        {
+          id: 'track-b',
+          name: 'Track B',
+          type: 'b',
+          acceptedTypes: ['video', 'image', 'audio', 'model'],
+          clips: [],
+          muted: false,
+          locked: false,
+        },
       ],
       currentTime: 0,
       duration: 30,
@@ -334,15 +353,20 @@ export const usePersistenceStore = create<PersistenceStore>((set, get) => ({
           // Create a File from the blob
           const file = new File([blob], entry.name, { type: blob.type })
           const mediaFile = await mediaStore.addFile(file)
-          
+
           // The addFile creates a new ID, but we need to use the original ID
           // So we need to update the store directly
-          useMediaStore.setState(state => ({
-            files: state.files.map(f => 
+          useMediaStore.setState((state) => ({
+            files: state.files.map((f) =>
               f.name === entry.name && f.id === mediaFile.id
-                ? { ...f, id: entry.id, promptText: entry.promptText, waveformPeaks: entry.waveformPeaks }
-                : f
-            )
+                ? {
+                    ...f,
+                    id: entry.id,
+                    promptText: entry.promptText,
+                    waveformPeaks: entry.waveformPeaks,
+                  }
+                : f,
+            ),
           }))
         } else if (entry.type === 'prompt' && entry.promptText) {
           // Restore prompt entries
@@ -503,7 +527,7 @@ export const usePersistenceStore = create<PersistenceStore>((set, get) => ({
 
     try {
       const records = await getAllProjects()
-      const projects: ProjectMetadata[] = records.map(r => ({
+      const projects: ProjectMetadata[] = records.map((r) => ({
         id: r.id,
         name: r.name,
         description: r.description,
@@ -613,7 +637,8 @@ export const usePersistenceStore = create<PersistenceStore>((set, get) => ({
         id: existingTrack?.id || `track-${type}`,
         name: templateConfig.trackNames[index] || `Track ${type.toUpperCase()}`,
         type,
-        acceptedTypes: existingTrack?.acceptedTypes || ['video', 'image', 'audio', 'model'] as const,
+        acceptedTypes:
+          existingTrack?.acceptedTypes || (['video', 'image', 'audio', 'model'] as const),
         clips: existingTrack?.clips || [],
         muted: existingTrack?.muted || false,
         locked: existingTrack?.locked || false,
@@ -621,14 +646,14 @@ export const usePersistenceStore = create<PersistenceStore>((set, get) => ({
     })
 
     useTimelineStore.setState({ tracks: newTracks as any })
-    
+
     // Trigger a save after applying template
     get().triggerAutoSave()
   },
 
   triggerAutoSave: () => {
     const state = get()
-    
+
     // Cancel existing timeout
     if (state._autoSaveTimeoutId) {
       clearTimeout(state._autoSaveTimeoutId)

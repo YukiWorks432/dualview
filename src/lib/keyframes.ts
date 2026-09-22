@@ -1,6 +1,6 @@
 /**
  * Keyframe Animation System (KEYFRAME-001, KEYFRAME-002)
- * 
+ *
  * Provides keyframe-based animation for clip properties like
  * opacity, position, scale, and rotation.
  */
@@ -25,7 +25,7 @@ export interface Keyframe {
 }
 
 // Animatable properties
-export type AnimatableProperty = 
+export type AnimatableProperty =
   | 'opacity'
   | 'positionX'
   | 'positionY'
@@ -54,21 +54,133 @@ export interface PropertyConfig {
 }
 
 export const PROPERTY_CONFIGS: Record<AnimatableProperty, PropertyConfig> = {
-  opacity: { name: 'opacity', label: 'Opacity', defaultValue: 1, min: 0, max: 1, step: 0.01, unit: '' },
-  positionX: { name: 'positionX', label: 'Position X', defaultValue: 0, min: -1000, max: 1000, step: 1, unit: 'px' },
-  positionY: { name: 'positionY', label: 'Position Y', defaultValue: 0, min: -1000, max: 1000, step: 1, unit: 'px' },
-  scale: { name: 'scale', label: 'Scale', defaultValue: 1, min: 0.1, max: 5, step: 0.01, unit: 'x' },
-  scaleX: { name: 'scaleX', label: 'Scale X', defaultValue: 1, min: 0.1, max: 5, step: 0.01, unit: 'x' },
-  scaleY: { name: 'scaleY', label: 'Scale Y', defaultValue: 1, min: 0.1, max: 5, step: 0.01, unit: 'x' },
-  rotation: { name: 'rotation', label: 'Rotation', defaultValue: 0, min: -360, max: 360, step: 1, unit: '°' },
-  cropTop: { name: 'cropTop', label: 'Crop Top', defaultValue: 0, min: 0, max: 100, step: 1, unit: '%' },
-  cropBottom: { name: 'cropBottom', label: 'Crop Bottom', defaultValue: 0, min: 0, max: 100, step: 1, unit: '%' },
-  cropLeft: { name: 'cropLeft', label: 'Crop Left', defaultValue: 0, min: 0, max: 100, step: 1, unit: '%' },
-  cropRight: { name: 'cropRight', label: 'Crop Right', defaultValue: 0, min: 0, max: 100, step: 1, unit: '%' },
+  opacity: {
+    name: 'opacity',
+    label: 'Opacity',
+    defaultValue: 1,
+    min: 0,
+    max: 1,
+    step: 0.01,
+    unit: '',
+  },
+  positionX: {
+    name: 'positionX',
+    label: 'Position X',
+    defaultValue: 0,
+    min: -1000,
+    max: 1000,
+    step: 1,
+    unit: 'px',
+  },
+  positionY: {
+    name: 'positionY',
+    label: 'Position Y',
+    defaultValue: 0,
+    min: -1000,
+    max: 1000,
+    step: 1,
+    unit: 'px',
+  },
+  scale: {
+    name: 'scale',
+    label: 'Scale',
+    defaultValue: 1,
+    min: 0.1,
+    max: 5,
+    step: 0.01,
+    unit: 'x',
+  },
+  scaleX: {
+    name: 'scaleX',
+    label: 'Scale X',
+    defaultValue: 1,
+    min: 0.1,
+    max: 5,
+    step: 0.01,
+    unit: 'x',
+  },
+  scaleY: {
+    name: 'scaleY',
+    label: 'Scale Y',
+    defaultValue: 1,
+    min: 0.1,
+    max: 5,
+    step: 0.01,
+    unit: 'x',
+  },
+  rotation: {
+    name: 'rotation',
+    label: 'Rotation',
+    defaultValue: 0,
+    min: -360,
+    max: 360,
+    step: 1,
+    unit: '°',
+  },
+  cropTop: {
+    name: 'cropTop',
+    label: 'Crop Top',
+    defaultValue: 0,
+    min: 0,
+    max: 100,
+    step: 1,
+    unit: '%',
+  },
+  cropBottom: {
+    name: 'cropBottom',
+    label: 'Crop Bottom',
+    defaultValue: 0,
+    min: 0,
+    max: 100,
+    step: 1,
+    unit: '%',
+  },
+  cropLeft: {
+    name: 'cropLeft',
+    label: 'Crop Left',
+    defaultValue: 0,
+    min: 0,
+    max: 100,
+    step: 1,
+    unit: '%',
+  },
+  cropRight: {
+    name: 'cropRight',
+    label: 'Crop Right',
+    defaultValue: 0,
+    min: 0,
+    max: 100,
+    step: 1,
+    unit: '%',
+  },
   blur: { name: 'blur', label: 'Blur', defaultValue: 0, min: 0, max: 50, step: 0.5, unit: 'px' },
-  brightness: { name: 'brightness', label: 'Brightness', defaultValue: 1, min: 0, max: 3, step: 0.01, unit: '' },
-  contrast: { name: 'contrast', label: 'Contrast', defaultValue: 1, min: 0, max: 3, step: 0.01, unit: '' },
-  saturation: { name: 'saturation', label: 'Saturation', defaultValue: 1, min: 0, max: 3, step: 0.01, unit: '' },
+  brightness: {
+    name: 'brightness',
+    label: 'Brightness',
+    defaultValue: 1,
+    min: 0,
+    max: 3,
+    step: 0.01,
+    unit: '',
+  },
+  contrast: {
+    name: 'contrast',
+    label: 'Contrast',
+    defaultValue: 1,
+    min: 0,
+    max: 3,
+    step: 0.01,
+    unit: '',
+  },
+  saturation: {
+    name: 'saturation',
+    label: 'Saturation',
+    defaultValue: 1,
+    min: 0,
+    max: 3,
+    step: 0.01,
+    unit: '',
+  },
 }
 
 // Keyframe track for a single property
@@ -137,16 +249,21 @@ function bezierDX(t: number, x1: number, x2: number): number {
 // Get easing function
 function getEasingFunction(easing: EasingType, bezier?: BezierCurve): (t: number) => number {
   switch (easing) {
-    case 'linear': return easeLinear
-    case 'ease-in': return easeIn
-    case 'ease-out': return easeOut
-    case 'ease-in-out': return easeInOut
+    case 'linear':
+      return easeLinear
+    case 'ease-in':
+      return easeIn
+    case 'ease-out':
+      return easeOut
+    case 'ease-in-out':
+      return easeInOut
     case 'bezier':
       if (bezier) {
         return (t) => cubicBezier(t, bezier.x1, bezier.y1, bezier.x2, bezier.y2)
       }
       return easeLinear
-    default: return easeLinear
+    default:
+      return easeLinear
   }
 }
 
@@ -156,7 +273,7 @@ function getEasingFunction(easing: EasingType, bezier?: BezierCurve): (t: number
 export function interpolateKeyframes(
   keyframes: Keyframe[],
   time: number,
-  defaultValue: number
+  defaultValue: number,
 ): number {
   if (keyframes.length === 0) {
     return defaultValue
@@ -206,7 +323,7 @@ export function interpolateKeyframes(
  */
 export function getAnimatedValues(
   clipKeyframes: ClipKeyframes | undefined,
-  time: number
+  time: number,
 ): Record<AnimatableProperty, number> {
   const values: Record<AnimatableProperty, number> = {} as Record<AnimatableProperty, number>
 
@@ -222,7 +339,7 @@ export function getAnimatedValues(
     values[track.property] = interpolateKeyframes(
       track.keyframes,
       time,
-      PROPERTY_CONFIGS[track.property].defaultValue
+      PROPERTY_CONFIGS[track.property].defaultValue,
     )
   }
 
@@ -237,7 +354,7 @@ export function addKeyframe(
   property: AnimatableProperty,
   time: number,
   value: number,
-  easing: EasingType = 'ease-in-out'
+  easing: EasingType = 'ease-in-out',
 ): ClipKeyframes {
   const newKeyframe: Keyframe = {
     id: generateKeyframeId(),
@@ -246,29 +363,24 @@ export function addKeyframe(
     easing,
   }
 
-  const trackIndex = clipKeyframes.tracks.findIndex(t => t.property === property)
+  const trackIndex = clipKeyframes.tracks.findIndex((t) => t.property === property)
 
   if (trackIndex === -1) {
     // Create new track
     return {
       ...clipKeyframes,
-      tracks: [
-        ...clipKeyframes.tracks,
-        { property, keyframes: [newKeyframe] },
-      ],
+      tracks: [...clipKeyframes.tracks, { property, keyframes: [newKeyframe] }],
     }
   }
 
   // Add to existing track
   const track = clipKeyframes.tracks[trackIndex]
-  const existingIndex = track.keyframes.findIndex(kf => Math.abs(kf.time - time) < 0.01)
+  const existingIndex = track.keyframes.findIndex((kf) => Math.abs(kf.time - time) < 0.01)
 
   let newKeyframes: Keyframe[]
   if (existingIndex !== -1) {
     // Update existing keyframe at this time
-    newKeyframes = track.keyframes.map((kf, i) =>
-      i === existingIndex ? newKeyframe : kf
-    )
+    newKeyframes = track.keyframes.map((kf, i) => (i === existingIndex ? newKeyframe : kf))
   } else {
     // Add new keyframe
     newKeyframes = [...track.keyframes, newKeyframe]
@@ -277,7 +389,7 @@ export function addKeyframe(
   return {
     ...clipKeyframes,
     tracks: clipKeyframes.tracks.map((t, i) =>
-      i === trackIndex ? { ...t, keyframes: newKeyframes } : t
+      i === trackIndex ? { ...t, keyframes: newKeyframes } : t,
     ),
   }
 }
@@ -285,16 +397,15 @@ export function addKeyframe(
 /**
  * Remove a keyframe
  */
-export function removeKeyframe(
-  clipKeyframes: ClipKeyframes,
-  keyframeId: string
-): ClipKeyframes {
+export function removeKeyframe(clipKeyframes: ClipKeyframes, keyframeId: string): ClipKeyframes {
   return {
     ...clipKeyframes,
-    tracks: clipKeyframes.tracks.map(track => ({
-      ...track,
-      keyframes: track.keyframes.filter(kf => kf.id !== keyframeId),
-    })).filter(track => track.keyframes.length > 0),
+    tracks: clipKeyframes.tracks
+      .map((track) => ({
+        ...track,
+        keyframes: track.keyframes.filter((kf) => kf.id !== keyframeId),
+      }))
+      .filter((track) => track.keyframes.length > 0),
   }
 }
 
@@ -304,15 +415,13 @@ export function removeKeyframe(
 export function updateKeyframe(
   clipKeyframes: ClipKeyframes,
   keyframeId: string,
-  updates: Partial<Omit<Keyframe, 'id'>>
+  updates: Partial<Omit<Keyframe, 'id'>>,
 ): ClipKeyframes {
   return {
     ...clipKeyframes,
-    tracks: clipKeyframes.tracks.map(track => ({
+    tracks: clipKeyframes.tracks.map((track) => ({
       ...track,
-      keyframes: track.keyframes.map(kf =>
-        kf.id === keyframeId ? { ...kf, ...updates } : kf
-      ),
+      keyframes: track.keyframes.map((kf) => (kf.id === keyframeId ? { ...kf, ...updates } : kf)),
     })),
   }
 }
@@ -324,12 +433,12 @@ export function copyKeyframes(
   clipKeyframes: ClipKeyframes,
   fromTime: number,
   toTime: number,
-  tolerance: number = 0.05
+  tolerance: number = 0.05,
 ): ClipKeyframes {
   let result = clipKeyframes
 
   for (const track of clipKeyframes.tracks) {
-    const sourceKf = track.keyframes.find(kf => Math.abs(kf.time - fromTime) < tolerance)
+    const sourceKf = track.keyframes.find((kf) => Math.abs(kf.time - fromTime) < tolerance)
     if (sourceKf) {
       result = addKeyframe(result, track.property, toTime, sourceKf.value, sourceKf.easing)
     }
@@ -344,12 +453,12 @@ export function copyKeyframes(
 export function getKeyframesAtTime(
   clipKeyframes: ClipKeyframes,
   time: number,
-  tolerance: number = 0.05
+  tolerance: number = 0.05,
 ): Keyframe[] {
   const result: Keyframe[] = []
 
   for (const track of clipKeyframes.tracks) {
-    const kf = track.keyframes.find(k => Math.abs(k.time - time) < tolerance)
+    const kf = track.keyframes.find((k) => Math.abs(k.time - time) < tolerance)
     if (kf) result.push(kf)
   }
 
@@ -361,10 +470,10 @@ export function getKeyframesAtTime(
  */
 export function hasKeyframes(
   clipKeyframes: ClipKeyframes | undefined,
-  property: AnimatableProperty
+  property: AnimatableProperty,
 ): boolean {
   if (!clipKeyframes) return false
-  const track = clipKeyframes.tracks.find(t => t.property === property)
+  const track = clipKeyframes.tracks.find((t) => t.property === property)
   return track ? track.keyframes.length > 0 : false
 }
 
@@ -373,11 +482,11 @@ export function hasKeyframes(
  */
 export function resetProperty(
   clipKeyframes: ClipKeyframes,
-  property: AnimatableProperty
+  property: AnimatableProperty,
 ): ClipKeyframes {
   return {
     ...clipKeyframes,
-    tracks: clipKeyframes.tracks.filter(t => t.property !== property),
+    tracks: clipKeyframes.tracks.filter((t) => t.property !== property),
   }
 }
 
@@ -392,17 +501,52 @@ export function createClipKeyframes(clipId: string): ClipKeyframes {
 }
 
 // Preset easing curves
-export const EASING_PRESETS: Record<string, { label: string; easing: EasingType; bezier?: BezierCurve }> = {
+export const EASING_PRESETS: Record<
+  string,
+  { label: string; easing: EasingType; bezier?: BezierCurve }
+> = {
   linear: { label: 'Linear', easing: 'linear' },
   easeIn: { label: 'Ease In', easing: 'ease-in' },
   easeOut: { label: 'Ease Out', easing: 'ease-out' },
   easeInOut: { label: 'Ease In/Out', easing: 'ease-in-out' },
-  easeInQuad: { label: 'Quad In', easing: 'bezier', bezier: { x1: 0.55, y1: 0.085, x2: 0.68, y2: 0.53 } },
-  easeOutQuad: { label: 'Quad Out', easing: 'bezier', bezier: { x1: 0.25, y1: 0.46, x2: 0.45, y2: 0.94 } },
-  easeInCubic: { label: 'Cubic In', easing: 'bezier', bezier: { x1: 0.55, y1: 0.055, x2: 0.675, y2: 0.19 } },
-  easeOutCubic: { label: 'Cubic Out', easing: 'bezier', bezier: { x1: 0.215, y1: 0.61, x2: 0.355, y2: 1 } },
-  easeInExpo: { label: 'Expo In', easing: 'bezier', bezier: { x1: 0.95, y1: 0.05, x2: 0.795, y2: 0.035 } },
-  easeOutExpo: { label: 'Expo Out', easing: 'bezier', bezier: { x1: 0.19, y1: 1, x2: 0.22, y2: 1 } },
-  easeInBack: { label: 'Back In', easing: 'bezier', bezier: { x1: 0.6, y1: -0.28, x2: 0.735, y2: 0.045 } },
-  easeOutBack: { label: 'Back Out', easing: 'bezier', bezier: { x1: 0.175, y1: 0.885, x2: 0.32, y2: 1.275 } },
+  easeInQuad: {
+    label: 'Quad In',
+    easing: 'bezier',
+    bezier: { x1: 0.55, y1: 0.085, x2: 0.68, y2: 0.53 },
+  },
+  easeOutQuad: {
+    label: 'Quad Out',
+    easing: 'bezier',
+    bezier: { x1: 0.25, y1: 0.46, x2: 0.45, y2: 0.94 },
+  },
+  easeInCubic: {
+    label: 'Cubic In',
+    easing: 'bezier',
+    bezier: { x1: 0.55, y1: 0.055, x2: 0.675, y2: 0.19 },
+  },
+  easeOutCubic: {
+    label: 'Cubic Out',
+    easing: 'bezier',
+    bezier: { x1: 0.215, y1: 0.61, x2: 0.355, y2: 1 },
+  },
+  easeInExpo: {
+    label: 'Expo In',
+    easing: 'bezier',
+    bezier: { x1: 0.95, y1: 0.05, x2: 0.795, y2: 0.035 },
+  },
+  easeOutExpo: {
+    label: 'Expo Out',
+    easing: 'bezier',
+    bezier: { x1: 0.19, y1: 1, x2: 0.22, y2: 1 },
+  },
+  easeInBack: {
+    label: 'Back In',
+    easing: 'bezier',
+    bezier: { x1: 0.6, y1: -0.28, x2: 0.735, y2: 0.045 },
+  },
+  easeOutBack: {
+    label: 'Back Out',
+    easing: 'bezier',
+    bezier: { x1: 0.175, y1: 0.885, x2: 0.32, y2: 1.275 },
+  },
 }

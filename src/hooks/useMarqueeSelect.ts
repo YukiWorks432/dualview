@@ -4,6 +4,7 @@
  * Provides click-and-drag rectangle selection for timeline clips
  */
 import { useState, useCallback, useEffect } from 'react'
+
 import { useTimelineStore } from '../stores/timelineStore'
 
 interface SelectionBox {
@@ -32,37 +33,40 @@ export function useMarqueeSelect({
   const { tracks, selectClips, addToSelection, clearSelection } = useTimelineStore()
 
   // Start marquee selection on background click
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    // Only start selection on left click on the background
-    if (e.button !== 0) return
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      // Only start selection on left click on the background
+      if (e.button !== 0) return
 
-    // Check if clicking on a clip (don't start selection)
-    const target = e.target as HTMLElement
-    if (target.closest('[data-clip]')) return
+      // Check if clicking on a clip (don't start selection)
+      const target = e.target as HTMLElement
+      if (target.closest('[data-clip]')) return
 
-    const container = containerRef.current
-    if (!container) return
+      const container = containerRef.current
+      if (!container) return
 
-    const rect = container.getBoundingClientRect()
-    const x = e.clientX - rect.left + container.scrollLeft
-    const y = e.clientY - rect.top + container.scrollTop
+      const rect = container.getBoundingClientRect()
+      const x = e.clientX - rect.left + container.scrollLeft
+      const y = e.clientY - rect.top + container.scrollTop
 
-    // Only start if clicking in the tracks area (below ruler)
-    if (y < rulerHeight) return
+      // Only start if clicking in the tracks area (below ruler)
+      if (y < rulerHeight) return
 
-    // Clear selection unless shift is held
-    if (!e.shiftKey) {
-      clearSelection()
-    }
+      // Clear selection unless shift is held
+      if (!e.shiftKey) {
+        clearSelection()
+      }
 
-    setIsSelecting(true)
-    setSelectionBox({
-      startX: x,
-      startY: y,
-      currentX: x,
-      currentY: y,
-    })
-  }, [containerRef, rulerHeight, clearSelection])
+      setIsSelecting(true)
+      setSelectionBox({
+        startX: x,
+        startY: y,
+        currentX: x,
+        currentY: y,
+      })
+    },
+    [containerRef, rulerHeight, clearSelection],
+  )
 
   // Update selection box on mouse move
   useEffect(() => {
@@ -76,11 +80,15 @@ export function useMarqueeSelect({
       const x = e.clientX - rect.left + container.scrollLeft
       const y = e.clientY - rect.top + container.scrollTop
 
-      setSelectionBox(prev => prev ? {
-        ...prev,
-        currentX: x,
-        currentY: y,
-      } : null)
+      setSelectionBox((prev) =>
+        prev
+          ? {
+              ...prev,
+              currentX: x,
+              currentY: y,
+            }
+          : null,
+      )
     }
 
     const handleMouseUp = () => {
@@ -108,7 +116,7 @@ export function useMarqueeSelect({
         // Check if this track is within the selection
         if (index < startTrackIndex || index > endTrackIndex) return
 
-        track.clips.forEach(clip => {
+        track.clips.forEach((clip) => {
           // Check if clip intersects with time range
           const clipStart = clip.startTime
           const clipEnd = clip.endTime
@@ -134,7 +142,17 @@ export function useMarqueeSelect({
       document.removeEventListener('mousemove', handleMouseMove)
       document.removeEventListener('mouseup', handleMouseUp)
     }
-  }, [isSelecting, selectionBox, pixelsPerSecond, trackHeight, rulerHeight, tracks, selectClips, addToSelection, containerRef])
+  }, [
+    isSelecting,
+    selectionBox,
+    pixelsPerSecond,
+    trackHeight,
+    rulerHeight,
+    tracks,
+    selectClips,
+    addToSelection,
+    containerRef,
+  ])
 
   // Get selection box visual properties
   const getSelectionBoxStyle = useCallback(() => {

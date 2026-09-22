@@ -19,7 +19,7 @@ varying vec2 v_texCoord;
 void main() {
   // Just output solid red to verify WebGL pipeline works
   gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
-}`
+}`,
   },
 
   'diff-absolute': {
@@ -53,7 +53,7 @@ void main() {
   vec3 result = mix(original, diff, u_opacity);
 
   gl_FragColor = vec4(result, 1.0);
-}`
+}`,
   },
 
   'diff-perceptual': {
@@ -91,7 +91,7 @@ void main() {
   vec3 result = mix(original, vis, u_opacity);
 
   gl_FragColor = vec4(result, 1.0);
-}`
+}`,
   },
 
   'diff-luminance': {
@@ -129,7 +129,7 @@ void main() {
   vec3 result = mix(original, vis, u_opacity);
 
   gl_FragColor = vec4(result, 1.0);
-}`
+}`,
   },
 
   'diff-chroma': {
@@ -168,7 +168,7 @@ void main() {
   vec3 result = mix(original, vis, u_opacity);
 
   gl_FragColor = vec4(result, 1.0);
-}`
+}`,
   },
 
   'diff-threshold': {
@@ -200,7 +200,7 @@ void main() {
   vec3 result = mix(original, vis, u_opacity);
 
   gl_FragColor = vec4(result, 1.0);
-}`
+}`,
   },
 
   'diff-amplified': {
@@ -237,7 +237,7 @@ void main() {
   vec3 result = mix(original, vis, u_opacity);
 
   gl_FragColor = vec4(result, 1.0);
-}`
+}`,
   },
 
   'diff-wipe': {
@@ -277,7 +277,7 @@ void main() {
   }
 
   gl_FragColor = vec4(result, 1.0);
-}`
+}`,
   },
 
   'diff-wipe-horizontal': {
@@ -308,7 +308,7 @@ void main() {
   }
 
   gl_FragColor = vec4(result, 1.0);
-}`
+}`,
   },
 
   'diff-split': {
@@ -336,8 +336,8 @@ void main() {
   }
 
   gl_FragColor = vec4(result, 1.0);
-}`
-  }
+}`,
+  },
 }
 
 export const DIFFERENCE_VARIANTS = Object.keys(DIFFERENCE_SHADERS)

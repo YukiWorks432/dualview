@@ -3,9 +3,10 @@
  * Visualizes pixel-level differences between two images/videos as a heatmap
  */
 import { useRef, useEffect, useCallback, useState } from 'react'
-import { useTimelineStore } from '../../stores/timelineStore'
-import { useMediaStore } from '../../stores/mediaStore'
+
 import { cn } from '../../lib/utils'
+import { useMediaStore } from '../../stores/mediaStore'
+import { useTimelineStore } from '../../stores/timelineStore'
 
 type HeatmapMode = 'absolute' | 'amplified' | 'threshold'
 
@@ -22,8 +23,8 @@ export function DifferenceHeatmap() {
   const { currentTime, isPlaying, tracks, playbackSpeed, loopRegion, seek } = useTimelineStore()
   const { getFile } = useMediaStore()
 
-  const trackA = tracks.find(t => t.type === 'a')
-  const trackB = tracks.find(t => t.type === 'b')
+  const trackA = tracks.find((t) => t.type === 'a')
+  const trackB = tracks.find((t) => t.type === 'b')
   const clipA = trackA?.clips[0]
   const clipB = trackB?.clips[0]
   // Only use video/image, not audio
@@ -81,7 +82,9 @@ export function DifferenceHeatmap() {
       // Calculate total difference (0-255 scale)
       const totalDiff = (rDiff + gDiff + bDiff) / 3
 
-      let r = 0, g = 0, b = 0
+      let r = 0,
+        g = 0,
+        b = 0
 
       switch (mode) {
         case 'absolute':
@@ -256,7 +259,7 @@ export function DifferenceHeatmap() {
                 'px-2 py-1 text-[10px] capitalize transition-colors',
                 mode === m
                   ? 'bg-accent text-white'
-                  : 'bg-surface text-text-muted hover:text-text-primary'
+                  : 'bg-surface text-text-muted hover:text-text-primary',
               )}
             >
               {m}
@@ -315,7 +318,6 @@ export function DifferenceHeatmap() {
           </div>
         )}
       </div>
-
     </div>
   )
 }

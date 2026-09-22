@@ -93,7 +93,7 @@ void main() {
   }
 
   gl_FragColor = vec4(result, 1.0);
-}`
+}`,
   },
 
   // SCOPE-004: False Color with A/B comparison side by side
@@ -139,7 +139,7 @@ void main() {
   }
 
   gl_FragColor = vec4(result, 1.0);
-}`
+}`,
   },
 
   // SCOPE-005: Focus Peaking Overlay
@@ -247,7 +247,7 @@ void main() {
   }
 
   gl_FragColor = vec4(result, 1.0);
-}`
+}`,
   },
 
   // SCOPE-005: Focus Peaking Compare (A vs B)
@@ -306,7 +306,7 @@ void main() {
   result = mix(result, peakColorB, peakB * u_opacity * 0.7);
 
   gl_FragColor = vec4(result, 1.0);
-}`
+}`,
   },
 
   // SCOPE-006: Zebra Stripes Overlay
@@ -377,7 +377,7 @@ void main() {
   }
 
   gl_FragColor = vec4(result, 1.0);
-}`
+}`,
   },
 
   // SCOPE-006: Zebra Stripes Compare (A vs B)
@@ -442,7 +442,7 @@ void main() {
   }
 
   gl_FragColor = vec4(result, 1.0);
-}`
+}`,
   },
 
   // SCOPE-007: Zone System Overlay
@@ -519,7 +519,7 @@ void main() {
   }
 
   gl_FragColor = vec4(result, 1.0);
-}`
+}`,
   },
 
   // SCOPE-007: Zone System Compare (A vs B distribution)
@@ -597,8 +597,8 @@ void main() {
   }
 
   gl_FragColor = vec4(result, 1.0);
-}`
-  }
+}`,
+  },
 }
 
 export const EXPOSURE_VARIANTS = Object.keys(EXPOSURE_SHADERS)

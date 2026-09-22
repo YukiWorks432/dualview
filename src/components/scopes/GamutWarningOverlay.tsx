@@ -3,8 +3,8 @@
  * Out-of-gamut color detection for different color spaces
  */
 
-import { useEffect, useRef, useState, useCallback } from 'react'
 import { AlertTriangle, X, ChevronDown } from 'lucide-react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 
 interface GamutWarningOverlayProps {
   videoARef: React.RefObject<HTMLVideoElement | null>
@@ -34,41 +34,41 @@ const COLOR_SPACES: Record<string, ColorSpaceGamut> = {
     label: 'sRGB',
     primaries: {
       red: { x: 0.64, y: 0.33 },
-      green: { x: 0.30, y: 0.60 },
-      blue: { x: 0.15, y: 0.06 }
+      green: { x: 0.3, y: 0.6 },
+      blue: { x: 0.15, y: 0.06 },
     },
-    whitePoint: { x: 0.3127, y: 0.3290 }
+    whitePoint: { x: 0.3127, y: 0.329 },
   },
   rec709: {
     name: 'rec709',
     label: 'Rec.709',
     primaries: {
       red: { x: 0.64, y: 0.33 },
-      green: { x: 0.30, y: 0.60 },
-      blue: { x: 0.15, y: 0.06 }
+      green: { x: 0.3, y: 0.6 },
+      blue: { x: 0.15, y: 0.06 },
     },
-    whitePoint: { x: 0.3127, y: 0.3290 }
+    whitePoint: { x: 0.3127, y: 0.329 },
   },
   dcip3: {
     name: 'dcip3',
     label: 'DCI-P3',
     primaries: {
-      red: { x: 0.680, y: 0.320 },
-      green: { x: 0.265, y: 0.690 },
-      blue: { x: 0.150, y: 0.060 }
+      red: { x: 0.68, y: 0.32 },
+      green: { x: 0.265, y: 0.69 },
+      blue: { x: 0.15, y: 0.06 },
     },
-    whitePoint: { x: 0.3127, y: 0.3290 }
+    whitePoint: { x: 0.3127, y: 0.329 },
   },
   rec2020: {
     name: 'rec2020',
     label: 'Rec.2020',
     primaries: {
       red: { x: 0.708, y: 0.292 },
-      green: { x: 0.170, y: 0.797 },
-      blue: { x: 0.131, y: 0.046 }
+      green: { x: 0.17, y: 0.797 },
+      blue: { x: 0.131, y: 0.046 },
     },
-    whitePoint: { x: 0.3127, y: 0.3290 }
-  }
+    whitePoint: { x: 0.3127, y: 0.329 },
+  },
 }
 
 interface GamutStats {
@@ -83,7 +83,7 @@ export function GamutWarningOverlay({
   imageARef,
   imageBRef,
   isVisible,
-  onClose
+  onClose,
 }: GamutWarningOverlayProps) {
   const canvasARef = useRef<HTMLCanvasElement>(null)
   const canvasBRef = useRef<HTMLCanvasElement>(null)
@@ -104,132 +104,155 @@ export function GamutWarningOverlay({
   }, [])
 
   // Convert linear RGB to XYZ
-  const rgbToXyz = useCallback((r: number, g: number, b: number): { x: number; y: number; z: number } => {
-    // sRGB to XYZ matrix (D65)
-    const x = r * 0.4124564 + g * 0.3575761 + b * 0.1804375
-    const y = r * 0.2126729 + g * 0.7151522 + b * 0.0721750
-    const z = r * 0.0193339 + g * 0.1191920 + b * 0.9503041
-    return { x, y, z }
-  }, [])
+  const rgbToXyz = useCallback(
+    (r: number, g: number, b: number): { x: number; y: number; z: number } => {
+      // sRGB to XYZ matrix (D65)
+      const x = r * 0.4124564 + g * 0.3575761 + b * 0.1804375
+      const y = r * 0.2126729 + g * 0.7151522 + b * 0.072175
+      const z = r * 0.0193339 + g * 0.119192 + b * 0.9503041
+      return { x, y, z }
+    },
+    [],
+  )
 
   // Convert XYZ to xyY chromaticity
-  const xyzToChromaticity = useCallback((X: number, Y: number, Z: number): { x: number; y: number } => {
-    const sum = X + Y + Z
-    if (sum === 0) return { x: 0.3127, y: 0.329 } // Return white point for black
-    return { x: X / sum, y: Y / sum }
-  }, [])
+  const xyzToChromaticity = useCallback(
+    (X: number, Y: number, Z: number): { x: number; y: number } => {
+      const sum = X + Y + Z
+      if (sum === 0) return { x: 0.3127, y: 0.329 } // Return white point for black
+      return { x: X / sum, y: Y / sum }
+    },
+    [],
+  )
 
   // Check if a point is inside a triangle (gamut)
-  const pointInTriangle = useCallback((
-    px: number, py: number,
-    v1x: number, v1y: number,
-    v2x: number, v2y: number,
-    v3x: number, v3y: number
-  ): boolean => {
-    // Using barycentric coordinates
-    const denominator = ((v2y - v3y) * (v1x - v3x) + (v3x - v2x) * (v1y - v3y))
-    const a = ((v2y - v3y) * (px - v3x) + (v3x - v2x) * (py - v3y)) / denominator
-    const b = ((v3y - v1y) * (px - v3x) + (v1x - v3x) * (py - v3y)) / denominator
-    const c = 1 - a - b
+  const pointInTriangle = useCallback(
+    (
+      px: number,
+      py: number,
+      v1x: number,
+      v1y: number,
+      v2x: number,
+      v2y: number,
+      v3x: number,
+      v3y: number,
+    ): boolean => {
+      // Using barycentric coordinates
+      const denominator = (v2y - v3y) * (v1x - v3x) + (v3x - v2x) * (v1y - v3y)
+      const a = ((v2y - v3y) * (px - v3x) + (v3x - v2x) * (py - v3y)) / denominator
+      const b = ((v3y - v1y) * (px - v3x) + (v1x - v3x) * (py - v3y)) / denominator
+      const c = 1 - a - b
 
-    return a >= 0 && a <= 1 && b >= 0 && b <= 1 && c >= 0 && c <= 1
-  }, [])
+      return a >= 0 && a <= 1 && b >= 0 && b <= 1 && c >= 0 && c <= 1
+    },
+    [],
+  )
 
   // Check if a color is within the target gamut
-  const isInGamut = useCallback((r: number, g: number, b: number, gamut: ColorSpaceGamut): boolean => {
-    // First check: values must be in 0-255 range (handled by source)
-    // Convert to linear RGB
-    const linearR = srgbToLinear(r)
-    const linearG = srgbToLinear(g)
-    const linearB = srgbToLinear(b)
+  const isInGamut = useCallback(
+    (r: number, g: number, b: number, gamut: ColorSpaceGamut): boolean => {
+      // First check: values must be in 0-255 range (handled by source)
+      // Convert to linear RGB
+      const linearR = srgbToLinear(r)
+      const linearG = srgbToLinear(g)
+      const linearB = srgbToLinear(b)
 
-    // Convert to XYZ
-    const xyz = rgbToXyz(linearR, linearG, linearB)
+      // Convert to XYZ
+      const xyz = rgbToXyz(linearR, linearG, linearB)
 
-    // Convert to chromaticity
-    const chrom = xyzToChromaticity(xyz.x, xyz.y, xyz.z)
+      // Convert to chromaticity
+      const chrom = xyzToChromaticity(xyz.x, xyz.y, xyz.z)
 
-    // Check if point is inside the gamut triangle
-    return pointInTriangle(
-      chrom.x, chrom.y,
-      gamut.primaries.red.x, gamut.primaries.red.y,
-      gamut.primaries.green.x, gamut.primaries.green.y,
-      gamut.primaries.blue.x, gamut.primaries.blue.y
-    )
-  }, [srgbToLinear, rgbToXyz, xyzToChromaticity, pointInTriangle])
+      // Check if point is inside the gamut triangle
+      return pointInTriangle(
+        chrom.x,
+        chrom.y,
+        gamut.primaries.red.x,
+        gamut.primaries.red.y,
+        gamut.primaries.green.x,
+        gamut.primaries.green.y,
+        gamut.primaries.blue.x,
+        gamut.primaries.blue.y,
+      )
+    },
+    [srgbToLinear, rgbToXyz, xyzToChromaticity, pointInTriangle],
+  )
 
   // Process image and generate overlay
-  const processImage = useCallback((
-    source: HTMLVideoElement | HTMLImageElement | null,
-    sampleCanvas: HTMLCanvasElement | null,
-    overlayCanvas: HTMLCanvasElement | null,
-    gamut: ColorSpaceGamut
-  ): GamutStats | null => {
-    if (!source || !sampleCanvas || !overlayCanvas) return null
+  const processImage = useCallback(
+    (
+      source: HTMLVideoElement | HTMLImageElement | null,
+      sampleCanvas: HTMLCanvasElement | null,
+      overlayCanvas: HTMLCanvasElement | null,
+      gamut: ColorSpaceGamut,
+    ): GamutStats | null => {
+      if (!source || !sampleCanvas || !overlayCanvas) return null
 
-    const ctx = sampleCanvas.getContext('2d', { willReadFrequently: true })
-    const overlayCtx = overlayCanvas.getContext('2d')
-    if (!ctx || !overlayCtx) return null
+      const ctx = sampleCanvas.getContext('2d', { willReadFrequently: true })
+      const overlayCtx = overlayCanvas.getContext('2d')
+      if (!ctx || !overlayCtx) return null
 
-    let width: number, height: number
-    if (source instanceof HTMLVideoElement) {
-      if (source.readyState < 2) return null
-      width = source.videoWidth
-      height = source.videoHeight
-    } else {
-      width = source.naturalWidth
-      height = source.naturalHeight
-    }
-
-    if (width === 0 || height === 0) return null
-
-    // Use reduced resolution for analysis
-    const analysisWidth = Math.min(width, 400)
-    const analysisHeight = Math.min(height, 300)
-
-    sampleCanvas.width = analysisWidth
-    sampleCanvas.height = analysisHeight
-    overlayCanvas.width = analysisWidth
-    overlayCanvas.height = analysisHeight
-
-    ctx.drawImage(source, 0, 0, analysisWidth, analysisHeight)
-    const imageData = ctx.getImageData(0, 0, analysisWidth, analysisHeight)
-    const data = imageData.data
-
-    // Create overlay image data
-    const overlayData = overlayCtx.createImageData(analysisWidth, analysisHeight)
-
-    let outOfGamutCount = 0
-    const totalPixels = (data.length / 4)
-
-    for (let i = 0; i < data.length; i += 4) {
-      const r = data[i]
-      const g = data[i + 1]
-      const b = data[i + 2]
-
-      if (!isInGamut(r, g, b, gamut)) {
-        outOfGamutCount++
-        // Mark pixel as red overlay
-        overlayData.data[i] = 255     // R
-        overlayData.data[i + 1] = 0   // G
-        overlayData.data[i + 2] = 0   // B
-        overlayData.data[i + 3] = 180 // A (semi-transparent)
+      let width: number, height: number
+      if (source instanceof HTMLVideoElement) {
+        if (source.readyState < 2) return null
+        width = source.videoWidth
+        height = source.videoHeight
       } else {
-        overlayData.data[i] = 0
-        overlayData.data[i + 1] = 0
-        overlayData.data[i + 2] = 0
-        overlayData.data[i + 3] = 0
+        width = source.naturalWidth
+        height = source.naturalHeight
       }
-    }
 
-    overlayCtx.putImageData(overlayData, 0, 0)
+      if (width === 0 || height === 0) return null
 
-    return {
-      totalPixels,
-      outOfGamutPixels: outOfGamutCount,
-      percentage: (outOfGamutCount / totalPixels) * 100
-    }
-  }, [isInGamut])
+      // Use reduced resolution for analysis
+      const analysisWidth = Math.min(width, 400)
+      const analysisHeight = Math.min(height, 300)
+
+      sampleCanvas.width = analysisWidth
+      sampleCanvas.height = analysisHeight
+      overlayCanvas.width = analysisWidth
+      overlayCanvas.height = analysisHeight
+
+      ctx.drawImage(source, 0, 0, analysisWidth, analysisHeight)
+      const imageData = ctx.getImageData(0, 0, analysisWidth, analysisHeight)
+      const data = imageData.data
+
+      // Create overlay image data
+      const overlayData = overlayCtx.createImageData(analysisWidth, analysisHeight)
+
+      let outOfGamutCount = 0
+      const totalPixels = data.length / 4
+
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i]
+        const g = data[i + 1]
+        const b = data[i + 2]
+
+        if (!isInGamut(r, g, b, gamut)) {
+          outOfGamutCount++
+          // Mark pixel as red overlay
+          overlayData.data[i] = 255 // R
+          overlayData.data[i + 1] = 0 // G
+          overlayData.data[i + 2] = 0 // B
+          overlayData.data[i + 3] = 180 // A (semi-transparent)
+        } else {
+          overlayData.data[i] = 0
+          overlayData.data[i + 1] = 0
+          overlayData.data[i + 2] = 0
+          overlayData.data[i + 3] = 0
+        }
+      }
+
+      overlayCtx.putImageData(overlayData, 0, 0)
+
+      return {
+        totalPixels,
+        outOfGamutPixels: outOfGamutCount,
+        percentage: (outOfGamutCount / totalPixels) * 100,
+      }
+    },
+    [isInGamut],
+  )
 
   // Main update loop
   useEffect(() => {
@@ -303,7 +326,9 @@ export function GamutWarningOverlay({
               className="w-full flex items-center justify-between px-2 py-1.5 bg-surface-alt border border-border rounded text-sm text-text-primary hover:bg-surface-hover"
             >
               <span>{currentGamut.label}</span>
-              <ChevronDown className={`w-4 h-4 transition-transform ${showDropdown ? 'rotate-180' : ''}`} />
+              <ChevronDown
+                className={`w-4 h-4 transition-transform ${showDropdown ? 'rotate-180' : ''}`}
+              />
             </button>
             {showDropdown && (
               <div className="absolute top-full left-0 right-0 mt-1 bg-surface border border-border rounded shadow-lg z-10">
@@ -388,8 +413,8 @@ export function GamutWarningOverlay({
 
           {/* Info */}
           <div className="mt-3 pt-2 border-t border-border text-[10px] text-text-muted">
-            Red overlay shows colors outside {currentGamut.label} gamut.
-            Useful for broadcast and print compliance.
+            Red overlay shows colors outside {currentGamut.label} gamut. Useful for broadcast and
+            print compliance.
           </div>
         </div>
 

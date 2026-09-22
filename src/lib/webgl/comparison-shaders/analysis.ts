@@ -116,7 +116,7 @@ void main() {
   vec3 result = mix(original, motionColor, u_opacity);
 
   gl_FragColor = vec4(result, 1.0);
-}`
+}`,
   },
 
   /**
@@ -175,7 +175,7 @@ void main() {
 
   vec3 original = mix(sampleTextureA(v_texCoord).rgb, sampleTextureB(v_texCoord).rgb, 0.5);
   gl_FragColor = vec4(mix(original, color, u_opacity), 1.0);
-}`
+}`,
   },
 
   /**
@@ -235,7 +235,7 @@ void main() {
 
   vec3 original = mix(sampleTextureA(v_texCoord).rgb, sampleTextureB(v_texCoord).rgb, 0.5);
   gl_FragColor = vec4(mix(original, color, u_opacity), 1.0);
-}`
+}`,
   },
 
   /**
@@ -346,7 +346,7 @@ void main() {
   vec3 result = mix(original, freqColor * 2.0, u_opacity);
 
   gl_FragColor = vec4(result, 1.0);
-}`
+}`,
   },
 
   /**
@@ -401,7 +401,7 @@ void main() {
 
   vec3 result = mix(original, phaseColor, u_opacity);
   gl_FragColor = vec4(result, 1.0);
-}`
+}`,
   },
 
   /**
@@ -459,7 +459,7 @@ void main() {
   vec3 result = mix(filtered, heatColor, u_opacity);
 
   gl_FragColor = vec4(result, 1.0);
-}`
+}`,
   },
 
   /**
@@ -518,7 +518,7 @@ void main() {
   vec3 result = mix(filtered, heatColor, u_opacity);
 
   gl_FragColor = vec4(result, 1.0);
-}`
+}`,
   },
 
   /**
@@ -576,7 +576,7 @@ void main() {
   vec3 result = mix(filtered, heatColor, u_opacity);
 
   gl_FragColor = vec4(result, 1.0);
-}`
+}`,
   },
 
   /**
@@ -654,7 +654,7 @@ void main() {
   vec3 result = mix(original, noiseVis, u_opacity);
 
   gl_FragColor = vec4(result, 1.0);
-}`
+}`,
   },
 
   /**
@@ -721,7 +721,7 @@ void main() {
   vec3 result = mix(original, vis, u_opacity);
 
   gl_FragColor = vec4(result, 1.0);
-}`
+}`,
   },
 
   /**
@@ -775,7 +775,7 @@ void main() {
   vec3 result = max(original, vis);
 
   gl_FragColor = vec4(result, 1.0);
-}`
+}`,
   },
 
   /**
@@ -839,7 +839,7 @@ void main() {
   vec3 result = max(original, vis);
 
   gl_FragColor = vec4(result, 1.0);
-}`
+}`,
   },
 
   /**
@@ -908,8 +908,8 @@ void main() {
   vec3 result = max(bg, vis);
 
   gl_FragColor = vec4(result, 1.0);
-}`
-  }
+}`,
+  },
 }
 
 export const ANALYSIS_VARIANTS = Object.keys(ANALYSIS_SHADERS)

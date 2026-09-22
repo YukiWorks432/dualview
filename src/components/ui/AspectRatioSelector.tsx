@@ -1,7 +1,20 @@
+import {
+  RectangleHorizontal,
+  RectangleVertical,
+  Square,
+  Monitor,
+  Film,
+  ChevronDown,
+  AlertTriangle,
+} from 'lucide-react'
 import { useState } from 'react'
-import { useProjectStore, ASPECT_RATIO_PRESETS, RESOLUTION_PRESETS } from '../../stores/projectStore'
+
 import { cn } from '../../lib/utils'
-import { RectangleHorizontal, RectangleVertical, Square, Monitor, Film, ChevronDown, AlertTriangle } from 'lucide-react'
+import {
+  useProjectStore,
+  ASPECT_RATIO_PRESETS,
+  RESOLUTION_PRESETS,
+} from '../../stores/projectStore'
 import type { AspectRatioPreset, ResolutionPreset } from '../../types'
 
 // Icons for each aspect ratio
@@ -12,7 +25,7 @@ const PRESET_ICONS: Record<AspectRatioPreset, React.ReactNode> = {
   '4:3': <Monitor className="w-3.5 h-3.5" />,
   '21:9': <Film className="w-3.5 h-3.5" />,
   '4:5': <RectangleVertical className="w-3.5 h-3.5" />,
-  'custom': <Square className="w-3.5 h-3.5" />,
+  custom: <Square className="w-3.5 h-3.5" />,
 }
 
 // Resolution preset order
@@ -31,10 +44,15 @@ interface AspectRatioSelectorProps {
   className?: string
 }
 
-export function AspectRatioSelector({ compact = false, showCustomInput = true, showResolution = true, className }: AspectRatioSelectorProps) {
-  const { 
-    aspectRatioSettings, 
-    setAspectRatioPreset, 
+export function AspectRatioSelector({
+  compact = false,
+  showCustomInput = true,
+  showResolution = true,
+  className,
+}: AspectRatioSelectorProps) {
+  const {
+    aspectRatioSettings,
+    setAspectRatioPreset,
     setCustomAspectRatio,
     setResolutionPreset,
     setCustomResolution,
@@ -43,13 +61,18 @@ export function AspectRatioSelector({ compact = false, showCustomInput = true, s
   const [isOpen, setIsOpen] = useState(false)
   const [customWidth, setCustomWidth] = useState(aspectRatioSettings.customWidth || 1920)
   const [customHeight, setCustomHeight] = useState(aspectRatioSettings.customHeight || 1080)
-  const [customResWidth, setCustomResWidth] = useState(aspectRatioSettings.customResolutionWidth || 1920)
-  const [customResHeight, setCustomResHeight] = useState(aspectRatioSettings.customResolutionHeight || 1080)
+  const [customResWidth, setCustomResWidth] = useState(
+    aspectRatioSettings.customResolutionWidth || 1920,
+  )
+  const [customResHeight, setCustomResHeight] = useState(
+    aspectRatioSettings.customResolutionHeight || 1080,
+  )
 
   const currentPreset = ASPECT_RATIO_PRESETS[aspectRatioSettings.preset]
   const presetKeys = Object.keys(ASPECT_RATIO_PRESETS) as AspectRatioPreset[]
   const currentResolution = getResolution()
-  const resolutionPresets = RESOLUTION_PRESETS[aspectRatioSettings.preset] || RESOLUTION_PRESETS['16:9']
+  const resolutionPresets =
+    RESOLUTION_PRESETS[aspectRatioSettings.preset] || RESOLUTION_PRESETS['16:9']
 
   const handlePresetSelect = (preset: AspectRatioPreset) => {
     setAspectRatioPreset(preset)
@@ -81,7 +104,7 @@ export function AspectRatioSelector({ compact = false, showCustomInput = true, s
           className={cn(
             'flex items-center gap-1.5 px-2 py-1.5 rounded text-xs',
             'bg-surface-alt border border-transparent hover:border-border-hover',
-            'transition-colors'
+            'transition-colors',
           )}
           onClick={() => setIsOpen(!isOpen)}
         >
@@ -97,26 +120,28 @@ export function AspectRatioSelector({ compact = false, showCustomInput = true, s
 
             {/* Dropdown */}
             <div className="absolute top-full left-0 mt-1 z-50 bg-surface border border-border rounded-lg shadow-xl min-w-[200px] py-1">
-              {presetKeys.filter(p => p !== 'custom').map((preset) => {
-                const config = ASPECT_RATIO_PRESETS[preset]
-                const isActive = aspectRatioSettings.preset === preset
+              {presetKeys
+                .filter((p) => p !== 'custom')
+                .map((preset) => {
+                  const config = ASPECT_RATIO_PRESETS[preset]
+                  const isActive = aspectRatioSettings.preset === preset
 
-                return (
-                  <button
-                    key={preset}
-                    className={cn(
-                      'w-full flex items-center gap-2 px-3 py-2 text-xs text-left',
-                      'hover:bg-surface-hover transition-colors',
-                      isActive && 'bg-accent/10 text-accent'
-                    )}
-                    onClick={() => handlePresetSelect(preset)}
-                  >
-                    {PRESET_ICONS[preset]}
-                    <span className="flex-1">{preset}</span>
-                    <span className="text-text-muted">{config.description}</span>
-                  </button>
-                )
-              })}
+                  return (
+                    <button
+                      key={preset}
+                      className={cn(
+                        'w-full flex items-center gap-2 px-3 py-2 text-xs text-left',
+                        'hover:bg-surface-hover transition-colors',
+                        isActive && 'bg-accent/10 text-accent',
+                      )}
+                      onClick={() => handlePresetSelect(preset)}
+                    >
+                      {PRESET_ICONS[preset]}
+                      <span className="flex-1">{preset}</span>
+                      <span className="text-text-muted">{config.description}</span>
+                    </button>
+                  )
+                })}
 
               {showCustomInput && (
                 <>
@@ -163,27 +188,29 @@ export function AspectRatioSelector({ compact = false, showCustomInput = true, s
 
       {/* Quick presets */}
       <div className="flex flex-wrap gap-1">
-        {presetKeys.filter(p => p !== 'custom').map((preset) => {
-          const config = ASPECT_RATIO_PRESETS[preset]
-          const isActive = aspectRatioSettings.preset === preset
+        {presetKeys
+          .filter((p) => p !== 'custom')
+          .map((preset) => {
+            const config = ASPECT_RATIO_PRESETS[preset]
+            const isActive = aspectRatioSettings.preset === preset
 
-          return (
-            <button
-              key={preset}
-              className={cn(
-                'flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium transition-colors',
-                isActive
-                  ? 'bg-accent text-white'
-                  : 'bg-surface-alt text-text-muted hover:bg-surface-hover hover:text-text-primary'
-              )}
-              onClick={() => handlePresetSelect(preset)}
-              title={config.description}
-            >
-              {PRESET_ICONS[preset]}
-              <span>{preset}</span>
-            </button>
-          )
-        })}
+            return (
+              <button
+                key={preset}
+                className={cn(
+                  'flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium transition-colors',
+                  isActive
+                    ? 'bg-accent text-white'
+                    : 'bg-surface-alt text-text-muted hover:bg-surface-hover hover:text-text-primary',
+                )}
+                onClick={() => handlePresetSelect(preset)}
+                title={config.description}
+              >
+                {PRESET_ICONS[preset]}
+                <span>{preset}</span>
+              </button>
+            )
+          })}
       </div>
 
       {/* Custom aspect ratio input */}
@@ -211,7 +238,7 @@ export function AspectRatioSelector({ compact = false, showCustomInput = true, s
                 'px-2 py-1 text-xs rounded transition-colors',
                 aspectRatioSettings.preset === 'custom'
                   ? 'bg-accent/20 text-accent'
-                  : 'bg-surface-alt text-text-muted hover:text-text-primary'
+                  : 'bg-surface-alt text-text-muted hover:text-text-primary',
               )}
               onClick={handleCustomApply}
             >
@@ -229,11 +256,13 @@ export function AspectRatioSelector({ compact = false, showCustomInput = true, s
       {/* ASPECT-002: Resolution Presets */}
       {showResolution && (
         <div className="pt-2 border-t border-border">
-          <div className="text-[10px] text-text-muted uppercase tracking-wider mb-2">Resolution</div>
-          
+          <div className="text-[10px] text-text-muted uppercase tracking-wider mb-2">
+            Resolution
+          </div>
+
           {/* Resolution preset buttons */}
           <div className="flex flex-wrap gap-1 mb-2">
-            {RESOLUTION_ORDER.filter(r => r !== 'custom').map((preset) => {
+            {RESOLUTION_ORDER.filter((r) => r !== 'custom').map((preset) => {
               const config = resolutionPresets[preset]
               const isActive = aspectRatioSettings.resolutionPreset === preset
               const memoryMB = estimateMemoryMB(config.width, config.height)
@@ -246,15 +275,13 @@ export function AspectRatioSelector({ compact = false, showCustomInput = true, s
                     'flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium transition-colors',
                     isActive
                       ? 'bg-accent text-white'
-                      : 'bg-surface-alt text-text-muted hover:bg-surface-hover hover:text-text-primary'
+                      : 'bg-surface-alt text-text-muted hover:bg-surface-hover hover:text-text-primary',
                   )}
                   onClick={() => handleResolutionSelect(preset)}
                   title={`${config.description} (~${memoryMB.toFixed(0)}MB)`}
                 >
                   <span>{config.label}</span>
-                  {isHighMem && !isActive && (
-                    <AlertTriangle className="w-3 h-3 text-amber-400" />
-                  )}
+                  {isHighMem && !isActive && <AlertTriangle className="w-3 h-3 text-amber-400" />}
                 </button>
               )
             })}
@@ -285,7 +312,7 @@ export function AspectRatioSelector({ compact = false, showCustomInput = true, s
                 'px-2 py-1 text-xs rounded transition-colors',
                 aspectRatioSettings.resolutionPreset === 'custom'
                   ? 'bg-accent/20 text-accent'
-                  : 'bg-surface-alt text-text-muted hover:text-text-primary'
+                  : 'bg-surface-alt text-text-muted hover:text-text-primary',
               )}
               onClick={handleCustomResolutionApply}
             >
@@ -320,10 +347,14 @@ export function AspectRatioSelector({ compact = false, showCustomInput = true, s
               maxWidth: '100%',
             }}
           >
-            <span>{aspectRatioSettings.preset === 'custom'
-              ? `${customWidth}:${customHeight}`
-              : aspectRatioSettings.preset}</span>
-            <span className="text-[8px] opacity-70">{currentResolution.width}×{currentResolution.height}</span>
+            <span>
+              {aspectRatioSettings.preset === 'custom'
+                ? `${customWidth}:${customHeight}`
+                : aspectRatioSettings.preset}
+            </span>
+            <span className="text-[8px] opacity-70">
+              {currentResolution.width}×{currentResolution.height}
+            </span>
           </div>
         </div>
       </div>

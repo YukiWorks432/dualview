@@ -1,13 +1,3 @@
-/**
- * Clip Context Menu (TL-013)
- *
- * Right-click context menu for timeline clips with common actions.
- * All options are FULLY FUNCTIONAL.
- */
-import { useEffect, useRef, useState } from 'react'
-import { useTimelineStore } from '../../stores/timelineStore'
-import { usePlaybackStore } from '../../stores/playbackStore'
-import { useHistoryStore } from '../../stores/historyStore'
 import {
   Scissors,
   Copy,
@@ -23,7 +13,18 @@ import {
   Replace,
   AudioLines,
 } from 'lucide-react'
+/**
+ * Clip Context Menu (TL-013)
+ *
+ * Right-click context menu for timeline clips with common actions.
+ * All options are FULLY FUNCTIONAL.
+ */
+import { useEffect, useRef, useState } from 'react'
+
+import { useHistoryStore } from '../../stores/historyStore'
 import { useMediaStore } from '../../stores/mediaStore'
+import { usePlaybackStore } from '../../stores/playbackStore'
+import { useTimelineStore } from '../../stores/timelineStore'
 
 interface ClipContextMenuProps {
   x: number
@@ -33,9 +34,7 @@ interface ClipContextMenuProps {
   onClose: () => void
 }
 
-export function ClipContextMenu({
-  x, y, clipId, trackId, onClose,
-}: ClipContextMenuProps) {
+export function ClipContextMenu({ x, y, clipId, trackId, onClose }: ClipContextMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null)
   const [showSpeedSubmenu, setShowSpeedSubmenu] = useState(false)
   const [showReplaceSubmenu, setShowReplaceSubmenu] = useState(false)
@@ -58,8 +57,8 @@ export function ClipContextMenu({
   const { files, getFile } = useMediaStore()
 
   // Find track and clip
-  const track = tracks.find(t => t.id === trackId)
-  const clip = track?.clips.find(c => c.id === clipId)
+  const track = tracks.find((t) => t.id === trackId)
+  const clip = track?.clips.find((c) => c.id === clipId)
   const isLocked = track?.locked || false
   const currentSpeed = clip?.speed || 1
 
@@ -68,9 +67,10 @@ export function ClipContextMenu({
   const isVideoClip = currentMedia?.type === 'video'
 
   // Get compatible media files for replacement (same type preferred)
-  const compatibleMedia = files.filter(f =>
-    f.id !== clip?.mediaId &&
-    (f.type === currentMedia?.type || track?.acceptedTypes.includes(f.type))
+  const compatibleMedia = files.filter(
+    (f) =>
+      f.id !== clip?.mediaId &&
+      (f.type === currentMedia?.type || track?.acceptedTypes.includes(f.type)),
   )
 
   // Close menu when clicking outside
@@ -164,22 +164,26 @@ export function ClipContextMenu({
         label="Paste"
         shortcut="⌘V"
         disabled={!clipboardClipId || isLocked}
-        onClick={() => handleAction(() => {
-          if (clipboardClipId) {
-            pushState()
-            pasteClip(trackId, currentTime)
-          }
-        })}
+        onClick={() =>
+          handleAction(() => {
+            if (clipboardClipId) {
+              pushState()
+              pasteClip(trackId, currentTime)
+            }
+          })
+        }
       />
       <MenuButton
         icon={CopyPlus}
         label="Duplicate"
         shortcut="⌘D"
         disabled={isLocked}
-        onClick={() => handleAction(() => {
-          pushState()
-          duplicateClip(clipId)
-        })}
+        onClick={() =>
+          handleAction(() => {
+            pushState()
+            duplicateClip(clipId)
+          })
+        }
       />
 
       <Separator />
@@ -190,30 +194,36 @@ export function ClipContextMenu({
         label="Split at Playhead"
         shortcut="S"
         disabled={isLocked}
-        onClick={() => handleAction(() => {
-          pushState()
-          splitClip(clipId, currentTime)
-        })}
+        onClick={() =>
+          handleAction(() => {
+            pushState()
+            splitClip(clipId, currentTime)
+          })
+        }
       />
       <MenuButton
         icon={ArrowLeftToLine}
         label="Keep Left of Playhead"
         shortcut="Q"
         disabled={isLocked}
-        onClick={() => handleAction(() => {
-          pushState()
-          splitAndKeepLeft(clipId, currentTime)
-        })}
+        onClick={() =>
+          handleAction(() => {
+            pushState()
+            splitAndKeepLeft(clipId, currentTime)
+          })
+        }
       />
       <MenuButton
         icon={ArrowRightToLine}
         label="Keep Right of Playhead"
         shortcut="W"
         disabled={isLocked}
-        onClick={() => handleAction(() => {
-          pushState()
-          splitAndKeepRight(clipId, currentTime)
-        })}
+        onClick={() =>
+          handleAction(() => {
+            pushState()
+            splitAndKeepRight(clipId, currentTime)
+          })
+        }
       />
 
       <Separator />
@@ -268,10 +278,12 @@ export function ClipContextMenu({
           icon={AudioLines}
           label="Separate Audio"
           disabled={isLocked}
-          onClick={() => handleAction(() => {
-            pushState()
-            separateAudio(clipId)
-          })}
+          onClick={() =>
+            handleAction(() => {
+              pushState()
+              separateAudio(clipId)
+            })
+          }
         />
       )}
 
@@ -305,9 +317,7 @@ export function ClipContextMenu({
                 onClick={() => setSpeed(opt.value)}
               >
                 <span>{opt.label}</span>
-                {currentSpeed === opt.value && (
-                  <span className="w-1.5 h-1.5 bg-accent" />
-                )}
+                {currentSpeed === opt.value && <span className="w-1.5 h-1.5 bg-accent" />}
               </button>
             ))}
           </div>
@@ -340,10 +350,12 @@ export function ClipContextMenu({
         shortcut="⌫"
         disabled={isLocked}
         danger
-        onClick={() => handleAction(() => {
-          pushState()
-          removeClip(clipId)
-        })}
+        onClick={() =>
+          handleAction(() => {
+            pushState()
+            removeClip(clipId)
+          })
+        }
       />
     </div>
   )
@@ -371,13 +383,14 @@ function MenuButton({
     <button
       className={`
         w-full px-3 py-2 flex items-center gap-2 text-sm
-        ${disabled
-          ? 'text-text-muted cursor-not-allowed'
-          : danger
-            ? 'text-error hover:bg-error/10'
-            : active
-              ? 'text-accent bg-accent/10'
-              : 'text-text-primary hover:bg-surface-hover'
+        ${
+          disabled
+            ? 'text-text-muted cursor-not-allowed'
+            : danger
+              ? 'text-error hover:bg-error/10'
+              : active
+                ? 'text-accent bg-accent/10'
+                : 'text-text-primary hover:bg-surface-hover'
         }
       `}
       disabled={disabled}
@@ -385,9 +398,7 @@ function MenuButton({
     >
       <Icon className="w-4 h-4" />
       <span className="flex-1 text-left">{label}</span>
-      {shortcut && (
-        <span className="text-xs text-text-muted">{shortcut}</span>
-      )}
+      {shortcut && <span className="text-xs text-text-muted">{shortcut}</span>}
     </button>
   )
 }

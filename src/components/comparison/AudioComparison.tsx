@@ -1,3 +1,15 @@
+import {
+  Activity,
+  Waves,
+  Volume2,
+  Play,
+  Pause,
+  SkipBack,
+  Disc,
+  Radio,
+  Settings2,
+  Grid3X3,
+} from 'lucide-react'
 /**
  * Professional Audio Comparison Component
  *
@@ -15,30 +27,19 @@
  * - Youlean Loudness Meter
  */
 import { useRef, useEffect, useState, useCallback } from 'react'
-import { useTimelineStore } from '../../stores/timelineStore'
-import { useMediaStore } from '../../stores/mediaStore'
-import { usePlaybackStore } from '../../stores/playbackStore'
-import { cn, formatTime } from '../../lib/utils'
-import {
-  Activity,
-  Waves,
-  Volume2,
-  Play,
-  Pause,
-  SkipBack,
-  Disc,
-  Radio,
-  Settings2,
-  Grid3X3
-} from 'lucide-react'
+
 import {
   analyzeAudio,
   formatLUFS,
   formatDb,
   LOUDNESS_TARGETS,
   type AudioAnalysisResult,
-  type LoudnessMetrics
+  type LoudnessMetrics,
 } from '../../lib/audio'
+import { cn, formatTime } from '../../lib/utils'
+import { useMediaStore } from '../../stores/mediaStore'
+import { usePlaybackStore } from '../../stores/playbackStore'
+import { useTimelineStore } from '../../stores/timelineStore'
 
 type AudioViewMode = 'spectrogram' | 'spectrum' | 'goniometer' | 'loudness' | 'waveform' | 'all'
 type ActiveAudio = 'both' | 'a' | 'b'
@@ -54,7 +55,7 @@ function LoudnessMeter({
   label,
   metrics,
   color,
-  targetPlatform
+  targetPlatform,
 }: {
   label: string
   metrics: LoudnessMetrics | null
@@ -78,15 +79,22 @@ function LoudnessMeter({
   return (
     <div className="bg-surface-alt p-3 flex-1 min-w-[200px]">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-xs font-medium" style={{ color }}>{label}</span>
+        <span className="text-xs font-medium" style={{ color }}>
+          {label}
+        </span>
         {targetPlatform && (
-          <span className={cn(
-            'text-[10px] px-1.5 py-0.5',
-            isLoud ? 'bg-red-500/20 text-red-400' :
-            isQuiet ? 'bg-yellow-500/20 text-yellow-400' :
-            'bg-green-500/20 text-green-400'
-          )}>
-            {diff > 0 ? '+' : ''}{diff.toFixed(1)} LU
+          <span
+            className={cn(
+              'text-[10px] px-1.5 py-0.5',
+              isLoud
+                ? 'bg-red-500/20 text-red-400'
+                : isQuiet
+                  ? 'bg-yellow-500/20 text-yellow-400'
+                  : 'bg-green-500/20 text-green-400',
+            )}
+          >
+            {diff > 0 ? '+' : ''}
+            {diff.toFixed(1)} LU
           </span>
         )}
       </div>
@@ -103,7 +111,14 @@ function LoudnessMeter({
       <div className="space-y-1.5">
         <MeterBar label="Momentary" value={metrics.momentary} min={-60} max={0} color={color} />
         <MeterBar label="Short-term" value={metrics.shortTerm} min={-60} max={0} color={color} />
-        <MeterBar label="True Peak" value={metrics.truePeak} min={-60} max={0} color={color} showClip />
+        <MeterBar
+          label="True Peak"
+          value={metrics.truePeak}
+          min={-60}
+          max={0}
+          color={color}
+          showClip
+        />
         <MeterBar label="RMS" value={metrics.rms} min={-60} max={0} color={color} />
       </div>
 
@@ -129,7 +144,7 @@ function MeterBar({
   min,
   max,
   color,
-  showClip
+  showClip,
 }: {
   label: string
   value: number
@@ -145,16 +160,14 @@ function MeterBar({
     <div>
       <div className="flex items-center justify-between text-[10px] mb-0.5">
         <span className="text-text-muted">{label}</span>
-        <span className={cn('font-mono', isClipping && 'text-red-400')}>
-          {formatDb(value)}
-        </span>
+        <span className={cn('font-mono', isClipping && 'text-red-400')}>{formatDb(value)}</span>
       </div>
       <div className="h-2 bg-surface relative overflow-hidden">
         <div
           className="h-full transition-all duration-75"
           style={{
             width: `${percentage}%`,
-            backgroundColor: isClipping ? '#f44336' : color
+            backgroundColor: isClipping ? '#f44336' : color,
           }}
         />
         {/* Grid marks */}
@@ -176,13 +189,14 @@ function MeterBar({
 function PhaseCorrelation({
   correlationA,
   correlationB,
-  mode
+  mode,
 }: {
   correlationA: number
   correlationB: number
   mode: ActiveAudio
 }) {
-  const correlation = mode === 'a' ? correlationA : mode === 'b' ? correlationB : (correlationA + correlationB) / 2
+  const correlation =
+    mode === 'a' ? correlationA : mode === 'b' ? correlationB : (correlationA + correlationB) / 2
 
   return (
     <div className="bg-surface-alt p-3">
@@ -198,17 +212,24 @@ function PhaseCorrelation({
         <div
           className="absolute top-0 bottom-0 w-2 transition-all duration-75"
           style={{
-            left: `${(correlation + 1) / 2 * 100}%`,
+            left: `${((correlation + 1) / 2) * 100}%`,
             transform: 'translateX(-50%)',
-            backgroundColor: correlation < 0 ? '#f44336' : correlation < 0.5 ? '#ff9800' : '#4caf50'
+            backgroundColor:
+              correlation < 0 ? '#f44336' : correlation < 0.5 ? '#ff9800' : '#4caf50',
           }}
         />
       </div>
       <div className="mt-2 text-center">
-        <span className={cn(
-          'text-lg font-mono',
-          correlation < 0 ? 'text-red-400' : correlation < 0.5 ? 'text-yellow-400' : 'text-green-400'
-        )}>
+        <span
+          className={cn(
+            'text-lg font-mono',
+            correlation < 0
+              ? 'text-red-400'
+              : correlation < 0.5
+                ? 'text-yellow-400'
+                : 'text-green-400',
+          )}
+        >
           {correlation.toFixed(2)}
         </span>
         <span className="text-xs text-text-muted ml-2">
@@ -223,7 +244,7 @@ function PhaseCorrelation({
 function StereoWidth({
   widthA,
   widthB,
-  mode
+  mode,
 }: {
   widthA: number
   widthB: number
@@ -239,7 +260,7 @@ function StereoWidth({
           className="absolute top-0 bottom-0 left-1/2 transition-all duration-75 bg-accent/60"
           style={{
             width: `${width * 100}%`,
-            transform: 'translateX(-50%)'
+            transform: 'translateX(-50%)',
           }}
         />
       </div>
@@ -260,7 +281,7 @@ function WaveformCanvas({
   duration,
   onSeek,
   label,
-  mediaName
+  mediaName,
 }: {
   peaks: number[]
   color: string
@@ -361,11 +382,7 @@ function WaveformCanvas({
           <span className="text-xs text-text-primary bg-black/70 px-2 py-0.5">{mediaName}</span>
         )}
       </div>
-      <canvas
-        ref={canvasRef}
-        className="w-full h-full cursor-pointer"
-        onClick={handleClick}
-      />
+      <canvas ref={canvasRef} className="w-full h-full cursor-pointer" onClick={handleClick} />
     </div>
   )
 }
@@ -375,7 +392,7 @@ function SpectrogramCanvas({
   analysisA,
   analysisB,
   currentTime,
-  duration
+  duration,
 }: {
   analysisA: AudioAnalysisState
   analysisB: AudioAnalysisState
@@ -481,7 +498,6 @@ function SpectrogramCanvas({
     ctx.fillText('Track B', 100, 20)
     ctx.fillStyle = '#cddc39'
     ctx.fillRect(160, 12, 20, 3)
-
   }, [analysisA.peaks, analysisB.peaks, currentTime, duration, size])
 
   return (
@@ -495,7 +511,7 @@ function SpectrogramCanvas({
 function GoniometerCanvas({
   analysisA,
   analysisB,
-  activeAudio
+  activeAudio,
 }: {
   analysisA: AudioAnalysisState
   analysisB: AudioAnalysisState
@@ -598,7 +614,6 @@ function GoniometerCanvas({
       ctx.textAlign = 'center'
       ctx.fillText('No stereo data', centerX, centerY)
     }
-
   }, [analysisA.analysis, analysisB.analysis, activeAudio, size])
 
   return (
@@ -618,8 +633,16 @@ export function AudioComparison() {
   const [volumeA] = useState(1)
   const [volumeB] = useState(1)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
-  const [analysisA, setAnalysisA] = useState<AudioAnalysisState>({ buffer: null, analysis: null, peaks: [] })
-  const [analysisB, setAnalysisB] = useState<AudioAnalysisState>({ buffer: null, analysis: null, peaks: [] })
+  const [analysisA, setAnalysisA] = useState<AudioAnalysisState>({
+    buffer: null,
+    analysis: null,
+    peaks: [],
+  })
+  const [analysisB, setAnalysisB] = useState<AudioAnalysisState>({
+    buffer: null,
+    analysis: null,
+    peaks: [],
+  })
   const [targetPlatform, setTargetPlatform] = useState<keyof typeof LOUDNESS_TARGETS>('spotify')
   const [showSettings, setShowSettings] = useState(false)
 
@@ -629,8 +652,8 @@ export function AudioComparison() {
   const { getFile } = useMediaStore()
 
   // Get active clips - check BOTH track types for audio
-  const trackA = tracks.find(t => t.type === 'a')
-  const trackB = tracks.find(t => t.type === 'b')
+  const trackA = tracks.find((t) => t.type === 'a')
+  const trackB = tracks.find((t) => t.type === 'b')
   const clipA = trackA?.clips[0]
   const clipB = trackB?.clips[0]
   const mediaA = clipA ? getFile(clipA.mediaId) : null
@@ -643,7 +666,7 @@ export function AudioComparison() {
   const maxDuration = Math.max(
     analysisA.analysis?.duration || 0,
     analysisB.analysis?.duration || 0,
-    1
+    1,
   )
 
   // Load and analyze audio
@@ -775,9 +798,15 @@ export function AudioComparison() {
       if (e.target instanceof HTMLInputElement) return
 
       switch (e.key.toLowerCase()) {
-        case 'a': setActiveAudio('a'); break
-        case 'b': setActiveAudio('b'); break
-        case 's': setActiveAudio('both'); break
+        case 'a':
+          setActiveAudio('a')
+          break
+        case 'b':
+          setActiveAudio('b')
+          break
+        case 's':
+          setActiveAudio('both')
+          break
       }
     }
 
@@ -805,7 +834,7 @@ export function AudioComparison() {
                 'px-3 py-1.5 text-xs flex items-center gap-1.5 transition-colors',
                 viewMode === mode
                   ? 'bg-accent text-white'
-                  : 'text-text-muted hover:text-text-primary hover:bg-surface-hover'
+                  : 'text-text-muted hover:text-text-primary hover:bg-surface-hover',
               )}
             >
               <Icon className="w-3.5 h-3.5" />
@@ -816,17 +845,16 @@ export function AudioComparison() {
 
         {/* Transport controls */}
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => seek(0)}
-            className="p-1.5 text-text-muted hover:text-text-primary"
-          >
+          <button onClick={() => seek(0)} className="p-1.5 text-text-muted hover:text-text-primary">
             <SkipBack className="w-4 h-4" />
           </button>
           <button
             onClick={togglePlay}
             className={cn(
               'w-8 h-8 flex items-center justify-center',
-              isPlaying ? 'bg-accent text-white' : 'bg-surface-hover text-text-primary hover:bg-accent hover:text-white'
+              isPlaying
+                ? 'bg-accent text-white'
+                : 'bg-surface-hover text-text-primary hover:bg-accent hover:text-white',
             )}
           >
             {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
@@ -846,10 +874,12 @@ export function AudioComparison() {
                 className={cn(
                   'px-3 py-1 text-xs font-medium transition-all',
                   activeAudio === mode
-                    ? mode === 'a' ? 'bg-accent text-white'
-                    : mode === 'b' ? 'bg-secondary text-black'
-                    : 'bg-text-primary text-background'
-                    : 'text-text-muted hover:text-text-primary'
+                    ? mode === 'a'
+                      ? 'bg-accent text-white'
+                      : mode === 'b'
+                        ? 'bg-secondary text-black'
+                        : 'bg-text-primary text-background'
+                    : 'text-text-muted hover:text-text-primary',
                 )}
               >
                 {mode === 'both' ? 'A+B' : mode.toUpperCase()}
@@ -861,7 +891,7 @@ export function AudioComparison() {
             onClick={() => setShowSettings(!showSettings)}
             className={cn(
               'p-1.5 transition-colors',
-              showSettings ? 'text-accent' : 'text-text-muted hover:text-text-primary'
+              showSettings ? 'text-accent' : 'text-text-muted hover:text-text-primary',
             )}
           >
             <Settings2 className="w-4 h-4" />
@@ -879,9 +909,10 @@ export function AudioComparison() {
               onChange={(e) => setTargetPlatform(e.target.value as keyof typeof LOUDNESS_TARGETS)}
               className="bg-surface-hover border border-border px-2 py-1 text-xs"
             >
-              {Object.keys(LOUDNESS_TARGETS).map(key => (
+              {Object.keys(LOUDNESS_TARGETS).map((key) => (
                 <option key={key} value={key}>
-                  {key.charAt(0).toUpperCase() + key.slice(1)} ({LOUDNESS_TARGETS[key as keyof typeof LOUDNESS_TARGETS]} LUFS)
+                  {key.charAt(0).toUpperCase() + key.slice(1)} (
+                  {LOUDNESS_TARGETS[key as keyof typeof LOUDNESS_TARGETS]} LUFS)
                 </option>
               ))}
             </select>
@@ -904,7 +935,9 @@ export function AudioComparison() {
               <Disc className="w-16 h-16 text-text-muted/30" />
               <div className="text-center">
                 <p className="text-sm font-medium text-text-secondary">No Audio Files</p>
-                <p className="text-xs text-text-muted mt-1">Add audio files to Track A and/or Track B</p>
+                <p className="text-xs text-text-muted mt-1">
+                  Add audio files to Track A and/or Track B
+                </p>
               </div>
             </div>
           </div>
@@ -1085,11 +1118,19 @@ export function AudioComparison() {
 
       {/* Keyboard hints */}
       <div className="h-7 bg-surface border-t border-border flex items-center justify-center gap-4 text-[10px] text-text-muted shrink-0">
-        <span><kbd className="px-1 bg-background font-mono">A</kbd> Solo A</span>
-        <span><kbd className="px-1 bg-background font-mono">B</kbd> Solo B</span>
-        <span><kbd className="px-1 bg-background font-mono">S</kbd> Both</span>
+        <span>
+          <kbd className="px-1 bg-background font-mono">A</kbd> Solo A
+        </span>
+        <span>
+          <kbd className="px-1 bg-background font-mono">B</kbd> Solo B
+        </span>
+        <span>
+          <kbd className="px-1 bg-background font-mono">S</kbd> Both
+        </span>
         <span className="text-border">|</span>
-        <span><kbd className="px-1 bg-background font-mono">Space</kbd> Play/Pause</span>
+        <span>
+          <kbd className="px-1 bg-background font-mono">Space</kbd> Play/Pause
+        </span>
       </div>
     </div>
   )

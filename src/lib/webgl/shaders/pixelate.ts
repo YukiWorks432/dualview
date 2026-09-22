@@ -21,7 +21,7 @@ void main() {
   vec4 colorB = texture2D(u_textureB, pixelUV);
 
   gl_FragColor = mix(colorA, colorB, u_progress);
-}`
+}`,
   },
 
   dither: {
@@ -45,7 +45,7 @@ void main() {
   vec3 dithered = floor(base.rgb * levels + bayer * intensity) / levels;
 
   gl_FragColor = vec4(dithered, 1.0);
-}`
+}`,
   },
 
   mosaic: {
@@ -71,7 +71,7 @@ void main() {
   vec4 colorB = texture2D(u_textureB, mosaicUV);
 
   gl_FragColor = mix(colorA, colorB, u_progress);
-}`
+}`,
   },
 
   retro: {
@@ -98,7 +98,7 @@ void main() {
   retro *= 0.9 + scanline * 0.1 * intensity;
 
   gl_FragColor = vec4(retro, 1.0);
-}`
+}`,
   },
 
   eight_bit: {
@@ -127,7 +127,7 @@ void main() {
   vec3 result = hsv2rgb(hsv);
 
   gl_FragColor = vec4(result, 1.0);
-}`
+}`,
   },
 
   halftone: {
@@ -159,7 +159,7 @@ void main() {
   vec3 result = base.rgb * dot + vec3(1.0 - dot) * (1.0 - intensity);
 
   gl_FragColor = vec4(result, 1.0);
-}`
+}`,
   },
 
   dots: {
@@ -185,7 +185,7 @@ void main() {
   float dot = smoothstep(0.4, 0.35, dist);
 
   gl_FragColor = vec4(base.rgb * dot, 1.0);
-}`
+}`,
   },
 
   crosshatch: {
@@ -214,8 +214,8 @@ void main() {
   hatch = mix(brightness, hatch, intensity);
 
   gl_FragColor = vec4(base.rgb * hatch + (1.0 - hatch) * 0.1, 1.0);
-}`
-  }
+}`,
+  },
 }
 
 export const PIXELATE_VARIANTS = Object.keys(PIXELATE_SHADERS)

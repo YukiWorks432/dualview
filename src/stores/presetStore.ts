@@ -1,7 +1,8 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { ComparisonMode, BlendMode, SplitLayout } from '../types'
+
 import { generateId } from '../lib/utils'
+import type { ComparisonMode, BlendMode, SplitLayout } from '../types'
 
 export interface ComparisonPreset {
   id: string
@@ -118,7 +119,7 @@ export const usePresetStore = create<PresetStore>()(
           settings,
         }
 
-        set(state => ({
+        set((state) => ({
           presets: [...state.presets, preset],
           activePresetId: preset.id,
         }))
@@ -127,7 +128,7 @@ export const usePresetStore = create<PresetStore>()(
       },
 
       loadPreset: (id: string) => {
-        const preset = get().presets.find(p => p.id === id)
+        const preset = get().presets.find((p) => p.id === id)
         if (preset) {
           set({ activePresetId: id })
         }
@@ -138,8 +139,8 @@ export const usePresetStore = create<PresetStore>()(
         // Don't allow deleting default presets
         if (id.startsWith('default-')) return
 
-        set(state => ({
-          presets: state.presets.filter(p => p.id !== id),
+        set((state) => ({
+          presets: state.presets.filter((p) => p.id !== id),
           activePresetId: state.activePresetId === id ? null : state.activePresetId,
         }))
       },
@@ -148,10 +149,8 @@ export const usePresetStore = create<PresetStore>()(
         // Don't allow renaming default presets
         if (id.startsWith('default-')) return
 
-        set(state => ({
-          presets: state.presets.map(p =>
-            p.id === id ? { ...p, name } : p
-          ),
+        set((state) => ({
+          presets: state.presets.map((p) => (p.id === id ? { ...p, name } : p)),
         }))
       },
 
@@ -164,6 +163,6 @@ export const usePresetStore = create<PresetStore>()(
     {
       name: 'dualview-presets',
       version: 1,
-    }
-  )
+    },
+  ),
 )

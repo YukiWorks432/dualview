@@ -1,10 +1,9 @@
 /**
  * ShareDialog Component (SHARE-001, SHARE-002, SHARE-003)
- * 
+ *
  * Dialog for sharing comparisons via links, embeds, and social media.
  */
 
-import { useState, useMemo } from 'react'
 import {
   X,
   Link2,
@@ -19,8 +18,8 @@ import {
   Moon,
   Laptop,
 } from 'lucide-react'
-import { cn } from '../../lib/utils'
-import { useProjectStore } from '../../stores/projectStore'
+import { useState, useMemo } from 'react'
+
 import {
   generateShareLink,
   generateEmbedCode,
@@ -34,6 +33,8 @@ import {
   type EmbedConfig,
   type SocialExportPreset,
 } from '../../lib/shareLink'
+import { cn } from '../../lib/utils'
+import { useProjectStore } from '../../stores/projectStore'
 
 interface ShareDialogProps {
   isOpen: boolean
@@ -46,53 +47,60 @@ export function ShareDialog({ isOpen, onClose }: ShareDialogProps) {
   const [activeTab, setActiveTab] = useState<ShareTab>('link')
   const [copied, setCopied] = useState(false)
   const [showQR, setShowQR] = useState(false)
-  
+
   // Link settings
   const [expiration, setExpiration] = useState<'24h' | '7d' | '30d' | 'never'>('never')
   const [autoplay, setAutoplay] = useState(false)
   const [loop, setLoop] = useState(true)
   const [showControls, setShowControls] = useState(true)
   const [theme, setTheme] = useState<'light' | 'dark' | 'auto'>('auto')
-  
+
   // Embed settings
   const [embedWidth, setEmbedWidth] = useState<number | 'responsive'>('responsive')
   const [embedHeight, setEmbedHeight] = useState(450)
   const [borderRadius, setBorderRadius] = useState(8)
   const [embedType, setEmbedType] = useState<'iframe' | 'responsive'>('responsive')
-  
+
   // Social settings
   const [selectedPreset, setSelectedPreset] = useState<SocialExportPreset>(SOCIAL_EXPORT_PRESETS[0])
   const [addOverlay, setAddOverlay] = useState(true)
-  
+
   const projectStore = useProjectStore()
 
   // Generate config from current project state
-  const linkConfig: ShareLinkConfig = useMemo(() => ({
-    mode: projectStore.comparisonMode,
-    aspectRatio: projectStore.aspectRatioSettings.preset,
-    sliderPosition: projectStore.sliderPosition,
-    sliderOrientation: projectStore.sliderOrientation,
-    autoplay,
-    loop,
-    showControls,
-    theme,
-    expiration,
-  }), [projectStore, autoplay, loop, showControls, theme, expiration])
+  const linkConfig: ShareLinkConfig = useMemo(
+    () => ({
+      mode: projectStore.comparisonMode,
+      aspectRatio: projectStore.aspectRatioSettings.preset,
+      sliderPosition: projectStore.sliderPosition,
+      sliderOrientation: projectStore.sliderOrientation,
+      autoplay,
+      loop,
+      showControls,
+      theme,
+      expiration,
+    }),
+    [projectStore, autoplay, loop, showControls, theme, expiration],
+  )
 
-  const embedConfig: EmbedConfig = useMemo(() => ({
-    ...linkConfig,
-    width: embedWidth,
-    height: embedHeight,
-    borderRadius,
-    showBranding: true,
-  }), [linkConfig, embedWidth, embedHeight, borderRadius])
+  const embedConfig: EmbedConfig = useMemo(
+    () => ({
+      ...linkConfig,
+      width: embedWidth,
+      height: embedHeight,
+      borderRadius,
+      showBranding: true,
+    }),
+    [linkConfig, embedWidth, embedHeight, borderRadius],
+  )
 
   const shareLink = useMemo(() => generateShareLink(linkConfig), [linkConfig])
-  const embedCode = useMemo(() => 
-    embedType === 'responsive' 
-      ? generateResponsiveEmbed(embedConfig)
-      : generateEmbedCode(embedConfig),
-    [embedConfig, embedType]
+  const embedCode = useMemo(
+    () =>
+      embedType === 'responsive'
+        ? generateResponsiveEmbed(embedConfig)
+        : generateEmbedCode(embedConfig),
+    [embedConfig, embedType],
   )
   const qrCodeUrl = useMemo(() => generateQRCodeUrl(shareLink, 200), [shareLink])
 
@@ -138,7 +146,7 @@ export function ShareDialog({ isOpen, onClose }: ShareDialogProps) {
               'flex items-center gap-2 px-6 py-3 text-sm font-medium transition-colors',
               activeTab === 'link'
                 ? 'text-blue-400 border-b-2 border-blue-400'
-                : 'text-zinc-400 hover:text-white'
+                : 'text-zinc-400 hover:text-white',
             )}
             onClick={() => setActiveTab('link')}
           >
@@ -150,7 +158,7 @@ export function ShareDialog({ isOpen, onClose }: ShareDialogProps) {
               'flex items-center gap-2 px-6 py-3 text-sm font-medium transition-colors',
               activeTab === 'embed'
                 ? 'text-blue-400 border-b-2 border-blue-400'
-                : 'text-zinc-400 hover:text-white'
+                : 'text-zinc-400 hover:text-white',
             )}
             onClick={() => setActiveTab('embed')}
           >
@@ -162,7 +170,7 @@ export function ShareDialog({ isOpen, onClose }: ShareDialogProps) {
               'flex items-center gap-2 px-6 py-3 text-sm font-medium transition-colors',
               activeTab === 'social'
                 ? 'text-blue-400 border-b-2 border-blue-400'
-                : 'text-zinc-400 hover:text-white'
+                : 'text-zinc-400 hover:text-white',
             )}
             onClick={() => setActiveTab('social')}
           >
@@ -191,7 +199,7 @@ export function ShareDialog({ isOpen, onClose }: ShareDialogProps) {
                       'px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2',
                       copied
                         ? 'bg-green-600 text-white'
-                        : 'bg-blue-600 hover:bg-blue-500 text-white'
+                        : 'bg-blue-600 hover:bg-blue-500 text-white',
                     )}
                   >
                     {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
@@ -260,7 +268,7 @@ export function ShareDialog({ isOpen, onClose }: ShareDialogProps) {
                           'flex-1 flex items-center justify-center gap-1 py-2 rounded-lg text-xs transition-colors',
                           theme === value
                             ? 'bg-blue-600 text-white'
-                            : 'bg-zinc-800 text-zinc-400 hover:text-white'
+                            : 'bg-zinc-800 text-zinc-400 hover:text-white',
                         )}
                         title={label}
                       >
@@ -316,7 +324,7 @@ export function ShareDialog({ isOpen, onClose }: ShareDialogProps) {
                       'flex-1 py-2 px-4 rounded-lg text-sm transition-colors',
                       embedType === 'responsive'
                         ? 'bg-blue-600 text-white'
-                        : 'bg-zinc-800 text-zinc-400 hover:text-white'
+                        : 'bg-zinc-800 text-zinc-400 hover:text-white',
                     )}
                   >
                     Responsive
@@ -327,7 +335,7 @@ export function ShareDialog({ isOpen, onClose }: ShareDialogProps) {
                       'flex-1 py-2 px-4 rounded-lg text-sm transition-colors',
                       embedType === 'iframe'
                         ? 'bg-blue-600 text-white'
-                        : 'bg-zinc-800 text-zinc-400 hover:text-white'
+                        : 'bg-zinc-800 text-zinc-400 hover:text-white',
                     )}
                   >
                     Fixed Size
@@ -381,7 +389,7 @@ export function ShareDialog({ isOpen, onClose }: ShareDialogProps) {
                       'absolute top-2 right-2 px-3 py-1 rounded text-xs font-medium transition-colors flex items-center gap-1',
                       copied
                         ? 'bg-green-600 text-white'
-                        : 'bg-zinc-700 hover:bg-zinc-600 text-white'
+                        : 'bg-zinc-700 hover:bg-zinc-600 text-white',
                     )}
                   >
                     {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
@@ -397,7 +405,10 @@ export function ShareDialog({ isOpen, onClose }: ShareDialogProps) {
                   <div
                     className="bg-zinc-900 flex items-center justify-center text-xs text-zinc-500"
                     style={{
-                      width: embedType === 'iframe' && embedWidth !== 'responsive' ? Math.min(embedWidth, 300) : '100%',
+                      width:
+                        embedType === 'iframe' && embedWidth !== 'responsive'
+                          ? Math.min(embedWidth, 300)
+                          : '100%',
                       height: Math.min(embedHeight, 150),
                       borderRadius: borderRadius,
                     }}
@@ -423,7 +434,7 @@ export function ShareDialog({ isOpen, onClose }: ShareDialogProps) {
                         'flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors text-left',
                         selectedPreset.id === preset.id
                           ? 'bg-blue-600 text-white'
-                          : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
+                          : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700',
                       )}
                     >
                       <span className="text-lg">{preset.icon}</span>
@@ -451,7 +462,9 @@ export function ShareDialog({ isOpen, onClose }: ShareDialogProps) {
                 <div className="grid grid-cols-3 gap-4 text-xs">
                   <div>
                     <div className="text-zinc-400">Resolution</div>
-                    <div className="text-white">{selectedPreset.width}×{selectedPreset.height}</div>
+                    <div className="text-white">
+                      {selectedPreset.width}×{selectedPreset.height}
+                    </div>
                   </div>
                   <div>
                     <div className="text-zinc-400">FPS</div>
@@ -474,7 +487,8 @@ export function ShareDialog({ isOpen, onClose }: ShareDialogProps) {
                     className="w-4 h-4 rounded border-zinc-600 bg-zinc-700 text-blue-600 focus:ring-blue-500"
                   />
                   <span className="text-sm text-zinc-300">
-                    Add "{selectedPreset.overlay.beforeLabel} / {selectedPreset.overlay.afterLabel}" overlay
+                    Add "{selectedPreset.overlay.beforeLabel} / {selectedPreset.overlay.afterLabel}"
+                    overlay
                   </span>
                 </label>
               )}
@@ -484,7 +498,9 @@ export function ShareDialog({ isOpen, onClose }: ShareDialogProps) {
                 onClick={() => {
                   // This would trigger the actual export with the selected preset
                   // For now, just show an alert
-                  alert(`Export with ${selectedPreset.name} preset coming soon!\n\nResolution: ${selectedPreset.width}×${selectedPreset.height}\nFormat: ${selectedPreset.format}`)
+                  alert(
+                    `Export with ${selectedPreset.name} preset coming soon!\n\nResolution: ${selectedPreset.width}×${selectedPreset.height}\nFormat: ${selectedPreset.format}`,
+                  )
                 }}
                 className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
               >

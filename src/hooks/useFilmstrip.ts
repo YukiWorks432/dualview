@@ -1,10 +1,11 @@
 /**
  * useFilmstrip Hook (FILMSTRIP-001, FILMSTRIP-002)
- * 
+ *
  * Manages filmstrip extraction and caching for video clips.
  */
 
 import { useEffect, useState, useCallback } from 'react'
+
 import {
   extractFilmstrip,
   getCachedFilmstrip,
@@ -29,7 +30,7 @@ interface UseFilmstripResult {
  */
 export function useFilmstrip(
   mediaId: string | undefined,
-  options: UseFilmstripOptions = {}
+  options: UseFilmstripOptions = {},
 ): UseFilmstripResult {
   const { enabled = true, ...config } = options
   const [filmstrip, setFilmstrip] = useState<FilmstripData | null>(null)
@@ -37,10 +38,10 @@ export function useFilmstrip(
   const [error, setError] = useState<string | null>(null)
   const [reloadTrigger, setReloadTrigger] = useState(0)
 
-  const getFile = useMediaStore(state => state.getFile)
+  const getFile = useMediaStore((state) => state.getFile)
 
   const reload = useCallback(() => {
-    setReloadTrigger(prev => prev + 1)
+    setReloadTrigger((prev) => prev + 1)
   }, [])
 
   useEffect(() => {
@@ -67,13 +68,13 @@ export function useFilmstrip(
     setError(null)
 
     extractFilmstrip(mediaId, media.url, media.duration || 10, config)
-      .then(result => {
+      .then((result) => {
         setFilmstrip(result)
         if (!result) {
           setError('Failed to extract frames')
         }
       })
-      .catch(err => {
+      .catch((err) => {
         console.error('Filmstrip extraction error:', err)
         setError(err.message || 'Extraction failed')
       })
@@ -90,12 +91,12 @@ export function useFilmstrip(
  */
 export function useFilmstrips(
   mediaIds: string[],
-  options: UseFilmstripOptions = {}
+  options: UseFilmstripOptions = {},
 ): Map<string, FilmstripData | null> {
   const { enabled = true, ...config } = options
   const [filmstrips, setFilmstrips] = useState<Map<string, FilmstripData | null>>(new Map())
 
-  const getFile = useMediaStore(state => state.getFile)
+  const getFile = useMediaStore((state) => state.getFile)
 
   useEffect(() => {
     if (!enabled || mediaIds.length === 0) {
@@ -121,12 +122,7 @@ export function useFilmstrips(
         }
 
         try {
-          const filmstrip = await extractFilmstrip(
-            mediaId,
-            media.url,
-            media.duration || 10,
-            config
-          )
+          const filmstrip = await extractFilmstrip(mediaId, media.url, media.duration || 10, config)
           results.set(mediaId, filmstrip)
         } catch {
           results.set(mediaId, null)

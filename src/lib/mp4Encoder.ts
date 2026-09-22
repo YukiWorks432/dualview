@@ -13,9 +13,9 @@ export interface Mp4ExportOptions {
 }
 
 const QUALITY_BITRATES = {
-  low: 2_500_000,    // 2.5 Mbps
+  low: 2_500_000, // 2.5 Mbps
   medium: 5_000_000, // 5 Mbps
-  high: 10_000_000,  // 10 Mbps
+  high: 10_000_000, // 10 Mbps
 }
 
 /**
@@ -36,7 +36,7 @@ export async function exportCanvasToMp4(
     fps: number
     quality: 'low' | 'medium' | 'high'
   },
-  onProgress: (progress: number, message: string) => void
+  onProgress: (progress: number, message: string) => void,
 ): Promise<Blob> {
   if (!isWebCodecsSupported()) {
     throw new Error('WebCodecs not supported in this browser. Try Chrome or Edge.')
@@ -108,7 +108,7 @@ export async function exportCanvasToMp4(
 
     // Prevent blocking
     if (i % 10 === 0) {
-      await new Promise(r => setTimeout(r, 0))
+      await new Promise((r) => setTimeout(r, 0))
     }
   }
 
@@ -140,7 +140,7 @@ export async function exportSweepToMp4(
     fps: number
     quality: 'low' | 'medium' | 'high'
   },
-  onProgress: (progress: number, message: string) => void
+  onProgress: (progress: number, message: string) => void,
 ): Promise<Blob> {
   // Create frame generators
   const frames = Array.from({ length: totalFrames }, (_, i) => {

@@ -1,6 +1,6 @@
 /**
  * Filmstrip Frame Extractor (FILMSTRIP-001)
- * 
+ *
  * Extracts multiple frames from videos as thumbnails for timeline preview.
  * Runs extraction in the main thread but with requestIdleCallback for performance.
  */
@@ -75,7 +75,7 @@ export async function extractFilmstrip(
   mediaId: string,
   videoUrl: string,
   duration: number,
-  config: FilmstripConfig = {}
+  config: FilmstripConfig = {},
 ): Promise<FilmstripData | null> {
   // Check cache first (uses LRU access)
   const cached = getFromCache(mediaId)
@@ -113,7 +113,7 @@ async function performExtraction(
   mediaId: string,
   videoUrl: string,
   duration: number,
-  config: Required<FilmstripConfig>
+  config: Required<FilmstripConfig>,
 ): Promise<FilmstripData | null> {
   return new Promise((resolve) => {
     const video = document.createElement('video')
@@ -148,10 +148,7 @@ async function performExtraction(
     }
 
     // Calculate frame times
-    const frameCount = Math.min(
-      Math.ceil(duration / config.frameInterval),
-      config.maxFrames
-    )
+    const frameCount = Math.min(Math.ceil(duration / config.frameInterval), config.maxFrames)
     const frameTimes: number[] = []
     for (let i = 0; i < frameCount; i++) {
       frameTimes.push(i * config.frameInterval)
@@ -159,7 +156,7 @@ async function performExtraction(
 
     const captureFrame = () => {
       if (isResolved) return
-      
+
       if (currentFrame >= frameTimes.length) {
         // All frames captured
         resolveOnce({
@@ -177,7 +174,7 @@ async function performExtraction(
 
     const handleSeeked = () => {
       if (isResolved) return
-      
+
       try {
         const canvas = document.createElement('canvas')
         canvas.width = config.thumbnailWidth
@@ -199,8 +196,11 @@ async function performExtraction(
 
         // Use requestIdleCallback for next frame if available, otherwise setTimeout
         if ('requestIdleCallback' in window) {
-          (window as Window & { requestIdleCallback: (cb: () => void, options?: { timeout: number }) => number })
-            .requestIdleCallback(captureFrame, { timeout: 100 })
+          ;(
+            window as Window & {
+              requestIdleCallback: (cb: () => void, options?: { timeout: number }) => number
+            }
+          ).requestIdleCallback(captureFrame, { timeout: 100 })
         } else {
           setTimeout(captureFrame, 10)
         }
@@ -211,12 +211,16 @@ async function performExtraction(
           captureFrame()
         } else {
           // Return what we have so far
-          resolveOnce(frames.length > 0 ? {
-            mediaId,
-            duration,
-            frames,
-            frameInterval: config.frameInterval,
-          } : null)
+          resolveOnce(
+            frames.length > 0
+              ? {
+                  mediaId,
+                  duration,
+                  frames,
+                  frameInterval: config.frameInterval,
+                }
+              : null,
+          )
         }
       }
     }
@@ -238,12 +242,16 @@ async function performExtraction(
     timeoutId = setTimeout(() => {
       if (!isResolved) {
         console.warn('Filmstrip extraction timed out')
-        resolveOnce(frames.length > 0 ? {
-          mediaId,
-          duration,
-          frames,
-          frameInterval: config.frameInterval,
-        } : null)
+        resolveOnce(
+          frames.length > 0
+            ? {
+                mediaId,
+                duration,
+                frames,
+                frameInterval: config.frameInterval,
+              }
+            : null,
+        )
       }
     }, 30000) // 30 second timeout
   })
@@ -277,14 +285,14 @@ export function getVisibleFrames(
   filmstrip: FilmstripData,
   startTime: number,
   endTime: number,
-  inPoint: number = 0
+  inPoint: number = 0,
 ): FilmstripFrame[] {
   // Adjust for clip's in-point
   const adjustedStart = startTime + inPoint
   const adjustedEnd = endTime + inPoint
 
   return filmstrip.frames.filter(
-    frame => frame.time >= adjustedStart && frame.time <= adjustedEnd
+    (frame) => frame.time >= adjustedStart && frame.time <= adjustedEnd,
   )
 }
 
@@ -293,7 +301,7 @@ export function getVisibleFrames(
  */
 export function calculateVisibleFrameCount(
   clipWidth: number,
-  thumbnailWidth: number = DEFAULT_CONFIG.thumbnailWidth
+  thumbnailWidth: number = DEFAULT_CONFIG.thumbnailWidth,
 ): number {
   return Math.max(1, Math.floor(clipWidth / thumbnailWidth))
 }

@@ -1,28 +1,22 @@
 /**
  * KeyframeEditor Component (KEYFRAME-001, KEYFRAME-002)
- * 
+ *
  * Panel for editing keyframe animations on the selected clip.
  */
 
+import { Diamond, ChevronDown, ChevronRight, RotateCcw, Copy, Clipboard } from 'lucide-react'
 import { useState, useMemo } from 'react'
-import {
-  Diamond,
-  ChevronDown,
-  ChevronRight,
-  RotateCcw,
-  Copy,
-  Clipboard,
-} from 'lucide-react'
-import { cn } from '../../lib/utils'
-import { useKeyframeStore } from '../../stores/keyframeStore'
-import { useTimelineStore } from '../../stores/timelineStore'
-import { usePlaybackStore } from '../../stores/playbackStore'
+
 import {
   PROPERTY_CONFIGS,
   EASING_PRESETS,
   type AnimatableProperty,
   type EasingType,
 } from '../../lib/keyframes'
+import { cn } from '../../lib/utils'
+import { useKeyframeStore } from '../../stores/keyframeStore'
+import { usePlaybackStore } from '../../stores/playbackStore'
+import { useTimelineStore } from '../../stores/timelineStore'
 
 interface KeyframeEditorProps {
   clipId: string
@@ -40,9 +34,9 @@ export function KeyframeEditor({ clipId, className }: KeyframeEditorProps) {
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(['Effects']))
   const [selectedEasing, setSelectedEasing] = useState<EasingType>('ease-in-out')
 
-  const currentTime = usePlaybackStore(state => state.currentTime)
-  const clip = useTimelineStore(state => 
-    state.tracks.flatMap(t => t.clips).find(c => c.id === clipId)
+  const currentTime = usePlaybackStore((state) => state.currentTime)
+  const clip = useTimelineStore((state) =>
+    state.tracks.flatMap((t) => t.clips).find((c) => c.id === clipId),
   )
 
   const {
@@ -57,15 +51,15 @@ export function KeyframeEditor({ clipId, className }: KeyframeEditorProps) {
   } = useKeyframeStore()
 
   // Use stable selectors to avoid re-renders
-  const clipKeyframes = useKeyframeStore(state => state.clipKeyframes.get(clipId))
-  const getAnimatedValuesAtTime = useKeyframeStore(state => state.getAnimatedValuesAtTime)
-  
+  const clipKeyframes = useKeyframeStore((state) => state.clipKeyframes.get(clipId))
+  const getAnimatedValuesAtTime = useKeyframeStore((state) => state.getAnimatedValuesAtTime)
+
   // Calculate animated values - memoize with stable inputs
   const relativeTimeForValues = currentTime - (clip?.startTime || 0)
   const animatedValues = useMemo(
     () => getAnimatedValuesAtTime(clipId, relativeTimeForValues),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [clipId, relativeTimeForValues, clipKeyframes] // Include clipKeyframes to recalc when keyframes change
+    [clipId, relativeTimeForValues, clipKeyframes], // Include clipKeyframes to recalc when keyframes change
   )
 
   // Get relative time within clip
@@ -74,17 +68,17 @@ export function KeyframeEditor({ clipId, className }: KeyframeEditorProps) {
   // Check if there's a keyframe at current time for a property
   const hasKeyframeAtTime = (property: AnimatableProperty): boolean => {
     if (!clipKeyframes) return false
-    const track = clipKeyframes.tracks.find(t => t.property === property)
+    const track = clipKeyframes.tracks.find((t) => t.property === property)
     if (!track) return false
-    return track.keyframes.some(kf => Math.abs(kf.time - relativeTime) < 0.05)
+    return track.keyframes.some((kf) => Math.abs(kf.time - relativeTime) < 0.05)
   }
 
   // Get keyframe at current time for a property
   const getKeyframeAtTime = (property: AnimatableProperty) => {
     if (!clipKeyframes) return null
-    const track = clipKeyframes.tracks.find(t => t.property === property)
+    const track = clipKeyframes.tracks.find((t) => t.property === property)
     if (!track) return null
-    return track.keyframes.find(kf => Math.abs(kf.time - relativeTime) < 0.05)
+    return track.keyframes.find((kf) => Math.abs(kf.time - relativeTime) < 0.05)
   }
 
   // Toggle keyframe at current time
@@ -103,7 +97,7 @@ export function KeyframeEditor({ clipId, className }: KeyframeEditorProps) {
   }
 
   const toggleGroup = (group: string) => {
-    setExpandedGroups(prev => {
+    setExpandedGroups((prev) => {
       const next = new Set(prev)
       if (next.has(group)) {
         next.delete(group)
@@ -123,7 +117,12 @@ export function KeyframeEditor({ clipId, className }: KeyframeEditorProps) {
   }
 
   return (
-    <div className={cn('flex flex-col bg-zinc-900 border border-zinc-700 rounded-lg overflow-hidden', className)}>
+    <div
+      className={cn(
+        'flex flex-col bg-zinc-900 border border-zinc-700 rounded-lg overflow-hidden',
+        className,
+      )}
+    >
       {/* Header */}
       <div className="flex items-center justify-between px-3 py-2 border-b border-zinc-700 bg-zinc-800">
         <div className="flex items-center gap-2">
@@ -144,7 +143,7 @@ export function KeyframeEditor({ clipId, className }: KeyframeEditorProps) {
               'p-1.5 rounded transition-colors',
               clipboardKeyframes
                 ? 'text-zinc-400 hover:text-white hover:bg-zinc-700'
-                : 'text-zinc-600 cursor-not-allowed'
+                : 'text-zinc-600 cursor-not-allowed',
             )}
             disabled={!clipboardKeyframes}
             title="Paste keyframes at current time"
@@ -194,14 +193,14 @@ export function KeyframeEditor({ clipId, className }: KeyframeEditorProps) {
                   const config = PROPERTY_CONFIGS[property]
                   const value = animatedValues[property]
                   const hasKf = hasKeyframeAtTime(property)
-                  const hasAnyKf = clipKeyframes?.tracks.some(t => t.property === property && t.keyframes.length > 0)
+                  const hasAnyKf = clipKeyframes?.tracks.some(
+                    (t) => t.property === property && t.keyframes.length > 0,
+                  )
 
                   return (
                     <div key={property} className="space-y-1">
                       <div className="flex items-center justify-between">
-                        <label className="text-[10px] text-zinc-500">
-                          {config.label}
-                        </label>
+                        <label className="text-[10px] text-zinc-500">{config.label}</label>
                         <div className="flex items-center gap-1">
                           {/* Keyframe toggle */}
                           <button
@@ -212,7 +211,7 @@ export function KeyframeEditor({ clipId, className }: KeyframeEditorProps) {
                                 ? 'text-amber-400 bg-amber-400/20'
                                 : hasAnyKf
                                   ? 'text-amber-400/50 hover:text-amber-400'
-                                  : 'text-zinc-600 hover:text-zinc-400'
+                                  : 'text-zinc-600 hover:text-zinc-400',
                             )}
                             title={hasKf ? 'Remove keyframe' : 'Add keyframe'}
                           >
@@ -237,7 +236,9 @@ export function KeyframeEditor({ clipId, className }: KeyframeEditorProps) {
                           max={config.max}
                           step={config.step}
                           value={value}
-                          onChange={(e) => updatePropertyValue(property, parseFloat(e.target.value))}
+                          onChange={(e) =>
+                            updatePropertyValue(property, parseFloat(e.target.value))
+                          }
                           className="flex-1 h-1 bg-zinc-700 rounded-full appearance-none cursor-pointer
                             [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 
                             [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-blue-500"
@@ -248,7 +249,12 @@ export function KeyframeEditor({ clipId, className }: KeyframeEditorProps) {
                           max={config.max}
                           step={config.step}
                           value={value.toFixed(2)}
-                          onChange={(e) => updatePropertyValue(property, parseFloat(e.target.value) || config.defaultValue)}
+                          onChange={(e) =>
+                            updatePropertyValue(
+                              property,
+                              parseFloat(e.target.value) || config.defaultValue,
+                            )
+                          }
                           className="w-16 bg-zinc-800 border border-zinc-700 rounded px-2 py-0.5 text-xs text-white text-right focus:outline-none focus:border-blue-500"
                         />
                         <span className="text-[10px] text-zinc-600 w-4">{config.unit}</span>
@@ -286,7 +292,7 @@ export function KeyframeEditor({ clipId, className }: KeyframeEditorProps) {
                           'absolute top-1/2 -translate-y-1/2 w-2 h-2 rounded-sm rotate-45 transition-colors',
                           selectedKeyframeId === kf.id
                             ? 'bg-blue-500'
-                            : 'bg-amber-400 hover:bg-amber-300'
+                            : 'bg-amber-400 hover:bg-amber-300',
                         )}
                         style={{ left: `calc(${position}% - 4px)` }}
                         title={`${PROPERTY_CONFIGS[track.property].label}: ${kf.value.toFixed(2)} @ ${kf.time.toFixed(2)}s`}
@@ -314,7 +320,7 @@ export function KeyframeEditor({ clipId, className }: KeyframeEditorProps) {
  * Compact keyframe indicator for timeline clips
  */
 export function KeyframeIndicator({ clipId }: { clipId: string }) {
-  const clipKeyframes = useKeyframeStore(state => state.getClipKeyframes(clipId))
+  const clipKeyframes = useKeyframeStore((state) => state.getClipKeyframes(clipId))
 
   if (!clipKeyframes || clipKeyframes.tracks.length === 0) {
     return null
@@ -322,7 +328,7 @@ export function KeyframeIndicator({ clipId }: { clipId: string }) {
 
   const totalKeyframes = clipKeyframes.tracks.reduce(
     (sum, track) => sum + track.keyframes.length,
-    0
+    0,
   )
 
   return (

@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from 'react'
+
 import { cn } from '../../lib/utils'
 
 interface TooltipProps {
@@ -26,20 +27,22 @@ export function Tooltip({ children, content, side = 'top' }: TooltipProps) {
               'top-full left-1/2 -translate-x-1/2 mt-2': side === 'bottom',
               'right-full top-1/2 -translate-y-1/2 mr-2': side === 'left',
               'left-full top-1/2 -translate-y-1/2 ml-2': side === 'right',
-            }
+            },
           )}
         >
           {content}
           {/* Tooltip arrow */}
-          <div className={cn(
-            'absolute w-2 h-2 bg-surface-alt border-border rotate-45',
-            {
-              'bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 border-r border-b': side === 'top',
-              'top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 border-l border-t': side === 'bottom',
+          <div
+            className={cn('absolute w-2 h-2 bg-surface-alt border-border rotate-45', {
+              'bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 border-r border-b':
+                side === 'top',
+              'top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 border-l border-t':
+                side === 'bottom',
               'right-0 top-1/2 -translate-y-1/2 translate-x-1/2 border-t border-r': side === 'left',
-              'left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 border-b border-l': side === 'right',
-            }
-          )} />
+              'left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 border-b border-l':
+                side === 'right',
+            })}
+          />
         </div>
       )}
     </div>

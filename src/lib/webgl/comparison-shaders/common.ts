@@ -404,7 +404,15 @@ ${VISUALIZATION_UTILS}
 export interface ComparisonShader {
   name: string
   label: string
-  category: 'difference' | 'structural' | 'color' | 'professional' | 'video' | 'weighting' | 'analysis' | 'exposure'
+  category:
+    | 'difference'
+    | 'structural'
+    | 'color'
+    | 'professional'
+    | 'video'
+    | 'weighting'
+    | 'analysis'
+    | 'exposure'
   description: string
   fragment: string
 }

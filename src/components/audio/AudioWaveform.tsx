@@ -1,3 +1,4 @@
+import { Music, Volume2, VolumeX, Play, Pause, SkipBack, Wand2 } from 'lucide-react'
 /**
  * AUD-001: Audio Waveform Display
  * AUD-002: A/B Audio Switch
@@ -5,10 +6,10 @@
  * Redesigned with elegant, professional UI
  */
 import { useRef, useEffect, useState, useCallback } from 'react'
-import { useTimelineStore } from '../../stores/timelineStore'
-import { useMediaStore } from '../../stores/mediaStore'
+
 import { cn, formatTime } from '../../lib/utils'
-import { Music, Volume2, VolumeX, Play, Pause, SkipBack, Wand2 } from 'lucide-react'
+import { useMediaStore } from '../../stores/mediaStore'
+import { useTimelineStore } from '../../stores/timelineStore'
 
 interface WaveformData {
   peaks: number[]
@@ -23,7 +24,7 @@ function VolumeSlider({
   value,
   onChange,
   color,
-  muted
+  muted,
 }: {
   value: number
   onChange: (v: number) => void
@@ -36,11 +37,11 @@ function VolumeSlider({
 
   return (
     <div className="relative w-20 h-6 flex items-center group">
-      <div className={cn("absolute inset-y-2 left-0 right-0 rounded-full", trackColorClass)} />
+      <div className={cn('absolute inset-y-2 left-0 right-0 rounded-full', trackColorClass)} />
       <div
         className={cn(
-          "absolute inset-y-2 left-0 rounded-full transition-all",
-          muted ? 'bg-text-muted' : colorClass
+          'absolute inset-y-2 left-0 rounded-full transition-all',
+          muted ? 'bg-text-muted' : colorClass,
         )}
         style={{ width: `${percentage}%` }}
       />
@@ -56,9 +57,9 @@ function VolumeSlider({
       {/* Thumb indicator */}
       <div
         className={cn(
-          "absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full border-2 border-background transition-all",
+          'absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full border-2 border-background transition-all',
           muted ? 'bg-text-muted' : colorClass,
-          "group-hover:scale-110"
+          'group-hover:scale-110',
         )}
         style={{ left: `calc(${percentage}% - 6px)` }}
       />
@@ -80,11 +81,12 @@ export function AudioWaveform() {
   const [volumeB, setVolumeB] = useState(1)
   const [autoLevel, setAutoLevel] = useState(false)
 
-  const { currentTime, isPlaying, seek, togglePlay, tracks, playbackSpeed, loopRegion } = useTimelineStore()
+  const { currentTime, isPlaying, seek, togglePlay, tracks, playbackSpeed, loopRegion } =
+    useTimelineStore()
   const { getFile } = useMediaStore()
 
-  const trackA = tracks.find(t => t.type === 'a')
-  const trackB = tracks.find(t => t.type === 'b')
+  const trackA = tracks.find((t) => t.type === 'a')
+  const trackB = tracks.find((t) => t.type === 'b')
   const clipA = trackA?.clips[0]
   const clipB = trackB?.clips[0]
   const mediaA = clipA ? getFile(clipA.mediaId) : null
@@ -151,64 +153,65 @@ export function AudioWaveform() {
   }, [mediaA, mediaB, extractWaveform])
 
   // Draw waveform on canvas
-  const drawWaveform = useCallback((
-    canvas: HTMLCanvasElement,
-    data: WaveformData | null,
-    color: string,
-    bgColor: string,
-    playheadTime: number,
-    isActive: boolean
-  ) => {
-    const ctx = canvas.getContext('2d')
-    if (!ctx || !data) return
+  const drawWaveform = useCallback(
+    (
+      canvas: HTMLCanvasElement,
+      data: WaveformData | null,
+      color: string,
+      bgColor: string,
+      playheadTime: number,
+      isActive: boolean,
+    ) => {
+      const ctx = canvas.getContext('2d')
+      if (!ctx || !data) return
 
-    const { width, height } = canvas
-    const { peaks, duration: audioDuration } = data
+      const { width, height } = canvas
+      const { peaks, duration: audioDuration } = data
 
-    // Clear with gradient background
-    const gradient = ctx.createLinearGradient(0, 0, 0, height)
-    gradient.addColorStop(0, bgColor)
-    gradient.addColorStop(0.5, '#0d0d0d')
-    gradient.addColorStop(1, bgColor)
-    ctx.fillStyle = gradient
-    ctx.fillRect(0, 0, width, height)
+      // Clear with gradient background
+      const gradient = ctx.createLinearGradient(0, 0, 0, height)
+      gradient.addColorStop(0, bgColor)
+      gradient.addColorStop(0.5, '#0d0d0d')
+      gradient.addColorStop(1, bgColor)
+      ctx.fillStyle = gradient
+      ctx.fillRect(0, 0, width, height)
 
-    const barWidth = Math.max(2, width / peaks.length)
-    const gap = 1
-    const halfHeight = height / 2
-    const playedRatio = playheadTime / audioDuration
+      const barWidth = Math.max(2, width / peaks.length)
+      const gap = 1
+      const halfHeight = height / 2
+      const playedRatio = playheadTime / audioDuration
 
-    // Draw waveform bars
-    for (let i = 0; i < peaks.length; i++) {
-      const barHeight = peaks[i] * halfHeight * 0.85
-      const x = i * barWidth
-      const ratio = i / peaks.length
+      // Draw waveform bars
+      for (let i = 0; i < peaks.length; i++) {
+        const barHeight = peaks[i] * halfHeight * 0.85
+        const x = i * barWidth
+        const ratio = i / peaks.length
 
-      // Color based on played position
-      const isPlayed = ratio <= playedRatio
-      ctx.fillStyle = isPlayed
-        ? color
-        : isActive ? `${color}40` : `${color}20`
+        // Color based on played position
+        const isPlayed = ratio <= playedRatio
+        ctx.fillStyle = isPlayed ? color : isActive ? `${color}40` : `${color}20`
 
-      // Draw mirrored bars (top and bottom)
-      const barActualWidth = barWidth - gap
-      ctx.fillRect(x, halfHeight - barHeight, barActualWidth, barHeight)
-      ctx.fillRect(x, halfHeight, barActualWidth, barHeight)
-    }
+        // Draw mirrored bars (top and bottom)
+        const barActualWidth = barWidth - gap
+        ctx.fillRect(x, halfHeight - barHeight, barActualWidth, barHeight)
+        ctx.fillRect(x, halfHeight, barActualWidth, barHeight)
+      }
 
-    // Draw playhead
-    if (audioDuration > 0 && isActive) {
-      const playheadX = playedRatio * width
-      ctx.fillStyle = '#ffffff'
-      ctx.fillRect(playheadX - 1, 0, 2, height)
+      // Draw playhead
+      if (audioDuration > 0 && isActive) {
+        const playheadX = playedRatio * width
+        ctx.fillStyle = '#ffffff'
+        ctx.fillRect(playheadX - 1, 0, 2, height)
 
-      // Glow effect
-      ctx.shadowColor = '#ffffff'
-      ctx.shadowBlur = 10
-      ctx.fillRect(playheadX - 1, 0, 2, height)
-      ctx.shadowBlur = 0
-    }
-  }, [])
+        // Glow effect
+        ctx.shadowColor = '#ffffff'
+        ctx.shadowBlur = 10
+        ctx.fillRect(playheadX - 1, 0, 2, height)
+        ctx.shadowBlur = 0
+      }
+    },
+    [],
+  )
 
   // Update waveform displays
   useEffect(() => {
@@ -323,17 +326,17 @@ export function AudioWaveform() {
   }, [isPlaying, loopRegion, seek])
 
   // Handle click to seek
-  const handleCanvasClick = useCallback((
-    e: React.MouseEvent<HTMLCanvasElement>,
-    data: WaveformData | null
-  ) => {
-    if (!data) return
-    const canvas = e.currentTarget
-    const rect = canvas.getBoundingClientRect()
-    const x = e.clientX - rect.left
-    const ratio = x / canvas.width
-    seek(ratio * data.duration)
-  }, [seek])
+  const handleCanvasClick = useCallback(
+    (e: React.MouseEvent<HTMLCanvasElement>, data: WaveformData | null) => {
+      if (!data) return
+      const canvas = e.currentTarget
+      const rect = canvas.getBoundingClientRect()
+      const x = e.clientX - rect.left
+      const ratio = x / canvas.width
+      seek(ratio * data.duration)
+    },
+    [seek],
+  )
 
   const hasAudio = mediaA?.type === 'audio' || mediaB?.type === 'audio'
 
@@ -342,9 +345,15 @@ export function AudioWaveform() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
       switch (e.key.toLowerCase()) {
-        case 'a': setActiveAudio('a'); break
-        case 'b': setActiveAudio('b'); break
-        case 's': setActiveAudio('both'); break
+        case 'a':
+          setActiveAudio('a')
+          break
+        case 'b':
+          setActiveAudio('b')
+          break
+        case 's':
+          setActiveAudio('both')
+          break
       }
     }
     window.addEventListener('keydown', handleKeyDown)
@@ -371,7 +380,7 @@ export function AudioWaveform() {
                       : mode === 'b'
                         ? 'bg-secondary text-black'
                         : 'bg-text-primary text-background'
-                    : 'text-text-muted hover:text-text-primary'
+                    : 'text-text-muted hover:text-text-primary',
                 )}
               >
                 {mode === 'both' ? 'A+B' : mode.toUpperCase()}
@@ -392,17 +401,18 @@ export function AudioWaveform() {
           <button
             onClick={togglePlay}
             className={cn(
-              "w-10 h-10 flex items-center justify-center transition-all",
+              'w-10 h-10 flex items-center justify-center transition-all',
               isPlaying
-                ? "bg-accent text-white"
-                : "bg-surface-hover text-text-primary hover:bg-accent hover:text-white"
+                ? 'bg-accent text-white'
+                : 'bg-surface-hover text-text-primary hover:bg-accent hover:text-white',
             )}
             title={isPlaying ? 'Pause (Space)' : 'Play (Space)'}
           >
             {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
           </button>
           <div className="ml-3 text-sm font-mono text-text-secondary tabular-nums">
-            {formatTime(currentTime)} <span className="text-text-muted">/</span> {formatTime(maxDuration)}
+            {formatTime(currentTime)} <span className="text-text-muted">/</span>{' '}
+            {formatTime(maxDuration)}
           </div>
         </div>
 
@@ -413,11 +423,15 @@ export function AudioWaveform() {
             <button
               onClick={() => setVolumeA(volumeA > 0 ? 0 : 1)}
               className={cn(
-                "p-1 transition-colors",
-                activeAudio === 'b' ? 'text-text-muted' : 'text-accent hover:text-accent'
+                'p-1 transition-colors',
+                activeAudio === 'b' ? 'text-text-muted' : 'text-accent hover:text-accent',
               )}
             >
-              {volumeA === 0 || activeAudio === 'b' ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+              {volumeA === 0 || activeAudio === 'b' ? (
+                <VolumeX className="w-4 h-4" />
+              ) : (
+                <Volume2 className="w-4 h-4" />
+              )}
             </button>
             <span className="text-[10px] font-bold text-accent w-3">A</span>
             <VolumeSlider
@@ -426,7 +440,9 @@ export function AudioWaveform() {
               color="accent"
               muted={activeAudio === 'b'}
             />
-            <span className="text-[10px] text-text-muted w-8 tabular-nums">{Math.round(volumeA * 100)}%</span>
+            <span className="text-[10px] text-text-muted w-8 tabular-nums">
+              {Math.round(volumeA * 100)}%
+            </span>
           </div>
 
           <div className="w-px h-6 bg-border" />
@@ -436,20 +452,29 @@ export function AudioWaveform() {
             <button
               onClick={() => setVolumeB(volumeB > 0 ? 0 : 1)}
               className={cn(
-                "p-1 transition-colors",
-                activeAudio === 'a' ? 'text-text-muted' : 'text-secondary hover:text-secondary'
+                'p-1 transition-colors',
+                activeAudio === 'a' ? 'text-text-muted' : 'text-secondary hover:text-secondary',
               )}
             >
-              {volumeB === 0 || activeAudio === 'a' ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+              {volumeB === 0 || activeAudio === 'a' ? (
+                <VolumeX className="w-4 h-4" />
+              ) : (
+                <Volume2 className="w-4 h-4" />
+              )}
             </button>
             <span className="text-[10px] font-bold text-secondary w-3">B</span>
             <VolumeSlider
               value={volumeB}
-              onChange={(v) => { setVolumeB(v); setAutoLevel(false) }}
+              onChange={(v) => {
+                setVolumeB(v)
+                setAutoLevel(false)
+              }}
               color="secondary"
               muted={activeAudio === 'a'}
             />
-            <span className="text-[10px] text-text-muted w-8 tabular-nums">{Math.round(volumeB * 100)}%</span>
+            <span className="text-[10px] text-text-muted w-8 tabular-nums">
+              {Math.round(volumeB * 100)}%
+            </span>
           </div>
 
           <div className="w-px h-6 bg-border" />
@@ -463,7 +488,7 @@ export function AudioWaveform() {
               autoLevel
                 ? 'bg-accent text-white'
                 : 'bg-surface-hover text-text-muted hover:text-text-primary',
-              (!waveformA || !waveformB) && 'opacity-40 cursor-not-allowed'
+              (!waveformA || !waveformB) && 'opacity-40 cursor-not-allowed',
             )}
             title="Auto-match audio levels"
           >
@@ -476,17 +501,23 @@ export function AudioWaveform() {
       {/* Waveforms */}
       <div className="flex-1 flex flex-col">
         {/* Audio A */}
-        <div className={cn(
-          'flex-1 relative transition-opacity duration-200',
-          activeAudio === 'b' && 'opacity-50'
-        )}>
+        <div
+          className={cn(
+            'flex-1 relative transition-opacity duration-200',
+            activeAudio === 'b' && 'opacity-50',
+          )}
+        >
           {/* Label */}
           <div className="absolute top-3 left-3 z-10 flex items-center gap-2">
-            <span className="w-7 h-7 bg-accent flex items-center justify-center text-white text-sm font-bold">A</span>
+            <span className="w-7 h-7 bg-accent flex items-center justify-center text-white text-sm font-bold">
+              A
+            </span>
             {waveformA && mediaA && (
               <div className="bg-black/70 backdrop-blur-sm px-2 py-1 flex items-center gap-3">
                 <span className="text-xs text-text-primary font-medium">{mediaA.name}</span>
-                <span className="text-[10px] text-text-muted">{formatTime(waveformA.duration)}</span>
+                <span className="text-[10px] text-text-muted">
+                  {formatTime(waveformA.duration)}
+                </span>
               </div>
             )}
           </div>
@@ -510,7 +541,9 @@ export function AudioWaveform() {
                 </div>
                 <div className="text-center">
                   <p className="text-sm font-medium text-text-secondary">Audio A</p>
-                  <p className="text-xs text-text-muted mt-1">Drop audio file or add from library</p>
+                  <p className="text-xs text-text-muted mt-1">
+                    Drop audio file or add from library
+                  </p>
                 </div>
               </div>
             </div>
@@ -522,24 +555,32 @@ export function AudioWaveform() {
             className={cn('w-full h-full cursor-pointer', !waveformA && 'hidden')}
             onClick={(e) => handleCanvasClick(e, waveformA)}
           />
-          {mediaA?.type === 'audio' && <audio ref={audioARef} src={mediaA.url} preload="auto" className="hidden" />}
+          {mediaA?.type === 'audio' && (
+            <audio ref={audioARef} src={mediaA.url} preload="auto" className="hidden" />
+          )}
         </div>
 
         {/* Divider */}
         <div className="h-px bg-border" />
 
         {/* Audio B */}
-        <div className={cn(
-          'flex-1 relative transition-opacity duration-200',
-          activeAudio === 'a' && 'opacity-50'
-        )}>
+        <div
+          className={cn(
+            'flex-1 relative transition-opacity duration-200',
+            activeAudio === 'a' && 'opacity-50',
+          )}
+        >
           {/* Label */}
           <div className="absolute top-3 left-3 z-10 flex items-center gap-2">
-            <span className="w-7 h-7 bg-secondary flex items-center justify-center text-black text-sm font-bold">B</span>
+            <span className="w-7 h-7 bg-secondary flex items-center justify-center text-black text-sm font-bold">
+              B
+            </span>
             {waveformB && mediaB && (
               <div className="bg-black/70 backdrop-blur-sm px-2 py-1 flex items-center gap-3">
                 <span className="text-xs text-text-primary font-medium">{mediaB.name}</span>
-                <span className="text-[10px] text-text-muted">{formatTime(waveformB.duration)}</span>
+                <span className="text-[10px] text-text-muted">
+                  {formatTime(waveformB.duration)}
+                </span>
               </div>
             )}
           </div>
@@ -563,7 +604,9 @@ export function AudioWaveform() {
                 </div>
                 <div className="text-center">
                   <p className="text-sm font-medium text-text-secondary">Audio B</p>
-                  <p className="text-xs text-text-muted mt-1">Drop audio file or add from library</p>
+                  <p className="text-xs text-text-muted mt-1">
+                    Drop audio file or add from library
+                  </p>
                 </div>
               </div>
             </div>
@@ -575,19 +618,33 @@ export function AudioWaveform() {
             className={cn('w-full h-full cursor-pointer', !waveformB && 'hidden')}
             onClick={(e) => handleCanvasClick(e, waveformB)}
           />
-          {mediaB?.type === 'audio' && <audio ref={audioBRef} src={mediaB.url} preload="auto" className="hidden" />}
+          {mediaB?.type === 'audio' && (
+            <audio ref={audioBRef} src={mediaB.url} preload="auto" className="hidden" />
+          )}
         </div>
       </div>
 
       {/* Bottom keyboard hints */}
       {hasAudio && (
         <div className="h-8 bg-surface border-t border-border flex items-center justify-center gap-6 text-[10px] text-text-muted">
-          <span><kbd className="px-1 py-0.5 bg-background text-accent font-mono mx-1">A</kbd> Solo A</span>
-          <span><kbd className="px-1 py-0.5 bg-background text-secondary font-mono mx-1">B</kbd> Solo B</span>
-          <span><kbd className="px-1 py-0.5 bg-background text-text-primary font-mono mx-1">S</kbd> Both</span>
+          <span>
+            <kbd className="px-1 py-0.5 bg-background text-accent font-mono mx-1">A</kbd> Solo A
+          </span>
+          <span>
+            <kbd className="px-1 py-0.5 bg-background text-secondary font-mono mx-1">B</kbd> Solo B
+          </span>
+          <span>
+            <kbd className="px-1 py-0.5 bg-background text-text-primary font-mono mx-1">S</kbd> Both
+          </span>
           <span className="text-border">|</span>
-          <span><kbd className="px-1 py-0.5 bg-background text-text-primary font-mono mx-1">Space</kbd> Play/Pause</span>
-          <span><kbd className="px-1 py-0.5 bg-background text-text-primary font-mono mx-1">←</kbd><kbd className="px-1 py-0.5 bg-background text-text-primary font-mono mx-1">→</kbd> Seek</span>
+          <span>
+            <kbd className="px-1 py-0.5 bg-background text-text-primary font-mono mx-1">Space</kbd>{' '}
+            Play/Pause
+          </span>
+          <span>
+            <kbd className="px-1 py-0.5 bg-background text-text-primary font-mono mx-1">←</kbd>
+            <kbd className="px-1 py-0.5 bg-background text-text-primary font-mono mx-1">→</kbd> Seek
+          </span>
         </div>
       )}
     </div>

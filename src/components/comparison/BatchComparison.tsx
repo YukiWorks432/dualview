@@ -3,9 +3,21 @@
  * Compare multiple images at once with matrix view and export
  */
 
+import {
+  Upload,
+  Grid3X3,
+  SortAsc,
+  SortDesc,
+  Filter,
+  X,
+  Play,
+  Pause,
+  FileJson,
+  FileSpreadsheet,
+} from 'lucide-react'
 import { useState, useCallback, useRef } from 'react'
+
 import { useMediaStore } from '../../stores/mediaStore'
-import { Upload, Grid3X3, SortAsc, SortDesc, Filter, X, Play, Pause, FileJson, FileSpreadsheet } from 'lucide-react'
 
 interface BatchResult {
   idA: string
@@ -40,20 +52,16 @@ export function BatchComparison({ isOpen, onClose }: BatchComparisonProps) {
   const abortRef = useRef(false)
 
   // Filter to only image files
-  const imageFiles = files.filter(f => f.type === 'image')
+  const imageFiles = files.filter((f) => f.type === 'image')
 
   // Toggle file selection
   const toggleFile = useCallback((id: string) => {
-    setSelectedFiles(prev =>
-      prev.includes(id)
-        ? prev.filter(f => f !== id)
-        : [...prev, id]
-    )
+    setSelectedFiles((prev) => (prev.includes(id) ? prev.filter((f) => f !== id) : [...prev, id]))
   }, [])
 
   // Select all images
   const selectAll = useCallback(() => {
-    setSelectedFiles(imageFiles.map(f => f.id))
+    setSelectedFiles(imageFiles.map((f) => f.id))
   }, [imageFiles])
 
   // Clear selection
@@ -87,8 +95,8 @@ export function BatchComparison({ isOpen, onClose }: BatchComparisonProps) {
     // Compare each pair
     for (let i = 0; i < selectedFiles.length && !abortRef.current; i++) {
       for (let j = i + 1; j < selectedFiles.length && !abortRef.current; j++) {
-        const fileA = files.find(f => f.id === selectedFiles[i])
-        const fileB = files.find(f => f.id === selectedFiles[j])
+        const fileA = files.find((f) => f.id === selectedFiles[i])
+        const fileB = files.find((f) => f.id === selectedFiles[j])
 
         if (!fileA || !fileB) continue
 
@@ -110,7 +118,7 @@ export function BatchComparison({ isOpen, onClose }: BatchComparisonProps) {
             diffPixelPercent: metrics.diffPixelPercent,
             peakDifference: metrics.peakDifference,
             meanDifference: metrics.meanDifference,
-            timestamp: Date.now()
+            timestamp: Date.now(),
           })
         } catch (err) {
           console.error(`Failed to compare ${fileA.name} with ${fileB.name}:`, err)
@@ -120,7 +128,7 @@ export function BatchComparison({ isOpen, onClose }: BatchComparisonProps) {
         setProgress((completed / totalComparisons) * 100)
 
         // Allow UI to update
-        await new Promise(resolve => setTimeout(resolve, 10))
+        await new Promise((resolve) => setTimeout(resolve, 10))
       }
     }
 
@@ -148,7 +156,7 @@ export function BatchComparison({ isOpen, onClose }: BatchComparisonProps) {
     ctx: CanvasRenderingContext2D,
     canvas: HTMLCanvasElement,
     imgA: HTMLImageElement,
-    imgB: HTMLImageElement
+    imgB: HTMLImageElement,
   ) => {
     const width = canvas.width
     const height = canvas.height
@@ -200,7 +208,7 @@ export function BatchComparison({ isOpen, onClose }: BatchComparisonProps) {
       deltaE: deltaE,
       diffPixelPercent: (diffPixels / pixelCount) * 100,
       peakDifference: maxDiff,
-      meanDifference: meanDiff
+      meanDifference: meanDiff,
     }
   }
 
@@ -211,7 +219,7 @@ export function BatchComparison({ isOpen, onClose }: BatchComparisonProps) {
   })
 
   // Filter results
-  const filteredResults = sortedResults.filter(r => {
+  const filteredResults = sortedResults.filter((r) => {
     if (showOnlyDifferent && r.ssim > 0.99) return false
     if (filterThreshold > 0 && r.diffPixelPercent < filterThreshold) return false
     return true
@@ -222,7 +230,7 @@ export function BatchComparison({ isOpen, onClose }: BatchComparisonProps) {
     const data = {
       timestamp: new Date().toISOString(),
       totalComparisons: filteredResults.length,
-      results: filteredResults
+      results: filteredResults,
     }
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
@@ -235,17 +243,25 @@ export function BatchComparison({ isOpen, onClose }: BatchComparisonProps) {
 
   // Export as CSV
   const exportCSV = useCallback(() => {
-    const headers = ['File A', 'File B', 'SSIM', 'Delta E', 'Diff Pixels %', 'Peak Diff', 'Mean Diff']
-    const rows = filteredResults.map(r => [
+    const headers = [
+      'File A',
+      'File B',
+      'SSIM',
+      'Delta E',
+      'Diff Pixels %',
+      'Peak Diff',
+      'Mean Diff',
+    ]
+    const rows = filteredResults.map((r) => [
       r.nameA,
       r.nameB,
       r.ssim.toFixed(4),
       r.deltaE.toFixed(2),
       r.diffPixelPercent.toFixed(2),
       r.peakDifference.toFixed(0),
-      r.meanDifference.toFixed(2)
+      r.meanDifference.toFixed(2),
     ])
-    const csv = [headers, ...rows].map(row => row.join(',')).join('\n')
+    const csv = [headers, ...rows].map((row) => row.join(',')).join('\n')
     const blob = new Blob([csv], { type: 'text/csv' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -256,13 +272,16 @@ export function BatchComparison({ isOpen, onClose }: BatchComparisonProps) {
   }, [filteredResults])
 
   // Compute summary statistics
-  const summaryStats = results.length > 0 ? {
-    avgSSIM: results.reduce((sum, r) => sum + r.ssim, 0) / results.length,
-    minSSIM: Math.min(...results.map(r => r.ssim)),
-    maxSSIM: Math.max(...results.map(r => r.ssim)),
-    avgDeltaE: results.reduce((sum, r) => sum + r.deltaE, 0) / results.length,
-    avgDiffPercent: results.reduce((sum, r) => sum + r.diffPixelPercent, 0) / results.length
-  } : null
+  const summaryStats =
+    results.length > 0
+      ? {
+          avgSSIM: results.reduce((sum, r) => sum + r.ssim, 0) / results.length,
+          minSSIM: Math.min(...results.map((r) => r.ssim)),
+          maxSSIM: Math.max(...results.map((r) => r.ssim)),
+          avgDeltaE: results.reduce((sum, r) => sum + r.deltaE, 0) / results.length,
+          avgDiffPercent: results.reduce((sum, r) => sum + r.diffPixelPercent, 0) / results.length,
+        }
+      : null
 
   if (!isOpen) return null
 
@@ -309,7 +328,7 @@ export function BatchComparison({ isOpen, onClose }: BatchComparisonProps) {
                 </div>
               ) : (
                 <div className="space-y-1">
-                  {imageFiles.map(file => (
+                  {imageFiles.map((file) => (
                     <button
                       key={file.id}
                       onClick={() => toggleFile(file.id)}
@@ -356,7 +375,10 @@ export function BatchComparison({ isOpen, onClose }: BatchComparisonProps) {
                   className="w-full px-4 py-2 bg-[#ff5722] text-white rounded flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Play size={16} />
-                  Compare ({Math.floor(selectedFiles.length * (selectedFiles.length - 1) / 2)} pairs)
+                  Compare ({Math.floor(
+                    (selectedFiles.length * (selectedFiles.length - 1)) / 2,
+                  )}{' '}
+                  pairs)
                 </button>
               )}
             </div>
@@ -379,7 +401,9 @@ export function BatchComparison({ isOpen, onClose }: BatchComparisonProps) {
                   </div>
                   <div>
                     <div className="text-gray-500">Max SSIM</div>
-                    <div className="text-green-400 font-mono">{summaryStats.maxSSIM.toFixed(4)}</div>
+                    <div className="text-green-400 font-mono">
+                      {summaryStats.maxSSIM.toFixed(4)}
+                    </div>
                   </div>
                   <div>
                     <div className="text-gray-500">Avg Delta E</div>
@@ -387,7 +411,9 @@ export function BatchComparison({ isOpen, onClose }: BatchComparisonProps) {
                   </div>
                   <div>
                     <div className="text-gray-500">Avg Diff %</div>
-                    <div className="text-white font-mono">{summaryStats.avgDiffPercent.toFixed(1)}%</div>
+                    <div className="text-white font-mono">
+                      {summaryStats.avgDiffPercent.toFixed(1)}%
+                    </div>
                   </div>
                 </div>
               </div>
@@ -399,7 +425,7 @@ export function BatchComparison({ isOpen, onClose }: BatchComparisonProps) {
                 <span className="text-sm text-gray-400">Sort by:</span>
                 <select
                   value={sortBy}
-                  onChange={e => setSortBy(e.target.value as typeof sortBy)}
+                  onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
                   className="bg-gray-800 border border-gray-600 rounded px-2 py-1 text-sm text-white"
                 >
                   <option value="ssim">SSIM</option>
@@ -407,7 +433,7 @@ export function BatchComparison({ isOpen, onClose }: BatchComparisonProps) {
                   <option value="diffPixelPercent">Diff %</option>
                 </select>
                 <button
-                  onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
+                  onClick={() => setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'))}
                   className="p-1 text-gray-400 hover:text-white"
                 >
                   {sortOrder === 'asc' ? <SortAsc size={16} /> : <SortDesc size={16} />}
@@ -420,7 +446,7 @@ export function BatchComparison({ isOpen, onClose }: BatchComparisonProps) {
                   <input
                     type="checkbox"
                     checked={showOnlyDifferent}
-                    onChange={e => setShowOnlyDifferent(e.target.checked)}
+                    onChange={(e) => setShowOnlyDifferent(e.target.checked)}
                     className="rounded"
                   />
                   Only different
@@ -476,24 +502,43 @@ export function BatchComparison({ isOpen, onClose }: BatchComparisonProps) {
                         key={`${result.idA}-${result.idB}`}
                         className={idx % 2 === 0 ? 'bg-[#1a1a1a]' : 'bg-[#222]'}
                       >
-                        <td className="px-4 py-2 text-white truncate max-w-[150px]">{result.nameA}</td>
-                        <td className="px-4 py-2 text-white truncate max-w-[150px]">{result.nameB}</td>
-                        <td className={`px-4 py-2 text-right font-mono ${
-                          result.ssim > 0.95 ? 'text-green-400' :
-                          result.ssim > 0.8 ? 'text-yellow-400' : 'text-red-400'
-                        }`}>
+                        <td className="px-4 py-2 text-white truncate max-w-[150px]">
+                          {result.nameA}
+                        </td>
+                        <td className="px-4 py-2 text-white truncate max-w-[150px]">
+                          {result.nameB}
+                        </td>
+                        <td
+                          className={`px-4 py-2 text-right font-mono ${
+                            result.ssim > 0.95
+                              ? 'text-green-400'
+                              : result.ssim > 0.8
+                                ? 'text-yellow-400'
+                                : 'text-red-400'
+                          }`}
+                        >
                           {result.ssim.toFixed(4)}
                         </td>
-                        <td className={`px-4 py-2 text-right font-mono ${
-                          result.deltaE < 1 ? 'text-green-400' :
-                          result.deltaE < 5 ? 'text-yellow-400' : 'text-red-400'
-                        }`}>
+                        <td
+                          className={`px-4 py-2 text-right font-mono ${
+                            result.deltaE < 1
+                              ? 'text-green-400'
+                              : result.deltaE < 5
+                                ? 'text-yellow-400'
+                                : 'text-red-400'
+                          }`}
+                        >
                           {result.deltaE.toFixed(2)}
                         </td>
-                        <td className={`px-4 py-2 text-right font-mono ${
-                          result.diffPixelPercent < 1 ? 'text-green-400' :
-                          result.diffPixelPercent < 10 ? 'text-yellow-400' : 'text-red-400'
-                        }`}>
+                        <td
+                          className={`px-4 py-2 text-right font-mono ${
+                            result.diffPixelPercent < 1
+                              ? 'text-green-400'
+                              : result.diffPixelPercent < 10
+                                ? 'text-yellow-400'
+                                : 'text-red-400'
+                          }`}
+                        >
                           {result.diffPixelPercent.toFixed(1)}%
                         </td>
                         <td className="px-4 py-2 text-right font-mono text-gray-300">

@@ -49,7 +49,7 @@ const GIF_PRESETS = {
 export async function createGifFromFrames(
   frames: ImageData[],
   preset: 'small' | 'medium' | 'large' | 'hd',
-  onProgress: (progress: number, message: string) => void
+  onProgress: (progress: number, message: string) => void,
 ): Promise<Blob> {
   onProgress(0, 'Loading GIF encoder...')
   await loadGifJs()
@@ -100,7 +100,7 @@ export async function createGifFromFrames(
 export function captureFrame(
   canvas: HTMLCanvasElement,
   targetWidth: number,
-  targetHeight: number
+  targetHeight: number,
 ): ImageData {
   // Create a temporary canvas at target size
   const tempCanvas = document.createElement('canvas')
@@ -122,7 +122,7 @@ export async function exportSweepAsGif(
   drawFrame: (progress: number) => HTMLCanvasElement,
   durationMs: number,
   preset: 'small' | 'medium' | 'large' | 'hd',
-  onProgress: (progress: number, message: string) => void
+  onProgress: (progress: number, message: string) => void,
 ): Promise<Blob> {
   const options = GIF_PRESETS[preset]
   const totalFrames = Math.ceil((durationMs / 1000) * options.fps)
@@ -143,7 +143,7 @@ export async function exportSweepAsGif(
 
     // Small delay to prevent blocking
     if (i % 10 === 0) {
-      await new Promise(r => setTimeout(r, 0))
+      await new Promise((r) => setTimeout(r, 0))
     }
   }
 

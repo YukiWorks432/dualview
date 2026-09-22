@@ -73,7 +73,7 @@ function calculateCovariance(
   dataA: Uint8ClampedArray,
   dataB: Uint8ClampedArray,
   meanA: number,
-  meanB: number
+  meanB: number,
 ): number {
   const pixelCount = dataA.length / 4
   let sum = 0
@@ -103,8 +103,8 @@ export function calculateSSIM(dataA: Uint8ClampedArray, dataB: Uint8ClampedArray
   const L = 255 // Dynamic range
   const k1 = 0.01
   const k2 = 0.03
-  const c1 = (k1 * L) * (k1 * L)
-  const c2 = (k2 * L) * (k2 * L)
+  const c1 = k1 * L * (k1 * L)
+  const c2 = k2 * L * (k2 * L)
 
   const numerator = (2 * statsA.mean * statsB.mean + c1) * (2 * covariance + c2)
   const denominator =
@@ -120,7 +120,7 @@ export function calculateSSIM(dataA: Uint8ClampedArray, dataB: Uint8ClampedArray
 export function getVideoFrameData(
   video: HTMLVideoElement,
   width: number = 256,
-  height: number = 144
+  height: number = 144,
 ): Uint8ClampedArray | null {
   if (!video || video.readyState < 2) return null
 
@@ -145,7 +145,7 @@ export interface QualityMetrics {
  */
 export function calculateVideoMetrics(
   videoA: HTMLVideoElement,
-  videoB: HTMLVideoElement
+  videoB: HTMLVideoElement,
 ): QualityMetrics | null {
   const dataA = getVideoFrameData(videoA)
   const dataB = getVideoFrameData(videoB)

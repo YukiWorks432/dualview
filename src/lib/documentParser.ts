@@ -4,11 +4,18 @@
  * Parses CSV, Excel, DOCX, and PDF files for comparison
  */
 
-import type { DocumentMetadata, ParsedDocumentContent, ParsedSheet, ParsedPDFPage, MediaType } from '../types'
-import Papa from 'papaparse'
-import * as XLSX from 'xlsx'
 import mammoth from 'mammoth'
+import Papa from 'papaparse'
 import * as pdfjsLib from 'pdfjs-dist'
+import * as XLSX from 'xlsx'
+
+import type {
+  DocumentMetadata,
+  ParsedDocumentContent,
+  ParsedSheet,
+  ParsedPDFPage,
+  MediaType,
+} from '../types'
 
 // Configure PDF.js worker
 pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`
@@ -45,23 +52,25 @@ export async function parseCSV(file: File): Promise<DocumentMetadata> {
 
         const parsedContent: ParsedDocumentContent = {
           type: 'csv',
-          sheets: [{
-            name: 'Sheet1',
-            data: data,
-            headers: headers
-          }]
+          sheets: [
+            {
+              name: 'Sheet1',
+              data: data,
+              headers: headers,
+            },
+          ],
         }
 
         resolve({
           rowCount: data.length,
           columnCount: headers.length,
           headers: headers,
-          parsedContent
+          parsedContent,
         })
       },
       error: (error) => {
         reject(new Error(`CSV parse error: ${error.message}`))
-      }
+      },
     })
   })
 }
@@ -84,8 +93,8 @@ export async function parseExcel(file: File): Promise<DocumentMetadata> {
 
     sheets.push({
       name: sheetName,
-      data: data.map(row => row.map(cell => cell?.toString() || '')),
-      headers
+      data: data.map((row) => row.map((cell) => cell?.toString() || '')),
+      headers,
     })
 
     totalRows += data.length
@@ -94,7 +103,7 @@ export async function parseExcel(file: File): Promise<DocumentMetadata> {
 
   const parsedContent: ParsedDocumentContent = {
     type: 'excel',
-    sheets
+    sheets,
   }
 
   return {
@@ -103,7 +112,7 @@ export async function parseExcel(file: File): Promise<DocumentMetadata> {
     sheetNames: workbook.SheetNames,
     sheetCount: workbook.SheetNames.length,
     headers: sheets[0]?.headers,
-    parsedContent
+    parsedContent,
   }
 }
 
@@ -120,19 +129,22 @@ export async function parseDOCX(file: File): Promise<DocumentMetadata> {
   const text = textResult.value
 
   // Count words and paragraphs
-  const words = text.trim().split(/\s+/).filter(w => w.length > 0)
-  const paragraphs = text.split(/\n\n+/).filter(p => p.trim().length > 0)
+  const words = text
+    .trim()
+    .split(/\s+/)
+    .filter((w) => w.length > 0)
+  const paragraphs = text.split(/\n\n+/).filter((p) => p.trim().length > 0)
 
   const parsedContent: ParsedDocumentContent = {
     type: 'docx',
     html,
-    text
+    text,
   }
 
   return {
     wordCount: words.length,
     paragraphCount: paragraphs.length,
-    parsedContent
+    parsedContent,
   }
 }
 
@@ -151,9 +163,7 @@ export async function parsePDF(file: File): Promise<DocumentMetadata> {
 
     // Extract text
     const textContent = await page.getTextContent()
-    const text = textContent.items
-      .map((item) => ('str' in item ? item.str : ''))
-      .join(' ')
+    const text = textContent.items.map((item) => ('str' in item ? item.str : '')).join(' ')
 
     if (text.trim().length > 0) {
       hasText = true
@@ -173,26 +183,26 @@ export async function parsePDF(file: File): Promise<DocumentMetadata> {
         canvasContext: context,
         viewport,
         // PDF.js 4.x requires the canvas property
-        canvas
+        canvas,
       } as Parameters<typeof page.render>[0]).promise
     }
 
     pages.push({
       pageNumber: i,
       text,
-      imageDataUrl: canvas.toDataURL('image/jpeg', 0.8)
+      imageDataUrl: canvas.toDataURL('image/jpeg', 0.8),
     })
   }
 
   const parsedContent: ParsedDocumentContent = {
     type: 'pdf',
-    pages
+    pages,
   }
 
   return {
     pageCount: pdf.numPages,
     hasText,
-    parsedContent
+    parsedContent,
   }
 }
 
@@ -233,7 +243,7 @@ export function generateDocumentThumbnail(docType: MediaType): string {
     csv: { bg: '#22c55e', fg: '#ffffff', icon: 'CSV' },
     excel: { bg: '#16a34a', fg: '#ffffff', icon: 'XLS' },
     docx: { bg: '#2563eb', fg: '#ffffff', icon: 'DOC' },
-    pdf: { bg: '#dc2626', fg: '#ffffff', icon: 'PDF' }
+    pdf: { bg: '#dc2626', fg: '#ffffff', icon: 'PDF' },
   }
 
   const color = colors[docType] || { bg: '#6b7280', fg: '#ffffff', icon: '?' }

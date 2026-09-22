@@ -1,10 +1,3 @@
-import { useState, useEffect } from 'react'
-import { Select, Slider, AspectRatioSelector, Button } from '../ui'
-import { useProjectStore } from '../../stores/projectStore'
-import { useTimelineStore } from '../../stores/timelineStore'
-import { usePersistenceStore } from '../../stores/persistenceStore'
-import { MediaUpload } from '../media/MediaUpload'
-import { MediaLibrary } from '../media/MediaLibrary'
 import {
   FolderOpen,
   Settings,
@@ -17,8 +10,19 @@ import {
   Microscope,
   Save,
 } from 'lucide-react'
+import { useState, useEffect } from 'react'
+
+import {
+  getAllComparisonCategories,
+  getComparisonModeInfo,
+} from '../../lib/webgl/comparison-shaders'
+import { usePersistenceStore } from '../../stores/persistenceStore'
+import { useProjectStore } from '../../stores/projectStore'
+import { useTimelineStore } from '../../stores/timelineStore'
 import type { BlendMode, SplitLayout, ExportSettings, WebGLComparisonMode } from '../../types'
-import { getAllComparisonCategories, getComparisonModeInfo } from '../../lib/webgl/comparison-shaders'
+import { MediaLibrary } from '../media/MediaLibrary'
+import { MediaUpload } from '../media/MediaUpload'
+import { Select, Slider, AspectRatioSelector, Button } from '../ui'
 
 type Tab = 'media' | 'settings'
 
@@ -63,10 +67,12 @@ export function Sidebar({ onCollapse, isMobileOpen, onMobileClose, onOpenProject
 
   // Desktop sidebar
   const sidebarContent = (
-    <aside className={`
+    <aside
+      className={`
       bg-surface border-r border-border flex flex-col
       ${isMobileOpen ? 'mobile-drawer animate-slide-in-left' : 'w-72 hide-mobile'}
-    `}>
+    `}
+    >
       {/* Project controls - at top of sidebar */}
       <div className="flex items-center justify-between px-3 py-2 border-b border-border shrink-0 bg-surface-alt/50">
         <div className="flex items-center gap-1">
@@ -92,12 +98,8 @@ export function Sidebar({ onCollapse, isMobileOpen, onMobileClose, onOpenProject
             <span className="hidden sm:inline">Save</span>
           </Button>
         </div>
-        {saveStatus === 'saved' && (
-          <span className="text-[10px] text-text-muted">Saved</span>
-        )}
-        {saveStatus === 'saving' && (
-          <span className="text-[10px] text-accent">Saving...</span>
-        )}
+        {saveStatus === 'saved' && <span className="text-[10px] text-text-muted">Saved</span>}
+        {saveStatus === 'saving' && <span className="text-[10px] text-accent">Saving...</span>}
       </div>
 
       {/* Tab navigation - Jakob's Law: Familiar tab pattern */}
@@ -120,7 +122,9 @@ export function Sidebar({ onCollapse, isMobileOpen, onMobileClose, onOpenProject
           }`}
           onClick={() => setActiveTab('media')}
         >
-          <FolderOpen className={`w-4 h-4 inline-block mr-2 transition-transform ${activeTab === 'media' ? 'scale-110' : ''}`} />
+          <FolderOpen
+            className={`w-4 h-4 inline-block mr-2 transition-transform ${activeTab === 'media' ? 'scale-110' : ''}`}
+          />
           Media
           {/* Active indicator - Von Restorff Effect */}
           {activeTab === 'media' && (
@@ -135,7 +139,9 @@ export function Sidebar({ onCollapse, isMobileOpen, onMobileClose, onOpenProject
           }`}
           onClick={() => setActiveTab('settings')}
         >
-          <Settings className={`w-4 h-4 inline-block mr-2 transition-transform ${activeTab === 'settings' ? 'scale-110' : ''}`} />
+          <Settings
+            className={`w-4 h-4 inline-block mr-2 transition-transform ${activeTab === 'settings' ? 'scale-110' : ''}`}
+          />
           Settings
           {activeTab === 'settings' && (
             <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-accent" />
@@ -187,10 +193,10 @@ export function Sidebar({ onCollapse, isMobileOpen, onMobileClose, onOpenProject
             title="Hugging Face"
           >
             <svg className="w-5 h-5" viewBox="0 0 120 120" fill="currentColor">
-              <path d="M60 0C26.9 0 0 26.9 0 60s26.9 60 60 60 60-26.9 60-60S93.1 0 60 0zm0 110C32.4 110 10 87.6 10 60S32.4 10 60 10s50 22.4 50 50-22.4 50-50 50z"/>
-              <circle cx="40" cy="50" r="8"/>
-              <circle cx="80" cy="50" r="8"/>
-              <path d="M60 85c-11 0-20-9-20-20h40c0 11-9 20-20 20z"/>
+              <path d="M60 0C26.9 0 0 26.9 0 60s26.9 60 60 60 60-26.9 60-60S93.1 0 60 0zm0 110C32.4 110 10 87.6 10 60S32.4 10 60 10s50 22.4 50 50-22.4 50-50 50z" />
+              <circle cx="40" cy="50" r="8" />
+              <circle cx="80" cy="50" r="8" />
+              <path d="M60 85c-11 0-20-9-20-20h40c0 11-9 20-20 20z" />
             </svg>
           </a>
           <a
@@ -201,7 +207,7 @@ export function Sidebar({ onCollapse, isMobileOpen, onMobileClose, onOpenProject
             title="GitHub"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+              <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
             </svg>
           </a>
           <a
@@ -212,7 +218,7 @@ export function Sidebar({ onCollapse, isMobileOpen, onMobileClose, onOpenProject
             title="X (Twitter)"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
             </svg>
           </a>
         </div>
@@ -224,10 +230,7 @@ export function Sidebar({ onCollapse, isMobileOpen, onMobileClose, onOpenProject
   if (isMobileOpen) {
     return (
       <>
-        <div
-          className="mobile-drawer-overlay"
-          onClick={onMobileClose}
-        />
+        <div className="mobile-drawer-overlay" onClick={onMobileClose} />
         {sidebarContent}
       </>
     )
@@ -251,11 +254,11 @@ function MediaPanel() {
   return (
     <div className="space-y-4">
       {/* Comparison readiness indicator - Zeigarnik Effect + Goal-Gradient Effect */}
-      <div className={`p-3 border transition-all duration-300 ${
-        isReady
-          ? 'bg-accent/10 border-accent/30'
-          : 'bg-surface-alt border-border'
-      }`}>
+      <div
+        className={`p-3 border transition-all duration-300 ${
+          isReady ? 'bg-accent/10 border-accent/30' : 'bg-surface-alt border-border'
+        }`}
+      >
         <div className="flex items-center justify-between mb-2">
           <span className="text-xs font-medium text-text-secondary">
             {isReady ? '✓ Ready to Compare' : 'Setup Progress'}
@@ -266,18 +269,26 @@ function MediaPanel() {
         </div>
         {/* Progress bar with animation */}
         <div className="flex gap-1 mb-2">
-          <div className={`flex-1 h-1.5 transition-all duration-300 ${
-            hasMediaA ? 'bg-accent' : 'bg-border animate-pulse-subtle'
-          }`} />
-          <div className={`flex-1 h-1.5 transition-all duration-300 ${
-            hasMediaB ? 'bg-secondary' : 'bg-border animate-pulse-subtle'
-          }`} />
+          <div
+            className={`flex-1 h-1.5 transition-all duration-300 ${
+              hasMediaA ? 'bg-accent' : 'bg-border animate-pulse-subtle'
+            }`}
+          />
+          <div
+            className={`flex-1 h-1.5 transition-all duration-300 ${
+              hasMediaB ? 'bg-secondary' : 'bg-border animate-pulse-subtle'
+            }`}
+          />
         </div>
         <div className="flex justify-between text-[10px]">
-          <span className={`flex items-center gap-1 ${hasMediaA ? 'text-accent' : 'text-text-muted'}`}>
+          <span
+            className={`flex items-center gap-1 ${hasMediaA ? 'text-accent' : 'text-text-muted'}`}
+          >
             {hasMediaA ? '● Media A' : '○ Add Media A'}
           </span>
-          <span className={`flex items-center gap-1 ${hasMediaB ? 'text-secondary' : 'text-text-muted'}`}>
+          <span
+            className={`flex items-center gap-1 ${hasMediaB ? 'text-secondary' : 'text-text-muted'}`}
+          >
             {hasMediaB ? '● Media B' : '○ Add Media B'}
           </span>
         </div>
@@ -327,7 +338,17 @@ interface SettingsPanelProps {
     checkerSize: number
   }
   setWebGLComparisonMode: (mode: WebGLComparisonMode) => void
-  setWebGLComparisonSettings: (settings: Partial<{ amplification: number; threshold: number; blockSize: number; opacity: number; loupeSize: number; loupeZoom: number; checkerSize: number }>) => void
+  setWebGLComparisonSettings: (
+    settings: Partial<{
+      amplification: number
+      threshold: number
+      blockSize: number
+      opacity: number
+      loupeSize: number
+      loupeZoom: number
+      checkerSize: number
+    }>,
+  ) => void
 }
 
 function SettingsPanel({
@@ -392,12 +413,14 @@ function SettingsPanel({
             onChange={(e) => {
               const category = e.target.value
               const categories = getAllComparisonCategories()
-              const cat = categories.find(c => c.id === category || c.modes[0]?.startsWith(category))
+              const cat = categories.find(
+                (c) => c.id === category || c.modes[0]?.startsWith(category),
+              )
               if (cat && cat.modes.length > 0) {
                 setWebGLComparisonMode(cat.modes[0])
               }
             }}
-            options={getAllComparisonCategories().map(cat => ({
+            options={getAllComparisonCategories().map((cat) => ({
               value: cat.id,
               label: `${cat.icon} ${cat.label}`,
             }))}
@@ -411,11 +434,11 @@ function SettingsPanel({
             options={(() => {
               const categories = getAllComparisonCategories()
               const currentCategory = webglComparisonSettings.mode.split('-')[0]
-              const cat = categories.find(c =>
-                c.modes.some(m => m.startsWith(currentCategory)) ||
-                c.id === currentCategory
+              const cat = categories.find(
+                (c) =>
+                  c.modes.some((m) => m.startsWith(currentCategory)) || c.id === currentCategory,
               )
-              return (cat?.modes || []).map(mode => {
+              return (cat?.modes || []).map((mode) => {
                 const info = getComparisonModeInfo(mode)
                 return { value: mode, label: info?.label || mode }
               })
@@ -552,10 +575,17 @@ function SettingsPanel({
           )}
 
           {/* SCOPE-004: False Color preset selector */}
-          {(webglComparisonSettings.mode === 'exposure-false-color' || webglComparisonSettings.mode === 'exposure-false-color-compare') && (
+          {(webglComparisonSettings.mode === 'exposure-false-color' ||
+            webglComparisonSettings.mode === 'exposure-false-color-compare') && (
             <Select
               label="Preset"
-              value={webglComparisonSettings.amplification < 34 ? 'broadcast' : webglComparisonSettings.amplification < 67 ? 'cinematic' : 'custom'}
+              value={
+                webglComparisonSettings.amplification < 34
+                  ? 'broadcast'
+                  : webglComparisonSettings.amplification < 67
+                    ? 'cinematic'
+                    : 'custom'
+              }
               onChange={(e) => {
                 const preset = e.target.value
                 if (preset === 'broadcast') setWebGLComparisonSettings({ amplification: 1 })
@@ -571,11 +601,22 @@ function SettingsPanel({
           )}
 
           {/* SCOPE-005: Focus Peaking color selector */}
-          {(webglComparisonSettings.mode === 'exposure-focus-peak' || webglComparisonSettings.mode === 'exposure-focus-peak-compare') && (
+          {(webglComparisonSettings.mode === 'exposure-focus-peak' ||
+            webglComparisonSettings.mode === 'exposure-focus-peak-compare') && (
             <>
               <Select
                 label="Peak Color"
-                value={webglComparisonSettings.amplification < 21 ? 'red' : webglComparisonSettings.amplification < 41 ? 'green' : webglComparisonSettings.amplification < 61 ? 'blue' : webglComparisonSettings.amplification < 81 ? 'yellow' : 'white'}
+                value={
+                  webglComparisonSettings.amplification < 21
+                    ? 'red'
+                    : webglComparisonSettings.amplification < 41
+                      ? 'green'
+                      : webglComparisonSettings.amplification < 61
+                        ? 'blue'
+                        : webglComparisonSettings.amplification < 81
+                          ? 'yellow'
+                          : 'white'
+                }
                 onChange={(e) => {
                   const color = e.target.value
                   if (color === 'red') setWebGLComparisonSettings({ amplification: 1 })
@@ -600,16 +641,25 @@ function SettingsPanel({
                 value={webglComparisonSettings.threshold}
                 onChange={(e) => setWebGLComparisonSettings({ threshold: Number(e.target.value) })}
               />
-              <p className="text-[10px] text-text-muted">Higher = stricter edge detection (fewer peaks)</p>
+              <p className="text-[10px] text-text-muted">
+                Higher = stricter edge detection (fewer peaks)
+              </p>
             </>
           )}
 
           {/* SCOPE-006: Zebra Stripes level selector */}
-          {(webglComparisonSettings.mode === 'exposure-zebra' || webglComparisonSettings.mode === 'exposure-zebra-compare') && (
+          {(webglComparisonSettings.mode === 'exposure-zebra' ||
+            webglComparisonSettings.mode === 'exposure-zebra-compare') && (
             <>
               <Select
                 label="Zebra Level"
-                value={webglComparisonSettings.amplification < 34 ? '90' : webglComparisonSettings.amplification < 67 ? '95' : '100'}
+                value={
+                  webglComparisonSettings.amplification < 34
+                    ? '90'
+                    : webglComparisonSettings.amplification < 67
+                      ? '95'
+                      : '100'
+                }
                 onChange={(e) => {
                   const level = e.target.value
                   if (level === '90') setWebGLComparisonSettings({ amplification: 1 })
@@ -630,26 +680,29 @@ function SettingsPanel({
                 value={webglComparisonSettings.threshold}
                 onChange={(e) => setWebGLComparisonSettings({ threshold: Number(e.target.value) })}
               />
-              <p className="text-[10px] text-text-muted">Show blue zebras for crushed blacks (0 = off)</p>
+              <p className="text-[10px] text-text-muted">
+                Show blue zebras for crushed blacks (0 = off)
+              </p>
             </>
           )}
 
           {/* SCOPE-007: Zone System info */}
-          {(webglComparisonSettings.mode === 'exposure-zone-system' || webglComparisonSettings.mode === 'exposure-zone-compare') && (
+          {(webglComparisonSettings.mode === 'exposure-zone-system' ||
+            webglComparisonSettings.mode === 'exposure-zone-compare') && (
             <div className="text-[10px] text-text-muted space-y-1 p-2 bg-background/50 rounded">
               <p className="font-medium text-text-secondary">Ansel Adams Zone System:</p>
               <div className="grid grid-cols-2 gap-x-2">
-                <span style={{color: '#000'}}>Zone 0: Pure black</span>
-                <span style={{color: '#260080'}}>Zone I: Near black</span>
-                <span style={{color: '#0000cc'}}>Zone II: Dark tones</span>
-                <span style={{color: '#004d99'}}>Zone III: Dark shadows</span>
-                <span style={{color: '#008080'}}>Zone IV: Shadows</span>
-                <span style={{color: '#009933'}}>Zone V: Middle gray</span>
-                <span style={{color: '#80b300'}}>Zone VI: Light skin</span>
-                <span style={{color: '#ccb300'}}>Zone VII: Light tones</span>
-                <span style={{color: '#ff8000'}}>Zone VIII: Whites</span>
-                <span style={{color: '#ff3333'}}>Zone IX: Near white</span>
-                <span style={{color: '#ff0080'}}>Zone X: Pure white</span>
+                <span style={{ color: '#000' }}>Zone 0: Pure black</span>
+                <span style={{ color: '#260080' }}>Zone I: Near black</span>
+                <span style={{ color: '#0000cc' }}>Zone II: Dark tones</span>
+                <span style={{ color: '#004d99' }}>Zone III: Dark shadows</span>
+                <span style={{ color: '#008080' }}>Zone IV: Shadows</span>
+                <span style={{ color: '#009933' }}>Zone V: Middle gray</span>
+                <span style={{ color: '#80b300' }}>Zone VI: Light skin</span>
+                <span style={{ color: '#ccb300' }}>Zone VII: Light tones</span>
+                <span style={{ color: '#ff8000' }}>Zone VIII: Whites</span>
+                <span style={{ color: '#ff3333' }}>Zone IX: Near white</span>
+                <span style={{ color: '#ff0080' }}>Zone X: Pure white</span>
               </div>
             </div>
           )}
@@ -755,12 +808,16 @@ function SettingsPanel({
           <h3 className="text-sm font-semibold text-text-primary">Quick Export</h3>
           <kbd className="kbd">E</kbd>
         </div>
-        <p className="text-[10px] text-text-muted -mt-2">Basic settings • Press E for full options</p>
+        <p className="text-[10px] text-text-muted -mt-2">
+          Basic settings • Press E for full options
+        </p>
         <div className="grid grid-cols-2 gap-3">
           <Select
             label="Format"
             value={exportSettings.format}
-            onChange={(e) => setExportSettings({ format: e.target.value as 'mp4' | 'webm' | 'gif' })}
+            onChange={(e) =>
+              setExportSettings({ format: e.target.value as 'mp4' | 'webm' | 'gif' })
+            }
             options={[
               { value: 'mp4', label: 'MP4' },
               { value: 'webm', label: 'WebM' },
@@ -770,7 +827,9 @@ function SettingsPanel({
           <Select
             label="Quality"
             value={exportSettings.quality}
-            onChange={(e) => setExportSettings({ quality: e.target.value as 'low' | 'medium' | 'high' })}
+            onChange={(e) =>
+              setExportSettings({ quality: e.target.value as 'low' | 'medium' | 'high' })
+            }
             options={[
               { value: 'low', label: 'Low' },
               { value: 'medium', label: 'Medium' },
@@ -781,7 +840,9 @@ function SettingsPanel({
         <Select
           label="Resolution"
           value={exportSettings.resolution}
-          onChange={(e) => setExportSettings({ resolution: e.target.value as '720p' | '1080p' | '4k' })}
+          onChange={(e) =>
+            setExportSettings({ resolution: e.target.value as '720p' | '1080p' | '4k' })
+          }
           options={[
             { value: '720p', label: '720p (HD)' },
             { value: '1080p', label: '1080p (Full HD)' },

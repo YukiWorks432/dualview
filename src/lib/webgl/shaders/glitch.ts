@@ -33,7 +33,7 @@ void main() {
 
   vec4 clean = mix(colorA, colorB, u_progress);
   gl_FragColor = mix(clean, glitched, jitterMask * intensity);
-}`
+}`,
   },
 
   line_tear: {
@@ -66,7 +66,7 @@ void main() {
     vec4 colorB = texture2D(u_textureB, uv);
     gl_FragColor = mix(colorA, colorB, u_progress);
   }
-}`
+}`,
   },
 
   block_drift: {
@@ -101,7 +101,7 @@ void main() {
     sourceMask > 0.5 ? colorB : colorA,
     step(0.9, blockRand) * intensity
   );
-}`
+}`,
   },
 
   digital: {
@@ -142,7 +142,7 @@ void main() {
   } else {
     gl_FragColor = clean;
   }
-}`
+}`,
   },
 
   corrupt: {
@@ -175,7 +175,7 @@ void main() {
   } else {
     gl_FragColor = mix(colorA, colorB, u_progress);
   }
-}`
+}`,
   },
 
   static_noise: {
@@ -198,7 +198,7 @@ void main() {
   vec3 staticColor = vec3(staticNoise);
 
   gl_FragColor = vec4(mix(base.rgb, staticColor, intensity * (0.2 + burst * 0.5)), 1.0);
-}`
+}`,
   },
 
   vhs: {
@@ -238,7 +238,7 @@ void main() {
   result.rgb = mix(result.rgb, vec3(gray), 0.2 * intensity);
 
   gl_FragColor = result;
-}`
+}`,
   },
 
   data_mosh: {
@@ -275,8 +275,8 @@ void main() {
   } else {
     gl_FragColor = mix(colorA, colorB, u_progress);
   }
-}`
-  }
+}`,
+  },
 }
 
 export const GLITCH_VARIANTS = Object.keys(GLITCH_SHADERS)

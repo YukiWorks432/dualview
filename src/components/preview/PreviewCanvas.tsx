@@ -1,4 +1,5 @@
 import { useRef, useImperativeHandle, forwardRef } from 'react'
+
 import { useProjectStore } from '../../stores/projectStore'
 import {
   SliderComparison,
@@ -80,16 +81,16 @@ export const PreviewCanvas = forwardRef<PreviewCanvasHandle, PreviewCanvasProps>
         }
 
         // Draw in order: videos first, then images, then canvases
-        videos.forEach(v => {
+        videos.forEach((v) => {
           if (!v.classList.contains('hidden')) drawMedia(v)
         })
-        images.forEach(i => drawMedia(i))
-        canvases.forEach(c => {
+        images.forEach((i) => drawMedia(i))
+        canvases.forEach((c) => {
           if (c !== canvas) drawMedia(c)
         })
 
         return canvas
-      }
+      },
     }))
 
     return (
@@ -119,23 +120,11 @@ export const PreviewCanvas = forwardRef<PreviewCanvasHandle, PreviewCanvasProps>
         </div>
 
         {/* Hidden canvas for export frame capture */}
-        <canvas
-          ref={exportCanvasRef}
-          className="hidden"
-          width={1920}
-          height={1080}
-        />
+        <canvas ref={exportCanvasRef} className="hidden" width={1920} height={1080} />
 
         {/* Legacy canvas ref support */}
-        {canvasRef && (
-          <canvas
-            ref={canvasRef}
-            className="hidden"
-            width={1920}
-            height={1080}
-          />
-        )}
+        {canvasRef && <canvas ref={canvasRef} className="hidden" width={1920} height={1080} />}
       </div>
     )
-  }
+  },
 )

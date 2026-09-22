@@ -1,10 +1,9 @@
 /**
  * ProjectSelector Component (PERSIST-003, PROJECT-001)
- * 
+ *
  * Modal for browsing, creating, loading, and managing projects.
  */
 
-import { useState } from 'react'
 import {
   FolderOpen,
   Plus,
@@ -19,6 +18,8 @@ import {
   FileImage,
   Loader2,
 } from 'lucide-react'
+import { useState } from 'react'
+
 import { usePersistenceStore, type ProjectMetadata } from '../../stores/persistenceStore'
 
 interface ProjectSelectorProps {
@@ -48,10 +49,11 @@ export function ProjectSelector({ isOpen, onClose }: ProjectSelectorProps) {
 
   if (!isOpen) return null
 
-  const filteredProjects = projects.filter(p =>
-    p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    p.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    p.tags.some(t => t.toLowerCase().includes(searchQuery.toLowerCase()))
+  const filteredProjects = projects.filter(
+    (p) =>
+      p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.tags.some((t) => t.toLowerCase().includes(searchQuery.toLowerCase())),
   )
 
   const formatDate = (date: Date) => {
@@ -97,9 +99,9 @@ export function ProjectSelector({ isOpen, onClose }: ProjectSelectorProps) {
     setIsExporting(true)
     try {
       const blob = await exportProject(projectId)
-      const project = projects.find(p => p.id === projectId)
+      const project = projects.find((p) => p.id === projectId)
       const filename = `${project?.name || 'project'}.dualview`
-      
+
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
@@ -171,9 +173,9 @@ export function ProjectSelector({ isOpen, onClose }: ProjectSelectorProps) {
             )}
             Import
           </button>
-          
+
           <div className="flex-1" />
-          
+
           {/* Search */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
@@ -303,11 +305,7 @@ function ProjectCard({
       {/* Thumbnail */}
       <div className="aspect-video bg-zinc-800 flex items-center justify-center">
         {project.thumbnail ? (
-          <img
-            src={project.thumbnail}
-            alt={project.name}
-            className="w-full h-full object-cover"
-          />
+          <img src={project.thumbnail} alt={project.name} className="w-full h-full object-cover" />
         ) : (
           <FileImage className="w-12 h-12 text-zinc-600" />
         )}
@@ -342,20 +340,29 @@ function ProjectCard({
       {isSelected && !showDeleteConfirm && (
         <div className="absolute bottom-0 left-0 right-0 flex items-center gap-1 p-2 bg-gradient-to-t from-zinc-900/95 to-transparent">
           <button
-            onClick={(e) => { e.stopPropagation(); onLoad(); }}
+            onClick={(e) => {
+              e.stopPropagation()
+              onLoad()
+            }}
             className="flex-1 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs rounded transition-colors"
           >
             Open
           </button>
           <button
-            onClick={(e) => { e.stopPropagation(); onDuplicate(); }}
+            onClick={(e) => {
+              e.stopPropagation()
+              onDuplicate()
+            }}
             className="p-1.5 bg-zinc-700 hover:bg-zinc-600 text-white rounded transition-colors"
             title="Duplicate"
           >
             <Copy className="w-3.5 h-3.5" />
           </button>
           <button
-            onClick={(e) => { e.stopPropagation(); onExport(); }}
+            onClick={(e) => {
+              e.stopPropagation()
+              onExport()
+            }}
             disabled={isExporting}
             className="p-1.5 bg-zinc-700 hover:bg-zinc-600 text-white rounded transition-colors disabled:opacity-50"
             title="Export"
@@ -363,7 +370,10 @@ function ProjectCard({
             <Download className="w-3.5 h-3.5" />
           </button>
           <button
-            onClick={(e) => { e.stopPropagation(); onDelete(); }}
+            onClick={(e) => {
+              e.stopPropagation()
+              onDelete()
+            }}
             className="p-1.5 bg-red-600/30 hover:bg-red-600 text-red-400 hover:text-white rounded transition-colors"
             title="Delete"
           >
@@ -378,13 +388,19 @@ function ProjectCard({
           <p className="text-sm text-white mb-3 text-center">Delete this project?</p>
           <div className="flex gap-2">
             <button
-              onClick={(e) => { e.stopPropagation(); onCancelDelete(); }}
+              onClick={(e) => {
+                e.stopPropagation()
+                onCancelDelete()
+              }}
               className="px-3 py-1.5 bg-zinc-700 hover:bg-zinc-600 text-white text-xs rounded transition-colors"
             >
               Cancel
             </button>
             <button
-              onClick={(e) => { e.stopPropagation(); onConfirmDelete(); }}
+              onClick={(e) => {
+                e.stopPropagation()
+                onConfirmDelete()
+              }}
               className="px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white text-xs rounded transition-colors"
             >
               Delete

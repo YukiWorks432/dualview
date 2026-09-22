@@ -1,14 +1,15 @@
+import { FileText, FileSpreadsheet, Table, Upload, File } from 'lucide-react'
 import { useMemo, useCallback, useRef } from 'react'
-import { useTimelineStore } from '../../stores/timelineStore'
+
+import { cn } from '../../lib/utils'
 import { useMediaStore } from '../../stores/mediaStore'
 import { usePlaybackStore } from '../../stores/playbackStore'
-import { CSVComparison } from './CSVComparison'
-import { ExcelComparison } from './ExcelComparison'
-import { DOCXComparison } from './DOCXComparison'
-import { PDFComparison } from './PDFComparison'
-import { FileText, FileSpreadsheet, Table, Upload, File } from 'lucide-react'
-import { cn } from '../../lib/utils'
+import { useTimelineStore } from '../../stores/timelineStore'
 import type { MediaType } from '../../types'
+import { CSVComparison } from './CSVComparison'
+import { DOCXComparison } from './DOCXComparison'
+import { ExcelComparison } from './ExcelComparison'
+import { PDFComparison } from './PDFComparison'
 
 interface DocumentTypeConfig {
   type: string
@@ -30,7 +31,7 @@ const documentTypes: DocumentTypeConfig[] = [
     color: 'text-green-400',
     bgColor: 'bg-green-500/10 hover:bg-green-500/20',
     borderColor: 'border-green-500/30 hover:border-green-500/50',
-    description: 'Spreadsheet data'
+    description: 'Spreadsheet data',
   },
   {
     type: 'excel',
@@ -40,7 +41,7 @@ const documentTypes: DocumentTypeConfig[] = [
     color: 'text-emerald-400',
     bgColor: 'bg-emerald-500/10 hover:bg-emerald-500/20',
     borderColor: 'border-emerald-500/30 hover:border-emerald-500/50',
-    description: 'Workbooks & sheets'
+    description: 'Workbooks & sheets',
   },
   {
     type: 'docx',
@@ -50,7 +51,7 @@ const documentTypes: DocumentTypeConfig[] = [
     color: 'text-blue-400',
     bgColor: 'bg-blue-500/10 hover:bg-blue-500/20',
     borderColor: 'border-blue-500/30 hover:border-blue-500/50',
-    description: 'Word documents'
+    description: 'Word documents',
   },
   {
     type: 'pdf',
@@ -60,8 +61,8 @@ const documentTypes: DocumentTypeConfig[] = [
     color: 'text-red-400',
     bgColor: 'bg-red-500/10 hover:bg-red-500/20',
     borderColor: 'border-red-500/30 hover:border-red-500/50',
-    description: 'PDF files'
-  }
+    description: 'PDF files',
+  },
 ]
 
 /**
@@ -74,14 +75,14 @@ export function DocumentComparison() {
   const { getFile, addFile } = useMediaStore()
 
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const currentUploadTarget = useRef<{ track: 'a' | 'b', accept: string } | null>(null)
+  const currentUploadTarget = useRef<{ track: 'a' | 'b'; accept: string } | null>(null)
 
   // Get current clips at playhead
-  const trackA = tracks.find(t => t.type === 'a')
-  const trackB = tracks.find(t => t.type === 'b')
+  const trackA = tracks.find((t) => t.type === 'a')
+  const trackB = tracks.find((t) => t.type === 'b')
 
-  const clipA = trackA?.clips.find(c => currentTime >= c.startTime && currentTime < c.endTime)
-  const clipB = trackB?.clips.find(c => currentTime >= c.startTime && currentTime < c.endTime)
+  const clipA = trackA?.clips.find((c) => currentTime >= c.startTime && currentTime < c.endTime)
+  const clipB = trackB?.clips.find((c) => currentTime >= c.startTime && currentTime < c.endTime)
 
   const mediaA = clipA ? getFile(clipA.mediaId) : null
   const mediaB = clipB ? getFile(clipB.mediaId) : null
@@ -101,23 +102,26 @@ export function DocumentComparison() {
   }, [mediaA, mediaB])
 
   // Handle file upload
-  const handleUpload = useCallback(async (files: FileList | null, targetTrack: 'a' | 'b') => {
-    if (!files || files.length === 0) return
+  const handleUpload = useCallback(
+    async (files: FileList | null, targetTrack: 'a' | 'b') => {
+      if (!files || files.length === 0) return
 
-    const file = files[0]
-    try {
-      const mediaFile = await addFile(file)
-      const track = targetTrack === 'a' ? trackA : trackB
+      const file = files[0]
+      try {
+        const mediaFile = await addFile(file)
+        const track = targetTrack === 'a' ? trackA : trackB
 
-      if (track) {
-        // Remove existing clips if any
-        const duration = mediaFile.duration || 10
-        addClip(track.id, mediaFile.id, 0, duration)
+        if (track) {
+          // Remove existing clips if any
+          const duration = mediaFile.duration || 10
+          addClip(track.id, mediaFile.id, 0, duration)
+        }
+      } catch (error) {
+        console.error('Failed to upload document:', error)
       }
-    } catch (error) {
-      console.error('Failed to upload document:', error)
-    }
-  }, [addFile, addClip, trackA, trackB])
+    },
+    [addFile, addClip, trackA, trackB],
+  )
 
   // Trigger file input
   const triggerUpload = useCallback((track: 'a' | 'b', accept: string) => {
@@ -129,12 +133,15 @@ export function DocumentComparison() {
   }, [])
 
   // Handle file input change
-  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    if (currentUploadTarget.current) {
-      handleUpload(e.target.files, currentUploadTarget.current.track)
-      e.target.value = '' // Reset for re-upload
-    }
-  }, [handleUpload])
+  const handleFileChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (currentUploadTarget.current) {
+        handleUpload(e.target.files, currentUploadTarget.current.track)
+        e.target.value = '' // Reset for re-upload
+      }
+    },
+    [handleUpload],
+  )
 
   // If no document files are loaded, show empty state with upload buttons
   if (!documentType) {
@@ -142,12 +149,7 @@ export function DocumentComparison() {
       <div className="w-full h-full flex items-center justify-center text-text-muted p-4">
         <div className="text-center max-w-3xl w-full">
           {/* Hidden file input */}
-          <input
-            ref={fileInputRef}
-            type="file"
-            className="hidden"
-            onChange={handleFileChange}
-          />
+          <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileChange} />
 
           <h2 className="text-lg font-semibold text-text-primary mb-1">Document Comparison</h2>
           <p className="text-xs text-text-muted mb-4">
@@ -174,7 +176,7 @@ export function DocumentComparison() {
                       className={cn(
                         'flex flex-col items-center gap-1 p-2 border transition-all',
                         doc.bgColor,
-                        doc.borderColor
+                        doc.borderColor,
                       )}
                     >
                       <Icon className={cn('w-5 h-5', doc.color)} />
@@ -203,7 +205,7 @@ export function DocumentComparison() {
                       className={cn(
                         'flex flex-col items-center gap-1 p-2 border transition-all',
                         doc.bgColor,
-                        doc.borderColor
+                        doc.borderColor,
                       )}
                     >
                       <Icon className={cn('w-5 h-5', doc.color)} />

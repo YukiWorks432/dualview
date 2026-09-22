@@ -4,15 +4,16 @@
  * With synchronized zoom/pan and adjustable panel widths
  */
 
-import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
-import { useProjectStore } from '../../stores/projectStore'
-import { useMediaStore } from '../../stores/mediaStore'
-import { useTimelineStore } from '../../stores/timelineStore'
-import { usePlaybackStore } from '../../stores/playbackStore'
-import { WebGLComparisonRenderer } from '../../lib/webgl/WebGLComparisonRenderer'
-import { getComparisonModeInfo } from '../../lib/webgl/comparison-shaders'
-import { useOptimizedClipSync } from '../../hooks/useOptimizedVideoSync'
 import { GripVertical, Maximize2, Minimize2 } from 'lucide-react'
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
+
+import { useOptimizedClipSync } from '../../hooks/useOptimizedVideoSync'
+import { getComparisonModeInfo } from '../../lib/webgl/comparison-shaders'
+import { WebGLComparisonRenderer } from '../../lib/webgl/WebGLComparisonRenderer'
+import { useMediaStore } from '../../stores/mediaStore'
+import { usePlaybackStore } from '../../stores/playbackStore'
+import { useProjectStore } from '../../stores/projectStore'
+import { useTimelineStore } from '../../stores/timelineStore'
 
 interface WebGLSplitViewProps {
   isVisible: boolean
@@ -41,20 +42,20 @@ export function WebGLSplitView({ isVisible, onToggle }: WebGLSplitViewProps) {
   const { currentTime } = usePlaybackStore()
 
   // Get active media from tracks
-  const trackA = tracks.find(t => t.type === 'a')
-  const trackB = tracks.find(t => t.type === 'b')
+  const trackA = tracks.find((t) => t.type === 'a')
+  const trackB = tracks.find((t) => t.type === 'b')
   const firstClipA = trackA?.clips[0] || null
   const firstClipB = trackB?.clips[0] || null
 
   // Find active clip (clip at current time)
   const activeClipA = useMemo(() => {
     if (!trackA) return null
-    return trackA.clips.find(c => currentTime >= c.startTime && currentTime < c.endTime) || null
+    return trackA.clips.find((c) => currentTime >= c.startTime && currentTime < c.endTime) || null
   }, [trackA, currentTime])
 
   const activeClipB = useMemo(() => {
     if (!trackB) return null
-    return trackB.clips.find(c => currentTime >= c.startTime && currentTime < c.endTime) || null
+    return trackB.clips.find((c) => currentTime >= c.startTime && currentTime < c.endTime) || null
   }, [trackB, currentTime])
 
   // Get media files - use active clip (clip at current time), fallback to first clip
@@ -126,7 +127,7 @@ export function WebGLSplitView({ isVisible, onToggle }: WebGLSplitViewProps) {
       loupeZoom: webglComparisonSettings.loupeZoom,
       checkerSize: webglComparisonSettings.checkerSize,
       mouseX: 0.5,
-      mouseY: 0.5
+      mouseY: 0.5,
     })
 
     animationRef.current = requestAnimationFrame(render)
@@ -167,20 +168,23 @@ export function WebGLSplitView({ isVisible, onToggle }: WebGLSplitViewProps) {
   }, [isVisible, leftWidth, rightWidth])
 
   // Handle divider drag
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (!containerRef.current) return
-    const rect = containerRef.current.getBoundingClientRect()
-    const x = ((e.clientX - rect.left) / rect.width) * 100
+  const handleMouseMove = useCallback(
+    (e: MouseEvent) => {
+      if (!containerRef.current) return
+      const rect = containerRef.current.getBoundingClientRect()
+      const x = ((e.clientX - rect.left) / rect.width) * 100
 
-    if (isDraggingLeft) {
-      const newLeft = Math.max(15, Math.min(45, x))
-      setLeftWidth(newLeft)
-    }
-    if (isDraggingRight) {
-      const newRight = Math.max(15, Math.min(45, 100 - x))
-      setRightWidth(newRight)
-    }
-  }, [isDraggingLeft, isDraggingRight])
+      if (isDraggingLeft) {
+        const newLeft = Math.max(15, Math.min(45, x))
+        setLeftWidth(newLeft)
+      }
+      if (isDraggingRight) {
+        const newRight = Math.max(15, Math.min(45, 100 - x))
+        setRightWidth(newRight)
+      }
+    },
+    [isDraggingLeft, isDraggingRight],
+  )
 
   const handleMouseUp = useCallback(() => {
     setIsDraggingLeft(false)
@@ -199,11 +203,11 @@ export function WebGLSplitView({ isVisible, onToggle }: WebGLSplitViewProps) {
   }, [isDraggingLeft, isDraggingRight, handleMouseMove, handleMouseUp])
 
   const handleImageALoad = useCallback(() => {
-    setImagesLoaded(prev => ({ ...prev, a: true }))
+    setImagesLoaded((prev) => ({ ...prev, a: true }))
   }, [])
 
   const handleImageBLoad = useCallback(() => {
-    setImagesLoaded(prev => ({ ...prev, b: true }))
+    setImagesLoaded((prev) => ({ ...prev, b: true }))
   }, [])
 
   const modeInfo = getComparisonModeInfo(webglComparisonSettings.mode)
@@ -251,7 +255,7 @@ export function WebGLSplitView({ isVisible, onToggle }: WebGLSplitViewProps) {
             src={mediaA.url}
             className="max-w-full max-h-full object-contain"
             style={{
-              transform: `scale(${webglComparisonSettings.webglZoom}) translate(${webglComparisonSettings.webglPanX * 50 / webglComparisonSettings.webglZoom}%, ${-webglComparisonSettings.webglPanY * 50 / webglComparisonSettings.webglZoom}%)`
+              transform: `scale(${webglComparisonSettings.webglZoom}) translate(${(webglComparisonSettings.webglPanX * 50) / webglComparisonSettings.webglZoom}%, ${(-webglComparisonSettings.webglPanY * 50) / webglComparisonSettings.webglZoom}%)`,
             }}
             muted
             playsInline
@@ -264,7 +268,7 @@ export function WebGLSplitView({ isVisible, onToggle }: WebGLSplitViewProps) {
             src={mediaA.url}
             className="max-w-full max-h-full object-contain"
             style={{
-              transform: `scale(${webglComparisonSettings.webglZoom}) translate(${webglComparisonSettings.webglPanX * 50 / webglComparisonSettings.webglZoom}%, ${-webglComparisonSettings.webglPanY * 50 / webglComparisonSettings.webglZoom}%)`
+              transform: `scale(${webglComparisonSettings.webglZoom}) translate(${(webglComparisonSettings.webglPanX * 50) / webglComparisonSettings.webglZoom}%, ${(-webglComparisonSettings.webglPanY * 50) / webglComparisonSettings.webglZoom}%)`,
             }}
             alt="Source A"
           />
@@ -291,7 +295,7 @@ export function WebGLSplitView({ isVisible, onToggle }: WebGLSplitViewProps) {
           ref={canvasRef}
           className="w-full h-full"
           style={{
-            transform: `scale(${webglComparisonSettings.webglZoom}) translate(${webglComparisonSettings.webglPanX * 50 / webglComparisonSettings.webglZoom}%, ${-webglComparisonSettings.webglPanY * 50 / webglComparisonSettings.webglZoom}%)`
+            transform: `scale(${webglComparisonSettings.webglZoom}) translate(${(webglComparisonSettings.webglPanX * 50) / webglComparisonSettings.webglZoom}%, ${(-webglComparisonSettings.webglPanY * 50) / webglComparisonSettings.webglZoom}%)`,
           }}
         />
         <div className="absolute top-2 left-2 bg-black/70 px-2 py-1 text-xs rounded">
@@ -318,7 +322,7 @@ export function WebGLSplitView({ isVisible, onToggle }: WebGLSplitViewProps) {
             src={mediaB.url}
             className="max-w-full max-h-full object-contain"
             style={{
-              transform: `scale(${webglComparisonSettings.webglZoom}) translate(${webglComparisonSettings.webglPanX * 50 / webglComparisonSettings.webglZoom}%, ${-webglComparisonSettings.webglPanY * 50 / webglComparisonSettings.webglZoom}%)`
+              transform: `scale(${webglComparisonSettings.webglZoom}) translate(${(webglComparisonSettings.webglPanX * 50) / webglComparisonSettings.webglZoom}%, ${(-webglComparisonSettings.webglPanY * 50) / webglComparisonSettings.webglZoom}%)`,
             }}
             muted
             playsInline
@@ -331,7 +335,7 @@ export function WebGLSplitView({ isVisible, onToggle }: WebGLSplitViewProps) {
             src={mediaB.url}
             className="max-w-full max-h-full object-contain"
             style={{
-              transform: `scale(${webglComparisonSettings.webglZoom}) translate(${webglComparisonSettings.webglPanX * 50 / webglComparisonSettings.webglZoom}%, ${-webglComparisonSettings.webglPanY * 50 / webglComparisonSettings.webglZoom}%)`
+              transform: `scale(${webglComparisonSettings.webglZoom}) translate(${(webglComparisonSettings.webglPanX * 50) / webglComparisonSettings.webglZoom}%, ${(-webglComparisonSettings.webglPanY * 50) / webglComparisonSettings.webglZoom}%)`,
             }}
             alt="Source B"
           />

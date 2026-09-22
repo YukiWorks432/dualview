@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
-import { cn } from '../../lib/utils'
 import { Info, X, ChevronDown, ChevronRight } from 'lucide-react'
+import { useEffect, useState } from 'react'
+
+import { cn } from '../../lib/utils'
 import type { MediaFile } from '../../types'
 
 interface MetadataComparisonProps {
@@ -121,7 +122,7 @@ async function extractExif(file: File): Promise<Record<string, string>> {
             view.getUint8(offset + 2),
             view.getUint8(offset + 3),
             view.getUint8(offset + 4),
-            view.getUint8(offset + 5)
+            view.getUint8(offset + 5),
           )
 
           if (exifSignature === 'Exif') {
@@ -147,15 +148,12 @@ async function extractExif(file: File): Promise<Record<string, string>> {
   })
 }
 
-export function MetadataComparison({
-  mediaA,
-  mediaB,
-  isOpen,
-  onClose,
-}: MetadataComparisonProps) {
+export function MetadataComparison({ mediaA, mediaB, isOpen, onClose }: MetadataComparisonProps) {
   const [metadataA, setMetadataA] = useState<MediaMetadata | null>(null)
   const [metadataB, setMetadataB] = useState<MediaMetadata | null>(null)
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['basic', 'dimensions']))
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(
+    new Set(['basic', 'dimensions']),
+  )
 
   useEffect(() => {
     if (mediaA) {
@@ -174,7 +172,7 @@ export function MetadataComparison({
   }, [mediaB])
 
   const toggleSection = (section: string) => {
-    setExpandedSections(prev => {
+    setExpandedSections((prev) => {
       const next = new Set(prev)
       if (next.has(section)) {
         next.delete(section)
@@ -195,10 +193,7 @@ export function MetadataComparison({
             <Info className="w-5 h-5" />
             Metadata Comparison
           </h2>
-          <button
-            onClick={onClose}
-            className="p-1 hover:bg-surface-hover rounded"
-          >
+          <button onClick={onClose} className="p-1 hover:bg-surface-hover rounded">
             <X className="w-5 h-5 text-text-muted" />
           </button>
         </div>
@@ -212,26 +207,51 @@ export function MetadataComparison({
             {/* Basic Info */}
             <MetadataSection
               title="Basic Info"
-                            isExpanded={expandedSections.has('basic')}
+              isExpanded={expandedSections.has('basic')}
               onToggle={() => toggleSection('basic')}
             >
-              <MetadataRow label="Name" valueA={metadataA?.basic.name} valueB={metadataB?.basic.name} />
-              <MetadataRow label="Type" valueA={metadataA?.basic.type} valueB={metadataB?.basic.type} />
-              <MetadataRow label="Size" valueA={metadataA?.basic.size} valueB={metadataB?.basic.size} highlight />
-              <MetadataRow label="Format" valueA={metadataA?.basic.format} valueB={metadataB?.basic.format} />
+              <MetadataRow
+                label="Name"
+                valueA={metadataA?.basic.name}
+                valueB={metadataB?.basic.name}
+              />
+              <MetadataRow
+                label="Type"
+                valueA={metadataA?.basic.type}
+                valueB={metadataB?.basic.type}
+              />
+              <MetadataRow
+                label="Size"
+                valueA={metadataA?.basic.size}
+                valueB={metadataB?.basic.size}
+                highlight
+              />
+              <MetadataRow
+                label="Format"
+                valueA={metadataA?.basic.format}
+                valueB={metadataB?.basic.format}
+              />
             </MetadataSection>
 
             {/* Dimensions */}
             {(metadataA?.dimensions || metadataB?.dimensions) && (
               <MetadataSection
                 title="Dimensions"
-                                isExpanded={expandedSections.has('dimensions')}
+                isExpanded={expandedSections.has('dimensions')}
                 onToggle={() => toggleSection('dimensions')}
               >
                 <MetadataRow
                   label="Resolution"
-                  valueA={metadataA?.dimensions ? `${metadataA.dimensions.width} × ${metadataA.dimensions.height}` : undefined}
-                  valueB={metadataB?.dimensions ? `${metadataB.dimensions.width} × ${metadataB.dimensions.height}` : undefined}
+                  valueA={
+                    metadataA?.dimensions
+                      ? `${metadataA.dimensions.width} × ${metadataA.dimensions.height}`
+                      : undefined
+                  }
+                  valueB={
+                    metadataB?.dimensions
+                      ? `${metadataB.dimensions.width} × ${metadataB.dimensions.height}`
+                      : undefined
+                  }
                   highlight
                 />
                 <MetadataRow
@@ -246,7 +266,7 @@ export function MetadataComparison({
             {(metadataA?.duration || metadataB?.duration) && (
               <MetadataSection
                 title="Duration"
-                                isExpanded={expandedSections.has('duration')}
+                isExpanded={expandedSections.has('duration')}
                 onToggle={() => toggleSection('duration')}
               >
                 <MetadataRow
@@ -262,10 +282,10 @@ export function MetadataComparison({
             {(metadataA?.exif || metadataB?.exif) && (
               <MetadataSection
                 title="EXIF Data"
-                                isExpanded={expandedSections.has('exif')}
+                isExpanded={expandedSections.has('exif')}
                 onToggle={() => toggleSection('exif')}
               >
-                {Object.keys({ ...metadataA?.exif, ...metadataB?.exif }).map(key => (
+                {Object.keys({ ...metadataA?.exif, ...metadataB?.exif }).map((key) => (
                   <MetadataRow
                     key={key}
                     label={key}
@@ -299,11 +319,7 @@ function MetadataSection({
         onClick={onToggle}
         className="col-span-2 flex items-center gap-2 py-2 text-sm font-medium text-text-secondary hover:text-text-primary border-b border-border"
       >
-        {isExpanded ? (
-          <ChevronDown className="w-4 h-4" />
-        ) : (
-          <ChevronRight className="w-4 h-4" />
-        )}
+        {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
         {title}
       </button>
       {isExpanded && children}
@@ -331,16 +347,16 @@ function MetadataRow({
       </div>
       <div
         className={cn(
-          "text-sm py-1 border-b border-border/50 font-mono",
-          isDifferent && highlight ? "text-orange-400" : "text-text-primary"
+          'text-sm py-1 border-b border-border/50 font-mono',
+          isDifferent && highlight ? 'text-orange-400' : 'text-text-primary',
         )}
       >
         {valueA || <span className="text-text-muted">—</span>}
       </div>
       <div
         className={cn(
-          "text-sm py-1 border-b border-border/50 font-mono",
-          isDifferent && highlight ? "text-lime-400" : "text-text-primary"
+          'text-sm py-1 border-b border-border/50 font-mono',
+          isDifferent && highlight ? 'text-lime-400' : 'text-text-primary',
         )}
       >
         {valueB || <span className="text-text-muted">—</span>}

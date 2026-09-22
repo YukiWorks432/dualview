@@ -9,6 +9,7 @@
  * - Effective duration from timeline content
  */
 import { create } from 'zustand'
+
 import { useTimelineStore } from './timelineStore'
 
 interface PlaybackStore {
@@ -84,15 +85,22 @@ export const usePlaybackStore = create<PlaybackStore>((set, get) => {
       // Stop one frame before end to show final frame (OpenCut pattern)
       if (newTime >= effectiveDuration - frameOffset) {
         newTime = effectiveDuration - frameOffset
-        set({ isPlaying: false, currentTime: Math.max(0, newTime), _animationFrameId: null, _lastUpdateTime: null })
+        set({
+          isPlaying: false,
+          currentTime: Math.max(0, newTime),
+          _animationFrameId: null,
+          _lastUpdateTime: null,
+        })
 
         // Sync with timeline store
         useTimelineStore.getState().pause()
 
         // Dispatch update event
-        window.dispatchEvent(new CustomEvent('playback-update', {
-          detail: { time: newTime, isPlaying: false }
-        }))
+        window.dispatchEvent(
+          new CustomEvent('playback-update', {
+            detail: { time: newTime, isPlaying: false },
+          }),
+        )
 
         return
       }
@@ -107,9 +115,11 @@ export const usePlaybackStore = create<PlaybackStore>((set, get) => {
     useTimelineStore.setState({ currentTime: newTime })
 
     // Dispatch update event for video sync
-    window.dispatchEvent(new CustomEvent('playback-update', {
-      detail: { time: newTime, isPlaying: true }
-    }))
+    window.dispatchEvent(
+      new CustomEvent('playback-update', {
+        detail: { time: newTime, isPlaying: true },
+      }),
+    )
 
     // Schedule next frame
     const frameId = requestAnimationFrame(updatePlayback)
@@ -140,9 +150,11 @@ export const usePlaybackStore = create<PlaybackStore>((set, get) => {
         // Seek to beginning
         set({ currentTime: 0 })
         useTimelineStore.setState({ currentTime: 0 })
-        window.dispatchEvent(new CustomEvent('playback-seek', {
-          detail: { time: 0 }
-        }))
+        window.dispatchEvent(
+          new CustomEvent('playback-seek', {
+            detail: { time: 0 },
+          }),
+        )
       }
 
       set({ isPlaying: true, _lastUpdateTime: null })
@@ -170,9 +182,11 @@ export const usePlaybackStore = create<PlaybackStore>((set, get) => {
       useTimelineStore.getState().pause()
 
       // Dispatch update event
-      window.dispatchEvent(new CustomEvent('playback-update', {
-        detail: { time: state.currentTime, isPlaying: false }
-      }))
+      window.dispatchEvent(
+        new CustomEvent('playback-update', {
+          detail: { time: state.currentTime, isPlaying: false },
+        }),
+      )
     },
 
     togglePlay: () => {
@@ -197,9 +211,11 @@ export const usePlaybackStore = create<PlaybackStore>((set, get) => {
       useTimelineStore.setState({ currentTime: snappedTime })
 
       // Dispatch seek event for video sync
-      window.dispatchEvent(new CustomEvent('playback-seek', {
-        detail: { time: snappedTime }
-      }))
+      window.dispatchEvent(
+        new CustomEvent('playback-seek', {
+          detail: { time: snappedTime },
+        }),
+      )
     },
 
     setSpeed: (speed: number) => {
@@ -210,9 +226,11 @@ export const usePlaybackStore = create<PlaybackStore>((set, get) => {
       useTimelineStore.setState({ playbackSpeed: clampedSpeed })
 
       // Dispatch speed event
-      window.dispatchEvent(new CustomEvent('playback-speed', {
-        detail: { speed: clampedSpeed }
-      }))
+      window.dispatchEvent(
+        new CustomEvent('playback-speed', {
+          detail: { speed: clampedSpeed },
+        }),
+      )
     },
 
     setVolume: (volume: number) => {
@@ -247,7 +265,7 @@ export const usePlaybackStore = create<PlaybackStore>((set, get) => {
       const effectiveDuration = state.getEffectiveDuration()
 
       const newTime = state.snapTimeToFrame(
-        Math.max(0, Math.min(state.currentTime + direction * frameTime, effectiveDuration))
+        Math.max(0, Math.min(state.currentTime + direction * frameTime, effectiveDuration)),
       )
 
       set({ currentTime: newTime })
@@ -256,9 +274,11 @@ export const usePlaybackStore = create<PlaybackStore>((set, get) => {
       useTimelineStore.setState({ currentTime: newTime })
 
       // Dispatch seek event
-      window.dispatchEvent(new CustomEvent('playback-seek', {
-        detail: { time: newTime }
-      }))
+      window.dispatchEvent(
+        new CustomEvent('playback-seek', {
+          detail: { time: newTime },
+        }),
+      )
     },
 
     getCurrentFrame: () => {

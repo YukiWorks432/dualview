@@ -3,8 +3,8 @@
  * Visualize colors on a wheel with hue angle and saturation
  */
 
-import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import { X, Palette, Eye, EyeOff } from 'lucide-react'
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 
 interface ColorWheelPanelProps {
   videoARef: React.RefObject<HTMLVideoElement | null>
@@ -33,7 +33,7 @@ export function ColorWheelPanel({
   imageBRef,
   isVisible,
   onClose,
-  onHighlightColor
+  onHighlightColor,
 }: ColorWheelPanelProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const sampleCanvasARef = useRef<HTMLCanvasElement>(null)
@@ -47,110 +47,121 @@ export function ColorWheelPanel({
   const [showHighlight, setShowHighlight] = useState(false)
 
   // RGB to HSL conversion
-  const rgbToHsl = useCallback((r: number, g: number, b: number): { h: number; s: number; l: number } => {
-    r /= 255
-    g /= 255
-    b /= 255
+  const rgbToHsl = useCallback(
+    (r: number, g: number, b: number): { h: number; s: number; l: number } => {
+      r /= 255
+      g /= 255
+      b /= 255
 
-    const max = Math.max(r, g, b)
-    const min = Math.min(r, g, b)
-    const l = (max + min) / 2
+      const max = Math.max(r, g, b)
+      const min = Math.min(r, g, b)
+      const l = (max + min) / 2
 
-    if (max === min) {
-      return { h: 0, s: 0, l }
-    }
+      if (max === min) {
+        return { h: 0, s: 0, l }
+      }
 
-    const d = max - min
-    const s = l > 0.5 ? d / (2 - max - min) : d / (max + min)
+      const d = max - min
+      const s = l > 0.5 ? d / (2 - max - min) : d / (max + min)
 
-    let h: number
-    if (max === r) {
-      h = ((g - b) / d + (g < b ? 6 : 0)) / 6
-    } else if (max === g) {
-      h = ((b - r) / d + 2) / 6
-    } else {
-      h = ((r - g) / d + 4) / 6
-    }
+      let h: number
+      if (max === r) {
+        h = ((g - b) / d + (g < b ? 6 : 0)) / 6
+      } else if (max === g) {
+        h = ((b - r) / d + 2) / 6
+      } else {
+        h = ((r - g) / d + 4) / 6
+      }
 
-    return { h: h * 360, s, l }
-  }, [])
+      return { h: h * 360, s, l }
+    },
+    [],
+  )
 
   // Calculate color distribution from image data
-  const calculateDistribution = useCallback((imageData: ImageData): ColorDistribution => {
-    // Create 2D distribution array: 360 hues x 101 saturation levels
-    const distribution: Uint32Array[] = []
-    for (let h = 0; h < 360; h++) {
-      distribution.push(new Uint32Array(101))
-    }
+  const calculateDistribution = useCallback(
+    (imageData: ImageData): ColorDistribution => {
+      // Create 2D distribution array: 360 hues x 101 saturation levels
+      const distribution: Uint32Array[] = []
+      for (let h = 0; h < 360; h++) {
+        distribution.push(new Uint32Array(101))
+      }
 
-    const data = imageData.data
-    const pixelCount = data.length / 4
-    let maxCount = 0
+      const data = imageData.data
+      const pixelCount = data.length / 4
+      let maxCount = 0
 
-    // Accumulate distribution
-    for (let i = 0; i < data.length; i += 4) {
-      const r = data[i]
-      const g = data[i + 1]
-      const b = data[i + 2]
+      // Accumulate distribution
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i]
+        const g = data[i + 1]
+        const b = data[i + 2]
 
-      const { h, s } = rgbToHsl(r, g, b)
-      const hueIndex = Math.floor(h) % 360
-      const satIndex = Math.round(s * 100)
+        const { h, s } = rgbToHsl(r, g, b)
+        const hueIndex = Math.floor(h) % 360
+        const satIndex = Math.round(s * 100)
 
-      distribution[hueIndex][satIndex]++
-      maxCount = Math.max(maxCount, distribution[hueIndex][satIndex])
-    }
+        distribution[hueIndex][satIndex]++
+        maxCount = Math.max(maxCount, distribution[hueIndex][satIndex])
+      }
 
-    // Find dominant hues (top 5 peaks)
-    const hueCounts: { hue: number; saturation: number; count: number }[] = []
-    for (let h = 0; h < 360; h++) {
-      for (let s = 10; s < 101; s++) { // Ignore very low saturation
-        if (distribution[h][s] > pixelCount * 0.001) { // At least 0.1% of pixels
-          hueCounts.push({ hue: h, saturation: s, count: distribution[h][s] })
+      // Find dominant hues (top 5 peaks)
+      const hueCounts: { hue: number; saturation: number; count: number }[] = []
+      for (let h = 0; h < 360; h++) {
+        for (let s = 10; s < 101; s++) {
+          // Ignore very low saturation
+          if (distribution[h][s] > pixelCount * 0.001) {
+            // At least 0.1% of pixels
+            hueCounts.push({ hue: h, saturation: s, count: distribution[h][s] })
+          }
         }
       }
-    }
-    hueCounts.sort((a, b) => b.count - a.count)
-    const dominantHues = hueCounts.slice(0, 5)
+      hueCounts.sort((a, b) => b.count - a.count)
+      const dominantHues = hueCounts.slice(0, 5)
 
-    return { distribution, dominantHues, totalPixels: pixelCount, maxCount }
-  }, [rgbToHsl])
+      return { distribution, dominantHues, totalPixels: pixelCount, maxCount }
+    },
+    [rgbToHsl],
+  )
 
   // Get image data from source
-  const getImageData = useCallback((
-    videoRef: React.RefObject<HTMLVideoElement | null>,
-    imageRef?: React.RefObject<HTMLImageElement | null>,
-    sampleCanvas?: HTMLCanvasElement | null
-  ): ImageData | null => {
-    if (!sampleCanvas) return null
+  const getImageData = useCallback(
+    (
+      videoRef: React.RefObject<HTMLVideoElement | null>,
+      imageRef?: React.RefObject<HTMLImageElement | null>,
+      sampleCanvas?: HTMLCanvasElement | null,
+    ): ImageData | null => {
+      if (!sampleCanvas) return null
 
-    const ctx = sampleCanvas.getContext('2d', { willReadFrequently: true })
-    if (!ctx) return null
+      const ctx = sampleCanvas.getContext('2d', { willReadFrequently: true })
+      if (!ctx) return null
 
-    const source = videoRef?.current || imageRef?.current
-    if (!source) return null
+      const source = videoRef?.current || imageRef?.current
+      if (!source) return null
 
-    let width: number, height: number
-    if (source instanceof HTMLVideoElement) {
-      if (source.readyState < 2) return null
-      width = source.videoWidth
-      height = source.videoHeight
-    } else {
-      width = source.naturalWidth
-      height = source.naturalHeight
-    }
+      let width: number, height: number
+      if (source instanceof HTMLVideoElement) {
+        if (source.readyState < 2) return null
+        width = source.videoWidth
+        height = source.videoHeight
+      } else {
+        width = source.naturalWidth
+        height = source.naturalHeight
+      }
 
-    if (width === 0 || height === 0) return null
+      if (width === 0 || height === 0) return null
 
-    // Sample at reduced resolution
-    const sampleWidth = Math.min(width, 300)
-    const sampleHeight = Math.min(height, 200)
-    sampleCanvas.width = sampleWidth
-    sampleCanvas.height = sampleHeight
+      // Sample at reduced resolution
+      const sampleWidth = Math.min(width, 300)
+      const sampleHeight = Math.min(height, 200)
+      sampleCanvas.width = sampleWidth
+      sampleCanvas.height = sampleHeight
 
-    ctx.drawImage(source, 0, 0, sampleWidth, sampleHeight)
-    return ctx.getImageData(0, 0, sampleWidth, sampleHeight)
-  }, [])
+      ctx.drawImage(source, 0, 0, sampleWidth, sampleHeight)
+      return ctx.getImageData(0, 0, sampleWidth, sampleHeight)
+    },
+    [],
+  )
 
   // HSL to RGB for drawing
   const hslToRgb = useCallback((h: number, s: number, l: number): string => {
@@ -158,13 +169,34 @@ export function ColorWheelPanel({
     const x = c * (1 - Math.abs(((h / 60) % 2) - 1))
     const m = l - c / 2
 
-    let r = 0, g = 0, b = 0
-    if (h < 60) { r = c; g = x; b = 0 }
-    else if (h < 120) { r = x; g = c; b = 0 }
-    else if (h < 180) { r = 0; g = c; b = x }
-    else if (h < 240) { r = 0; g = x; b = c }
-    else if (h < 300) { r = x; g = 0; b = c }
-    else { r = c; g = 0; b = x }
+    let r = 0,
+      g = 0,
+      b = 0
+    if (h < 60) {
+      r = c
+      g = x
+      b = 0
+    } else if (h < 120) {
+      r = x
+      g = c
+      b = 0
+    } else if (h < 180) {
+      r = 0
+      g = c
+      b = x
+    } else if (h < 240) {
+      r = 0
+      g = x
+      b = c
+    } else if (h < 300) {
+      r = x
+      g = 0
+      b = c
+    } else {
+      r = c
+      g = 0
+      b = x
+    }
 
     const ri = Math.round((r + m) * 255)
     const gi = Math.round((g + m) * 255)
@@ -218,7 +250,7 @@ export function ColorWheelPanel({
     const size = canvas.width
     const centerX = size / 2
     const centerY = size / 2
-    const radius = (size / 2) - 20
+    const radius = size / 2 - 20
 
     // Clear
     ctx.fillStyle = '#1a1a1a'
@@ -226,7 +258,7 @@ export function ColorWheelPanel({
 
     // Draw color wheel background (graticule)
     for (let h = 0; h < 360; h += 30) {
-      const radians = (h - 90) * Math.PI / 180
+      const radians = ((h - 90) * Math.PI) / 180
       const x1 = centerX + Math.cos(radians) * 20
       const y1 = centerY + Math.sin(radians) * 20
       const x2 = centerX + Math.cos(radians) * radius
@@ -261,10 +293,18 @@ export function ColorWheelPanel({
     // Get distributions to render based on view mode
     const distributions: { dist: ColorDistribution; color: string; alpha: number }[] = []
     if ((viewMode === 'a' || viewMode === 'both') && distributionA) {
-      distributions.push({ dist: distributionA, color: '#ff9632', alpha: viewMode === 'both' ? 0.6 : 0.8 })
+      distributions.push({
+        dist: distributionA,
+        color: '#ff9632',
+        alpha: viewMode === 'both' ? 0.6 : 0.8,
+      })
     }
     if ((viewMode === 'b' || viewMode === 'both') && distributionB) {
-      distributions.push({ dist: distributionB, color: '#96ff32', alpha: viewMode === 'both' ? 0.6 : 0.8 })
+      distributions.push({
+        dist: distributionB,
+        color: '#96ff32',
+        alpha: viewMode === 'both' ? 0.6 : 0.8,
+      })
     }
 
     // Render each distribution
@@ -278,7 +318,7 @@ export function ColorWheelPanel({
           const intensity = Math.log1p(count) / Math.log1p(dist.maxCount)
 
           // Convert to wheel coordinates
-          const radians = (h - 90) * Math.PI / 180
+          const radians = ((h - 90) * Math.PI) / 180
           const satRadius = (s / 100) * radius
           const x = centerX + Math.cos(radians) * satRadius
           const y = centerY + Math.sin(radians) * satRadius
@@ -304,7 +344,7 @@ export function ColorWheelPanel({
 
     // Draw hovered color indicator
     if (hoveredColor) {
-      const radians = (hoveredColor.hue - 90) * Math.PI / 180
+      const radians = ((hoveredColor.hue - 90) * Math.PI) / 180
       const satRadius = (hoveredColor.sat / 100) * radius
       const x = centerX + Math.cos(radians) * satRadius
       const y = centerY + Math.sin(radians) * satRadius
@@ -315,7 +355,6 @@ export function ColorWheelPanel({
       ctx.arc(x, y, 8, 0, Math.PI * 2)
       ctx.stroke()
     }
-
   }, [distributionA, distributionB, isVisible, viewMode, hoveredColor, hslToRgb])
 
   // Handle mouse interaction
@@ -329,7 +368,7 @@ export function ColorWheelPanel({
 
     const centerX = canvas.width / 2
     const centerY = canvas.height / 2
-    const radius = (canvas.width / 2) - 20
+    const radius = canvas.width / 2 - 20
 
     // Calculate hue and saturation from position
     const dx = x - centerX
@@ -337,7 +376,7 @@ export function ColorWheelPanel({
     const distance = Math.sqrt(dx * dx + dy * dy)
 
     if (distance <= radius) {
-      let angle = Math.atan2(dy, dx) * 180 / Math.PI + 90
+      let angle = (Math.atan2(dy, dx) * 180) / Math.PI + 90
       if (angle < 0) angle += 360
 
       const hue = Math.round(angle) % 360
@@ -370,10 +409,14 @@ export function ColorWheelPanel({
     const colors: { hue: number; sat: number; count: number; source: 'A' | 'B' }[] = []
 
     if (distributionA && (viewMode === 'a' || viewMode === 'both')) {
-      distributionA.dominantHues.forEach(c => colors.push({ hue: c.hue, sat: c.saturation, count: c.count, source: 'A' }))
+      distributionA.dominantHues.forEach((c) =>
+        colors.push({ hue: c.hue, sat: c.saturation, count: c.count, source: 'A' }),
+      )
     }
     if (distributionB && (viewMode === 'b' || viewMode === 'both')) {
-      distributionB.dominantHues.forEach(c => colors.push({ hue: c.hue, sat: c.saturation, count: c.count, source: 'B' }))
+      distributionB.dominantHues.forEach((c) =>
+        colors.push({ hue: c.hue, sat: c.saturation, count: c.count, source: 'B' }),
+      )
     }
 
     return colors.slice(0, 6)
@@ -444,9 +487,7 @@ export function ColorWheelPanel({
             <span className="text-text-muted">
               H: {hoveredColor.hue} S: {hoveredColor.sat}%
             </span>
-            <span className="text-text-muted ml-auto text-[10px]">
-              Click to highlight
-            </span>
+            <span className="text-text-muted ml-auto text-[10px]">Click to highlight</span>
           </div>
         </div>
       )}

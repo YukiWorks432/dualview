@@ -10,7 +10,11 @@ interface ClipWaveformProps {
   className?: string
 }
 
-export function ClipWaveform({ peaks, color = 'rgba(255, 255, 255, 0.6)', className = '' }: ClipWaveformProps) {
+export function ClipWaveform({
+  peaks,
+  color = 'rgba(255, 255, 255, 0.6)',
+  className = '',
+}: ClipWaveformProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
@@ -100,10 +104,6 @@ export function ClipWaveform({ peaks, color = 'rgba(255, 255, 255, 0.6)', classN
   }, [peaks, color])
 
   return (
-    <canvas
-      ref={canvasRef}
-      className={`w-full h-full ${className}`}
-      style={{ display: 'block' }}
-    />
+    <canvas ref={canvasRef} className={`w-full h-full ${className}`} style={{ display: 'block' }} />
   )
 }

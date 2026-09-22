@@ -21,7 +21,7 @@ export interface PDFExportOptions {
  */
 export async function captureScreenshot(
   element: HTMLElement,
-  options: ScreenshotOptions
+  options: ScreenshotOptions,
 ): Promise<Blob> {
   // Use html2canvas-style approach with native canvas
   const rect = element.getBoundingClientRect()
@@ -61,15 +61,15 @@ export async function captureScreenshot(
     }
   }
 
-  videos.forEach(v => drawMedia(v))
-  images.forEach(i => drawMedia(i))
-  canvases.forEach(c => drawMedia(c))
+  videos.forEach((v) => drawMedia(v))
+  images.forEach((i) => drawMedia(i))
+  canvases.forEach((c) => drawMedia(c))
 
   // Convert to blob
   return new Promise((resolve, reject) => {
     const mimeType = options.format === 'png' ? 'image/png' : 'image/jpeg'
     canvas.toBlob(
-      blob => {
+      (blob) => {
         if (blob) {
           resolve(blob)
         } else {
@@ -77,7 +77,7 @@ export async function captureScreenshot(
         }
       },
       mimeType,
-      options.format === 'jpg' ? options.quality : undefined
+      options.format === 'jpg' ? options.quality : undefined,
     )
   })
 }
@@ -87,16 +87,12 @@ export async function captureScreenshot(
  */
 export async function captureCanvasScreenshot(
   canvas: HTMLCanvasElement | null,
-  format: 'png' | 'jpg' = 'png'
+  format: 'png' | 'jpg' = 'png',
 ): Promise<Blob | null> {
   if (!canvas) return null
 
-  return new Promise(resolve => {
-    canvas.toBlob(
-      blob => resolve(blob),
-      format === 'png' ? 'image/png' : 'image/jpeg',
-      0.95
-    )
+  return new Promise((resolve) => {
+    canvas.toBlob((blob) => resolve(blob), format === 'png' ? 'image/png' : 'image/jpeg', 0.95)
   })
 }
 
@@ -140,10 +136,10 @@ export async function generatePDFReport(
     comparisonMode: string
     annotations?: string[]
     metrics?: { ssim?: number; psnr?: number }
-    webglMetrics?: WebGLPDFMetrics  // WEBGL-010
-    webglMode?: string              // WEBGL-010
-    threshold?: number              // WEBGL-010
-  }
+    webglMetrics?: WebGLPDFMetrics // WEBGL-010
+    webglMode?: string // WEBGL-010
+    threshold?: number // WEBGL-010
+  },
 ): Promise<Blob> {
   // Create a simple HTML-based PDF
   const { jsPDF } = await import('jspdf')
@@ -226,31 +222,68 @@ export async function generatePDFReport(
     doc.setFont('helvetica', 'normal')
 
     // SSIM with quality assessment
-    const ssimQuality = options.webglMetrics.ssim > 0.95 ? 'Excellent' :
-                        options.webglMetrics.ssim > 0.8 ? 'Good' :
-                        options.webglMetrics.ssim > 0.5 ? 'Fair' : 'Poor'
-    doc.text(`Structural Similarity (SSIM): ${options.webglMetrics.ssim.toFixed(4)} (${ssimQuality})`, margin, yPos)
+    const ssimQuality =
+      options.webglMetrics.ssim > 0.95
+        ? 'Excellent'
+        : options.webglMetrics.ssim > 0.8
+          ? 'Good'
+          : options.webglMetrics.ssim > 0.5
+            ? 'Fair'
+            : 'Poor'
+    doc.text(
+      `Structural Similarity (SSIM): ${options.webglMetrics.ssim.toFixed(4)} (${ssimQuality})`,
+      margin,
+      yPos,
+    )
     yPos += 5
 
     // Delta E with interpretation
-    const deltaEInterpretation = options.webglMetrics.deltaE < 1 ? 'Imperceptible' :
-                                  options.webglMetrics.deltaE < 2 ? 'Barely perceptible' :
-                                  options.webglMetrics.deltaE < 5 ? 'Noticeable' : 'Obvious'
-    doc.text(`Perceptual Difference (Delta E CIE94): ${options.webglMetrics.deltaE.toFixed(2)} (${deltaEInterpretation})`, margin, yPos)
+    const deltaEInterpretation =
+      options.webglMetrics.deltaE < 1
+        ? 'Imperceptible'
+        : options.webglMetrics.deltaE < 2
+          ? 'Barely perceptible'
+          : options.webglMetrics.deltaE < 5
+            ? 'Noticeable'
+            : 'Obvious'
+    doc.text(
+      `Perceptual Difference (Delta E CIE94): ${options.webglMetrics.deltaE.toFixed(2)} (${deltaEInterpretation})`,
+      margin,
+      yPos,
+    )
     yPos += 5
 
-    doc.text(`Different Pixels: ${options.webglMetrics.diffPixelPercent.toFixed(1)}% (${options.webglMetrics.failPixelCount.toLocaleString()} of ${options.webglMetrics.totalPixelCount.toLocaleString()})`, margin, yPos)
+    doc.text(
+      `Different Pixels: ${options.webglMetrics.diffPixelPercent.toFixed(1)}% (${options.webglMetrics.failPixelCount.toLocaleString()} of ${options.webglMetrics.totalPixelCount.toLocaleString()})`,
+      margin,
+      yPos,
+    )
     yPos += 5
 
-    doc.text(`Peak Pixel Difference: ${options.webglMetrics.peakDifference.toFixed(0)} / 255`, margin, yPos)
+    doc.text(
+      `Peak Pixel Difference: ${options.webglMetrics.peakDifference.toFixed(0)} / 255`,
+      margin,
+      yPos,
+    )
     yPos += 5
 
-    doc.text(`Mean Pixel Difference: ${options.webglMetrics.meanDifference.toFixed(2)} / 255`, margin, yPos)
+    doc.text(
+      `Mean Pixel Difference: ${options.webglMetrics.meanDifference.toFixed(2)} / 255`,
+      margin,
+      yPos,
+    )
     yPos += 5
 
     // Pass/Fail summary
-    const passRate = (options.webglMetrics.passPixelCount / options.webglMetrics.totalPixelCount * 100).toFixed(1)
-    doc.text(`Threshold Pass Rate: ${passRate}% (${options.webglMetrics.passPixelCount.toLocaleString()} pixels)`, margin, yPos)
+    const passRate = (
+      (options.webglMetrics.passPixelCount / options.webglMetrics.totalPixelCount) *
+      100
+    ).toFixed(1)
+    doc.text(
+      `Threshold Pass Rate: ${passRate}% (${options.webglMetrics.passPixelCount.toLocaleString()} pixels)`,
+      margin,
+      yPos,
+    )
     yPos += 5
   }
 
@@ -308,7 +341,7 @@ export async function generatePDFReport(
     'Generated with DualView - github.com/gokayfem/dualview',
     pageWidth / 2,
     pageHeight - 5,
-    { align: 'center' }
+    { align: 'center' },
   )
 
   return doc.output('blob')

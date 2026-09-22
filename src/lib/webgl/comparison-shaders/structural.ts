@@ -42,7 +42,7 @@ void main() {
   vec3 result = mix(original, vis, u_opacity);
 
   gl_FragColor = vec4(result, 1.0);
-}`
+}`,
   },
 
   'struct-edge': {
@@ -92,7 +92,7 @@ void main() {
   vec3 result = mix(original, vis, u_opacity);
 
   gl_FragColor = vec4(result, 1.0);
-}`
+}`,
   },
 
   'struct-gradient': {
@@ -139,7 +139,7 @@ void main() {
   vec3 result = mix(original, vis, u_opacity);
 
   gl_FragColor = vec4(result, 1.0);
-}`
+}`,
   },
 
   'struct-contrast': {
@@ -207,7 +207,7 @@ void main() {
   vec3 result = mix(original, vis, u_opacity);
 
   gl_FragColor = vec4(result, 1.0);
-}`
+}`,
   },
 
   'struct-block': {
@@ -259,8 +259,8 @@ void main() {
   vec3 result = mix(original, vis, u_opacity);
 
   gl_FragColor = vec4(result, 1.0);
-}`
-  }
+}`,
+  },
 }
 
 export const STRUCTURAL_VARIANTS = Object.keys(STRUCTURAL_SHADERS)

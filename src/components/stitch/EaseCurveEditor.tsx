@@ -3,11 +3,21 @@
  * Visual bezier curve editor with presets and custom control points
  */
 
-import { useState, useCallback, useRef, useEffect } from 'react'
 import {
-  Spline, Copy, Clipboard, RotateCcw, Play, Pause, X,
-  TrendingUp, TrendingDown, Activity, Zap
+  Spline,
+  Copy,
+  Clipboard,
+  RotateCcw,
+  Play,
+  Pause,
+  X,
+  TrendingUp,
+  TrendingDown,
+  Activity,
+  Zap,
 } from 'lucide-react'
+import { useState, useCallback, useRef, useEffect } from 'react'
+
 import type { EaseCurve } from '../../types'
 
 // Re-export EaseCurve type for convenience
@@ -49,7 +59,13 @@ function cubicBezier(t: number, p1: number, p2: number): number {
 }
 
 // Sample the bezier curve for rendering
-function sampleBezierCurve(x1: number, y1: number, x2: number, y2: number, samples: number = 100): { x: number; y: number }[] {
+function sampleBezierCurve(
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+  samples: number = 100,
+): { x: number; y: number }[] {
   const points: { x: number; y: number }[] = []
   for (let i = 0; i <= samples; i++) {
     const t = i / samples
@@ -60,7 +76,13 @@ function sampleBezierCurve(x1: number, y1: number, x2: number, y2: number, sampl
   return points
 }
 
-export function EaseCurveEditor({ isOpen, onClose, curve, onCurveChange, clipId }: EaseCurveEditorProps) {
+export function EaseCurveEditor({
+  isOpen,
+  onClose,
+  curve,
+  onCurveChange,
+  clipId,
+}: EaseCurveEditorProps) {
   const [localCurve, setLocalCurve] = useState<EaseCurve>(curve)
   const [dragging, setDragging] = useState<'p1' | 'p2' | null>(null)
   const [isPreviewPlaying, setIsPreviewPlaying] = useState(false)
@@ -142,7 +164,12 @@ export function EaseCurveEditor({ isOpen, onClose, curve, onCurveChange, clipId 
     ctx.stroke()
 
     // Draw the bezier curve
-    const curvePoints = sampleBezierCurve(localCurve.x1, localCurve.y1, localCurve.x2, localCurve.y2)
+    const curvePoints = sampleBezierCurve(
+      localCurve.x1,
+      localCurve.y1,
+      localCurve.x2,
+      localCurve.y2,
+    )
     ctx.strokeStyle = '#ff5722'
     ctx.lineWidth = 2.5
     ctx.beginPath()
@@ -200,7 +227,6 @@ export function EaseCurveEditor({ isOpen, onClose, curve, onCurveChange, clipId 
     ctx.rotate(-Math.PI / 2)
     ctx.fillText('Progress →', 0, 0)
     ctx.restore()
-
   }, [localCurve, CANVAS_SIZE, PADDING, INNER_SIZE])
 
   // Draw curve on mount and changes
@@ -222,59 +248,65 @@ export function EaseCurveEditor({ isOpen, onClose, curve, onCurveChange, clipId 
   }, [localCurve, isOpen, drawCurve])
 
   // Handle mouse events for dragging control points
-  const handleMouseDown = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-    const rect = canvas.getBoundingClientRect()
-    const x = (e.clientX - rect.left) / (rect.width / CANVAS_SIZE)
-    const y = (e.clientY - rect.top) / (rect.height / CANVAS_SIZE)
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent<HTMLCanvasElement>) => {
+      const canvas = canvasRef.current
+      if (!canvas) return
+      const rect = canvas.getBoundingClientRect()
+      const x = (e.clientX - rect.left) / (rect.width / CANVAS_SIZE)
+      const y = (e.clientY - rect.top) / (rect.height / CANVAS_SIZE)
 
-    // Check if clicked on P1
-    const p1x = PADDING + localCurve.x1 * INNER_SIZE
-    const p1y = CANVAS_SIZE - PADDING - localCurve.y1 * INNER_SIZE
-    if (Math.hypot(x - p1x, y - p1y) < 15) {
-      setDragging('p1')
-      return
-    }
+      // Check if clicked on P1
+      const p1x = PADDING + localCurve.x1 * INNER_SIZE
+      const p1y = CANVAS_SIZE - PADDING - localCurve.y1 * INNER_SIZE
+      if (Math.hypot(x - p1x, y - p1y) < 15) {
+        setDragging('p1')
+        return
+      }
 
-    // Check if clicked on P2
-    const p2x = PADDING + localCurve.x2 * INNER_SIZE
-    const p2y = CANVAS_SIZE - PADDING - localCurve.y2 * INNER_SIZE
-    if (Math.hypot(x - p2x, y - p2y) < 15) {
-      setDragging('p2')
-    }
-  }, [localCurve, CANVAS_SIZE, PADDING, INNER_SIZE])
+      // Check if clicked on P2
+      const p2x = PADDING + localCurve.x2 * INNER_SIZE
+      const p2y = CANVAS_SIZE - PADDING - localCurve.y2 * INNER_SIZE
+      if (Math.hypot(x - p2x, y - p2y) < 15) {
+        setDragging('p2')
+      }
+    },
+    [localCurve, CANVAS_SIZE, PADDING, INNER_SIZE],
+  )
 
-  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!dragging) return
-    const canvas = canvasRef.current
-    if (!canvas) return
-    const rect = canvas.getBoundingClientRect()
-    const x = (e.clientX - rect.left) / (rect.width / CANVAS_SIZE)
-    const y = (e.clientY - rect.top) / (rect.height / CANVAS_SIZE)
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent<HTMLCanvasElement>) => {
+      if (!dragging) return
+      const canvas = canvasRef.current
+      if (!canvas) return
+      const rect = canvas.getBoundingClientRect()
+      const x = (e.clientX - rect.left) / (rect.width / CANVAS_SIZE)
+      const y = (e.clientY - rect.top) / (rect.height / CANVAS_SIZE)
 
-    // Convert to normalized coordinates
-    const normX = Math.max(0, Math.min(1, (x - PADDING) / INNER_SIZE))
-    const normY = Math.max(-0.5, Math.min(1.5, (CANVAS_SIZE - PADDING - y) / INNER_SIZE))
+      // Convert to normalized coordinates
+      const normX = Math.max(0, Math.min(1, (x - PADDING) / INNER_SIZE))
+      const normY = Math.max(-0.5, Math.min(1.5, (CANVAS_SIZE - PADDING - y) / INNER_SIZE))
 
-    if (dragging === 'p1') {
-      setLocalCurve(prev => ({
-        ...prev,
-        x1: normX,
-        y1: normY,
-        id: 'custom',
-        name: 'Custom'
-      }))
-    } else if (dragging === 'p2') {
-      setLocalCurve(prev => ({
-        ...prev,
-        x2: normX,
-        y2: normY,
-        id: 'custom',
-        name: 'Custom'
-      }))
-    }
-  }, [dragging, CANVAS_SIZE, PADDING, INNER_SIZE])
+      if (dragging === 'p1') {
+        setLocalCurve((prev) => ({
+          ...prev,
+          x1: normX,
+          y1: normY,
+          id: 'custom',
+          name: 'Custom',
+        }))
+      } else if (dragging === 'p2') {
+        setLocalCurve((prev) => ({
+          ...prev,
+          x2: normX,
+          y2: normY,
+          id: 'custom',
+          name: 'Custom',
+        }))
+      }
+    },
+    [dragging, CANVAS_SIZE, PADDING, INNER_SIZE],
+  )
 
   const handleMouseUp = useCallback(() => {
     if (dragging) {
@@ -320,10 +352,13 @@ export function EaseCurveEditor({ isOpen, onClose, curve, onCurveChange, clipId 
   }, [isPreviewPlaying, localCurve])
 
   // Apply preset
-  const applyPreset = useCallback((preset: EaseCurve) => {
-    setLocalCurve(preset)
-    onCurveChange(preset)
-  }, [onCurveChange])
+  const applyPreset = useCallback(
+    (preset: EaseCurve) => {
+      setLocalCurve(preset)
+      onCurveChange(preset)
+    },
+    [onCurveChange],
+  )
 
   // Copy to clipboard
   const copyToClipboard = useCallback(() => {
@@ -388,7 +423,7 @@ export function EaseCurveEditor({ isOpen, onClose, curve, onCurveChange, clipId 
               <div className="text-xs text-gray-500 uppercase tracking-wide">Presets</div>
             </div>
             <div className="flex-1 overflow-y-auto p-2">
-              {EASE_PRESETS.map(preset => {
+              {EASE_PRESETS.map((preset) => {
                 const Icon = getPresetIcon(preset)
                 return (
                   <button
@@ -415,7 +450,11 @@ export function EaseCurveEditor({ isOpen, onClose, curve, onCurveChange, clipId 
               <div className="flex-shrink-0">
                 <canvas
                   ref={canvasRef}
-                  style={{ width: `${CANVAS_SIZE}px`, height: `${CANVAS_SIZE}px`, background: '#0d0d0d' }}
+                  style={{
+                    width: `${CANVAS_SIZE}px`,
+                    height: `${CANVAS_SIZE}px`,
+                    background: '#0d0d0d',
+                  }}
                   className="cursor-crosshair rounded border border-gray-700"
                   onMouseDown={handleMouseDown}
                   onMouseMove={handleMouseMove}
@@ -427,7 +466,9 @@ export function EaseCurveEditor({ isOpen, onClose, curve, onCurveChange, clipId 
               <div className="flex-1 flex flex-col gap-4">
                 {/* Control Point Values */}
                 <div className="bg-[#0d0d0d] rounded p-4 border border-gray-800">
-                  <div className="text-xs text-gray-500 uppercase tracking-wide mb-3">Control Points</div>
+                  <div className="text-xs text-gray-500 uppercase tracking-wide mb-3">
+                    Control Points
+                  </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -444,9 +485,14 @@ export function EaseCurveEditor({ isOpen, onClose, curve, onCurveChange, clipId 
                             max="1"
                             step="0.01"
                             value={localCurve.x1.toFixed(2)}
-                            onChange={e => {
+                            onChange={(e) => {
                               const val = parseFloat(e.target.value) || 0
-                              setLocalCurve(prev => ({ ...prev, x1: Math.max(0, Math.min(1, val)), id: 'custom', name: 'Custom' }))
+                              setLocalCurve((prev) => ({
+                                ...prev,
+                                x1: Math.max(0, Math.min(1, val)),
+                                id: 'custom',
+                                name: 'Custom',
+                              }))
                             }}
                             onBlur={() => onCurveChange(localCurve)}
                             className="w-full bg-[#1a1a1a] border border-gray-600 rounded px-2 py-1 text-sm text-white"
@@ -460,9 +506,14 @@ export function EaseCurveEditor({ isOpen, onClose, curve, onCurveChange, clipId 
                             max="1.5"
                             step="0.01"
                             value={localCurve.y1.toFixed(2)}
-                            onChange={e => {
+                            onChange={(e) => {
                               const val = parseFloat(e.target.value) || 0
-                              setLocalCurve(prev => ({ ...prev, y1: Math.max(-0.5, Math.min(1.5, val)), id: 'custom', name: 'Custom' }))
+                              setLocalCurve((prev) => ({
+                                ...prev,
+                                y1: Math.max(-0.5, Math.min(1.5, val)),
+                                id: 'custom',
+                                name: 'Custom',
+                              }))
                             }}
                             onBlur={() => onCurveChange(localCurve)}
                             className="w-full bg-[#1a1a1a] border border-gray-600 rounded px-2 py-1 text-sm text-white"
@@ -485,9 +536,14 @@ export function EaseCurveEditor({ isOpen, onClose, curve, onCurveChange, clipId 
                             max="1"
                             step="0.01"
                             value={localCurve.x2.toFixed(2)}
-                            onChange={e => {
+                            onChange={(e) => {
                               const val = parseFloat(e.target.value) || 0
-                              setLocalCurve(prev => ({ ...prev, x2: Math.max(0, Math.min(1, val)), id: 'custom', name: 'Custom' }))
+                              setLocalCurve((prev) => ({
+                                ...prev,
+                                x2: Math.max(0, Math.min(1, val)),
+                                id: 'custom',
+                                name: 'Custom',
+                              }))
                             }}
                             onBlur={() => onCurveChange(localCurve)}
                             className="w-full bg-[#1a1a1a] border border-gray-600 rounded px-2 py-1 text-sm text-white"
@@ -501,9 +557,14 @@ export function EaseCurveEditor({ isOpen, onClose, curve, onCurveChange, clipId 
                             max="1.5"
                             step="0.01"
                             value={localCurve.y2.toFixed(2)}
-                            onChange={e => {
+                            onChange={(e) => {
                               const val = parseFloat(e.target.value) || 0
-                              setLocalCurve(prev => ({ ...prev, y2: Math.max(-0.5, Math.min(1.5, val)), id: 'custom', name: 'Custom' }))
+                              setLocalCurve((prev) => ({
+                                ...prev,
+                                y2: Math.max(-0.5, Math.min(1.5, val)),
+                                id: 'custom',
+                                name: 'Custom',
+                              }))
                             }}
                             onBlur={() => onCurveChange(localCurve)}
                             className="w-full bg-[#1a1a1a] border border-gray-600 rounded px-2 py-1 text-sm text-white"
@@ -516,7 +577,9 @@ export function EaseCurveEditor({ isOpen, onClose, curve, onCurveChange, clipId 
 
                 {/* CSS Output */}
                 <div className="bg-[#0d0d0d] rounded p-4 border border-gray-800">
-                  <div className="text-xs text-gray-500 uppercase tracking-wide mb-2">CSS Value</div>
+                  <div className="text-xs text-gray-500 uppercase tracking-wide mb-2">
+                    CSS Value
+                  </div>
                   <code className="text-sm text-[#ff5722] font-mono bg-[#1a1a1a] px-3 py-2 rounded block">
                     {getCssCubicBezier()}
                   </code>
@@ -607,7 +670,7 @@ export function EaseCurveEditor({ isOpen, onClose, curve, onCurveChange, clipId 
 // Toggle button for ease curve editor
 export function EaseCurveToggle({
   onClick,
-  curveName = 'Linear'
+  curveName = 'Linear',
 }: {
   onClick: () => void
   curveName?: string

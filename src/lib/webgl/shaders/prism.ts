@@ -26,7 +26,7 @@ void main() {
   vec4 colorB = vec4(colorB_r.r, colorB_g.g, colorB_b.b, 1.0);
 
   gl_FragColor = mix(colorA, colorB, u_progress);
-}`
+}`,
   },
 
   spectral_smear: {
@@ -59,7 +59,7 @@ void main() {
   result.a = 1.0;
 
   gl_FragColor = result;
-}`
+}`,
   },
 
   chroma_pulse: {
@@ -84,7 +84,7 @@ void main() {
   );
 
   gl_FragColor = mix(base, shifted, pulse);
-}`
+}`,
   },
 
   rainbow: {
@@ -108,7 +108,7 @@ void main() {
   result.a = 1.0;
 
   gl_FragColor = result;
-}`
+}`,
   },
 
   prism_wipe: {
@@ -146,7 +146,7 @@ void main() {
   } else {
     gl_FragColor = colorA;
   }
-}`
+}`,
   },
 
   aberration: {
@@ -179,7 +179,7 @@ void main() {
   );
 
   gl_FragColor = mix(colorA, colorB, u_progress);
-}`
+}`,
   },
 
   shift: {
@@ -203,7 +203,7 @@ void main() {
   colorB.rgb = hsv2rgb(hsvB);
 
   gl_FragColor = mix(colorA, colorB, u_progress);
-}`
+}`,
   },
 
   dispersion: {
@@ -240,8 +240,8 @@ void main() {
   result.a = 1.0;
 
   gl_FragColor = result;
-}`
-  }
+}`,
+  },
 }
 
 export const PRISM_VARIANTS = Object.keys(PRISM_SHADERS)

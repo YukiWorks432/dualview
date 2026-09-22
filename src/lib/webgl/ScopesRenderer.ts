@@ -13,14 +13,14 @@ import {
   WAVEFORM_PARADE_SHADER,
   VECTORSCOPE_SHADER,
   RGB_PARADE_SHADER,
-  type ScopeShaderType
+  type ScopeShaderType,
 } from './scope-shaders'
 
 export interface ScopeUniforms {
-  intensity?: number        // 0.5-3.0
-  zoom?: number             // 1-4 (vectorscope only)
-  showSkinTone?: boolean    // Vectorscope skin tone line
-  isolatedChannel?: number  // 0=all, 1=R, 2=G, 3=B (parade only)
+  intensity?: number // 0.5-3.0
+  zoom?: number // 1-4 (vectorscope only)
+  showSkinTone?: boolean // Vectorscope skin tone line
+  isolatedChannel?: number // 0=all, 1=R, 2=G, 3=B (parade only)
 }
 
 export class ScopesRenderer {
@@ -46,7 +46,7 @@ export class ScopesRenderer {
       preserveDrawingBuffer: true,
       antialias: false,
       depth: false,
-      stencil: false
+      stencil: false,
     })
 
     if (!gl) {
@@ -95,24 +95,14 @@ export class ScopesRenderer {
     if (!gl) return
 
     // Full-screen quad
-    const positions = new Float32Array([
-      -1, -1,
-       1, -1,
-      -1,  1,
-       1,  1
-    ])
+    const positions = new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1])
 
     this.positionBuffer = gl.createBuffer()
     gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer)
     gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW)
 
     // Texture coordinates
-    const texCoords = new Float32Array([
-      0, 1,
-      1, 1,
-      0, 0,
-      1, 0
-    ])
+    const texCoords = new Float32Array([0, 1, 1, 1, 0, 0, 1, 0])
 
     this.texCoordBuffer = gl.createBuffer()
     gl.bindBuffer(gl.ARRAY_BUFFER, this.texCoordBuffer)
@@ -264,7 +254,10 @@ export class ScopesRenderer {
 
     // Parade-specific uniforms
     if (type === 'parade') {
-      gl.uniform1i(gl.getUniformLocation(program, 'u_isolatedChannel'), uniforms.isolatedChannel ?? 0)
+      gl.uniform1i(
+        gl.getUniformLocation(program, 'u_isolatedChannel'),
+        uniforms.isolatedChannel ?? 0,
+      )
     }
 
     // Draw
@@ -301,7 +294,7 @@ export class ScopesRenderer {
     const gl = this.gl
     if (!gl) return
 
-    this.programs.forEach(program => {
+    this.programs.forEach((program) => {
       gl.deleteProgram(program)
     })
     this.programs.clear()

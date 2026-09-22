@@ -1,18 +1,3 @@
-import { useRef, useEffect, useCallback, useState, useMemo } from 'react'
-import type { DragEvent } from 'react'
-import { useTimelineStore } from '../../stores/timelineStore'
-import { usePlaybackStore } from '../../stores/playbackStore'
-import { useMediaStore } from '../../stores/mediaStore'
-import { useHistoryStore } from '../../stores/historyStore'
-import { useTimelineDrag, useTimelineTrim } from '../../hooks/useTimelineDrag'
-import { useEdgeAutoScroll } from '../../hooks/useEdgeAutoScroll'
-import { useMarqueeSelect } from '../../hooks/useMarqueeSelect'
-import { formatTime, cn } from '../../lib/utils'
-import { extractFilmstrip, getCachedFilmstrip, type FilmstripData } from '../../lib/filmstripExtractor'
-import { Button } from '../ui'
-import { ClipContextMenu } from './ClipContextMenu'
-import { TimelineClip } from './TimelineClip'
-import { MEDIA_DRAG_TYPE, type MediaDragData } from '../media/MediaLibrary'
 import {
   Play,
   Pause,
@@ -41,7 +26,27 @@ import {
   Type,
   Trash2,
 } from 'lucide-react'
+import { useRef, useEffect, useCallback, useState, useMemo } from 'react'
+import type { DragEvent } from 'react'
+
+import { useEdgeAutoScroll } from '../../hooks/useEdgeAutoScroll'
+import { useMarqueeSelect } from '../../hooks/useMarqueeSelect'
+import { useTimelineDrag, useTimelineTrim } from '../../hooks/useTimelineDrag'
+import {
+  extractFilmstrip,
+  getCachedFilmstrip,
+  type FilmstripData,
+} from '../../lib/filmstripExtractor'
+import { formatTime, cn } from '../../lib/utils'
+import { useHistoryStore } from '../../stores/historyStore'
+import { useMediaStore } from '../../stores/mediaStore'
+import { usePlaybackStore } from '../../stores/playbackStore'
+import { useTimelineStore } from '../../stores/timelineStore'
 import type { MediaType } from '../../types'
+import { MEDIA_DRAG_TYPE, type MediaDragData } from '../media/MediaLibrary'
+import { Button } from '../ui'
+import { ClipContextMenu } from './ClipContextMenu'
+import { TimelineClip } from './TimelineClip'
 
 export function Timeline() {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -69,7 +74,6 @@ export function Timeline() {
   const [filmstrips, setFilmstrips] = useState<Map<string, FilmstripData>>(new Map())
   const [filmstripLoading, setFilmstripLoading] = useState<Set<string>>(new Set())
   const [showFilmstrip, setShowFilmstrip] = useState(true)
-
 
   // Playback store for play/pause/seek
   const {
@@ -173,31 +177,29 @@ export function Timeline() {
         const cached = getCachedFilmstrip(mediaId)
         if (cached) {
           if (isMounted) {
-            setFilmstrips(prev => new Map(prev).set(mediaId, cached))
+            setFilmstrips((prev) => new Map(prev).set(mediaId, cached))
           }
           continue
         }
 
         // Mark as loading
         if (isMounted) {
-          setFilmstripLoading(prev => new Set(prev).add(mediaId))
+          setFilmstripLoading((prev) => new Set(prev).add(mediaId))
         }
 
         try {
-          const filmstrip = await extractFilmstrip(
-            mediaId,
-            media.url,
-            media.duration || 10,
-            { frameInterval: 1, maxFrames: 60 }
-          )
+          const filmstrip = await extractFilmstrip(mediaId, media.url, media.duration || 10, {
+            frameInterval: 1,
+            maxFrames: 60,
+          })
           if (isMounted && filmstrip) {
-            setFilmstrips(prev => new Map(prev).set(mediaId, filmstrip))
+            setFilmstrips((prev) => new Map(prev).set(mediaId, filmstrip))
           }
         } catch (error) {
           console.warn('Failed to extract filmstrip:', error)
         } finally {
           if (isMounted) {
-            setFilmstripLoading(prev => {
+            setFilmstripLoading((prev) => {
               const next = new Set(prev)
               next.delete(mediaId)
               return next
@@ -212,7 +214,7 @@ export function Timeline() {
     return () => {
       isMounted = false
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tracks, files, showFilmstrip]) // Note: filmstrips and filmstripLoading intentionally excluded to avoid infinite loops
 
   // TL-003: Enhanced drag state management (OpenCut pattern)
@@ -229,12 +231,7 @@ export function Timeline() {
   })
 
   // TL-006: Enhanced trim state management
-  const {
-    trimState,
-    handleTrimStart,
-    isTrimming,
-    getTrimSnapIndicator,
-  } = useTimelineTrim({
+  const { trimState, handleTrimStart, isTrimming, getTrimSnapIndicator } = useTimelineTrim({
     pixelsPerSecond,
   })
 
@@ -280,7 +277,7 @@ export function Timeline() {
       const time = x / pixelsPerSecond
       seek(Math.max(0, Math.min(time, duration)))
     },
-    [pixelsPerSecond, duration, seek]
+    [pixelsPerSecond, duration, seek],
   )
 
   useEffect(() => {
@@ -320,36 +317,42 @@ export function Timeline() {
   }, [openTrackSettings, showAddTrackMenu])
 
   // Handle clip mouse down - delegates to drag hook with track lock check
-  const handleClipMouseDown = useCallback((e: React.MouseEvent, clipId: string, trackId: string, startTime: number) => {
-    const track = tracks.find(t => t.id === trackId)
-    if (track?.locked) return
-    handleDragMouseDown(e, clipId, trackId, startTime)
-  }, [tracks, handleDragMouseDown])
+  const handleClipMouseDown = useCallback(
+    (e: React.MouseEvent, clipId: string, trackId: string, startTime: number) => {
+      const track = tracks.find((t) => t.id === trackId)
+      if (track?.locked) return
+      handleDragMouseDown(e, clipId, trackId, startTime)
+    },
+    [tracks, handleDragMouseDown],
+  )
 
   // Handle drag over for media drop from library
-  const handleTrackDragOver = useCallback((e: DragEvent<HTMLDivElement>, trackId: string) => {
-    // Check if this is a media drag from the library
-    if (!e.dataTransfer.types.includes(MEDIA_DRAG_TYPE)) return
+  const handleTrackDragOver = useCallback(
+    (e: DragEvent<HTMLDivElement>, trackId: string) => {
+      // Check if this is a media drag from the library
+      if (!e.dataTransfer.types.includes(MEDIA_DRAG_TYPE)) return
 
-    e.preventDefault()
-    e.dataTransfer.dropEffect = 'copy'
+      e.preventDefault()
+      e.dataTransfer.dropEffect = 'copy'
 
-    // Check if track accepts the drag
-    const track = tracks.find(t => t.id === trackId)
-    if (track?.locked) {
-      e.dataTransfer.dropEffect = 'none'
-      return
-    }
+      // Check if track accepts the drag
+      const track = tracks.find((t) => t.id === trackId)
+      if (track?.locked) {
+        e.dataTransfer.dropEffect = 'none'
+        return
+      }
 
-    setDragOverTrackId(trackId)
+      setDragOverTrackId(trackId)
 
-    // Calculate drop position in timeline
-    if (containerRef.current) {
-      const rect = containerRef.current.getBoundingClientRect()
-      const x = e.clientX - rect.left + containerRef.current.scrollLeft
-      setDropIndicatorX(x)
-    }
-  }, [tracks])
+      // Calculate drop position in timeline
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect()
+        const x = e.clientX - rect.left + containerRef.current.scrollLeft
+        setDropIndicatorX(x)
+      }
+    },
+    [tracks],
+  )
 
   const handleTrackDragLeave = useCallback((e: DragEvent<HTMLDivElement>) => {
     // Only clear if we're leaving the track entirely
@@ -360,58 +363,64 @@ export function Timeline() {
     }
   }, [])
 
-  const handleTrackDrop = useCallback((e: DragEvent<HTMLDivElement>, trackId: string) => {
-    e.preventDefault()
+  const handleTrackDrop = useCallback(
+    (e: DragEvent<HTMLDivElement>, trackId: string) => {
+      e.preventDefault()
 
-    // Get the drag data
-    const dragDataStr = e.dataTransfer.getData(MEDIA_DRAG_TYPE)
-    if (!dragDataStr) return
+      // Get the drag data
+      const dragDataStr = e.dataTransfer.getData(MEDIA_DRAG_TYPE)
+      if (!dragDataStr) return
 
-    try {
-      const dragData: MediaDragData = JSON.parse(dragDataStr)
-      const track = tracks.find(t => t.id === trackId)
+      try {
+        const dragData: MediaDragData = JSON.parse(dragDataStr)
+        const track = tracks.find((t) => t.id === trackId)
 
-      if (!track || track.locked) return
+        if (!track || track.locked) return
 
-      // Check if track accepts this media type
-      if (!track.acceptedTypes.includes(dragData.mediaType)) {
-        console.warn(`Track ${track.name} does not accept ${dragData.mediaType}`)
-        return
+        // Check if track accepts this media type
+        if (!track.acceptedTypes.includes(dragData.mediaType)) {
+          console.warn(`Track ${track.name} does not accept ${dragData.mediaType}`)
+          return
+        }
+
+        // Calculate drop time from position
+        let dropTime = 0
+        if (containerRef.current) {
+          const rect = containerRef.current.getBoundingClientRect()
+          const x = e.clientX - rect.left + containerRef.current.scrollLeft
+          dropTime = Math.max(0, x / pixelsPerSecond)
+        }
+
+        // Push history for undo
+        pushState()
+
+        // Add clip at drop position
+        addClip(trackId, dragData.mediaId, dropTime, dragData.duration)
+      } catch (err) {
+        console.error('Failed to parse drag data:', err)
+      } finally {
+        setDragOverTrackId(null)
+        setDropIndicatorX(null)
       }
-
-      // Calculate drop time from position
-      let dropTime = 0
-      if (containerRef.current) {
-        const rect = containerRef.current.getBoundingClientRect()
-        const x = e.clientX - rect.left + containerRef.current.scrollLeft
-        dropTime = Math.max(0, x / pixelsPerSecond)
-      }
-
-      // Push history for undo
-      pushState()
-
-      // Add clip at drop position
-      addClip(trackId, dragData.mediaId, dropTime, dragData.duration)
-    } catch (err) {
-      console.error('Failed to parse drag data:', err)
-    } finally {
-      setDragOverTrackId(null)
-      setDropIndicatorX(null)
-    }
-  }, [tracks, pixelsPerSecond, addClip, pushState])
+    },
+    [tracks, pixelsPerSecond, addClip, pushState],
+  )
 
   // Handle trim mouse down - delegates to trim hook with track lock check
-  const handleTrimMouseDown = useCallback((
-    e: React.MouseEvent,
-    clipId: string,
-    side: 'start' | 'end',
-    clipTime: number,
-    trackId: string
-  ) => {
-    const track = tracks.find(t => t.id === trackId)
-    if (track?.locked) return
-    handleTrimStart(e, clipId, side, clipTime)
-  }, [tracks, handleTrimStart])
+  const handleTrimMouseDown = useCallback(
+    (
+      e: React.MouseEvent,
+      clipId: string,
+      side: 'start' | 'end',
+      clipTime: number,
+      trackId: string,
+    ) => {
+      const track = tracks.find((t) => t.id === trackId)
+      if (track?.locked) return
+      handleTrimStart(e, clipId, side, clipTime)
+    },
+    [tracks, handleTrimStart],
+  )
 
   // Handle keyboard shortcuts for clip operations
   useEffect(() => {
@@ -422,12 +431,16 @@ export function Timeline() {
       }
 
       // Delete selected clip(s)
-      if ((e.key === 'Delete' || e.key === 'Backspace') && (selectedClipId || selectedClipIds.length > 0)) {
-        const clipsToDelete = selectedClipIds.length > 0 ? selectedClipIds : (selectedClipId ? [selectedClipId] : [])
+      if (
+        (e.key === 'Delete' || e.key === 'Backspace') &&
+        (selectedClipId || selectedClipIds.length > 0)
+      ) {
+        const clipsToDelete =
+          selectedClipIds.length > 0 ? selectedClipIds : selectedClipId ? [selectedClipId] : []
         if (clipsToDelete.length > 0) {
           pushState()
-          clipsToDelete.forEach(clipId => {
-            const track = tracks.find(t => t.clips.some(c => c.id === clipId))
+          clipsToDelete.forEach((clipId) => {
+            const track = tracks.find((t) => t.clips.some((c) => c.id === clipId))
             if (track && !track.locked) {
               removeClip(clipId)
             }
@@ -438,7 +451,7 @@ export function Timeline() {
 
       // Split clip at playhead (TL-001)
       if (e.key === 's' && !e.ctrlKey && !e.metaKey && !e.shiftKey && selectedClipId) {
-        const track = tracks.find(t => t.clips.some(c => c.id === selectedClipId))
+        const track = tracks.find((t) => t.clips.some((c) => c.id === selectedClipId))
         if (track && !track.locked) {
           pushState()
           splitClip(selectedClipId, currentTime)
@@ -447,7 +460,7 @@ export function Timeline() {
 
       // Keep left of playhead (Q)
       if (e.key === 'q' && !e.ctrlKey && !e.metaKey && !e.shiftKey && selectedClipId) {
-        const track = tracks.find(t => t.clips.some(c => c.id === selectedClipId))
+        const track = tracks.find((t) => t.clips.some((c) => c.id === selectedClipId))
         if (track && !track.locked) {
           pushState()
           splitAndKeepLeft(selectedClipId, currentTime)
@@ -456,7 +469,7 @@ export function Timeline() {
 
       // Keep right of playhead (W)
       if (e.key === 'w' && !e.ctrlKey && !e.metaKey && !e.shiftKey && selectedClipId) {
-        const track = tracks.find(t => t.clips.some(c => c.id === selectedClipId))
+        const track = tracks.find((t) => t.clips.some((c) => c.id === selectedClipId))
         if (track && !track.locked) {
           pushState()
           splitAndKeepRight(selectedClipId, currentTime)
@@ -466,7 +479,7 @@ export function Timeline() {
       // Duplicate clip (TL-002)
       if (e.key === 'd' && (e.ctrlKey || e.metaKey) && selectedClipId) {
         e.preventDefault()
-        const track = tracks.find(t => t.clips.some(c => c.id === selectedClipId))
+        const track = tracks.find((t) => t.clips.some((c) => c.id === selectedClipId))
         if (track && !track.locked) {
           pushState()
           duplicateClip(selectedClipId)
@@ -483,7 +496,7 @@ export function Timeline() {
       if (e.key === 'v' && (e.ctrlKey || e.metaKey)) {
         e.preventDefault()
         // Paste to the first available track at playhead
-        const track = tracks.find(t => !t.locked)
+        const track = tracks.find((t) => !t.locked)
         if (track) {
           pushState()
           pasteClip(track.id, currentTime)
@@ -509,7 +522,24 @@ export function Timeline() {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [selectedClipId, selectedClipIds, tracks, removeClip, pushState, splitClip, splitAndKeepLeft, splitAndKeepRight, duplicateClip, currentTime, copyClip, pasteClip, selectAllClips, clearSelection, toggleSnap, toggleRipple])
+  }, [
+    selectedClipId,
+    selectedClipIds,
+    tracks,
+    removeClip,
+    pushState,
+    splitClip,
+    splitAndKeepLeft,
+    splitAndKeepRight,
+    duplicateClip,
+    currentTime,
+    copyClip,
+    pasteClip,
+    selectAllClips,
+    clearSelection,
+    toggleSnap,
+    toggleRipple,
+  ])
 
   // TL-015: Generate adaptive time markers based on zoom level
   const timeMarkers = useMemo(() => {
@@ -526,12 +556,14 @@ export function Timeline() {
 
     // Snap to nice values (1, 2, 5, 10, 15, 30, 60, etc.)
     const niceIntervals = [0.1, 0.25, 0.5, 1, 2, 5, 10, 15, 30, 60, 120, 300, 600]
-    const majorInterval = niceIntervals.find(i => i >= majorIntervalSec) || 600
-    const minorInterval = niceIntervals.find(i => i >= minorIntervalSec && i < majorInterval) || majorInterval / 4
+    const majorInterval = niceIntervals.find((i) => i >= majorIntervalSec) || 600
+    const minorInterval =
+      niceIntervals.find((i) => i >= minorIntervalSec && i < majorInterval) || majorInterval / 4
 
     // Generate markers
     for (let t = 0; t <= duration + majorInterval; t += minorInterval) {
-      const isMajor = Math.abs(t % majorInterval) < 0.001 || Math.abs(t % majorInterval - majorInterval) < 0.001
+      const isMajor =
+        Math.abs(t % majorInterval) < 0.001 || Math.abs((t % majorInterval) - majorInterval) < 0.001
       markers.push({ time: t, major: isMajor })
     }
 
@@ -539,21 +571,24 @@ export function Timeline() {
   }, [duration, pixelsPerSecond])
 
   // Format time based on zoom level (show frames at high zoom)
-  const formatMarkerTime = useCallback((seconds: number) => {
-    if (pixelsPerSecond > 200) {
-      // High zoom - show frames
-      const totalFrames = Math.floor(seconds * frameRate)
-      const frames = totalFrames % frameRate
-      const secs = Math.floor(totalFrames / frameRate)
-      return `${secs}:${frames.toString().padStart(2, '0')}`
-    } else if (pixelsPerSecond > 50) {
-      // Medium zoom - show seconds.ms
-      return seconds.toFixed(1)
-    } else {
-      // Low zoom - show MM:SS
-      return formatTime(seconds)
-    }
-  }, [pixelsPerSecond, frameRate])
+  const formatMarkerTime = useCallback(
+    (seconds: number) => {
+      if (pixelsPerSecond > 200) {
+        // High zoom - show frames
+        const totalFrames = Math.floor(seconds * frameRate)
+        const frames = totalFrames % frameRate
+        const secs = Math.floor(totalFrames / frameRate)
+        return `${secs}:${frames.toString().padStart(2, '0')}`
+      } else if (pixelsPerSecond > 50) {
+        // Medium zoom - show seconds.ms
+        return seconds.toFixed(1)
+      } else {
+        // Low zoom - show MM:SS
+        return formatTime(seconds)
+      }
+    },
+    [pixelsPerSecond, frameRate],
+  )
 
   return (
     <div className="h-40 md:h-64 bg-surface border-t border-border flex flex-col">
@@ -590,11 +625,7 @@ export function Timeline() {
               title="Play/Pause (Space)"
               className={`h-8 w-8 ${isPlaying ? 'bg-accent/20 text-accent' : ''}`}
             >
-              {isPlaying ? (
-                <Pause className="w-4 h-4" />
-              ) : (
-                <Play className="w-4 h-4" />
-              )}
+              {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
             </Button>
             <Button
               variant="ghost"
@@ -647,10 +678,10 @@ export function Timeline() {
                 key={speed}
                 onClick={() => setPlaybackSpeed(speed)}
                 className={cn(
-                  "px-2.5 py-1 text-xs font-medium transition-all duration-150",
+                  'px-2.5 py-1 text-xs font-medium transition-all duration-150',
                   playbackSpeed === speed && shuttleSpeed === 0
-                    ? "bg-accent text-white"
-                    : "text-text-muted hover:text-text-primary hover:bg-surface-hover"
+                    ? 'bg-accent text-white'
+                    : 'text-text-muted hover:text-text-primary hover:bg-surface-hover',
                 )}
               >
                 {speed === 1 ? '1×' : `${speed}×`}
@@ -659,10 +690,12 @@ export function Timeline() {
           </div>
           {/* Shuttle speed indicator - clear visual feedback */}
           {shuttleSpeed !== 0 && (
-            <div className={cn(
-              "px-2.5 py-1 text-xs font-mono font-medium animate-pulse-subtle",
-              shuttleSpeed > 0 ? "bg-green-600/90 text-white" : "bg-orange-600/90 text-white"
-            )}>
+            <div
+              className={cn(
+                'px-2.5 py-1 text-xs font-mono font-medium animate-pulse-subtle',
+                shuttleSpeed > 0 ? 'bg-green-600/90 text-white' : 'bg-orange-600/90 text-white',
+              )}
+            >
               {shuttleSpeed > 0 ? '▶▶' : '◀◀'} {Math.abs(shuttleSpeed)}×
             </div>
           )}
@@ -677,10 +710,10 @@ export function Timeline() {
         <div className="flex items-center gap-1">
           {/* FILMSTRIP-002: Toggle filmstrip view */}
           <Button
-            variant={showFilmstrip ? "secondary" : "ghost"}
+            variant={showFilmstrip ? 'secondary' : 'ghost'}
             size="icon"
             onClick={() => setShowFilmstrip(!showFilmstrip)}
-            title={showFilmstrip ? "Hide filmstrip" : "Show filmstrip"}
+            title={showFilmstrip ? 'Hide filmstrip' : 'Show filmstrip'}
             className={`hidden md:flex h-7 w-7 ${showFilmstrip ? 'bg-accent/10 text-accent' : ''}`}
           >
             <Video className="w-3.5 h-3.5" />
@@ -688,7 +721,7 @@ export function Timeline() {
 
           {/* Advanced tools toggle - Cognitive Load reduction (hidden on mobile) */}
           <Button
-            variant={showAdvancedTools ? "secondary" : "ghost"}
+            variant={showAdvancedTools ? 'secondary' : 'ghost'}
             size="sm"
             onClick={() => setShowAdvancedTools(!showAdvancedTools)}
             title="Toggle advanced tools"
@@ -704,10 +737,10 @@ export function Timeline() {
               {/* Loop controls */}
               <div className="flex items-center gap-0.5 bg-surface p-0.5 ml-1">
                 <Button
-                  variant={loopRegion ? "secondary" : "ghost"}
+                  variant={loopRegion ? 'secondary' : 'ghost'}
                   size="icon"
-                  onClick={() => loopRegion ? clearLoop() : setLoopIn()}
-                  title={loopRegion ? "Clear loop (Esc)" : "Set loop in (I/O)"}
+                  onClick={() => (loopRegion ? clearLoop() : setLoopIn())}
+                  title={loopRegion ? 'Clear loop (Esc)' : 'Set loop in (I/O)'}
                   className={`h-7 w-7 ${loopRegion ? 'bg-accent/20 text-accent' : ''}`}
                 >
                   <Repeat className="w-3.5 h-3.5" />
@@ -720,16 +753,18 @@ export function Timeline() {
               </div>
 
               {/* Clip editing tools */}
-              <div className={cn(
-                "flex items-center gap-0.5 bg-surface p-0.5 transition-opacity",
-                !selectedClipId && "opacity-40"
-              )}>
+              <div
+                className={cn(
+                  'flex items-center gap-0.5 bg-surface p-0.5 transition-opacity',
+                  !selectedClipId && 'opacity-40',
+                )}
+              >
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => {
                     if (selectedClipId) {
-                      const track = tracks.find(t => t.clips.some(c => c.id === selectedClipId))
+                      const track = tracks.find((t) => t.clips.some((c) => c.id === selectedClipId))
                       if (track && !track.locked) {
                         pushState()
                         splitClip(selectedClipId, currentTime)
@@ -747,7 +782,7 @@ export function Timeline() {
                   size="icon"
                   onClick={() => {
                     if (selectedClipId) {
-                      const track = tracks.find(t => t.clips.some(c => c.id === selectedClipId))
+                      const track = tracks.find((t) => t.clips.some((c) => c.id === selectedClipId))
                       if (track && !track.locked) {
                         pushState()
                         duplicateClip(selectedClipId)
@@ -779,7 +814,7 @@ export function Timeline() {
                   )}
                 </Button>
                 <Button
-                  variant={snapEnabled ? "secondary" : "ghost"}
+                  variant={snapEnabled ? 'secondary' : 'ghost'}
                   size="icon"
                   onClick={toggleSnap}
                   title="Snap to edges (N)"
@@ -788,7 +823,7 @@ export function Timeline() {
                   <Magnet className="w-3.5 h-3.5" />
                 </Button>
                 <Button
-                  variant={rippleEnabled ? "secondary" : "ghost"}
+                  variant={rippleEnabled ? 'secondary' : 'ghost'}
                   size="icon"
                   onClick={toggleRipple}
                   title="Ripple edit (R)"
@@ -832,10 +867,12 @@ export function Timeline() {
                 <div className="flex gap-1">
                   <button
                     data-track-settings
-                    onClick={() => setOpenTrackSettings(openTrackSettings === track.id ? null : track.id)}
+                    onClick={() =>
+                      setOpenTrackSettings(openTrackSettings === track.id ? null : track.id)
+                    }
                     className={cn(
-                      "p-1 hover:bg-surface",
-                      openTrackSettings === track.id && "bg-surface"
+                      'p-1 hover:bg-surface',
+                      openTrackSettings === track.id && 'bg-surface',
                     )}
                     title="Track Settings"
                   >
@@ -868,19 +905,28 @@ export function Timeline() {
               {/* Accepted types indicator */}
               <div className="flex gap-1 mt-1">
                 {track.acceptedTypes.includes('video') && (
-                  <span title="Accepts video"><Video className="w-3 h-3 text-accent" /></span>
+                  <span title="Accepts video">
+                    <Video className="w-3 h-3 text-accent" />
+                  </span>
                 )}
                 {track.acceptedTypes.includes('image') && (
-                  <span title="Accepts images"><Image className="w-3 h-3 text-secondary" /></span>
+                  <span title="Accepts images">
+                    <Image className="w-3 h-3 text-secondary" />
+                  </span>
                 )}
                 {track.acceptedTypes.includes('audio') && (
-                  <span title="Accepts audio"><Music className="w-3 h-3 text-text-muted" /></span>
+                  <span title="Accepts audio">
+                    <Music className="w-3 h-3 text-text-muted" />
+                  </span>
                 )}
               </div>
 
               {/* Track settings dropdown */}
               {openTrackSettings === track.id && (
-                <div data-track-settings className="absolute left-full top-0 ml-1 z-30 bg-surface border border-border p-2 shadow-lg min-w-[140px]">
+                <div
+                  data-track-settings
+                  className="absolute left-full top-0 ml-1 z-30 bg-surface border border-border p-2 shadow-lg min-w-[140px]"
+                >
                   <div className="text-xs font-medium text-text-secondary mb-2">
                     Accepted Media Types
                   </div>
@@ -905,12 +951,14 @@ export function Timeline() {
                           }}
                           className="w-3 h-3 accent-accent"
                         />
-                        <Icon className={cn(
-                          "w-3 h-3",
-                          type === 'video' && "text-accent",
-                          type === 'image' && "text-secondary",
-                          type === 'audio' && "text-text-muted"
-                        )} />
+                        <Icon
+                          className={cn(
+                            'w-3 h-3',
+                            type === 'video' && 'text-accent',
+                            type === 'image' && 'text-secondary',
+                            type === 'audio' && 'text-text-muted',
+                          )}
+                        />
                         <span className="text-xs text-text-primary capitalize">{type}</span>
                       </label>
                     )
@@ -937,14 +985,17 @@ export function Timeline() {
             </div>
           ))}
           {/* Add Track button */}
-          <div data-add-track-menu className="h-10 px-2 flex items-center justify-center border-b border-border relative">
+          <div
+            data-add-track-menu
+            className="h-10 px-2 flex items-center justify-center border-b border-border relative"
+          >
             <button
               onClick={() => setShowAddTrackMenu(!showAddTrackMenu)}
               className={cn(
-                "flex items-center gap-1.5 px-2 py-1 text-xs font-medium transition-colors",
+                'flex items-center gap-1.5 px-2 py-1 text-xs font-medium transition-colors',
                 showAddTrackMenu
-                  ? "bg-accent text-white"
-                  : "text-text-muted hover:text-text-primary hover:bg-surface-hover"
+                  ? 'bg-accent text-white'
+                  : 'text-text-muted hover:text-text-primary hover:bg-surface-hover',
               )}
               title="Add new track"
             >
@@ -954,7 +1005,10 @@ export function Timeline() {
 
             {/* Add track dropdown menu */}
             {showAddTrackMenu && (
-              <div data-add-track-menu className="absolute left-full top-0 ml-1 z-30 bg-surface border border-border shadow-lg min-w-[140px]">
+              <div
+                data-add-track-menu
+                className="absolute left-full top-0 ml-1 z-30 bg-surface border border-border shadow-lg min-w-[140px]"
+              >
                 <button
                   onClick={() => {
                     pushState()
@@ -1020,10 +1074,9 @@ export function Timeline() {
                   className="absolute top-0 flex flex-col items-center"
                   style={{ left: marker.time * pixelsPerSecond }}
                 >
-                  <div className={cn(
-                    "w-px",
-                    marker.major ? "h-3 bg-border" : "h-1.5 bg-border/50"
-                  )} />
+                  <div
+                    className={cn('w-px', marker.major ? 'h-3 bg-border' : 'h-1.5 bg-border/50')}
+                  />
                   {marker.major && (
                     <span className="text-[10px] text-text-muted">
                       {formatMarkerTime(marker.time)}
@@ -1070,7 +1123,7 @@ export function Timeline() {
                 className={cn(
                   'h-12 md:h-16 border-b border-border relative transition-colors',
                   track.locked && 'opacity-50',
-                  dragOverTrackId === track.id && 'bg-accent/10 border-accent/50'
+                  dragOverTrackId === track.id && 'bg-accent/10 border-accent/50',
                 )}
               >
                 {/* Drop indicator line */}
@@ -1092,7 +1145,12 @@ export function Timeline() {
                   const isBeingDragged = isClipDragging(clip.id)
                   const isSelected = selectedClipId === clip.id || selectedClipIds.includes(clip.id)
                   // Overlap detection
-                  const overlappingClips = getOverlappingClips(track.id, clip.startTime, clip.endTime, clip.id)
+                  const overlappingClips = getOverlappingClips(
+                    track.id,
+                    clip.startTime,
+                    clip.endTime,
+                    clip.id,
+                  )
                   const hasOverlap = overlappingClips.length > 0
 
                   return (
@@ -1187,8 +1245,6 @@ export function Timeline() {
           onClose={() => setContextMenu(null)}
         />
       )}
-
-
     </div>
   )
 }

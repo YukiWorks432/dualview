@@ -11,14 +11,15 @@
  * This is an overlay component that can be used with any comparison mode
  */
 
+import { Grid3X3, Eye, EyeOff, Check } from 'lucide-react'
 import { useRef, useEffect, useState, useCallback, useMemo } from 'react'
-import { useTimelineStore } from '../../stores/timelineStore'
-import { usePlaybackStore } from '../../stores/playbackStore'
-import { useMediaStore } from '../../stores/mediaStore'
-import { useProjectStore } from '../../stores/projectStore'
+
 import { useOptimizedClipSync } from '../../hooks/useOptimizedVideoSync'
 import { useSyncedZoom } from '../../hooks/useSyncedZoom'
-import { Grid3X3, Eye, EyeOff, Check } from 'lucide-react'
+import { useMediaStore } from '../../stores/mediaStore'
+import { usePlaybackStore } from '../../stores/playbackStore'
+import { useProjectStore } from '../../stores/projectStore'
+import { useTimelineStore } from '../../stores/timelineStore'
 
 export function PixelGridOverlay() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -28,7 +29,13 @@ export function PixelGridOverlay() {
   const animationRef = useRef<number>(0)
 
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
-  const [hoveredPixel, setHoveredPixel] = useState<{ x: number; y: number; r: number; g: number; b: number } | null>(null)
+  const [hoveredPixel, setHoveredPixel] = useState<{
+    x: number
+    y: number
+    r: number
+    g: number
+    b: number
+  } | null>(null)
   const [imagesLoaded, setImagesLoaded] = useState({ a: false, b: false })
   const [copied, setCopied] = useState(false)
 
@@ -39,13 +46,13 @@ export function PixelGridOverlay() {
   const { currentTime } = usePlaybackStore()
 
   // Get tracks and clips
-  const trackA = tracks.find(t => t.type === 'a')
+  const trackA = tracks.find((t) => t.type === 'a')
   const firstClipA = trackA?.clips[0] || null
 
   // Find active clip
   const activeClipA = useMemo(() => {
     if (!trackA) return null
-    return trackA.clips.find(c => currentTime >= c.startTime && currentTime < c.endTime) || null
+    return trackA.clips.find((c) => currentTime >= c.startTime && currentTime < c.endTime) || null
   }, [trackA, currentTime])
 
   // Get media files - use active clip (clip at current time), fallback to first clip
@@ -58,7 +65,7 @@ export function PixelGridOverlay() {
 
   // Handle image load
   const handleImageALoad = useCallback(() => {
-    setImagesLoaded(prev => ({ ...prev, a: true }))
+    setImagesLoaded((prev) => ({ ...prev, a: true }))
   }, [])
 
   // Check if grid should be visible (zoom >= minZoomLevel)
@@ -95,13 +102,18 @@ export function PixelGridOverlay() {
     ctx.clearRect(0, 0, width, height)
 
     // Get source
-    const sourceA = mediaA?.type === 'video' ? videoARef.current :
-                   mediaA?.type === 'image' ? imgARef.current : null
+    const sourceA =
+      mediaA?.type === 'video'
+        ? videoARef.current
+        : mediaA?.type === 'image'
+          ? imgARef.current
+          : null
 
-    const sourceAReady = sourceA && (
-      mediaA?.type === 'video' ? (videoARef.current?.readyState || 0) >= 2 :
-      mediaA?.type === 'image' && imagesLoaded.a
-    )
+    const sourceAReady =
+      sourceA &&
+      (mediaA?.type === 'video'
+        ? (videoARef.current?.readyState || 0) >= 2
+        : mediaA?.type === 'image' && imagesLoaded.a)
 
     if (!sourceA || !sourceAReady) {
       ctx.fillStyle = '#1a1a1a'
@@ -231,7 +243,14 @@ export function PixelGridOverlay() {
     }
 
     animationRef.current = requestAnimationFrame(render)
-  }, [mediaA, shouldShowGrid, zoom, pixelGridSettings.gridColor, pixelGridSettings.showRGBValues, imagesLoaded])
+  }, [
+    mediaA,
+    shouldShowGrid,
+    zoom,
+    pixelGridSettings.gridColor,
+    pixelGridSettings.showRGBValues,
+    imagesLoaded,
+  ])
 
   // Start render loop
   useEffect(() => {
@@ -244,42 +263,49 @@ export function PixelGridOverlay() {
   }, [render])
 
   // Handle mouse move to get pixel info
-  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect()
-    const x = e.clientX - rect.left
-    const y = e.clientY - rect.top
-    setMousePos({ x, y })
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      const rect = e.currentTarget.getBoundingClientRect()
+      const x = e.clientX - rect.left
+      const y = e.clientY - rect.top
+      setMousePos({ x, y })
 
-    // Get pixel info from source
-    const sourceA = mediaA?.type === 'video' ? videoARef.current :
-                   mediaA?.type === 'image' ? imgARef.current : null
+      // Get pixel info from source
+      const sourceA =
+        mediaA?.type === 'video'
+          ? videoARef.current
+          : mediaA?.type === 'image'
+            ? imgARef.current
+            : null
 
-    if (!sourceA) return
+      if (!sourceA) return
 
-    const srcWidth = 'videoWidth' in sourceA ? sourceA.videoWidth : sourceA.naturalWidth
-    const srcHeight = 'videoHeight' in sourceA ? sourceA.videoHeight : sourceA.naturalHeight
+      const srcWidth = 'videoWidth' in sourceA ? sourceA.videoWidth : sourceA.naturalWidth
+      const srcHeight = 'videoHeight' in sourceA ? sourceA.videoHeight : sourceA.naturalHeight
 
-    const pixelX = Math.floor((x / rect.width) * srcWidth)
-    const pixelY = Math.floor((y / rect.height) * srcHeight)
+      const pixelX = Math.floor((x / rect.width) * srcWidth)
+      const pixelY = Math.floor((y / rect.height) * srcHeight)
 
-    if (pixelX >= 0 && pixelX < srcWidth && pixelY >= 0 && pixelY < srcHeight) {
-      const tempCanvas = document.createElement('canvas')
-      tempCanvas.width = 1
-      tempCanvas.height = 1
-      const tempCtx = tempCanvas.getContext('2d')
-      if (tempCtx) {
-        tempCtx.drawImage(sourceA, pixelX, pixelY, 1, 1, 0, 0, 1, 1)
-        const data = tempCtx.getImageData(0, 0, 1, 1).data
-        setHoveredPixel({
-          x: pixelX,
-          y: pixelY,
-          r: data[0],
-          g: data[1],
-          b: data[2]
-        })
+      if (pixelX >= 0 && pixelX < srcWidth && pixelY >= 0 && pixelY < srcHeight) {
+        const tempCanvas = document.createElement('canvas')
+        tempCanvas.width = 1
+        tempCanvas.height = 1
+        const tempCtx = tempCanvas.getContext('2d')
+        if (tempCtx) {
+          tempCtx.drawImage(sourceA, pixelX, pixelY, 1, 1, 0, 0, 1, 1)
+          const data = tempCtx.getImageData(0, 0, 1, 1).data
+          setHoveredPixel({
+            x: pixelX,
+            y: pixelY,
+            r: data[0],
+            g: data[1],
+            b: data[2],
+          })
+        }
       }
-    }
-  }, [mediaA])
+    },
+    [mediaA],
+  )
 
   // Handle click to copy pixel value
   const handleClick = useCallback(() => {
@@ -314,10 +340,13 @@ export function PixelGridOverlay() {
   }
 
   // Combine containerProps handlers with our own
-  const combinedMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    handleMouseMove(e)
-    containerProps.onMouseMove?.(e)
-  }, [handleMouseMove, containerProps])
+  const combinedMouseMove = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      handleMouseMove(e)
+      containerProps.onMouseMove?.(e)
+    },
+    [handleMouseMove, containerProps],
+  )
 
   return (
     <div
@@ -332,7 +361,13 @@ export function PixelGridOverlay() {
       <video
         ref={videoARef}
         src={mediaA?.type === 'video' ? mediaA.url : undefined}
-        style={{ position: 'absolute', width: '1px', height: '1px', opacity: 0, pointerEvents: 'none' }}
+        style={{
+          position: 'absolute',
+          width: '1px',
+          height: '1px',
+          opacity: 0,
+          pointerEvents: 'none',
+        }}
         muted
         playsInline
         loop
@@ -341,21 +376,12 @@ export function PixelGridOverlay() {
 
       {/* Hidden image elements */}
       {mediaA?.type === 'image' && (
-        <img
-          ref={imgARef}
-          src={mediaA.url}
-          className="hidden"
-          onLoad={handleImageALoad}
-          alt=""
-        />
+        <img ref={imgARef} src={mediaA.url} className="hidden" onLoad={handleImageALoad} alt="" />
       )}
 
       {/* Canvas with zoom transform */}
       <div className="w-full h-full" style={transformStyle}>
-        <canvas
-          ref={canvasRef}
-          className="w-full h-full"
-        />
+        <canvas ref={canvasRef} className="w-full h-full" />
       </div>
 
       {/* Controls */}
@@ -380,7 +406,7 @@ export function PixelGridOverlay() {
 
         {/* Grid color selector */}
         <div className="flex flex-col gap-1">
-          {(['white', 'black', 'auto'] as const).map(color => (
+          {(['white', 'black', 'auto'] as const).map((color) => (
             <button
               key={color}
               onClick={() => setPixelGridSettings({ gridColor: color })}
@@ -398,7 +424,9 @@ export function PixelGridOverlay() {
         <span className="text-gray-400">Mode:</span>
         <span className="text-[#cddc39] ml-2 font-medium">Pixel Grid</span>
         {!shouldShowGrid && (
-          <span className="text-orange-400 ml-2">(Zoom to {pixelGridSettings.minZoomLevel * 100}%+)</span>
+          <span className="text-orange-400 ml-2">
+            (Zoom to {pixelGridSettings.minZoomLevel * 100}%+)
+          </span>
         )}
       </div>
 
@@ -407,7 +435,10 @@ export function PixelGridOverlay() {
         <div className="absolute top-14 left-4 bg-black/70 px-3 py-1.5 rounded text-xs text-gray-400">
           Zoom: {Math.round(zoom * 100)}% {shouldShowGrid && '- Grid visible'}
           <button
-            onClick={(e) => { e.stopPropagation(); resetZoom() }}
+            onClick={(e) => {
+              e.stopPropagation()
+              resetZoom()
+            }}
             className="ml-2 text-text-muted hover:text-text-primary"
           >
             Reset
@@ -421,22 +452,24 @@ export function PixelGridOverlay() {
           className="absolute pointer-events-none bg-black/90 px-3 py-2 rounded text-xs font-mono z-50"
           style={{
             left: Math.min(mousePos.x + 15, (containerRef.current?.offsetWidth || 400) - 200),
-            top: Math.min(mousePos.y + 15, (containerRef.current?.offsetHeight || 300) - 100)
+            top: Math.min(mousePos.y + 15, (containerRef.current?.offsetHeight || 300) - 100),
           }}
         >
           <div className="text-gray-300 font-semibold mb-1">Pixel Info</div>
           <div className="flex items-center gap-2">
             <span
               className="w-6 h-6 rounded border border-gray-600"
-              style={{ backgroundColor: `rgb(${hoveredPixel.r}, ${hoveredPixel.g}, ${hoveredPixel.b})` }}
+              style={{
+                backgroundColor: `rgb(${hoveredPixel.r}, ${hoveredPixel.g}, ${hoveredPixel.b})`,
+              }}
             />
             <div>
-              <div className="text-white">({hoveredPixel.x}, {hoveredPixel.y})</div>
+              <div className="text-white">
+                ({hoveredPixel.x}, {hoveredPixel.y})
+              </div>
               <div>
-                <span className="text-red-400">{hoveredPixel.r}</span>
-                {' '}
-                <span className="text-green-400">{hoveredPixel.g}</span>
-                {' '}
+                <span className="text-red-400">{hoveredPixel.r}</span>{' '}
+                <span className="text-green-400">{hoveredPixel.g}</span>{' '}
                 <span className="text-blue-400">{hoveredPixel.b}</span>
               </div>
               <div className="text-gray-500">
@@ -460,8 +493,7 @@ export function PixelGridOverlay() {
 
       {/* Settings display */}
       <div className="absolute bottom-4 left-4 bg-black/70 px-3 py-1.5 rounded text-xs text-gray-400">
-        Grid: {pixelGridSettings.gridColor} |
-        Min Zoom: {pixelGridSettings.minZoomLevel * 100}% |
+        Grid: {pixelGridSettings.gridColor} | Min Zoom: {pixelGridSettings.minZoomLevel * 100}% |
         {pixelGridSettings.showRGBValues ? ' RGB on' : ' RGB off'}
       </div>
     </div>

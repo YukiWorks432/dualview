@@ -13,7 +13,8 @@ const WEIGHT_SALIENCY: ComparisonShader = {
   name: 'weight-saliency',
   label: 'Saliency Map',
   category: 'weighting',
-  description: 'Visual saliency-based importance weighting combining edges, color contrast, and center bias',
+  description:
+    'Visual saliency-based importance weighting combining edges, color contrast, and center bias',
   fragment: `${COMPARISON_COMMON}
 
 // Compute saliency for a single pixel
@@ -73,7 +74,7 @@ void main() {
 
   gl_FragColor = vec4(color, 1.0);
 }
-`
+`,
 }
 
 /**
@@ -142,7 +143,7 @@ void main() {
 
   gl_FragColor = vec4(finalColor, 1.0);
 }
-`
+`,
 }
 
 /**
@@ -257,18 +258,14 @@ void main() {
 
   gl_FragColor = vec4(color, 1.0);
 }
-`
+`,
 }
 
 // Export all weighting shaders
 export const WEIGHTING_SHADERS: Record<string, ComparisonShader> = {
   'weight-saliency': WEIGHT_SALIENCY,
   'weight-edge': WEIGHT_EDGE,
-  'weight-ssim': WEIGHT_SSIM
+  'weight-ssim': WEIGHT_SSIM,
 }
 
-export const WEIGHTING_VARIANTS = [
-  'weight-saliency',
-  'weight-edge',
-  'weight-ssim'
-]
+export const WEIGHTING_VARIANTS = ['weight-saliency', 'weight-edge', 'weight-ssim']

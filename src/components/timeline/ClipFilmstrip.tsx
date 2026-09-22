@@ -1,13 +1,14 @@
 /**
  * ClipFilmstrip Component (FILMSTRIP-002)
- * 
+ *
  * Displays a filmstrip of video frames inside a timeline clip.
  * Adapts frame density based on clip width.
  */
 
 import { memo, useMemo } from 'react'
-import { cn } from '../../lib/utils'
+
 import type { FilmstripData } from '../../lib/filmstripExtractor'
+import { cn } from '../../lib/utils'
 
 interface ClipFilmstripProps {
   filmstrip: FilmstripData
@@ -33,7 +34,7 @@ export const ClipFilmstrip = memo(function ClipFilmstrip({
 
     // Find frames within the in/out range
     const framesInRange = filmstrip.frames.filter(
-      frame => frame.time >= inPoint && frame.time <= outPoint
+      (frame) => frame.time >= inPoint && frame.time <= outPoint,
     )
 
     if (framesInRange.length <= maxVisibleFrames) {

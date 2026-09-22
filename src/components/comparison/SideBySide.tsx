@@ -1,18 +1,19 @@
+import { Upload } from 'lucide-react'
 import { useRef, useEffect, useMemo } from 'react'
-import { useTimelineStore } from '../../stores/timelineStore'
-import { usePlaybackStore } from '../../stores/playbackStore'
-import { useMediaStore } from '../../stores/mediaStore'
-import { useProjectStore } from '../../stores/projectStore'
+
+import { useDropZone } from '../../hooks/useDropZone'
+import { useOptimizedClipSync } from '../../hooks/useOptimizedVideoSync'
+import { usePixelInspector } from '../../hooks/usePixelInspector'
+import { useSyncedZoom } from '../../hooks/useSyncedZoom'
 import { calculateVideoMetrics } from '../../lib/metrics'
+import { cn } from '../../lib/utils'
+import { useMediaStore } from '../../stores/mediaStore'
+import { usePlaybackStore } from '../../stores/playbackStore'
+import { useProjectStore } from '../../stores/projectStore'
+import { useTimelineStore } from '../../stores/timelineStore'
+import { MagnifierLoupe, useMagnifier } from './MagnifierLoupe'
 import { MetricsOverlay } from './MetricsOverlay'
 import { PixelInspector } from './PixelInspector'
-import { MagnifierLoupe, useMagnifier } from './MagnifierLoupe'
-import { useSyncedZoom } from '../../hooks/useSyncedZoom'
-import { usePixelInspector } from '../../hooks/usePixelInspector'
-import { useOptimizedClipSync } from '../../hooks/useOptimizedVideoSync'
-import { useDropZone } from '../../hooks/useDropZone'
-import { cn } from '../../lib/utils'
-import { Upload } from 'lucide-react'
 
 export function SideBySide() {
   const videoARef = useRef<HTMLVideoElement>(null)
@@ -32,8 +33,8 @@ export function SideBySide() {
   const dropZoneB = useDropZone({ trackType: 'b' })
 
   // Get tracks
-  const trackA = tracks.find(t => t.type === 'a')
-  const trackB = tracks.find(t => t.type === 'b')
+  const trackA = tracks.find((t) => t.type === 'a')
+  const trackB = tracks.find((t) => t.type === 'b')
 
   // Get first clip for display (always show something)
   const firstClipA = trackA?.clips[0] || null
@@ -42,12 +43,12 @@ export function SideBySide() {
   // Find clip that contains current time for proper sync
   const activeClipA = useMemo(() => {
     if (!trackA) return null
-    return trackA.clips.find(c => currentTime >= c.startTime && currentTime < c.endTime) || null
+    return trackA.clips.find((c) => currentTime >= c.startTime && currentTime < c.endTime) || null
   }, [trackA, currentTime])
 
   const activeClipB = useMemo(() => {
     if (!trackB) return null
-    return trackB.clips.find(c => currentTime >= c.startTime && currentTime < c.endTime) || null
+    return trackB.clips.find((c) => currentTime >= c.startTime && currentTime < c.endTime) || null
   }, [trackB, currentTime])
 
   // Use active clip's media for display (clip at current time), fallback to first clip
@@ -129,7 +130,10 @@ export function SideBySide() {
         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 bg-black/70 backdrop-blur-sm px-3 py-1 flex items-center gap-2">
           <span className="text-xs text-text-primary font-medium">{Math.round(zoom * 100)}%</span>
           <button
-            onClick={(e) => { e.stopPropagation(); resetZoom() }}
+            onClick={(e) => {
+              e.stopPropagation()
+              resetZoom()
+            }}
             className="text-[10px] text-text-muted hover:text-text-primary"
           >
             Reset
@@ -140,8 +144,8 @@ export function SideBySide() {
       {/* Video A */}
       <div
         className={cn(
-          "flex-1 relative border-r border-border overflow-hidden transition-all duration-200",
-          dropZoneA.isDragOver && "ring-2 ring-inset ring-accent bg-accent/10"
+          'flex-1 relative border-r border-border overflow-hidden transition-all duration-200',
+          dropZoneA.isDragOver && 'ring-2 ring-inset ring-accent bg-accent/10',
         )}
         {...dropZoneA.dropZoneProps}
       >
@@ -172,15 +176,17 @@ export function SideBySide() {
               />
             )
           ) : (
-            <div className={cn(
-              "w-full h-full flex flex-col items-center justify-center text-text-muted bg-surface gap-3 transition-colors",
-              dropZoneA.isDragOver && "bg-accent/20 text-accent"
-            )}>
+            <div
+              className={cn(
+                'w-full h-full flex flex-col items-center justify-center text-text-muted bg-surface gap-3 transition-colors',
+                dropZoneA.isDragOver && 'bg-accent/20 text-accent',
+              )}
+            >
               <button
                 onClick={() => dropZoneA.openFileDialog()}
                 className="p-4 rounded-lg border-2 border-dashed border-current hover:bg-accent/10 transition-colors"
               >
-                <Upload className={cn("w-8 h-8", dropZoneA.isDragOver && "animate-bounce")} />
+                <Upload className={cn('w-8 h-8', dropZoneA.isDragOver && 'animate-bounce')} />
               </button>
               <span className="text-sm">Click or drop Media A</span>
             </div>
@@ -216,8 +222,8 @@ export function SideBySide() {
       {/* Video B */}
       <div
         className={cn(
-          "flex-1 relative overflow-hidden transition-all duration-200",
-          dropZoneB.isDragOver && "ring-2 ring-inset ring-secondary bg-secondary/10"
+          'flex-1 relative overflow-hidden transition-all duration-200',
+          dropZoneB.isDragOver && 'ring-2 ring-inset ring-secondary bg-secondary/10',
         )}
         {...dropZoneB.dropZoneProps}
       >
@@ -248,15 +254,17 @@ export function SideBySide() {
               />
             )
           ) : (
-            <div className={cn(
-              "w-full h-full flex flex-col items-center justify-center text-text-muted bg-surface gap-3 transition-colors",
-              dropZoneB.isDragOver && "bg-secondary/20 text-secondary"
-            )}>
+            <div
+              className={cn(
+                'w-full h-full flex flex-col items-center justify-center text-text-muted bg-surface gap-3 transition-colors',
+                dropZoneB.isDragOver && 'bg-secondary/20 text-secondary',
+              )}
+            >
               <button
                 onClick={() => dropZoneB.openFileDialog()}
                 className="p-4 rounded-lg border-2 border-dashed border-current hover:bg-secondary/10 transition-colors"
               >
-                <Upload className={cn("w-8 h-8", dropZoneB.isDragOver && "animate-bounce")} />
+                <Upload className={cn('w-8 h-8', dropZoneB.isDragOver && 'animate-bounce')} />
               </button>
               <span className="text-sm">Click or drop Media B</span>
             </div>

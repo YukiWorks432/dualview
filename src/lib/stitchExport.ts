@@ -6,6 +6,7 @@
  */
 
 import { Muxer, ArrayBufferTarget } from 'mp4-muxer'
+
 import type { TimelineTrack, MediaFile } from '../types'
 
 export interface StitchExportSettings {
@@ -121,7 +122,7 @@ export async function exportStitchedVideo(
   track: TimelineTrack,
   getFile: (id: string) => MediaFile | undefined,
   settings: StitchExportSettings,
-  onProgress: (progress: StitchExportProgress) => void
+  onProgress: (progress: StitchExportProgress) => void,
 ): Promise<Blob | null> {
   // Sort clips by start time
   const sortedClips = [...track.clips].sort((a, b) => a.startTime - b.startTime)
@@ -249,7 +250,7 @@ export async function exportStitchedVideo(
       // Process each frame of the clip
       for (let frameInClip = 0; frameInClip < clipFrames; frameInClip++) {
         // Calculate source time in video
-        const sourceTime = clip.inPoint + (frameInClip * frameDuration)
+        const sourceTime = clip.inPoint + frameInClip * frameDuration
 
         // Seek video
         await seekVideoAndWait(video, sourceTime)
@@ -291,7 +292,7 @@ export async function exportStitchedVideo(
 
         // Update progress
         const overallProgress = Math.round(
-          ((clipIndex + frameInClip / clipFrames) / sortedClips.length) * 100
+          ((clipIndex + frameInClip / clipFrames) / sortedClips.length) * 100,
         )
         onProgress({
           status: 'encoding',
@@ -305,7 +306,6 @@ export async function exportStitchedVideo(
       // Cleanup video element
       video.src = ''
       video.load()
-
     } else if (media.type === 'image') {
       // Load image
       const img = new Image()
@@ -397,7 +397,7 @@ export function downloadStitchedVideo(blob: Blob, filename: string = 'stitched-v
  */
 export function getTrackExportInfo(
   track: TimelineTrack,
-  getFile: (id: string) => MediaFile | undefined
+  getFile: (id: string) => MediaFile | undefined,
 ): {
   totalDuration: number
   clipCount: number

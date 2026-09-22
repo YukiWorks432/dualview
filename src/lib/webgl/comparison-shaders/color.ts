@@ -53,7 +53,7 @@ void main() {
   vec3 result = mix(original, vis, u_opacity);
 
   gl_FragColor = vec4(result, 1.0);
-}`
+}`,
   },
 
   'color-saturation': {
@@ -99,7 +99,7 @@ void main() {
   vec3 result = mix(original, vis, u_opacity);
 
   gl_FragColor = vec4(result, 1.0);
-}`
+}`,
   },
 
   'color-false': {
@@ -134,7 +134,7 @@ void main() {
   vec3 result = mix(original, vis, u_opacity);
 
   gl_FragColor = vec4(result, 1.0);
-}`
+}`,
   },
 
   'color-channels': {
@@ -200,7 +200,7 @@ void main() {
   vec3 result = mix(original, vis, u_opacity);
 
   gl_FragColor = vec4(result, 1.0);
-}`
+}`,
   },
 
   'color-histogram': {
@@ -278,8 +278,8 @@ void main() {
   }
 
   gl_FragColor = vec4(vis, 1.0);
-}`
-  }
+}`,
+  },
 }
 
 export const COLOR_VARIANTS = Object.keys(COLOR_SHADERS)

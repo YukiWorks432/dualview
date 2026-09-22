@@ -1,6 +1,6 @@
 /**
  * IndexedDB wrapper for project persistence (PERSIST-001)
- * 
+ *
  * Provides a simple API for storing and retrieving projects and media blobs
  * in the browser's IndexedDB storage.
  */
@@ -20,12 +20,12 @@ export interface ProjectRecord {
   createdAt: number // timestamp
   updatedAt: number // timestamp
   thumbnail: string | null // base64 screenshot
-  
+
   // Serialized state
   timelineState: string // JSON
   projectSettings: string // JSON
   mediaManifest: MediaManifestEntry[] // List of media IDs and metadata
-  
+
   // KEYFRAME-001: Keyframe data (serialized as array of [clipId, ClipKeyframes] tuples)
   keyframeData?: string // JSON - array of [string, ClipKeyframes][]
 }
@@ -194,11 +194,7 @@ export async function deleteProject(id: string): Promise<void> {
 /**
  * Save a media blob for a project
  */
-export async function saveMediaBlob(
-  projectId: string,
-  mediaId: string,
-  blob: Blob
-): Promise<void> {
+export async function saveMediaBlob(projectId: string, mediaId: string, blob: Blob): Promise<void> {
   const database = await getDB()
 
   return new Promise((resolve, reject) => {
@@ -221,10 +217,7 @@ export async function saveMediaBlob(
 /**
  * Get a media blob by project and media ID
  */
-export async function getMediaBlob(
-  projectId: string,
-  mediaId: string
-): Promise<Blob | null> {
+export async function getMediaBlob(projectId: string, mediaId: string): Promise<Blob | null> {
   const database = await getDB()
 
   return new Promise((resolve, reject) => {
@@ -243,9 +236,7 @@ export async function getMediaBlob(
 /**
  * Get all media blobs for a project
  */
-export async function getProjectMediaBlobs(
-  projectId: string
-): Promise<Map<string, Blob>> {
+export async function getProjectMediaBlobs(projectId: string): Promise<Map<string, Blob>> {
   const database = await getDB()
 
   return new Promise((resolve, reject) => {

@@ -9,9 +9,10 @@
  * - Document-level mouse listeners
  */
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { useTimelineStore } from '../stores/timelineStore'
-import { useHistoryStore } from '../stores/historyStore'
+
 import { snapTimeToFrame } from '../lib/utils'
+import { useHistoryStore } from '../stores/historyStore'
+import { useTimelineStore } from '../stores/timelineStore'
 
 // Minimum mouse movement to distinguish drag from click
 const DRAG_THRESHOLD = 5
@@ -56,49 +57,53 @@ export function useTimelineDrag(options: UseTimelineDragOptions) {
   const { pushState } = useHistoryStore()
 
   // Convert pixels to time
-  const pixelsToTime = useCallback((pixels: number) => {
-    return pixels / pixelsPerSecond
-  }, [pixelsPerSecond])
+  const pixelsToTime = useCallback(
+    (pixels: number) => {
+      return pixels / pixelsPerSecond
+    },
+    [pixelsPerSecond],
+  )
 
   // Convert time to pixels
-  const timeToPixels = useCallback((time: number) => {
-    return time * pixelsPerSecond
-  }, [pixelsPerSecond])
+  const timeToPixels = useCallback(
+    (time: number) => {
+      return time * pixelsPerSecond
+    },
+    [pixelsPerSecond],
+  )
 
   // Start potential drag (mouse down)
-  const handleMouseDown = useCallback((
-    e: React.MouseEvent,
-    clipId: string,
-    trackId: string,
-    clipStartTime: number
-  ) => {
-    e.preventDefault()
-    e.stopPropagation()
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent, clipId: string, trackId: string, clipStartTime: number) => {
+      e.preventDefault()
+      e.stopPropagation()
 
-    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
-    const offsetX = e.clientX - rect.left
+      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+      const offsetX = e.clientX - rect.left
 
-    setDragState({
-      isDragging: false, // Not dragging yet, just potential
-      clipId,
-      trackId,
-      originalStartTime: clipStartTime,
-      originalTrackId: trackId,
-      currentTime: clipStartTime,
-      currentTrackId: trackId,
-      startX: e.clientX,
-      startY: e.clientY,
-      currentX: e.clientX,
-      currentY: e.clientY,
-      offsetX,
-      // TL-004: Initialize snap state
-      isSnapped: false,
-      snapPoint: null,
-    })
+      setDragState({
+        isDragging: false, // Not dragging yet, just potential
+        clipId,
+        trackId,
+        originalStartTime: clipStartTime,
+        originalTrackId: trackId,
+        currentTime: clipStartTime,
+        currentTrackId: trackId,
+        startX: e.clientX,
+        startY: e.clientY,
+        currentX: e.clientX,
+        currentY: e.clientY,
+        offsetX,
+        // TL-004: Initialize snap state
+        isSnapped: false,
+        snapPoint: null,
+      })
 
-    isDraggingRef.current = false
-    hasMovedRef.current = false
-  }, [])
+      isDraggingRef.current = false
+      hasMovedRef.current = false
+    },
+    [],
+  )
 
   // Handle mouse move (document level)
   useEffect(() => {
@@ -119,7 +124,7 @@ export function useTimelineDrag(options: UseTimelineDragOptions) {
 
         onDragStart?.(dragState.clipId)
 
-        setDragState(prev => prev ? { ...prev, isDragging: true } : null)
+        setDragState((prev) => (prev ? { ...prev, isDragging: true } : null))
       }
 
       if (isDraggingRef.current) {
@@ -140,27 +145,36 @@ export function useTimelineDrag(options: UseTimelineDragOptions) {
 
         // Calculate which track we're over (based on Y position)
         const trackIndex = Math.floor(deltaY / trackHeight)
-        const currentTrackIndex = tracks.findIndex(t => t.id === dragState.originalTrackId)
-        const newTrackIndex = Math.max(0, Math.min(tracks.length - 1, currentTrackIndex + trackIndex))
+        const currentTrackIndex = tracks.findIndex((t) => t.id === dragState.originalTrackId)
+        const newTrackIndex = Math.max(
+          0,
+          Math.min(tracks.length - 1, currentTrackIndex + trackIndex),
+        )
         const newTrackId = tracks[newTrackIndex]?.id || dragState.originalTrackId
 
-        setDragState(prev => prev ? {
-          ...prev,
-          currentTime: newTime,
-          currentTrackId: newTrackId,
-          currentX: e.clientX,
-          currentY: e.clientY,
-          isSnapped,
-          snapPoint: isSnapped ? snapPoint : null,
-        } : null)
+        setDragState((prev) =>
+          prev
+            ? {
+                ...prev,
+                currentTime: newTime,
+                currentTrackId: newTrackId,
+                currentX: e.clientX,
+                currentY: e.clientY,
+                isSnapped,
+                snapPoint: isSnapped ? snapPoint : null,
+              }
+            : null,
+        )
       }
     }
 
     const handleMouseUp = () => {
       if (dragState && isDraggingRef.current) {
         // Apply the move
-        if (dragState.currentTime !== dragState.originalStartTime ||
-            dragState.currentTrackId !== dragState.originalTrackId) {
+        if (
+          dragState.currentTime !== dragState.originalStartTime ||
+          dragState.currentTrackId !== dragState.originalTrackId
+        ) {
           moveClip(dragState.clipId, dragState.currentTrackId, dragState.currentTime)
         }
 
@@ -193,33 +207,56 @@ export function useTimelineDrag(options: UseTimelineDragOptions) {
       document.removeEventListener('mouseup', handleMouseUp)
       document.removeEventListener('keydown', handleKeyDown)
     }
-  }, [dragState, pixelsToTime, frameRate, tracks, trackHeight, moveClip, pushState, onDragStart, onDragEnd, getSnapPoint])
+  }, [
+    dragState,
+    pixelsToTime,
+    frameRate,
+    tracks,
+    trackHeight,
+    moveClip,
+    pushState,
+    onDragStart,
+    onDragEnd,
+    getSnapPoint,
+  ])
 
   // Get current position for a clip (either drag position or actual position)
-  const getClipPosition = useCallback((clipId: string, actualStartTime: number) => {
-    if (dragState?.isDragging && dragState.clipId === clipId) {
-      return dragState.currentTime
-    }
-    return actualStartTime
-  }, [dragState])
+  const getClipPosition = useCallback(
+    (clipId: string, actualStartTime: number) => {
+      if (dragState?.isDragging && dragState.clipId === clipId) {
+        return dragState.currentTime
+      }
+      return actualStartTime
+    },
+    [dragState],
+  )
 
   // Get current track for a clip (either drag track or actual track)
-  const getClipTrack = useCallback((clipId: string, actualTrackId: string) => {
-    if (dragState?.isDragging && dragState.clipId === clipId) {
-      return dragState.currentTrackId
-    }
-    return actualTrackId
-  }, [dragState])
+  const getClipTrack = useCallback(
+    (clipId: string, actualTrackId: string) => {
+      if (dragState?.isDragging && dragState.clipId === clipId) {
+        return dragState.currentTrackId
+      }
+      return actualTrackId
+    },
+    [dragState],
+  )
 
   // Check if a clip is being dragged
-  const isClipDragging = useCallback((clipId: string) => {
-    return dragState?.isDragging && dragState.clipId === clipId
-  }, [dragState])
+  const isClipDragging = useCallback(
+    (clipId: string) => {
+      return dragState?.isDragging && dragState.clipId === clipId
+    },
+    [dragState],
+  )
 
   // TL-004: Check if clip is currently snapped
-  const isClipSnapped = useCallback((clipId: string) => {
-    return dragState?.isDragging && dragState.clipId === clipId && dragState.isSnapped
-  }, [dragState])
+  const isClipSnapped = useCallback(
+    (clipId: string) => {
+      return dragState?.isDragging && dragState.clipId === clipId && dragState.isSnapped
+    },
+    [dragState],
+  )
 
   // TL-004: Get snap point for visual indicator
   const getSnapIndicator = useCallback(() => {
@@ -275,33 +312,31 @@ export function useTimelineTrim(options: UseTimelineTrimOptions) {
   const { trimClip, frameRate, getSnapPoint } = useTimelineStore()
   const { pushState } = useHistoryStore()
 
-  const handleTrimStart = useCallback((
-    e: React.MouseEvent,
-    clipId: string,
-    side: 'start' | 'end',
-    currentTime: number
-  ) => {
-    e.preventDefault()
-    e.stopPropagation()
+  const handleTrimStart = useCallback(
+    (e: React.MouseEvent, clipId: string, side: 'start' | 'end', currentTime: number) => {
+      e.preventDefault()
+      e.stopPropagation()
 
-    // Push history at trim start
-    pushState()
+      // Push history at trim start
+      pushState()
 
-    setTrimState({
-      isTrimming: true,
-      clipId,
-      side,
-      originalTime: currentTime,
-      currentTime,
-      startX: e.clientX,
-      // TL-006: Initialize snap state
-      isSnapped: false,
-      snapPoint: null,
-    })
+      setTrimState({
+        isTrimming: true,
+        clipId,
+        side,
+        originalTime: currentTime,
+        currentTime,
+        startX: e.clientX,
+        // TL-006: Initialize snap state
+        isSnapped: false,
+        snapPoint: null,
+      })
 
-    isTrimmingRef.current = true
-    onTrimStart?.(clipId, side)
-  }, [pushState, onTrimStart])
+      isTrimmingRef.current = true
+      onTrimStart?.(clipId, side)
+    },
+    [pushState, onTrimStart],
+  )
 
   useEffect(() => {
     if (!trimState) return
@@ -324,12 +359,16 @@ export function useTimelineTrim(options: UseTimelineTrimOptions) {
         isSnapped = true
       }
 
-      setTrimState(prev => prev ? {
-        ...prev,
-        currentTime: newTime,
-        isSnapped,
-        snapPoint: isSnapped ? snapPoint : null,
-      } : null)
+      setTrimState((prev) =>
+        prev
+          ? {
+              ...prev,
+              currentTime: newTime,
+              isSnapped,
+              snapPoint: isSnapped ? snapPoint : null,
+            }
+          : null,
+      )
 
       // Apply trim in real-time
       trimClip(trimState.clipId, trimState.side, newTime)
