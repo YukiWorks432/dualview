@@ -6,11 +6,9 @@ import { PreviewCanvas, type PreviewCanvasHandle } from './components/preview/Pr
 import { ProjectSelector } from './components/project'
 import { ScopesPanel } from './components/scopes'
 import { Timeline } from './components/timeline/Timeline'
-import {
-  KeyboardShortcutsHelp,
-  useKeyboardShortcutsHelp,
-} from './components/ui/KeyboardShortcutsHelp'
+import { KeyboardShortcutsHelp } from './components/ui/KeyboardShortcutsHelp'
 import { getComparisonModeByKeyboardCode } from './config/comparisonModes'
+import { useKeyboardShortcutsHelp } from './hooks/useKeyboardShortcutsHelp'
 import { captureCanvasScreenshot, downloadBlob } from './lib/screenshotExport'
 import { useHistoryStore } from './stores/historyStore'
 import { useMediaStore } from './stores/mediaStore'
