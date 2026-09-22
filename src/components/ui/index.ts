@@ -1,4 +1,5 @@
 export { Button, type ButtonProps } from './button'
+export { Checkbox, type CheckboxProps } from './checkbox'
 export { buttonVariants, type ButtonVariantProps } from './button-variants'
 export {
   Dialog,

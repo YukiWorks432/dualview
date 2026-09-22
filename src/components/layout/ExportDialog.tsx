@@ -1,15 +1,4 @@
-import {
-  Download,
-  Loader2,
-  Check,
-  AlertCircle,
-  FileText,
-  Clipboard,
-  Box,
-  Sparkles,
-  Film,
-  Layers,
-} from 'lucide-react'
+import { Download, Loader2, Check, AlertCircle, Box, Sparkles, Film, Layers } from 'lucide-react'
 import { useState, useMemo } from 'react'
 import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
@@ -45,6 +34,13 @@ import { useTimelineStore } from '../../stores/timelineStore'
 import type { ExportSource, SweepStyle, TransitionEngine, TransitionExportMode } from '../../types'
 import { ExportModeTabs, type ExportMode } from '../export/ExportModeTabs'
 import { ExportReadiness } from '../export/ExportReadiness'
+import { PdfExportPanel } from '../export/PdfExportPanel'
+import {
+  ScreenshotExportPanel,
+  type ScreenshotFormat,
+  type ScreenshotResolution,
+  type ScreenshotSource,
+} from '../export/ScreenshotExportPanel'
 import {
   Button,
   Dialog,
@@ -81,11 +77,9 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
     setSliderPosition,
   } = useProjectStore()
   const [exportMode, setExportMode] = useState<ExportMode>('video')
-  const [screenshotFormat, setScreenshotFormat] = useState<'png' | 'jpg'>('png')
-  const [screenshotResolution, setScreenshotResolution] = useState<'720p' | '1080p' | '4k'>('1080p')
-  const [screenshotSource, setScreenshotSource] = useState<'comparison' | 'a-only' | 'b-only'>(
-    'comparison',
-  )
+  const [screenshotFormat, setScreenshotFormat] = useState<ScreenshotFormat>('png')
+  const [screenshotResolution, setScreenshotResolution] = useState<ScreenshotResolution>('1080p')
+  const [screenshotSource, setScreenshotSource] = useState<ScreenshotSource>('comparison')
   const [screenshotSliderPos, setScreenshotSliderPos] = useState(50)
   const [screenshotQuality, setScreenshotQuality] = useState(95)
   const [isExporting, setIsExporting] = useState(false)
@@ -2790,157 +2784,24 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
             </>
           )}
 
-          {/* Screenshot Export */}
           {exportMode === 'screenshot' && (
-            <>
-              {/* Export Source */}
-              <div>
-                <label className="block text-sm text-text-secondary mb-2">Export Source</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { value: 'comparison', label: 'Comparison' },
-                    { value: 'a-only', label: 'A Only' },
-                    { value: 'b-only', label: 'B Only' },
-                  ].map((option) => (
-                    <button
-                      key={option.value}
-                      onClick={() =>
-                        setScreenshotSource(option.value as 'comparison' | 'a-only' | 'b-only')
-                      }
-                      className={`px-3 py-2 text-sm border transition-colors ${
-                        screenshotSource === option.value
-                          ? 'border-accent bg-accent/10 text-accent'
-                          : 'border-border text-text-secondary hover:border-text-muted'
-                      }`}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Slider Position - only for comparison */}
-              {screenshotSource === 'comparison' && (
-                <div>
-                  <label className="block text-sm text-text-secondary mb-2">
-                    Slider Position: {screenshotSliderPos}%
-                  </label>
-                  <Slider
-                    value={screenshotSliderPos}
-                    onChange={(e) => setScreenshotSliderPos(Number(e.target.value))}
-                    min={0}
-                    max={100}
-                    step={1}
-                  />
-                  <div className="flex justify-between text-xs text-text-muted mt-1">
-                    <span>Full A</span>
-                    <span>50/50</span>
-                    <span>Full B</span>
-                  </div>
-                </div>
-              )}
-
-              {/* Resolution */}
-              <div>
-                <label className="block text-sm text-text-secondary mb-2">Resolution</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { value: '720p', label: '720p', desc: '1280×720' },
-                    { value: '1080p', label: '1080p', desc: '1920×1080' },
-                    { value: '4k', label: '4K', desc: '3840×2160' },
-                  ].map((res) => (
-                    <button
-                      key={res.value}
-                      onClick={() => setScreenshotResolution(res.value as '720p' | '1080p' | '4k')}
-                      className={`px-3 py-2 text-sm border transition-colors ${
-                        screenshotResolution === res.value
-                          ? 'border-accent bg-accent/10 text-accent'
-                          : 'border-border text-text-secondary hover:border-text-muted'
-                      }`}
-                    >
-                      <div className="font-medium">{res.label}</div>
-                      <div className="text-xs opacity-70">{res.desc}</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Format */}
-              <Select
-                label="Format"
-                value={screenshotFormat}
-                onChange={(e) => setScreenshotFormat(e.target.value as 'png' | 'jpg')}
-                options={[
-                  { value: 'png', label: 'PNG (lossless)' },
-                  { value: 'jpg', label: 'JPEG (smaller file)' },
-                ]}
-              />
-
-              {/* Quality - only for JPEG */}
-              {screenshotFormat === 'jpg' && (
-                <div>
-                  <label className="block text-sm text-text-secondary mb-2">
-                    Quality: {screenshotQuality}%
-                  </label>
-                  <Slider
-                    value={screenshotQuality}
-                    onChange={(e) => setScreenshotQuality(Number(e.target.value))}
-                    min={10}
-                    max={100}
-                    step={5}
-                  />
-                  <div className="flex justify-between text-xs text-text-muted mt-1">
-                    <span>Smaller file</span>
-                    <span>Better quality</span>
-                  </div>
-                </div>
-              )}
-
-              {/* Status message */}
-              {exportProgress.status === 'done' && exportProgress.message && (
-                <div className="flex items-center gap-2 text-green-500 text-sm">
-                  <Check className="w-4 h-4" />
-                  <span>{exportProgress.message}</span>
-                </div>
-              )}
-
-              {error && (
-                <div className="flex items-center gap-2 text-error text-sm">
-                  <AlertCircle className="w-4 h-4" />
-                  <span>{error}</span>
-                </div>
-              )}
-
-              <div className="flex justify-end gap-2 pt-4">
-                <Button variant="outline" onClick={onClose}>
-                  Cancel
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => handleScreenshotExport(true)}
-                  disabled={isExportingScreenshot}
-                >
-                  <Clipboard className="w-4 h-4" />
-                  Copy
-                </Button>
-                <Button
-                  onClick={() => handleScreenshotExport(false)}
-                  disabled={isExportingScreenshot}
-                >
-                  {isExportingScreenshot ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Capturing...
-                    </>
-                  ) : (
-                    <>
-                      <Download className="w-4 h-4" />
-                      Download
-                    </>
-                  )}
-                </Button>
-              </div>
-            </>
+            <ScreenshotExportPanel
+              source={screenshotSource}
+              onSourceChange={setScreenshotSource}
+              sliderPosition={screenshotSliderPos}
+              onSliderPositionChange={setScreenshotSliderPos}
+              resolution={screenshotResolution}
+              onResolutionChange={setScreenshotResolution}
+              format={screenshotFormat}
+              onFormatChange={setScreenshotFormat}
+              quality={screenshotQuality}
+              onQualityChange={setScreenshotQuality}
+              progress={exportProgress}
+              error={error}
+              isExporting={isExportingScreenshot}
+              onClose={onClose}
+              onExport={(copyToClipboard) => void handleScreenshotExport(copyToClipboard)}
+            />
           )}
 
           {/* 3D Turntable Export */}
@@ -3432,67 +3293,18 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
             </>
           )}
 
-          {/* PDF Report Export */}
           {exportMode === 'pdf' && (
-            <>
-              <div>
-                <label className="block text-sm text-text-secondary mb-1">Report Title</label>
-                <input
-                  type="text"
-                  value={pdfTitle}
-                  onChange={(e) => setPdfTitle(e.target.value)}
-                  className="w-full px-3 py-2 bg-background border border-border rounded text-text-primary focus:outline-none focus:ring-1 focus:ring-accent"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={includeMetadata}
-                    onChange={(e) => setIncludeMetadata(e.target.checked)}
-                    className="w-4 h-4 accent-accent"
-                  />
-                  <span className="text-sm text-text-primary">Include media metadata</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={includeSettings}
-                    onChange={(e) => setIncludeSettings(e.target.checked)}
-                    className="w-4 h-4 accent-accent"
-                  />
-                  <span className="text-sm text-text-primary">Include comparison settings</span>
-                </label>
-              </div>
-
-              <div className="flex items-center gap-2 p-3 bg-surface-alt border border-border rounded text-sm text-text-secondary">
-                <FileText className="w-4 h-4 flex-shrink-0" />
-                <span>
-                  Generates a professional PDF report with screenshot, metadata, and quality
-                  metrics.
-                </span>
-              </div>
-
-              <div className="flex justify-end gap-2 pt-4">
-                <Button variant="outline" onClick={onClose}>
-                  Cancel
-                </Button>
-                <Button onClick={handlePDFExport} disabled={isExportingPDF}>
-                  {isExportingPDF ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Generating...
-                    </>
-                  ) : (
-                    <>
-                      <FileText className="w-4 h-4" />
-                      Generate PDF
-                    </>
-                  )}
-                </Button>
-              </div>
-            </>
+            <PdfExportPanel
+              title={pdfTitle}
+              onTitleChange={setPdfTitle}
+              includeMetadata={includeMetadata}
+              onIncludeMetadataChange={setIncludeMetadata}
+              includeSettings={includeSettings}
+              onIncludeSettingsChange={setIncludeSettings}
+              isExporting={isExportingPDF}
+              onClose={onClose}
+              onExport={() => void handlePDFExport()}
+            />
           )}
         </div>
       </DialogContent>
