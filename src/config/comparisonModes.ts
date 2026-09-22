@@ -179,7 +179,9 @@ export const comparisonModeGroups: Array<{
   },
 ]
 
-export const secondaryComparisonModes: ComparisonModeDefinition[] = comparisonModeGroups.flatMap((group) => group.modes)
+export const secondaryComparisonModes: ComparisonModeDefinition[] = comparisonModeGroups.flatMap(
+  (group) => group.modes,
+)
 
 const comparisonModeByCode = new Map(
   comparisonModeDefinitions.flatMap((definition) =>
