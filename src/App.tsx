@@ -6,10 +6,9 @@ import { PreviewCanvas, type PreviewCanvasHandle } from './components/preview/Pr
 import { ProjectSelector } from './components/project'
 import { ScopesPanel } from './components/scopes'
 import { Timeline } from './components/timeline/Timeline'
-import {
-  KeyboardShortcutsHelp,
-  useKeyboardShortcutsHelp,
-} from './components/ui/KeyboardShortcutsHelp'
+import { KeyboardShortcutsHelp } from './components/ui/KeyboardShortcutsHelp'
+import { getComparisonModeByKeyboardCode } from './config/comparisonModes'
+import { useKeyboardShortcutsHelp } from './hooks/useKeyboardShortcutsHelp'
 import { captureCanvasScreenshot, downloadBlob } from './lib/screenshotExport'
 import { useHistoryStore } from './stores/historyStore'
 import { useMediaStore } from './stores/mediaStore'
@@ -81,25 +80,6 @@ export default function App() {
   } = useProjectStore()
   const { undo, redo } = useHistoryStore()
 
-  // Mode shortcuts map (Serial Position Effect - number keys for quick access)
-  const modeShortcuts: Record<string, Parameters<typeof setComparisonMode>[0]> = {
-    Digit1: 'slider',
-    Digit2: 'side-by-side',
-    Digit3: 'webgl-compare',
-    Digit4: 'audio',
-    Digit5: 'prompt-diff',
-    Digit6: 'json-diff',
-    Digit7: 'model-3d',
-    Digit8: 'document',
-  }
-
-  // MODE-001 to MODE-005: Additional mode shortcuts
-  const newModeShortcuts: Record<string, Parameters<typeof setComparisonMode>[0]> = {
-    KeyQ: 'quad', // MODE-001: Quad View
-    KeyR: 'radial-loupe', // MODE-002: Radial Loupe
-    KeyG: 'grid-tile', // MODE-003: Grid Tile
-  }
-
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -126,17 +106,10 @@ export default function App() {
         return
       }
 
-      // Number keys 1-5 for quick mode switching (Serial Position Effect)
-      if (modeShortcuts[e.code]) {
+      const shortcutMode = getComparisonModeByKeyboardCode(e.code)
+      if (shortcutMode) {
         e.preventDefault()
-        setComparisonMode(modeShortcuts[e.code])
-        return
-      }
-
-      // MODE-001 to MODE-003: Quick mode shortcuts (Q, R, G)
-      if (newModeShortcuts[e.code]) {
-        e.preventDefault()
-        setComparisonMode(newModeShortcuts[e.code])
+        setComparisonMode(shortcutMode)
         return
       }
 
@@ -281,8 +254,8 @@ export default function App() {
             setWebGLComparisonMode('exposure-zebra')
           }
           break
-        // SCOPE-001/002/003: Toggle video scopes panel (W key)
-        case 'KeyW':
+        // SCOPE-001/002/003: Toggle video scopes panel (G key)
+        case 'KeyG':
           e.preventDefault()
           toggleScopes()
           break
@@ -308,8 +281,6 @@ export default function App() {
     stepFrame,
     isPlaying,
     setComparisonMode,
-    modeShortcuts,
-    newModeShortcuts,
     toggleWebGLFlipAB,
     comparisonMode,
     setWebGLComparisonMode,

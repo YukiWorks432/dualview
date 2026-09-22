@@ -1,12 +1,9 @@
-import { X, Keyboard } from 'lucide-react'
-/**
- * Keyboard Shortcuts Help Modal (OpenCut Pattern)
- *
- * Shows all available keyboard shortcuts in a categorized modal
- */
-import { useEffect, useState } from 'react'
+import { Keyboard, X } from 'lucide-react'
 
-import { cn } from '../../lib/utils'
+import { primaryComparisonModes } from '../../config/comparisonModes'
+import { Button } from './button'
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from './dialog'
+import { Kbd } from './kbd'
 
 interface ShortcutItem {
   keys: string[]
@@ -21,23 +18,21 @@ interface ShortcutCategory {
 const SHORTCUT_CATEGORIES: ShortcutCategory[] = [
   {
     title: 'Comparison Modes',
-    shortcuts: [
-      { keys: ['1'], description: 'Slider mode' },
-      { keys: ['2'], description: 'Side by Side mode' },
-      { keys: ['3'], description: 'Audio mode' },
-      { keys: ['4'], description: 'Prompt Diff mode' },
-      { keys: ['5'], description: 'JSON Diff mode' },
-      { keys: ['H'], description: 'Toggle slider visibility' },
-    ],
+    shortcuts: primaryComparisonModes.flatMap((definition) =>
+      definition.shortcut
+        ? [{ keys: [definition.shortcut.key], description: `Switch to ${definition.label}` }]
+        : [],
+    ),
   },
   {
     title: 'Playback',
     shortcuts: [
-      { keys: ['Space', 'K'], description: 'Toggle play/pause' },
+      { keys: ['Space'], description: 'Toggle play/pause' },
       { keys: ['J'], description: 'Shuttle backward (1x, 2x, 4x, 8x)' },
+      { keys: ['K'], description: 'Stop shuttle playback' },
       { keys: ['L'], description: 'Shuttle forward (1x, 2x, 4x, 8x)' },
-      { keys: ['←'], description: 'Frame step backward (when paused)' },
-      { keys: ['→'], description: 'Frame step forward (when paused)' },
+      { keys: ['←'], description: 'Frame step backward when paused' },
+      { keys: ['→'], description: 'Frame step forward when paused' },
       { keys: ['Shift', '←'], description: 'Jump backward 5 seconds' },
       { keys: ['Shift', '→'], description: 'Jump forward 5 seconds' },
       { keys: ['Home'], description: 'Go to start' },
@@ -93,16 +88,13 @@ const SHORTCUT_CATEGORIES: ShortcutCategory[] = [
     ],
   },
   {
-    title: 'Exposure Tools',
+    title: 'Analysis Tools',
     shortcuts: [
       { keys: ['P'], description: 'Toggle Focus Peaking overlay' },
       { keys: ['Z'], description: 'Toggle Zebra Stripes overlay' },
-      { keys: ['F'], description: 'Flip A/B sources (in Difference mode)' },
+      { keys: ['F'], description: 'Flip A/B sources in Difference mode' },
+      { keys: ['G'], description: 'Toggle video scopes' },
     ],
-  },
-  {
-    title: 'Scopes (Difference Mode)',
-    shortcuts: [{ keys: ['G'], description: 'Toggle Gamut Warning overlay' }],
   },
 ]
 
@@ -112,63 +104,49 @@ interface KeyboardShortcutsHelpProps {
 }
 
 export function KeyboardShortcutsHelp({ isOpen, onClose }: KeyboardShortcutsHelpProps) {
-  // Close on escape
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
-        onClose()
-      }
-    }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isOpen, onClose])
-
-  if (!isOpen) return null
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-
-      {/* Modal */}
-      <div className="relative bg-surface border border-border rounded-lg shadow-2xl max-w-3xl w-full max-h-[80vh] overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-border">
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent showCloseButton={false} className="max-w-3xl overflow-hidden p-0">
+        <div className="flex items-center justify-between border-b border-border p-4">
           <div className="flex items-center gap-2">
-            <Keyboard className="w-5 h-5 text-accent" />
-            <h2 className="text-lg font-semibold text-text-primary">Keyboard Shortcuts</h2>
+            <Keyboard className="h-5 w-5 text-accent" aria-hidden="true" />
+            <DialogTitle className="text-lg font-semibold">Keyboard Shortcuts</DialogTitle>
+            <DialogDescription className="sr-only">
+              Keyboard shortcuts available throughout DualView.
+            </DialogDescription>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1 hover:bg-surface-hover rounded transition-colors"
+          <DialogClose
+            render={
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                aria-label="Close keyboard shortcuts"
+              />
+            }
           >
-            <X className="w-5 h-5 text-text-muted" />
-          </button>
+            <X className="h-5 w-5 text-text-muted" aria-hidden="true" />
+          </DialogClose>
         </div>
 
-        {/* Content */}
-        <div className="p-4 overflow-y-auto max-h-[calc(80vh-80px)]">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="max-h-[calc(80vh-80px)] overflow-y-auto p-4">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             {SHORTCUT_CATEGORIES.map((category) => (
-              <div key={category.title}>
-                <h3 className="text-sm font-medium text-accent mb-3">{category.title}</h3>
+              <section key={category.title}>
+                <h3 className="mb-3 text-sm font-medium text-accent">{category.title}</h3>
                 <div className="space-y-2">
-                  {category.shortcuts.map((shortcut, index) => (
-                    <div key={index} className="flex items-center justify-between py-1">
+                  {category.shortcuts.map((shortcut) => (
+                    <div
+                      key={`${category.title}-${shortcut.keys.join('-')}`}
+                      className="flex items-center justify-between gap-4 py-1"
+                    >
                       <span className="text-sm text-text-secondary">{shortcut.description}</span>
-                      <div className="flex gap-1">
-                        {shortcut.keys.map((key, keyIndex) => (
-                          <span key={keyIndex}>
-                            <kbd
-                              className={cn(
-                                'px-2 py-0.5 text-xs font-mono rounded',
-                                'bg-background border border-border text-text-primary',
-                              )}
-                            >
-                              {key}
-                            </kbd>
-                            {keyIndex < shortcut.keys.length - 1 && (
-                              <span className="mx-1 text-text-muted">+</span>
+                      <div className="flex shrink-0 items-center gap-1">
+                        {shortcut.keys.map((key, index) => (
+                          <span key={`${key}-${index}`} className="flex items-center gap-1">
+                            <Kbd>{key}</Kbd>
+                            {index < shortcut.keys.length - 1 && (
+                              <span className="text-text-muted">+</span>
                             )}
                           </span>
                         ))}
@@ -176,52 +154,17 @@ export function KeyboardShortcutsHelp({ isOpen, onClose }: KeyboardShortcutsHelp
                     </div>
                   ))}
                 </div>
-              </div>
+              </section>
             ))}
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="p-3 border-t border-border bg-surface-hover">
-          <p className="text-xs text-text-muted text-center">
-            Press{' '}
-            <kbd className="px-1.5 py-0.5 text-xs font-mono bg-background border border-border rounded">
-              ?
-            </kbd>{' '}
-            to toggle this help
+        <div className="border-t border-border bg-surface-hover p-3">
+          <p className="text-center text-xs text-text-muted">
+            Press <Kbd>?</Kbd> to toggle this help.
           </p>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   )
-}
-
-// Hook to manage keyboard shortcuts help visibility
-export function useKeyboardShortcutsHelp() {
-  const [isOpen, setIsOpen] = useState(false)
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Ignore if typing in an input
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
-        return
-      }
-
-      // Toggle with ? key
-      if (e.key === '?' || (e.shiftKey && e.key === '/')) {
-        e.preventDefault()
-        setIsOpen((prev) => !prev)
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [])
-
-  return {
-    isOpen,
-    open: () => setIsOpen(true),
-    close: () => setIsOpen(false),
-    toggle: () => setIsOpen((prev) => !prev),
-  }
 }
