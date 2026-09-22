@@ -1,0 +1,63 @@
+name: Modernize bootstrap
+
+on:
+  push:
+    branches:
+      - modernize-2026
+
+permissions:
+  contents: write
+
+concurrency:
+  group: modernize-bootstrap
+  cancel-in-progress: true
+
+jobs:
+  modernize:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.ref_name }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 12.5.1
+          run_install: false
+
+      - name: Update dependencies and generate lockfile
+        run: pnpm update --latest
+
+      - name: Commit dependency metadata
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json pnpm-lock.yaml
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: refresh dependencies"
+            git push origin HEAD:${{ github.ref_name }}
+          fi
+
+      - name: Check formatting
+        run: pnpm format:check
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Test
+        run: pnpm test:run
+
+      - name: Build
+        run: pnpm build
