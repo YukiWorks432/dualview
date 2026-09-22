@@ -5,18 +5,25 @@
 <h1 align="center">DualView</h1>
 
 <p align="center">
-  <a href="https://dualview.ai">
-    <img src="https://img.shields.io/badge/Website-dualview.ai-ff5722?style=for-the-badge" alt="Website">
+  <a href="https://github.com/YukiWorks432/dualview">
+    <img src="https://img.shields.io/badge/GitHub-YukiWorks432-181717?style=for-the-badge&logo=github" alt="YukiWorks432 on GitHub">
   </a>
-  <a href="https://github.com/gokayfem">
-    <img src="https://img.shields.io/badge/GitHub-gokayfem-181717?style=for-the-badge&logo=github" alt="GitHub">
+  <a href="https://hanayuki.xyz">
+    <img src="https://img.shields.io/badge/Website-hanayuki.xyz-ff5722?style=for-the-badge" alt="hanayuki.xyz">
   </a>
-  <a href="https://x.com/gokayfem">
-    <img src="https://img.shields.io/badge/X-@gokayfem-000000?style=for-the-badge&logo=x" alt="X">
+  <a href="https://x.com/YuK1_Works">
+    <img src="https://img.shields.io/badge/X-@YuK1__Works-000000?style=for-the-badge&logo=x" alt="@YuK1_Works on X">
   </a>
-  <a href="https://huggingface.co/gokaygokay">
-    <img src="https://img.shields.io/badge/HuggingFace-gokaygokay-yellow?style=for-the-badge&logo=huggingface" alt="Hugging Face">
-  </a>
+</p>
+
+<p align="center">
+  <sub>
+    Originally created by <a href="https://github.com/gokayfem"><strong>Gökay Aydoğan</strong></a>
+    · <a href="https://github.com/gokayfem/dualview">Upstream repository</a>
+    · <a href="https://dualview.ai">Original website</a>
+    · <a href="https://x.com/gokayfem">@gokayfem</a>
+    · <a href="https://huggingface.co/gokaygokay">Hugging Face</a>
+  </sub>
 </p>
 
 <p align="center">
@@ -42,7 +49,8 @@
   <a href="#webgl-analysis">Analysis</a> •
   <a href="#export">Export</a> •
   <a href="#shortcuts">Shortcuts</a> •
-  <a href="#getting-started">Get Started</a>
+  <a href="#getting-started">Get Started</a> •
+  <a href="#project-lineage">Lineage</a>
 </p>
 
 <p align="center">
@@ -53,6 +61,24 @@
   <img src="https://img.shields.io/badge/WebGL-GPU_Accelerated-990000?style=flat-square&logo=webgl" alt="WebGL">
   <img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" alt="License">
 </p>
+
+---
+
+<h2 id="project-lineage">Project Lineage</h2>
+
+> [!NOTE]
+> **DualView was originally created by [Gökay Aydoğan](https://github.com/gokayfem) in
+> [gokayfem/dualview](https://github.com/gokayfem/dualview).**
+> This repository is a maintained fork by [YukiWorks432](https://github.com/YukiWorks432),
+> continuing that work with modernization, maintenance, and ongoing development while preserving
+> attribution to the original project.
+
+| Role | Links |
+| ---- | ----- |
+| **Original project** | [gokayfem/dualview](https://github.com/gokayfem/dualview) · [dualview.ai](https://dualview.ai) |
+| **Original creator** | [Gökay Aydoğan](https://github.com/gokayfem) · [@gokayfem](https://x.com/gokayfem) |
+| **Maintained fork** | [YukiWorks432/dualview](https://github.com/YukiWorks432/dualview) |
+| **Fork maintainer** | [YukiWorks432](https://github.com/YukiWorks432) · [@YuK1_Works](https://x.com/YuK1_Works) · [hanayuki.xyz](https://hanayuki.xyz) |
 
 ---
 
@@ -159,7 +185,7 @@ Whether you're a **VFX artist** comparing renders, an **AI researcher** evaluati
 
 <h2 id="comparison-modes">🎯 Comparison Modes</h2>
 
-DualView offers **15 unique comparison modes** to suit every workflow:
+DualView offers **16 comparison modes** to suit every workflow:
 
 ### Core Modes
 
@@ -178,9 +204,9 @@ DualView offers **15 unique comparison modes** to suit every workflow:
 
 | Mode              | Key | Description                                  |
 | ----------------- | --- | -------------------------------------------- |
-| **Quad View**     | `Q` | Four-panel layout for multi-angle comparison |
-| **Radial Loupe**  | `R` | Magnifying lens follows cursor               |
-| **Grid Tile**     | `G` | Checkerboard interleaving of A/B             |
+| **Quad View**     | —   | Four-panel layout for multi-angle comparison |
+| **Radial Loupe**  | —   | Magnifying lens follows cursor               |
+| **Grid Tile**     | —   | Checkerboard interleaving of A/B             |
 | **Blend Modes**   | —   | Difference, Overlay, Multiply, Screen        |
 | **Split Screen**  | —   | Grid layouts: 2×1, 1×2, 2×2                  |
 | **Flicker**       | —   | Auto-alternating A/B for spotting changes    |
@@ -513,15 +539,22 @@ DualView is built for speed. Master these shortcuts:
 
 | Key       | Action                   |
 | --------- | ------------------------ |
-| `1` - `7` | Switch comparison modes  |
-| `Q`       | Quad view                |
-| `R`       | Radial loupe             |
-| `G`       | Grid tile                |
-| `H`       | Hide/show slider         |
-| `F`       | Flip A/B (in WebGL mode) |
+| `1` - `8` | Switch comparison modes  |
+| `F`       | Flip A/B (in Difference mode) |
 | `P`       | Toggle focus peaking     |
 | `Z`       | Toggle zebra stripes     |
-| `W`       | Toggle video scopes      |
+| `G`       | Toggle video scopes      |
+
+### Timeline Editing
+
+| Key       | Action                                  |
+| --------- | --------------------------------------- |
+| `S`       | Split selected clip at playhead         |
+| `Q`       | Keep left of playhead (trim right)      |
+| `W`       | Keep right of playhead (trim left)      |
+| `R`       | Toggle ripple edit mode                 |
+| `N`       | Toggle snapping                         |
+| `Delete`  | Delete selected clips                   |
 
 ### Interface
 
@@ -549,7 +582,7 @@ Professional broadcast-style monitoring tools:
 | **Color Wheel**   | Vectorscope-style chrominance   |
 | **Gamut Warning** | Out-of-gamut pixel highlighting |
 
-Toggle with `W` key.
+Toggle with `G` key.
 
 ---
 
@@ -761,28 +794,47 @@ MP4 export additionally depends on the browser exposing the WebCodecs `VideoEnco
 <details>
 <summary><strong>Cite this project</strong></summary>
 
-If DualView supports your work, please cite the software. GitHub also provides
-ready-to-copy APA and BibTeX entries via **Cite this repository**.
+This repository is a maintained fork of the original
+[gokayfem/dualview](https://github.com/gokayfem/dualview) project. The citation metadata keeps
+credit to original creator Gökay Aydoğan while identifying YukiWorks432 as the maintainer of this
+fork.
+
+If your work depends on this maintained fork, GitHub's **Cite this repository** action uses
+[CITATION.cff](CITATION.cff). A matching BibTeX entry is:
 
 ```bibtex
-@software{Aydogan_DualView_2026,
-  author  = {Aydoğan, Gökay},
+@software{Aydogan_YukiWorks432_DualView_2026,
+  author  = {Aydoğan, Gökay and {YukiWorks432}},
   title   = {DualView},
   version = {1.0.0},
   year    = {2026},
-  url     = {https://github.com/gokayfem/dualview}
+  url     = {https://github.com/YukiWorks432/dualview},
+  note    = {Maintained fork of https://github.com/gokayfem/dualview}
 }
 ```
 
-[ORCID](https://orcid.org/0000-0002-2343-9433) · [Citation metadata](CITATION.cff)
+[Original project](https://github.com/gokayfem/dualview) ·
+[Original author ORCID](https://orcid.org/0000-0002-2343-9433) ·
+[Fork citation metadata](CITATION.cff)
 
 </details>
+
+## Credits
+
+DualView's original work remains credited to **Gökay Aydoğan** and the
+[gokayfem/dualview](https://github.com/gokayfem/dualview) project. This fork is maintained by
+**YukiWorks432**.
+
+| | GitHub | X | Website |
+| --- | --- | --- | --- |
+| **Original creator** | [gokayfem](https://github.com/gokayfem) | [@gokayfem](https://x.com/gokayfem) | [dualview.ai](https://dualview.ai) |
+| **Fork maintainer** | [YukiWorks432](https://github.com/YukiWorks432) | [@YuK1_Works](https://x.com/YuK1_Works) | [hanayuki.xyz](https://hanayuki.xyz) |
 
 ## 📄 License
 
 MIT License - see [LICENSE](LICENSE) for details.
 
-Contributions welcome! Feel free to open issues and pull requests.
+Contributions are welcome on this fork. Feel free to [open an issue](https://github.com/YukiWorks432/dualview/issues) or [submit a pull request](https://github.com/YukiWorks432/dualview/pulls).
 
 ---
 
