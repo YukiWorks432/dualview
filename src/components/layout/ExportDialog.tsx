@@ -1,4 +1,4 @@
-import { Download, Loader2, Check, AlertCircle, Film, Layers } from 'lucide-react'
+import { Download, Loader2, Check, AlertCircle } from 'lucide-react'
 import { useState, useMemo } from 'react'
 import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
@@ -19,7 +19,6 @@ import {
   type StitchExportProgress,
 } from '../../lib/stitchExport'
 import { downloadVideo } from '../../lib/sweepExport'
-import { formatTime } from '../../lib/utils'
 import {
   getAllEngines,
   getAllVariants,
@@ -47,6 +46,13 @@ import {
   type ScreenshotResolution,
   type ScreenshotSource,
 } from '../export/ScreenshotExportPanel'
+import {
+  StitchExportPanel,
+  type StitchFps,
+  type StitchQuality,
+  type StitchResolution,
+  type StitchTrackOption,
+} from '../export/StitchExportPanel'
 import {
   TransitionExportPanel,
   type TransitionExportFormat,
@@ -121,9 +127,9 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
   // Stitch export settings
   const [isExportingStitch, setIsExportingStitch] = useState(false)
   const [stitchTrackId, setStitchTrackId] = useState<string>('track-a')
-  const [stitchResolution, setStitchResolution] = useState<'720p' | '1080p' | '4k'>('1080p')
-  const [stitchQuality, setStitchQuality] = useState<'low' | 'medium' | 'high'>('medium')
-  const [stitchFps, setStitchFps] = useState<24 | 30 | 60>(30)
+  const [stitchResolution, setStitchResolution] = useState<StitchResolution>('1080p')
+  const [stitchQuality, setStitchQuality] = useState<StitchQuality>('medium')
+  const [stitchFps, setStitchFps] = useState<StitchFps>(30)
   const [stitchProgress, setStitchProgress] = useState<StitchExportProgress>({
     status: 'idle',
     progress: 0,
@@ -134,6 +140,27 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
   const { getFile } = useMediaStore()
   const { tracks, duration } = useTimelineStore()
   const { setExporting } = usePlaybackStore()
+
+  const stitchTrackOptions = useMemo<StitchTrackOption[]>(
+    () =>
+      tracks
+        .filter((track) => track.type === 'a' || track.type === 'b')
+        .map((track) => {
+          const info = getTrackExportInfo(track, getFile)
+          return {
+            id: track.id,
+            name: track.name,
+            type: track.type as 'a' | 'b',
+            clipCount: info.clipCount,
+            totalDuration: info.totalDuration,
+            clips: info.clips.map((clip) => ({
+              name: clip.name,
+              duration: clip.duration,
+            })),
+          }
+        }),
+    [tracks, getFile],
+  )
 
   // Get video elements from the DOM using data-track attributes
   const getVideoElements = () => {
@@ -2064,6 +2091,54 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
     }
   }
 
+  const handleStitchExport = async () => {
+    const selectedTrack = tracks.find((track) => track.id === stitchTrackId)
+    if (!selectedTrack || selectedTrack.clips.length === 0) return
+
+    setIsExportingStitch(true)
+    setStitchProgress({
+      status: 'preparing',
+      progress: 0,
+      message: 'Preparing...',
+      currentClip: 0,
+      totalClips: selectedTrack.clips.length,
+    })
+
+    try {
+      const blob = await exportStitchedVideo(
+        selectedTrack,
+        getFile,
+        {
+          trackId: stitchTrackId,
+          format: 'mp4',
+          resolution: stitchResolution,
+          quality: stitchQuality,
+          fps: stitchFps,
+          includeAudio: false,
+        },
+        setStitchProgress,
+      )
+
+      if (blob) {
+        downloadStitchedVideo(
+          blob,
+          `${selectedTrack.name.toLowerCase().replace(/\s+/g, '-')}-stitched.mp4`,
+        )
+      }
+    } catch (err) {
+      console.error('Stitch export error:', err)
+      setStitchProgress({
+        status: 'error',
+        progress: 0,
+        message: err instanceof Error ? err.message : 'Export failed',
+        currentClip: 0,
+        totalClips: 0,
+      })
+    } finally {
+      setIsExportingStitch(false)
+    }
+  }
+
   if (!isOpen) return null
 
   const trackAForReadiness = tracks.find((track) => track.type === 'a')
@@ -2609,283 +2684,31 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
             />
           )}
 
-          {/* Stitch Export - Combine clips into single video */}
           {exportMode === 'stitch' && (
-            <>
-              {/* Track Selection */}
-              <div>
-                <label className="block text-sm text-text-secondary mb-2">Source Track</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {tracks
-                    .filter((t) => t.type === 'a' || t.type === 'b')
-                    .map((track) => {
-                      const trackInfo = getTrackExportInfo(track, getFile)
-                      return (
-                        <button
-                          key={track.id}
-                          onClick={() => setStitchTrackId(track.id)}
-                          className={`p-3 text-left border transition-colors ${
-                            stitchTrackId === track.id
-                              ? 'border-accent bg-accent/10'
-                              : 'border-border hover:border-text-muted'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2 mb-1">
-                            <div
-                              className={`w-3 h-3 rounded ${track.type === 'a' ? 'bg-orange-500' : 'bg-lime-400'}`}
-                            />
-                            <span className="text-sm font-medium text-text-primary">
-                              {track.name}
-                            </span>
-                          </div>
-                          <div className="text-xs text-text-muted">
-                            {trackInfo.clipCount} clip{trackInfo.clipCount !== 1 ? 's' : ''} •{' '}
-                            {formatTime(trackInfo.totalDuration)}
-                          </div>
-                        </button>
-                      )
-                    })}
-                </div>
-              </div>
-
-              {/* Clip Preview */}
-              {(() => {
-                const selectedTrack = tracks.find((t) => t.id === stitchTrackId)
-                if (!selectedTrack) return null
-                const trackInfo = getTrackExportInfo(selectedTrack, getFile)
-
-                if (trackInfo.clipCount === 0) {
-                  return (
-                    <div className="p-4 bg-surface-alt border border-border text-center">
-                      <Film className="w-8 h-8 mx-auto text-text-muted mb-2" />
-                      <p className="text-sm text-text-secondary">No clips on this track</p>
-                      <p className="text-xs text-text-muted mt-1">
-                        Add clips to the timeline to export
-                      </p>
-                    </div>
-                  )
-                }
-
-                return (
-                  <div className="space-y-2">
-                    <label className="block text-sm text-text-secondary">
-                      Clips to Stitch ({trackInfo.clipCount})
-                    </label>
-                    <div className="max-h-32 overflow-y-auto space-y-1 p-2 bg-surface-alt border border-border">
-                      {trackInfo.clips.map((clip, i) => (
-                        <div key={i} className="flex items-center gap-2 text-xs">
-                          <span className="text-text-muted w-5">{i + 1}.</span>
-                          <Film className="w-3 h-3 text-text-muted" />
-                          <span className="text-text-primary truncate flex-1">{clip.name}</span>
-                          <span className="text-text-muted">{formatTime(clip.duration)}</span>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="text-xs text-text-muted text-right">
-                      Total: {formatTime(trackInfo.totalDuration)}
-                    </div>
-                  </div>
-                )
-              })()}
-
-              {/* Resolution */}
-              <div>
-                <label className="block text-sm text-text-secondary mb-2">Resolution</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {['720p', '1080p', '4k'].map((res) => (
-                    <button
-                      key={res}
-                      onClick={() => setStitchResolution(res as '720p' | '1080p' | '4k')}
-                      className={`px-3 py-2 text-sm border transition-colors ${
-                        stitchResolution === res
-                          ? 'border-accent bg-accent/10 text-accent'
-                          : 'border-border text-text-secondary hover:border-text-muted'
-                      }`}
-                    >
-                      {res.toUpperCase()}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Quality */}
-              <div>
-                <label className="block text-sm text-text-secondary mb-2">Quality</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { value: 'low', label: 'Low', desc: '2 Mbps' },
-                    { value: 'medium', label: 'Medium', desc: '5 Mbps' },
-                    { value: 'high', label: 'High', desc: '10 Mbps' },
-                  ].map((opt) => (
-                    <button
-                      key={opt.value}
-                      onClick={() => setStitchQuality(opt.value as 'low' | 'medium' | 'high')}
-                      className={`px-3 py-2 text-sm border transition-colors ${
-                        stitchQuality === opt.value
-                          ? 'border-accent bg-accent/10 text-accent'
-                          : 'border-border text-text-secondary hover:border-text-muted'
-                      }`}
-                    >
-                      <div>{opt.label}</div>
-                      <div className="text-[10px] text-text-muted">{opt.desc}</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Frame Rate */}
-              <div>
-                <label className="block text-sm text-text-secondary mb-2">Frame Rate</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {[24, 30, 60].map((fps) => (
-                    <button
-                      key={fps}
-                      onClick={() => setStitchFps(fps as 24 | 30 | 60)}
-                      className={`px-3 py-2 text-sm border transition-colors ${
-                        stitchFps === fps
-                          ? 'border-accent bg-accent/10 text-accent'
-                          : 'border-border text-text-secondary hover:border-text-muted'
-                      }`}
-                    >
-                      {fps} fps
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Progress */}
-              {stitchProgress.status === 'encoding' && (
-                <div className="p-4 bg-surface-alt border border-border space-y-3">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-text-secondary">{stitchProgress.message}</span>
-                    <span className="text-accent font-medium">{stitchProgress.progress}%</span>
-                  </div>
-                  <div className="h-2 bg-background overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-accent via-accent to-secondary transition-all duration-200"
-                      style={{ width: `${stitchProgress.progress}%` }}
-                    />
-                  </div>
-                  <div className="text-xs text-text-muted">
-                    Clip {stitchProgress.currentClip} of {stitchProgress.totalClips}
-                  </div>
-                </div>
-              )}
-
-              {/* Success */}
-              {stitchProgress.status === 'done' && (
-                <div className="p-6 bg-gradient-to-br from-accent/20 via-accent/10 to-secondary/10 border border-accent/40 text-center space-y-4">
-                  <div className="w-16 h-16 mx-auto bg-accent/20 flex items-center justify-center mb-3">
-                    <Check className="w-8 h-8 text-accent" strokeWidth={3} />
-                  </div>
-                  <h3 className="text-xl font-bold text-text-primary">Stitch Complete!</h3>
-                  <p className="text-sm text-text-secondary">
-                    Your combined video is ready in your downloads folder
-                  </p>
-                  <div className="flex items-center justify-center gap-3 pt-2">
-                    <button
-                      onClick={onClose}
-                      className="px-4 py-2 text-sm bg-accent text-white hover:bg-accent-hover transition-colors"
-                    >
-                      Done
-                    </button>
-                    <button
-                      onClick={() =>
-                        setStitchProgress({
-                          status: 'idle',
-                          progress: 0,
-                          message: '',
-                          currentClip: 0,
-                          totalClips: 0,
-                        })
-                      }
-                      className="px-4 py-2 text-sm border border-border text-text-secondary hover:text-text-primary transition-colors"
-                    >
-                      Export Another
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Error */}
-              {stitchProgress.status === 'error' && (
-                <div className="flex items-center gap-2 text-error text-sm p-3 bg-error/10 border border-error/30">
-                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                  <span>{stitchProgress.message}</span>
-                </div>
-              )}
-
-              {/* Export Button */}
-              <div className="flex justify-end gap-2 pt-4">
-                <Button variant="outline" onClick={onClose} disabled={isExportingStitch}>
-                  Cancel
-                </Button>
-                <Button
-                  onClick={async () => {
-                    const selectedTrack = tracks.find((t) => t.id === stitchTrackId)
-                    if (!selectedTrack || selectedTrack.clips.length === 0) return
-
-                    setIsExportingStitch(true)
-                    setStitchProgress({
-                      status: 'preparing',
-                      progress: 0,
-                      message: 'Preparing...',
-                      currentClip: 0,
-                      totalClips: selectedTrack.clips.length,
-                    })
-
-                    try {
-                      const blob = await exportStitchedVideo(
-                        selectedTrack,
-                        getFile,
-                        {
-                          trackId: stitchTrackId,
-                          format: 'mp4',
-                          resolution: stitchResolution,
-                          quality: stitchQuality,
-                          fps: stitchFps,
-                          includeAudio: false,
-                        },
-                        setStitchProgress,
-                      )
-
-                      if (blob) {
-                        downloadStitchedVideo(
-                          blob,
-                          `${selectedTrack.name.toLowerCase().replace(/\s+/g, '-')}-stitched.mp4`,
-                        )
-                      }
-                    } catch (err) {
-                      console.error('Stitch export error:', err)
-                      setStitchProgress({
-                        status: 'error',
-                        progress: 0,
-                        message: err instanceof Error ? err.message : 'Export failed',
-                        currentClip: 0,
-                        totalClips: 0,
-                      })
-                    } finally {
-                      setIsExportingStitch(false)
-                    }
-                  }}
-                  disabled={
-                    isExportingStitch || !tracks.find((t) => t.id === stitchTrackId)?.clips.length
-                  }
-                >
-                  {isExportingStitch ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Stitching...
-                    </>
-                  ) : (
-                    <>
-                      <Layers className="w-4 h-4" />
-                      Export Stitched Video
-                    </>
-                  )}
-                </Button>
-              </div>
-            </>
+            <StitchExportPanel
+              tracks={stitchTrackOptions}
+              trackId={stitchTrackId}
+              onTrackChange={setStitchTrackId}
+              resolution={stitchResolution}
+              onResolutionChange={setStitchResolution}
+              quality={stitchQuality}
+              onQualityChange={setStitchQuality}
+              fps={stitchFps}
+              onFpsChange={setStitchFps}
+              progress={stitchProgress}
+              isExporting={isExportingStitch}
+              onClose={onClose}
+              onExport={() => void handleStitchExport()}
+              onReset={() =>
+                setStitchProgress({
+                  status: 'idle',
+                  progress: 0,
+                  message: '',
+                  currentClip: 0,
+                  totalClips: 0,
+                })
+              }
+            />
           )}
 
           {exportMode === 'pdf' && (
