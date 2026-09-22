@@ -1,5 +1,7 @@
-import { FFmpeg } from '@ffmpeg/ffmpeg'
-import { fetchFile, toBlobURL } from '@ffmpeg/util'
+import ffmpegCoreUrl from '@ffmpeg/core/dist/esm/ffmpeg-core.js?url'
+import ffmpegWasmUrl from '@ffmpeg/core/dist/esm/ffmpeg-core.wasm?url'
+import type { FFmpeg } from '@ffmpeg/ffmpeg'
+import { fetchFile } from '@ffmpeg/util'
 
 let ffmpeg: FFmpeg | null = null
 let loaded = false
@@ -14,6 +16,7 @@ export async function getFFmpeg(): Promise<FFmpeg> {
 
   loadingPromise = (async () => {
     console.log('[FFmpeg] Starting to load FFmpeg WASM...')
+    const { FFmpeg } = await import('@ffmpeg/ffmpeg')
     ffmpeg = new FFmpeg()
 
     ffmpeg.on('log', ({ message }) => {
@@ -24,14 +27,11 @@ export async function getFFmpeg(): Promise<FFmpeg> {
       console.log('[FFmpeg] Loading progress:', Math.round(progress * 100) + '%')
     })
 
-    // Load FFmpeg with CORS-enabled URLs
-    const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm'
-    console.log('[FFmpeg] Fetching FFmpeg core from CDN...')
-
+    // Keep the FFmpeg core self-hosted so exports work offline and under strict CSP.
     try {
       await ffmpeg.load({
-        coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
-        wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+        coreURL: ffmpegCoreUrl,
+        wasmURL: ffmpegWasmUrl,
       })
       console.log('[FFmpeg] FFmpeg loaded successfully!')
       loaded = true
