@@ -12,7 +12,6 @@ import {
   Film,
   Layers,
 } from 'lucide-react'
-import { Muxer, ArrayBufferTarget } from 'mp4-muxer'
 import { useState, useMemo } from 'react'
 import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
@@ -20,6 +19,7 @@ import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js'
 
 import { GIF_PRESETS } from '../../lib/gifEncoder'
 import { isWebCodecsSupported } from '../../lib/mp4Encoder'
+import { createAvcMp4Muxer } from '../../lib/mp4Muxer'
 import {
   captureCanvasScreenshot,
   downloadBlob,
@@ -483,14 +483,10 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
           // Pause and prepare for seeking
           if (targetVideo) targetVideo.pause()
 
-          const muxer = new Muxer({
-            target: new ArrayBufferTarget(),
-            video: { codec: 'avc', width: 1920, height: 1080 },
-            fastStart: 'in-memory',
-          })
+          const muxer = await createAvcMp4Muxer()
 
           const encoder = new VideoEncoder({
-            output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
+            output: (chunk, meta) => muxer.addChunk(chunk, meta),
             error: (e) => console.error('VideoEncoder error:', e),
           })
 
@@ -545,9 +541,7 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
 
           await encoder.flush()
           encoder.close()
-          muxer.finalize()
-
-          const { buffer } = muxer.target as ArrayBufferTarget
+          const buffer = await muxer.finalize()
           const mp4Blob = new Blob([buffer], { type: 'video/mp4' })
           const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
           downloadVideo(mp4Blob, `dualview-${exportSettings.exportSource}-${timestamp}.mp4`)
@@ -854,21 +848,13 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
         if (videoB) videoB.pause()
 
         // Create muxer
-        const muxer = new Muxer({
-          target: new ArrayBufferTarget(),
-          video: {
-            codec: 'avc',
-            width: 1920,
-            height: 1080,
-          },
-          fastStart: 'in-memory',
-        })
+        const muxer = await createAvcMp4Muxer()
 
         // Create video encoder
         let encodedFrames = 0
         const encoder = new VideoEncoder({
           output: (chunk, meta) => {
-            muxer.addVideoChunk(chunk, meta)
+            muxer.addChunk(chunk, meta)
             encodedFrames++
           },
           error: (e) => console.error('VideoEncoder error:', e),
@@ -943,9 +929,7 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
         setExportProgress({ status: 'encoding', progress: 95, message: 'Finalizing MP4...' })
         await encoder.flush()
         encoder.close()
-        muxer.finalize()
-
-        const { buffer } = muxer.target as ArrayBufferTarget
+        const buffer = await muxer.finalize()
         const mp4Blob = new Blob([buffer], { type: 'video/mp4' })
 
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
@@ -1407,14 +1391,10 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
               ? 5_000_000
               : 2_500_000
 
-        const muxer = new Muxer({
-          target: new ArrayBufferTarget(),
-          video: { codec: 'avc', width: canvasWidth, height: canvasHeight },
-          fastStart: 'in-memory',
-        })
+        const muxer = await createAvcMp4Muxer()
 
         const encoder = new VideoEncoder({
-          output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
+          output: (chunk, meta) => muxer.addChunk(chunk, meta),
           error: (e) => console.error('VideoEncoder error:', e),
         })
 
@@ -1496,9 +1476,7 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
         setExportProgress({ status: 'encoding', progress: 95, message: 'Finalizing MP4...' })
         await encoder.flush()
         encoder.close()
-        muxer.finalize()
-
-        const { buffer } = muxer.target as ArrayBufferTarget
+        const buffer = await muxer.finalize()
         const mp4Blob = new Blob([buffer], { type: 'video/mp4' })
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
         downloadVideo(mp4Blob, `dualview-3d-turntable-${export3DSource}-${timestamp}.mp4`)
@@ -1772,14 +1750,10 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
               ? 5_000_000
               : 2_500_000
 
-        const muxer = new Muxer({
-          target: new ArrayBufferTarget(),
-          video: { codec: 'avc', width, height },
-          fastStart: 'in-memory',
-        })
+        const muxer = await createAvcMp4Muxer()
 
         const encoder = new VideoEncoder({
-          output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
+          output: (chunk, meta) => muxer.addChunk(chunk, meta),
           error: (e) => console.error('VideoEncoder error:', e),
         })
 
@@ -1924,9 +1898,7 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
         setExportProgress({ status: 'encoding', progress: 95, message: 'Finalizing MP4...' })
         await encoder.flush()
         encoder.close()
-        muxer.finalize()
-
-        const { buffer } = muxer.target as ArrayBufferTarget
+        const buffer = await muxer.finalize()
         const mp4Blob = new Blob([buffer], { type: 'video/mp4' })
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
         downloadVideo(mp4Blob, `dualview-transition-${transitionEngine}-${timestamp}.mp4`)

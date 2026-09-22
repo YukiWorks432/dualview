@@ -5,9 +5,9 @@
  * Uses WebCodecs API for encoding.
  */
 
-import { Muxer, ArrayBufferTarget } from 'mp4-muxer'
 
 import type { TimelineTrack, MediaFile } from '../types'
+import { createAvcMp4Muxer } from './mp4Muxer'
 
 export interface StitchExportSettings {
   trackId: string
@@ -176,23 +176,14 @@ export async function exportStitchedVideo(
   const totalFrames = Math.ceil(totalDuration * fps)
 
   // Setup MP4 muxer
-  const target = new ArrayBufferTarget()
-  const muxer = new Muxer({
-    target,
-    video: {
-      codec: 'avc',
-      width,
-      height,
-    },
-    fastStart: 'in-memory',
-  })
+  const muxer = await createAvcMp4Muxer()
 
   // Setup video encoder
   let framesEncoded = 0
 
   const encoder = new VideoEncoder({
     output: (chunk, meta) => {
-      muxer.addVideoChunk(chunk, meta)
+      muxer.addChunk(chunk, meta)
       framesEncoded++
     },
     error: (e) => {
@@ -363,7 +354,7 @@ export async function exportStitchedVideo(
   encoder.close()
 
   // Finalize muxer
-  muxer.finalize()
+  const buffer = await muxer.finalize()
 
   onProgress({
     status: 'done',
@@ -374,7 +365,6 @@ export async function exportStitchedVideo(
   })
 
   // Create blob
-  const buffer = target.buffer
   return new Blob([buffer], { type: 'video/mp4' })
 }
 

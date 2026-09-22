@@ -1,9 +1,10 @@
 /**
- * MP4 Encoder using mp4-muxer and WebCodecs API
+ * MP4 Encoder using Mediabunny and WebCodecs API
  * Hardware-accelerated, fast, no FFmpeg needed
  */
 
-import { Muxer, ArrayBufferTarget } from 'mp4-muxer'
+
+import { createAvcMp4Muxer } from './mp4Muxer'
 
 export interface Mp4ExportOptions {
   width: number
@@ -26,7 +27,7 @@ export function isWebCodecsSupported(): boolean {
 }
 
 /**
- * Export canvas frames to MP4 using WebCodecs + mp4-muxer
+ * Export canvas frames to MP4 using WebCodecs + Mediabunny
  */
 export async function exportCanvasToMp4(
   frames: (() => HTMLCanvasElement)[],
@@ -49,21 +50,13 @@ export async function exportCanvasToMp4(
   onProgress(0, 'Initializing MP4 encoder...')
 
   // Create muxer
-  const muxer = new Muxer({
-    target: new ArrayBufferTarget(),
-    video: {
-      codec: 'avc',
-      width,
-      height,
-    },
-    fastStart: 'in-memory',
-  })
+  const muxer = await createAvcMp4Muxer()
 
   // Create video encoder
   let encodedFrames = 0
   const encoder = new VideoEncoder({
     output: (chunk, meta) => {
-      muxer.addVideoChunk(chunk, meta)
+      muxer.addChunk(chunk, meta)
       encodedFrames++
       const progress = 50 + (encodedFrames / totalFrames) * 45
       onProgress(progress, `Encoding frame ${encodedFrames}/${totalFrames}`)
@@ -117,11 +110,8 @@ export async function exportCanvasToMp4(
   await encoder.flush()
   encoder.close()
 
-  // Finalize muxer
-  muxer.finalize()
-
-  // Get the MP4 data
-  const { buffer } = muxer.target as ArrayBufferTarget
+  // Finalize muxer and get the MP4 data
+  const buffer = await muxer.finalize()
   const blob = new Blob([buffer], { type: 'video/mp4' })
 
   onProgress(100, 'MP4 export complete!')
