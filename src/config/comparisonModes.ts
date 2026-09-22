@@ -32,7 +32,7 @@ export interface ComparisonModeDefinition {
   }
 }
 
-export const comparisonModeDefinitions = [
+export const comparisonModeDefinitions: ComparisonModeDefinition[] = [
   {
     mode: 'slider',
     icon: SplitSquareHorizontal,
@@ -153,13 +153,18 @@ export const comparisonModeDefinitions = [
     description: 'Apply morphological operations',
     group: 'analysis',
   },
-] satisfies ComparisonModeDefinition[]
+]
 
 export const primaryComparisonModes = comparisonModeDefinitions.filter(
   (definition) => definition.group === 'primary',
 )
 
-export const comparisonModeGroups = [
+export const comparisonModeGroups: Array<{
+  id: 'multi-view' | 'analysis'
+  name: string
+  description: string
+  modes: ComparisonModeDefinition[]
+}> = [
   {
     id: 'multi-view',
     name: 'Multi-View',
@@ -172,9 +177,9 @@ export const comparisonModeGroups = [
     description: 'Deep inspection',
     modes: comparisonModeDefinitions.filter((definition) => definition.group === 'analysis'),
   },
-] as const
+]
 
-export const secondaryComparisonModes = comparisonModeGroups.flatMap((group) => group.modes)
+export const secondaryComparisonModes: ComparisonModeDefinition[] = comparisonModeGroups.flatMap((group) => group.modes)
 
 const comparisonModeByCode = new Map(
   comparisonModeDefinitions.flatMap((definition) =>
