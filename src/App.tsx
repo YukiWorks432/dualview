@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useState, useRef } from 'react'
+import { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react'
 
-import { ExportDialog } from './components/layout/ExportDialog'
 import { Header } from './components/layout/Header'
 import { Sidebar } from './components/layout/Sidebar'
 import { PreviewCanvas, type PreviewCanvasHandle } from './components/preview/PreviewCanvas'
@@ -18,6 +17,10 @@ import { usePersistenceStore } from './stores/persistenceStore'
 import { usePlaybackStore } from './stores/playbackStore'
 import { useProjectStore } from './stores/projectStore'
 import { useTimelineStore } from './stores/timelineStore'
+
+const ExportDialog = lazy(() =>
+  import('./components/layout/ExportDialog').then((module) => ({ default: module.ExportDialog })),
+)
 
 export default function App() {
   const [isExportOpen, setIsExportOpen] = useState(false)
@@ -421,11 +424,15 @@ export default function App() {
       {/* SCOPE-001, SCOPE-002, SCOPE-003: Video Scopes Panel */}
       <ScopesPanel />
 
-      <ExportDialog
-        isOpen={isExportOpen}
-        onClose={() => setIsExportOpen(false)}
-        canvasRef={canvasRef}
-      />
+      {isExportOpen && (
+        <Suspense fallback={null}>
+          <ExportDialog
+            isOpen
+            onClose={() => setIsExportOpen(false)}
+            canvasRef={canvasRef}
+          />
+        </Suspense>
+      )}
       <KeyboardShortcutsHelp isOpen={shortcutsHelp.isOpen} onClose={shortcutsHelp.close} />
 
       {/* PERSIST-003: Project selector modal */}
