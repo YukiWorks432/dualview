@@ -1,4 +1,5 @@
 import { Keyboard, X } from 'lucide-react'
+
 import { primaryComparisonModes } from '../../config/comparisonModes'
 import { Button } from './button'
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from './dialog'
@@ -167,4 +168,3 @@ export function KeyboardShortcutsHelp({ isOpen, onClose }: KeyboardShortcutsHelp
     </Dialog>
   )
 }
-
