@@ -1,10 +1,8 @@
 import {
-  X,
   Download,
   Loader2,
   Check,
   AlertCircle,
-  Camera,
   FileText,
   Clipboard,
   Box,
@@ -45,9 +43,17 @@ import { usePlaybackStore } from '../../stores/playbackStore'
 import { useProjectStore } from '../../stores/projectStore'
 import { useTimelineStore } from '../../stores/timelineStore'
 import type { ExportSource, SweepStyle, TransitionEngine, TransitionExportMode } from '../../types'
-import { Button, Select, Slider } from '../ui'
-
-type ExportMode = 'video' | 'screenshot' | 'pdf' | '3d' | 'transition' | 'stitch'
+import { ExportModeTabs, type ExportMode } from '../export/ExportModeTabs'
+import { ExportReadiness } from '../export/ExportReadiness'
+import {
+  Button,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+  Select,
+  Slider,
+} from '../ui'
 
 interface ExportDialogProps {
   isOpen: boolean
@@ -2048,141 +2054,32 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
 
   if (!isOpen) return null
 
+  const trackAForReadiness = tracks.find((track) => track.type === 'a')
+  const trackBForReadiness = tracks.find((track) => track.type === 'b')
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) onClose()
+      }}
+    >
+      <DialogContent
+        className="w-full max-w-md p-6"
+        backdropClassName="bg-black/60 backdrop-blur-sm"
+      >
+        <DialogTitle className="mb-2 text-lg font-semibold">Export Comparison</DialogTitle>
+        <DialogDescription className="sr-only">
+          Configure and export the current comparison in video, image, 3D, transition, stitch, or
+          PDF format.
+        </DialogDescription>
 
-      {/* Dialog */}
-      <div className="relative bg-surface border border-border rounded-lg shadow-xl w-full max-w-md p-6">
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-text-muted hover:text-text-primary"
-        >
-          <X className="w-5 h-5" />
-        </button>
+        <ExportReadiness
+          hasMediaA={Boolean(trackAForReadiness?.clips.length)}
+          hasMediaB={Boolean(trackBForReadiness?.clips.length)}
+        />
 
-        <h2 className="text-lg font-semibold text-text-primary mb-2">Export Comparison</h2>
-
-        {/* Zeigarnik Effect - Readiness indicator */}
-        {(() => {
-          const trackA = tracks.find((t) => t.type === 'a')
-          const trackB = tracks.find((t) => t.type === 'b')
-          const hasMediaA = trackA && trackA.clips.length > 0
-          const hasMediaB = trackB && trackB.clips.length > 0
-          const isReady = hasMediaA || hasMediaB
-
-          if (!isReady) {
-            return (
-              <div className="mb-4 p-3 bg-warning/10 border border-warning/30 flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 text-warning flex-shrink-0" />
-                <span className="text-sm text-warning">Add media to Track A or B to export</span>
-              </div>
-            )
-          }
-
-          if (!hasMediaA || !hasMediaB) {
-            return (
-              <div className="mb-4 p-2 bg-surface-alt border border-border flex items-center gap-3 text-xs">
-                <div
-                  className={`flex items-center gap-1 ${hasMediaA ? 'text-accent' : 'text-text-muted'}`}
-                >
-                  <div
-                    className={`w-2 h-2 rounded-full ${hasMediaA ? 'bg-accent' : 'bg-border'}`}
-                  />
-                  <span>Media A</span>
-                </div>
-                <div
-                  className={`flex items-center gap-1 ${hasMediaB ? 'text-secondary' : 'text-text-muted'}`}
-                >
-                  <div
-                    className={`w-2 h-2 rounded-full ${hasMediaB ? 'bg-secondary' : 'bg-border'}`}
-                  />
-                  <span>Media B</span>
-                </div>
-                <span className="text-text-muted ml-auto">Single media export available</span>
-              </div>
-            )
-          }
-
-          return (
-            <div className="mb-4 p-2 bg-accent/10 border border-accent/30 flex items-center gap-2 text-xs">
-              <Check className="w-4 h-4 text-accent" />
-              <span className="text-accent font-medium">Ready to export comparison</span>
-            </div>
-          )
-        })()}
-
-        {/* Export mode tabs */}
-        <div className="grid grid-cols-6 gap-1 border-b border-border mb-4 pb-1">
-          <button
-            className={`py-2 px-1 text-xs font-medium transition-colors flex items-center justify-center gap-1 rounded-t ${
-              exportMode === 'video'
-                ? 'text-text-primary bg-surface-alt border-b-2 border-accent'
-                : 'text-text-secondary hover:text-text-primary hover:bg-surface-alt/50'
-            }`}
-            onClick={() => setExportMode('video')}
-          >
-            <Download className="w-3.5 h-3.5" />
-            Video
-          </button>
-          <button
-            className={`py-2 px-1 text-xs font-medium transition-colors flex items-center justify-center gap-1 rounded-t ${
-              exportMode === 'stitch'
-                ? 'text-text-primary bg-surface-alt border-b-2 border-accent'
-                : 'text-text-secondary hover:text-text-primary hover:bg-surface-alt/50'
-            }`}
-            onClick={() => setExportMode('stitch')}
-            title="Stitch clips into a single video"
-          >
-            <Layers className="w-3.5 h-3.5" />
-            Stitch
-          </button>
-          <button
-            className={`py-2 px-1 text-xs font-medium transition-colors flex items-center justify-center gap-1 rounded-t ${
-              exportMode === 'transition'
-                ? 'text-text-primary bg-surface-alt border-b-2 border-accent'
-                : 'text-text-secondary hover:text-text-primary hover:bg-surface-alt/50'
-            }`}
-            onClick={() => setExportMode('transition')}
-          >
-            <Sparkles className="w-3.5 h-3.5" />
-            FX
-          </button>
-          <button
-            className={`py-2 px-1 text-xs font-medium transition-colors flex items-center justify-center gap-1 rounded-t ${
-              exportMode === 'screenshot'
-                ? 'text-text-primary bg-surface-alt border-b-2 border-accent'
-                : 'text-text-secondary hover:text-text-primary hover:bg-surface-alt/50'
-            }`}
-            onClick={() => setExportMode('screenshot')}
-          >
-            <Camera className="w-3.5 h-3.5" />
-            Image
-          </button>
-          <button
-            className={`py-2 px-1 text-xs font-medium transition-colors flex items-center justify-center gap-1 rounded-t ${
-              exportMode === '3d'
-                ? 'text-text-primary bg-surface-alt border-b-2 border-accent'
-                : 'text-text-secondary hover:text-text-primary hover:bg-surface-alt/50'
-            }`}
-            onClick={() => setExportMode('3d')}
-          >
-            <Box className="w-3.5 h-3.5" />
-            3D
-          </button>
-          <button
-            className={`py-2 px-1 text-xs font-medium transition-colors flex items-center justify-center gap-1 rounded-t ${
-              exportMode === 'pdf'
-                ? 'text-text-primary bg-surface-alt border-b-2 border-accent'
-                : 'text-text-secondary hover:text-text-primary hover:bg-surface-alt/50'
-            }`}
-            onClick={() => setExportMode('pdf')}
-          >
-            <FileText className="w-3.5 h-3.5" />
-            PDF
-          </button>
-        </div>
+        <ExportModeTabs value={exportMode} onValueChange={setExportMode} />
 
         <div className="space-y-4">
           {/* Video/GIF Export */}
@@ -3598,7 +3495,7 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
             </>
           )}
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   )
 }
