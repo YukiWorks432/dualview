@@ -1,7 +1,6 @@
 import { create } from 'zustand'
 
 import { getDocumentType, parseDocument, generateDocumentThumbnail } from '../lib/documentParser'
-import { generateModelThumbnail } from '../lib/modelThumbnail'
 import { generateId } from '../lib/utils'
 import type { MediaFile, MediaType } from '../types'
 import { useTimelineStore } from './timelineStore'
@@ -147,8 +146,9 @@ async function processFile(file: File): Promise<MediaFile> {
     // Set default duration for 3D models (5 seconds = one full rotation)
     mediaFile.duration = 5
 
-    // Generate thumbnail for 3D model
+    // Generate thumbnail for 3D model only when a model is actually imported.
     try {
+      const { generateModelThumbnail } = await import('../lib/modelThumbnail')
       const thumbnail = await generateModelThumbnail(url)
       if (thumbnail) {
         mediaFile.thumbnail = thumbnail
