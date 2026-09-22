@@ -18,6 +18,7 @@ export {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from './dropdown-menu'
+export { Input, type InputProps } from './input'
 export { Kbd } from './kbd'
 export { Slider, type SliderProps } from './slider'
 export { Select, type SelectProps } from './select'
