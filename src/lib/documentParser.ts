@@ -4,11 +4,6 @@
  * Parses CSV, Excel, DOCX, and PDF files for comparison
  */
 
-import mammoth from 'mammoth'
-import Papa from 'papaparse'
-import * as pdfjsLib from 'pdfjs-dist'
-import * as XLSX from 'xlsx'
-
 import type {
   DocumentMetadata,
   ParsedDocumentContent,
@@ -17,8 +12,19 @@ import type {
   MediaType,
 } from '../types'
 
-// Configure PDF.js worker
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`
+let pdfJsPromise: Promise<typeof import('pdfjs-dist')> | null = null
+
+async function getPdfJs(): Promise<typeof import('pdfjs-dist')> {
+  pdfJsPromise ??= Promise.all([
+    import('pdfjs-dist'),
+    import('pdfjs-dist/build/pdf.worker.min.mjs?url'),
+  ]).then(([pdfjsLib, worker]) => {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = worker.default
+    return pdfjsLib
+  })
+
+  return pdfJsPromise
+}
 
 /**
  * Detect document type from file extension
@@ -44,6 +50,8 @@ export function getDocumentType(fileName: string): MediaType | null {
  * Parse CSV file
  */
 export async function parseCSV(file: File): Promise<DocumentMetadata> {
+  const { default: Papa } = await import('papaparse')
+
   return new Promise((resolve, reject) => {
     Papa.parse(file, {
       complete: (results) => {
@@ -79,7 +87,7 @@ export async function parseCSV(file: File): Promise<DocumentMetadata> {
  * Parse Excel file
  */
 export async function parseExcel(file: File): Promise<DocumentMetadata> {
-  const arrayBuffer = await file.arrayBuffer()
+  const [arrayBuffer, XLSX] = await Promise.all([file.arrayBuffer(), import('xlsx')])
   const workbook = XLSX.read(arrayBuffer, { type: 'array' })
 
   const sheets: ParsedSheet[] = []
@@ -120,7 +128,10 @@ export async function parseExcel(file: File): Promise<DocumentMetadata> {
  * Parse DOCX file
  */
 export async function parseDOCX(file: File): Promise<DocumentMetadata> {
-  const arrayBuffer = await file.arrayBuffer()
+  const [arrayBuffer, { default: mammoth }] = await Promise.all([
+    file.arrayBuffer(),
+    import('mammoth'),
+  ])
 
   const result = await mammoth.convertToHtml({ arrayBuffer })
   const textResult = await mammoth.extractRawText({ arrayBuffer })
@@ -152,7 +163,7 @@ export async function parseDOCX(file: File): Promise<DocumentMetadata> {
  * Parse PDF file
  */
 export async function parsePDF(file: File): Promise<DocumentMetadata> {
-  const arrayBuffer = await file.arrayBuffer()
+  const [arrayBuffer, pdfjsLib] = await Promise.all([file.arrayBuffer(), getPdfJs()])
   const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise
 
   const pages: ParsedPDFPage[] = []
