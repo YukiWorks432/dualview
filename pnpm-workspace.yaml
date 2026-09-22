@@ -1,4 +1,7 @@
 minimumReleaseAge: 1440
+minimumReleaseAgeExclude:
+  - oxlint@1.85.0
+  - '@oxlint/*'
 strictDepBuilds: true
 
 allowBuilds:
