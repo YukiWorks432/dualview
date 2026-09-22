@@ -3,13 +3,7 @@ import { useEffect, useState } from 'react'
 
 import { primaryComparisonModes } from '../../config/comparisonModes'
 import { Button } from './button'
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogTitle,
-} from './dialog'
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from './dialog'
 import { Kbd } from './kbd'
 
 interface ShortcutItem {
