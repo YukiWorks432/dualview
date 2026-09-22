@@ -47,6 +47,18 @@ jobs:
             git push origin HEAD:${{ github.ref_name }}
           fi
 
+      - name: Apply initial Oxfmt formatting
+        run: pnpm format
+
+      - name: Commit formatter migration
+        shell: bash
+        run: |
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m "style: format codebase with Oxfmt"
+            git push origin HEAD:${{ github.ref_name }}
+          fi
+
       - name: Check formatting
         run: pnpm format:check
 
