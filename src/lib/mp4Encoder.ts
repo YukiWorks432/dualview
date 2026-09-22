@@ -3,7 +3,6 @@
  * Hardware-accelerated, fast, no FFmpeg needed
  */
 
-
 import { createAvcMp4Muxer } from './mp4Muxer'
 
 export interface Mp4ExportOptions {

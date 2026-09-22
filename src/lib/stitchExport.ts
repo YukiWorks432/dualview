@@ -5,7 +5,6 @@
  * Uses WebCodecs API for encoding.
  */
 
-
 import type { TimelineTrack, MediaFile } from '../types'
 import { createAvcMp4Muxer } from './mp4Muxer'
 
