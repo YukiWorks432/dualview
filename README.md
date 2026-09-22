@@ -73,12 +73,12 @@
 > continuing that work with modernization, maintenance, and ongoing development while preserving
 > attribution to the original project.
 
-| Role | Links |
-| ---- | ----- |
-| **Original project** | [gokayfem/dualview](https://github.com/gokayfem/dualview) · [dualview.ai](https://dualview.ai) |
-| **Original creator** | [Gökay Aydoğan](https://github.com/gokayfem) · [@gokayfem](https://x.com/gokayfem) |
-| **Maintained fork** | [YukiWorks432/dualview](https://github.com/YukiWorks432/dualview) |
-| **Fork maintainer** | [YukiWorks432](https://github.com/YukiWorks432) · [@YuK1_Works](https://x.com/YuK1_Works) · [hanayuki.xyz](https://hanayuki.xyz) |
+| Role                 | Links                                                                                                                            |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| **Original project** | [gokayfem/dualview](https://github.com/gokayfem/dualview) · [dualview.ai](https://dualview.ai)                                   |
+| **Original creator** | [Gökay Aydoğan](https://github.com/gokayfem) · [@gokayfem](https://x.com/gokayfem)                                               |
+| **Maintained fork**  | [YukiWorks432/dualview](https://github.com/YukiWorks432/dualview)                                                                |
+| **Fork maintainer**  | [YukiWorks432](https://github.com/YukiWorks432) · [@YuK1_Works](https://x.com/YuK1_Works) · [hanayuki.xyz](https://hanayuki.xyz) |
 
 ---
 
@@ -537,24 +537,24 @@ DualView is built for speed. Master these shortcuts:
 
 ### Modes & Views
 
-| Key       | Action                   |
-| --------- | ------------------------ |
-| `1` - `8` | Switch comparison modes  |
+| Key       | Action                        |
+| --------- | ----------------------------- |
+| `1` - `8` | Switch comparison modes       |
 | `F`       | Flip A/B (in Difference mode) |
-| `P`       | Toggle focus peaking     |
-| `Z`       | Toggle zebra stripes     |
-| `G`       | Toggle video scopes      |
+| `P`       | Toggle focus peaking          |
+| `Z`       | Toggle zebra stripes          |
+| `G`       | Toggle video scopes           |
 
 ### Timeline Editing
 
-| Key       | Action                                  |
-| --------- | --------------------------------------- |
-| `S`       | Split selected clip at playhead         |
-| `Q`       | Keep left of playhead (trim right)      |
-| `W`       | Keep right of playhead (trim left)      |
-| `R`       | Toggle ripple edit mode                 |
-| `N`       | Toggle snapping                         |
-| `Delete`  | Delete selected clips                   |
+| Key      | Action                             |
+| -------- | ---------------------------------- |
+| `S`      | Split selected clip at playhead    |
+| `Q`      | Keep left of playhead (trim right) |
+| `W`      | Keep right of playhead (trim left) |
+| `R`      | Toggle ripple edit mode            |
+| `N`      | Toggle snapping                    |
+| `Delete` | Delete selected clips              |
 
 ### Interface
 
@@ -825,10 +825,10 @@ DualView's original work remains credited to **Gökay Aydoğan** and the
 [gokayfem/dualview](https://github.com/gokayfem/dualview) project. This fork is maintained by
 **YukiWorks432**.
 
-| | GitHub | X | Website |
-| --- | --- | --- | --- |
-| **Original creator** | [gokayfem](https://github.com/gokayfem) | [@gokayfem](https://x.com/gokayfem) | [dualview.ai](https://dualview.ai) |
-| **Fork maintainer** | [YukiWorks432](https://github.com/YukiWorks432) | [@YuK1_Works](https://x.com/YuK1_Works) | [hanayuki.xyz](https://hanayuki.xyz) |
+|                      | GitHub                                          | X                                       | Website                              |
+| -------------------- | ----------------------------------------------- | --------------------------------------- | ------------------------------------ |
+| **Original creator** | [gokayfem](https://github.com/gokayfem)         | [@gokayfem](https://x.com/gokayfem)     | [dualview.ai](https://dualview.ai)   |
+| **Fork maintainer**  | [YukiWorks432](https://github.com/YukiWorks432) | [@YuK1_Works](https://x.com/YuK1_Works) | [hanayuki.xyz](https://hanayuki.xyz) |
 
 ## 📄 License
 

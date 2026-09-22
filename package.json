@@ -2,7 +2,21 @@
   "name": "dualview",
   "version": "1.0.0",
   "description": "Open source side-by-side comparison tool for images, videos, audio files, and AI prompts",
+  "homepage": "https://github.com/YukiWorks432/dualview#readme",
+  "bugs": {
+    "url": "https://github.com/YukiWorks432/dualview/issues"
+  },
   "license": "MIT",
+  "author": {
+    "name": "Gökay Aydoğan",
+    "url": "https://github.com/gokayfem"
+  },
+  "contributors": [
+    {
+      "name": "YukiWorks432",
+      "url": "https://hanayuki.xyz"
+    }
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/YukiWorks432/dualview.git"
@@ -66,19 +80,5 @@
     "node": ">=22.12.0",
     "pnpm": ">=12.0.0"
   },
-  "packageManager": "pnpm@12.5.1",
-  "homepage": "https://github.com/YukiWorks432/dualview#readme",
-  "bugs": {
-    "url": "https://github.com/YukiWorks432/dualview/issues"
-  },
-  "author": {
-    "name": "Gökay Aydoğan",
-    "url": "https://github.com/gokayfem"
-  },
-  "contributors": [
-    {
-      "name": "YukiWorks432",
-      "url": "https://hanayuki.xyz"
-    }
-  ]
+  "packageManager": "pnpm@12.5.1"
 }
