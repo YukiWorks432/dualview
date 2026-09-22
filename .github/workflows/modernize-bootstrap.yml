@@ -31,7 +31,6 @@ jobs:
         uses: actions/setup-node@v5
         with:
           node-version: 24
-          cache: pnpm
 
       - name: Update dependencies and generate lockfile
         run: pnpm update --latest
