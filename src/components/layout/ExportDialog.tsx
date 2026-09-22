@@ -1,4 +1,4 @@
-import { Download, Loader2, Check, AlertCircle, Box, Sparkles, Film, Layers } from 'lucide-react'
+import { Download, Loader2, Check, AlertCircle, Sparkles, Film, Layers } from 'lucide-react'
 import { useState, useMemo } from 'react'
 import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
@@ -34,6 +34,12 @@ import { useTimelineStore } from '../../stores/timelineStore'
 import type { ExportSource, SweepStyle, TransitionEngine, TransitionExportMode } from '../../types'
 import { ExportModeTabs, type ExportMode } from '../export/ExportModeTabs'
 import { ExportReadiness } from '../export/ExportReadiness'
+import {
+  Model3DExportPanel,
+  type Export3DFormat,
+  type Export3DQuality,
+  type Export3DSource,
+} from '../export/Model3DExportPanel'
 import { PdfExportPanel } from '../export/PdfExportPanel'
 import {
   ScreenshotExportPanel,
@@ -91,13 +97,11 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
   const [progress, setProgress] = useState(0)
   const [error, setError] = useState<string | null>(null)
   // 3D export settings
-  const [export3DSource, setExport3DSource] = useState<'side-by-side' | 'a-only' | 'b-only'>(
-    'side-by-side',
-  )
+  const [export3DSource, setExport3DSource] = useState<Export3DSource>('side-by-side')
   const [export3DRotations, setExport3DRotations] = useState(1)
   const [export3DFps, setExport3DFps] = useState(30)
-  const [export3DFormat, setExport3DFormat] = useState<'mp4' | 'gif'>('mp4')
-  const [export3DQuality, setExport3DQuality] = useState<'low' | 'medium' | 'high'>('medium')
+  const [export3DFormat, setExport3DFormat] = useState<Export3DFormat>('mp4')
+  const [export3DQuality, setExport3DQuality] = useState<Export3DQuality>('medium')
   const [isExporting3D, setIsExporting3D] = useState(false)
   // Transition export settings
   const [isExportingTransition, setIsExportingTransition] = useState(false)
@@ -2804,214 +2808,29 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
             />
           )}
 
-          {/* 3D Turntable Export */}
           {exportMode === '3d' && (
-            <>
-              {/* Export Source */}
-              <div>
-                <label className="block text-sm text-text-secondary mb-2">Export Source</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { value: 'side-by-side', label: 'Side by Side' },
-                    { value: 'a-only', label: 'A Only' },
-                    { value: 'b-only', label: 'B Only' },
-                  ].map((option) => (
-                    <button
-                      key={option.value}
-                      onClick={() =>
-                        setExport3DSource(option.value as 'side-by-side' | 'a-only' | 'b-only')
-                      }
-                      className={`px-3 py-2 text-sm border transition-colors ${
-                        export3DSource === option.value
-                          ? 'border-accent bg-accent/10 text-accent'
-                          : 'border-border text-text-secondary hover:border-text-muted'
-                      }`}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
-                </div>
-                <p className="text-xs text-text-muted mt-1">
-                  {export3DSource === 'side-by-side' && 'Both models rotate together in split view'}
-                  {export3DSource === 'a-only' && 'Only Model A rotating'}
-                  {export3DSource === 'b-only' && 'Only Model B rotating'}
-                </p>
-              </div>
-
-              {/* Rotations */}
-              <div>
-                <label className="block text-sm text-text-secondary mb-2">
-                  Full Rotations: {export3DRotations}
-                </label>
-                <Slider
-                  value={export3DRotations}
-                  onChange={(e) => setExport3DRotations(Number(e.target.value))}
-                  min={1}
-                  max={5}
-                  step={1}
-                />
-                <p className="text-xs text-text-muted mt-1">
-                  Duration: ~{export3DRotations * 3} seconds
-                </p>
-              </div>
-
-              {/* Format */}
-              <div>
-                <label className="block text-sm text-text-secondary mb-2">Format</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    { value: 'mp4', label: 'MP4' },
-                    { value: 'gif', label: 'GIF' },
-                  ].map((fmt) => (
-                    <button
-                      key={fmt.value}
-                      onClick={() => setExport3DFormat(fmt.value as 'mp4' | 'gif')}
-                      className={`px-3 py-2 text-sm border transition-colors ${
-                        export3DFormat === fmt.value
-                          ? 'border-accent bg-accent/10 text-accent'
-                          : 'border-border text-text-secondary hover:border-text-muted'
-                      }`}
-                    >
-                      {fmt.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Quality - only for MP4 */}
-              {export3DFormat === 'mp4' && (
-                <Select
-                  label="Quality"
-                  value={export3DQuality}
-                  onChange={(e) => setExport3DQuality(e.target.value as 'low' | 'medium' | 'high')}
-                  options={[
-                    { value: 'low', label: 'Low (faster, smaller file)' },
-                    { value: 'medium', label: 'Medium (balanced)' },
-                    { value: 'high', label: 'High (best quality)' },
-                  ]}
-                />
-              )}
-
-              {/* FPS */}
-              <div>
-                <label className="block text-sm text-text-secondary mb-2">
-                  Frame Rate: {export3DFps} fps
-                </label>
-                <div className="grid grid-cols-3 gap-2">
-                  {[24, 30, 60].map((fps) => (
-                    <button
-                      key={fps}
-                      onClick={() => setExport3DFps(fps)}
-                      className={`px-3 py-2 text-sm border transition-colors ${
-                        export3DFps === fps
-                          ? 'border-accent bg-accent/10 text-accent'
-                          : 'border-border text-text-secondary hover:border-text-muted'
-                      }`}
-                    >
-                      {fps} fps
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Progress */}
-              {isExporting3D && (
-                <div className="space-y-3 p-4 bg-surface-alt border border-border">
-                  <div className="flex items-center justify-between text-xs">
-                    <span
-                      className={`px-2 py-1 ${progress >= 0 ? 'bg-accent text-white' : 'bg-border text-text-muted'}`}
-                    >
-                      1. Setup
-                    </span>
-                    <div className="flex-1 h-px bg-border mx-2" />
-                    <span
-                      className={`px-2 py-1 ${progress >= 10 ? 'bg-accent text-white' : 'bg-border text-text-muted'}`}
-                    >
-                      2. Rendering
-                    </span>
-                    <div className="flex-1 h-px bg-border mx-2" />
-                    <span
-                      className={`px-2 py-1 ${progress >= 90 ? 'bg-accent text-white' : 'bg-border text-text-muted'}`}
-                    >
-                      3. Encoding
-                    </span>
-                  </div>
-
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-text-secondary">{exportProgress.message}</span>
-                      <span
-                        className={`font-medium ${progress >= 90 ? 'text-secondary' : 'text-accent'}`}
-                      >
-                        {Math.round(progress)}%
-                      </span>
-                    </div>
-                    <div className="h-2 bg-background overflow-hidden">
-                      <div
-                        className="h-full bg-gradient-to-r from-accent via-accent to-secondary transition-all duration-200"
-                        style={{ width: `${progress}%` }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Success state */}
-              {exportProgress.status === 'done' && exportMode === '3d' && (
-                <div className="p-6 bg-gradient-to-br from-accent/20 via-accent/10 to-secondary/10 border border-accent/40 text-center space-y-4">
-                  <div className="w-16 h-16 mx-auto bg-accent/20 flex items-center justify-center mb-3">
-                    <Check className="w-8 h-8 text-accent" strokeWidth={3} />
-                  </div>
-                  <h3 className="text-xl font-bold text-text-primary">3D Export Complete!</h3>
-                  <p className="text-sm text-text-secondary">
-                    Your turntable video is ready in your downloads folder
-                  </p>
-                  <div className="flex items-center justify-center gap-3 pt-2">
-                    <button
-                      onClick={onClose}
-                      className="px-4 py-2 text-sm bg-accent text-white hover:bg-accent-hover transition-colors"
-                    >
-                      Done
-                    </button>
-                    <button
-                      onClick={() => {
-                        setExportProgress({ status: 'idle', progress: 0 })
-                        setProgress(0)
-                      }}
-                      className="px-4 py-2 text-sm border border-border text-text-secondary hover:text-text-primary transition-colors"
-                    >
-                      Export Another
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {error && (
-                <div className="flex items-center gap-2 text-error text-sm">
-                  <AlertCircle className="w-4 h-4" />
-                  <span>{error}</span>
-                </div>
-              )}
-
-              <div className="flex justify-end gap-2 pt-4">
-                <Button variant="outline" onClick={onClose} disabled={isExporting3D}>
-                  Cancel
-                </Button>
-                <Button onClick={handle3DExport} disabled={isExporting3D}>
-                  {isExporting3D ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Exporting...
-                    </>
-                  ) : (
-                    <>
-                      <Box className="w-4 h-4" />
-                      Export 3D
-                    </>
-                  )}
-                </Button>
-              </div>
-            </>
+            <Model3DExportPanel
+              source={export3DSource}
+              onSourceChange={setExport3DSource}
+              rotations={export3DRotations}
+              onRotationsChange={setExport3DRotations}
+              fps={export3DFps}
+              onFpsChange={setExport3DFps}
+              format={export3DFormat}
+              onFormatChange={setExport3DFormat}
+              quality={export3DQuality}
+              onQualityChange={setExport3DQuality}
+              isExporting={isExporting3D}
+              progress={progress}
+              exportProgress={exportProgress}
+              error={error}
+              onClose={onClose}
+              onExport={() => void handle3DExport()}
+              onReset={() => {
+                setExportProgress({ status: 'idle', progress: 0 })
+                setProgress(0)
+              }}
+            />
           )}
 
           {/* Stitch Export - Combine clips into single video */}
