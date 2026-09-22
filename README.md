@@ -46,10 +46,10 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/React-19.2.0-61DAFB?style=flat-square&logo=react" alt="React">
-  <img src="https://img.shields.io/badge/TypeScript-5.9.3-3178C6?style=flat-square&logo=typescript" alt="TypeScript">
-  <img src="https://img.shields.io/badge/Vite-7.2.4-646CFF?style=flat-square&logo=vite" alt="Vite">
-  <img src="https://img.shields.io/badge/Three.js-0.182-000000?style=flat-square&logo=threedotjs" alt="Three.js">
+  <img src="https://img.shields.io/badge/React-19.3.0-61DAFB?style=flat-square&logo=react" alt="React">
+  <img src="https://img.shields.io/badge/TypeScript-7.0.2-3178C6?style=flat-square&logo=typescript" alt="TypeScript">
+  <img src="https://img.shields.io/badge/Vite-8.3.0-646CFF?style=flat-square&logo=vite" alt="Vite">
+  <img src="https://img.shields.io/badge/Three.js-0.186-000000?style=flat-square&logo=threedotjs" alt="Three.js">
   <img src="https://img.shields.io/badge/WebGL-GPU_Accelerated-990000?style=flat-square&logo=webgl" alt="WebGL">
   <img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" alt="License">
 </p>
@@ -571,11 +571,11 @@ Toggle with `W` key.
 
 | Core         | Version |
 | ------------ | ------- |
-| React        | 19.2.0  |
-| TypeScript   | 5.9.3   |
-| Vite         | 7.2.4   |
-| Zustand      | 5.0.9   |
-| Tailwind CSS | 4.1.18  |
+| React        | 19.3.0  |
+| TypeScript   | 7.0.2   |
+| Vite         | 8.3.0   |
+| Zustand      | 5.0.15  |
+| Tailwind CSS | 4.3.3   |
 
 </td>
 <td>
@@ -583,7 +583,7 @@ Toggle with `W` key.
 | Media          | Technology     |
 | -------------- | -------------- |
 | Video Encoding | WebCodecs API  |
-| MP4 Muxing     | mp4-muxer      |
+| MP4 Muxing     | Mediabunny     |
 | GIF Encoding   | gif.js         |
 | 3D Rendering   | Three.js       |
 | PDF Export     | jsPDF          |
@@ -596,33 +596,50 @@ Toggle with `W` key.
 </tr>
 </table>
 
+
+### Development Tooling
+
+| Tool       | Purpose                              |
+| ---------- | ------------------------------------ |
+| pnpm 12    | Package management and lockfile      |
+| Oxfmt      | Formatting and import sorting        |
+| Oxlint     | Type-aware linting                   |
+| Vitest 5   | Unit tests                           |
+| GitHub CI  | Frozen install + full quality checks |
+
+Heavy comparison modes, document parsers, export tooling, PDF.js workers, and FFmpeg are split or self-hosted so they are loaded only when needed.
+
 ---
 
 <h2 id="getting-started">🚀 Getting Started</h2>
 
 ```bash
-# Clone the repository
-git clone https://github.com/gokayfem/dualview.git
+# Clone this fork
+git clone https://github.com/YukiWorks432/dualview.git
 cd dualview
 
 # Install dependencies
-npm install
+pnpm install
 
 # Start development server
-npm run dev
+pnpm dev
+
+# Run formatting, linting, type checks, tests, and production build
+pnpm check
 
 # Build for production
-npm run build
+pnpm build
 
 # Preview production build
-npm run preview
+pnpm preview
 ```
 
 ### Requirements
 
-- Node.js 18+
+- Node.js 22.12+
+- pnpm 12+
 - Modern browser with WebGL 2.0 support
-- WebCodecs API for video export (Chrome/Edge recommended)
+- WebCodecs `VideoEncoder` support for MP4 export
 
 ---
 
@@ -731,12 +748,14 @@ src/
 
 ## 🌐 Browser Support
 
-| Browser      | Support    | Notes                       |
-| ------------ | ---------- | --------------------------- |
-| Chrome 94+   | ✅ Full    | Best performance, WebCodecs |
-| Edge 94+     | ✅ Full    | Chromium-based              |
-| Firefox 100+ | ⚠️ Partial | No WebCodecs (GIF only)     |
-| Safari 16+   | ⚠️ Partial | Limited WebGL features      |
+| Browser      | Baseline target |
+| ------------ | --------------- |
+| Chrome 111+  | Supported       |
+| Edge 111+    | Supported       |
+| Firefox 114+ | Supported       |
+| Safari 16.4+ | Supported       |
+
+MP4 export additionally depends on the browser exposing the WebCodecs `VideoEncoder` API.
 
 ---
 
