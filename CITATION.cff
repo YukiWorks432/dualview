@@ -1,5 +1,5 @@
 cff-version: 1.2.0
-message: 'If you use DualView in your work, please cite it using the metadata below.'
+message: 'If you use this maintained fork of DualView in your work, please cite it using the metadata below and retain attribution to the original project.'
 type: software
 title: 'DualView'
 version: '1.0.0'
@@ -8,7 +8,10 @@ authors:
   - family-names: 'Aydoğan'
     given-names: 'Gökay'
     orcid: 'https://orcid.org/0000-0002-2343-9433'
-abstract: 'An open-source side-by-side comparison and analysis tool for images, videos, audio, 3D models, documents, and text.'
+  - name: 'YukiWorks432'
+contact:
+  - name: 'YukiWorks432'
+abstract: 'An open-source side-by-side comparison and analysis tool for images, videos, audio, 3D models, documents, and text. This repository is a maintained fork of the original DualView project.'
 keywords:
   - media comparison
   - visual quality assurance
@@ -17,5 +20,14 @@ keywords:
   - audio analysis
   - WebGL
 license: MIT
-repository-code: 'https://github.com/gokayfem/dualview'
-url: 'https://github.com/gokayfem/dualview'
+repository-code: 'https://github.com/YukiWorks432/dualview'
+url: 'https://github.com/YukiWorks432/dualview'
+references:
+  - type: software
+    title: 'DualView (original project)'
+    authors:
+      - family-names: 'Aydoğan'
+        given-names: 'Gökay'
+        orcid: 'https://orcid.org/0000-0002-2343-9433'
+    repository-code: 'https://github.com/gokayfem/dualview'
+    url: 'https://dualview.ai'
