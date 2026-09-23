@@ -914,11 +914,6 @@ export function Timeline() {
                     <Image className="w-3 h-3 text-secondary" />
                   </span>
                 )}
-                {track.acceptedTypes.includes('audio') && (
-                  <span title="Accepts audio">
-                    <Music className="w-3 h-3 text-text-muted" />
-                  </span>
-                )}
               </div>
 
               {/* Track settings dropdown */}
@@ -930,9 +925,9 @@ export function Timeline() {
                   <div className="text-xs font-medium text-text-secondary mb-2">
                     Accepted Media Types
                   </div>
-                  {(['video', 'image', 'audio'] as MediaType[]).map((type) => {
+                  {(['video', 'image'] as MediaType[]).map((type) => {
                     const isActive = track.acceptedTypes.includes(type)
-                    const Icon = type === 'video' ? Video : type === 'image' ? Image : Music
+                    const Icon = type === 'video' ? Video : Image
                     return (
                       <label
                         key={type}
@@ -956,7 +951,6 @@ export function Timeline() {
                             'w-3 h-3',
                             type === 'video' && 'text-accent',
                             type === 'image' && 'text-secondary',
-                            type === 'audio' && 'text-text-muted',
                           )}
                         />
                         <span className="text-xs text-text-primary capitalize">{type}</span>
