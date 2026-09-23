@@ -1,13 +1,4 @@
-export type MediaType =
-  | 'video'
-  | 'image'
-  | 'audio'
-  | 'prompt'
-  | 'model'
-  | 'csv'
-  | 'excel'
-  | 'docx'
-  | 'pdf'
+export type MediaType = 'video' | 'image'
 
 export type ComparisonMode =
   | 'slider'
@@ -15,17 +6,13 @@ export type ComparisonMode =
   | 'blend'
   | 'split'
   | 'flicker'
-  | 'prompt-diff'
-  | 'json-diff'
   | 'heatmap'
   | 'audio'
-  | 'model-3d'
   | 'webgl-compare'
   | 'quad'
   | 'radial-loupe'
   | 'grid-tile'
   | 'morphological'
-  | 'document'
 
 // ASPECT-001: Aspect Ratio Presets
 export type AspectRatioPreset = '16:9' | '9:16' | '1:1' | '4:3' | '21:9' | '4:5' | 'custom'
@@ -223,7 +210,6 @@ export interface MediaFile {
   width?: number
   height?: number
   thumbnail?: string
-  promptText?: string
   waveformPeaks?: number[] // TL-006: Audio waveform peaks for timeline preview
   // MEDIA-012: Status tracking
   status: MediaStatus
@@ -233,50 +219,6 @@ export interface MediaFile {
   videoCodec?: string
   playbackBackend?: 'native' | 'mediabunny'
   hasAlpha?: boolean
-  // Document-specific metadata (CSV, Excel, DOCX, PDF)
-  documentMeta?: DocumentMetadata
-}
-
-// Document metadata for spreadsheets and documents
-export interface DocumentMetadata {
-  // CSV/Excel
-  rowCount?: number
-  columnCount?: number
-  headers?: string[]
-  sheetNames?: string[] // Excel only
-  sheetCount?: number // Excel only
-  // DOCX
-  wordCount?: number
-  paragraphCount?: number
-  // PDF
-  pageCount?: number
-  hasText?: boolean // Whether PDF has extractable text
-  // Common
-  parsedContent?: ParsedDocumentContent
-}
-
-// Parsed document content for comparison
-export interface ParsedDocumentContent {
-  type: 'csv' | 'excel' | 'docx' | 'pdf'
-  // CSV/Excel data
-  sheets?: ParsedSheet[]
-  // DOCX content
-  html?: string // Rendered HTML from mammoth
-  text?: string // Plain text extraction
-  // PDF pages
-  pages?: ParsedPDFPage[]
-}
-
-export interface ParsedSheet {
-  name: string
-  data: string[][] // 2D array of cell values
-  headers?: string[]
-}
-
-export interface ParsedPDFPage {
-  pageNumber: number
-  text: string
-  imageDataUrl?: string // Rendered page as image
 }
 
 // STITCH-002: Ease curve for clip timing
