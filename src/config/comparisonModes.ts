@@ -162,7 +162,5 @@ export function getComparisonModeByKeyboardCode(code: string): ComparisonMode | 
 }
 
 export function getComparisonModeDefinition(mode: ComparisonMode): ComparisonModeDefinition {
-  const definition = comparisonModeById.get(mode)
-  if (!definition) throw new Error(`Unknown comparison mode: ${mode}`)
-  return definition
+  return comparisonModeById.get(mode) ?? comparisonModeById.get('slider')!
 }
