@@ -299,8 +299,7 @@ export default function App() {
         const file = files[i]
         if (
           file.type.startsWith('video/') ||
-          file.type.startsWith('image/') ||
-          file.type.startsWith('audio/')
+          file.type.startsWith('image/')
         ) {
           const mediaFile = await addFile(file)
 
