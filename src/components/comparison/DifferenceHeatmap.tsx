@@ -4,23 +4,25 @@
  */
 import { useRef, useEffect, useCallback, useState } from 'react'
 
+import type { VideoFrameElement } from '../../lib/media/frameSource'
 import { cn } from '../../lib/utils'
 import { useMediaStore } from '../../stores/mediaStore'
 import { useTimelineStore } from '../../stores/timelineStore'
+import { VideoSurface } from '../media/VideoSurface'
 
 type HeatmapMode = 'absolute' | 'amplified' | 'threshold'
 
 export function DifferenceHeatmap() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const videoARef = useRef<HTMLVideoElement>(null)
-  const videoBRef = useRef<HTMLVideoElement>(null)
+  const videoARef = useRef<VideoFrameElement>(null)
+  const videoBRef = useRef<VideoFrameElement>(null)
   const animationRef = useRef<number | undefined>(undefined)
 
   const [mode, setMode] = useState<HeatmapMode>('amplified')
   const [threshold, setThreshold] = useState(10) // For threshold mode
   const [amplification, setAmplification] = useState(5) // For amplified mode
 
-  const { currentTime, isPlaying, tracks, playbackSpeed, loopRegion, seek } = useTimelineStore()
+  const { isPlaying, tracks } = useTimelineStore()
   const { getFile } = useMediaStore()
 
   const trackA = tracks.find((t) => t.type === 'a')
@@ -135,49 +137,6 @@ export function DifferenceHeatmap() {
     }
   }, [isPlaying, mode, threshold, amplification])
 
-  // Apply playback speed (VID-002)
-  useEffect(() => {
-    if (videoARef.current) videoARef.current.playbackRate = playbackSpeed
-    if (videoBRef.current) videoBRef.current.playbackRate = playbackSpeed
-  }, [playbackSpeed])
-
-  // Handle loop region (VID-003)
-  useEffect(() => {
-    const videoA = videoARef.current
-    if (!videoA || !isPlaying || !loopRegion) return
-
-    const handleTimeUpdate = () => {
-      if (videoA.currentTime >= loopRegion.outPoint) {
-        videoA.currentTime = loopRegion.inPoint
-        if (videoBRef.current) videoBRef.current.currentTime = loopRegion.inPoint
-        seek(loopRegion.inPoint)
-      }
-    }
-
-    videoA.addEventListener('timeupdate', handleTimeUpdate)
-    return () => videoA.removeEventListener('timeupdate', handleTimeUpdate)
-  }, [isPlaying, loopRegion, seek])
-
-  // Sync video playback
-  useEffect(() => {
-    if (videoARef.current && mediaA) {
-      videoARef.current.currentTime = currentTime
-      if (isPlaying) {
-        videoARef.current.play().catch(() => {})
-      } else {
-        videoARef.current.pause()
-      }
-    }
-    if (videoBRef.current && mediaB) {
-      videoBRef.current.currentTime = currentTime
-      if (isPlaying) {
-        videoBRef.current.play().catch(() => {})
-      } else {
-        videoBRef.current.pause()
-      }
-    }
-  }, [currentTime, isPlaying, mediaA, mediaB])
-
   // Start render loop
   useEffect(() => {
     renderFrame()
@@ -217,25 +176,21 @@ export function DifferenceHeatmap() {
 
       {/* Hidden video elements for canvas drawing */}
       {mediaA?.type === 'video' && (
-        <video
+        <VideoSurface
           ref={videoARef}
-          src={mediaA.url}
+          media={mediaA}
+          clip={clipA || null}
           className="hidden"
-          muted
-          playsInline
-          loop
-          crossOrigin="anonymous"
+          dataTrack="a"
         />
       )}
       {mediaB?.type === 'video' && (
-        <video
+        <VideoSurface
           ref={videoBRef}
-          src={mediaB.url}
+          media={mediaB}
+          clip={clipB || null}
           className="hidden"
-          muted
-          playsInline
-          loop
-          crossOrigin="anonymous"
+          dataTrack="b"
         />
       )}
 
