@@ -21,7 +21,6 @@ interface MediaStore {
   retryProcessing: (id: string) => Promise<void>
 }
 
-
 async function loadNativeVideo(url: string): Promise<HTMLVideoElement> {
   const video = document.createElement('video')
   video.src = url
