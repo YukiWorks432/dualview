@@ -297,10 +297,7 @@ export default function App() {
 
       for (let i = 0; i < files.length; i++) {
         const file = files[i]
-        if (
-          file.type.startsWith('video/') ||
-          file.type.startsWith('image/')
-        ) {
+        if (file.type.startsWith('video/') || file.type.startsWith('image/')) {
           const mediaFile = await addFile(file)
 
           // Auto-add to timeline (respecting accepted types)
