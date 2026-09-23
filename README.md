@@ -673,6 +673,20 @@ pnpm preview
 - Modern browser with WebGL 2.0 support
 - WebCodecs `VideoEncoder` support for MP4 export
 
+### Deployment
+
+The maintained web app is deployed as Cloudflare Workers Static Assets at
+[dualview.hanayuki.xyz](https://dualview.hanayuki.xyz). There is no application Worker or backend
+API in the deployment path; Wrangler uploads the Vite `dist/` output directly.
+
+```bash
+pnpm build
+pnpm dlx wrangler@4 deploy
+```
+
+`wrangler.jsonc` owns the production Custom Domain and disables the `workers.dev` route. Missing
+paths use the static `404.html` page instead of falling back to the application shell.
+
 ---
 
 ## 📁 Project Structure
