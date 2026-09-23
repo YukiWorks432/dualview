@@ -11,6 +11,7 @@
 import { v4 as uuidv4 } from 'uuid'
 import { create } from 'zustand'
 
+import { comparisonModeDefinitions } from '../config/comparisonModes'
 import {
   initDB,
   saveProject,
@@ -348,6 +349,8 @@ export const usePersistenceStore = create<PersistenceStore>((set, get) => ({
       // Restore media files
       const mediaStore = useMediaStore.getState()
       for (const entry of projectRecord.mediaManifest) {
+        if (entry.type !== 'video' && entry.type !== 'image') continue
+
         const blob = mediaBlobs.get(entry.id)
         if (blob) {
           // Create a File from the blob
@@ -362,15 +365,10 @@ export const usePersistenceStore = create<PersistenceStore>((set, get) => ({
                 ? {
                     ...f,
                     id: entry.id,
-                    promptText: entry.promptText,
-                    waveformPeaks: entry.waveformPeaks,
                   }
                 : f,
             ),
           }))
-        } else if (entry.type === 'prompt' && entry.promptText) {
-          // Restore prompt entries
-          await mediaStore.addPrompt(entry.promptText, entry.name)
         }
       }
 
@@ -392,8 +390,14 @@ export const usePersistenceStore = create<PersistenceStore>((set, get) => ({
 
       // Restore project settings
       const projectSettings = JSON.parse(projectRecord.projectSettings)
+      const comparisonMode = comparisonModeDefinitions.some(
+        (definition) => definition.mode === projectSettings.comparisonMode,
+      )
+        ? projectSettings.comparisonMode
+        : 'slider'
+
       useProjectStore.setState({
-        comparisonMode: projectSettings.comparisonMode || 'slider',
+        comparisonMode,
         blendMode: projectSettings.blendMode || 'difference',
         splitLayout: projectSettings.splitLayout || '2x1',
         sliderPosition: projectSettings.sliderPosition ?? 50,
