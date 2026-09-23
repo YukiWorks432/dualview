@@ -4,6 +4,7 @@
  * WEBGL-004: Support ROI (Region of Interest) for localized analysis
  */
 
+import type { VisualFrameElement } from '../media/frameSource'
 import type { WebGLAnalysisMetrics, ROIRect } from '../../types'
 
 /**
@@ -273,8 +274,8 @@ export function computeMetricsFromWebGLCanvas(
   _gl: WebGLRenderingContext,
   width: number,
   height: number,
-  videoA: HTMLVideoElement | HTMLImageElement,
-  videoB: HTMLVideoElement | HTMLImageElement,
+  videoA: VisualFrameElement,
+  videoB: VisualFrameElement,
   threshold: number = 10,
   roi?: ROIRect | null,
 ): WebGLAnalysisMetrics {
