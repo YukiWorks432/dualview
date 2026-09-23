@@ -35,6 +35,7 @@ import {
   type VideoFrameElement,
   type VisualFrameElement,
 } from '../../lib/media/frameSource'
+import { SUPPORTED_MEDIA_ACCEPT } from '../../lib/media/fileTypes'
 import {
   generatePDFReport,
   downloadBlob,
