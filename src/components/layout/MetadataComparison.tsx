@@ -1,6 +1,7 @@
 import { ChevronDown, FileSearch, Equal, ArrowUpDown } from 'lucide-react'
 import { useState, useEffect } from 'react'
 
+import { extractPrimaryAudioBuffer } from '../../lib/media/audio'
 import { cn } from '../../lib/utils'
 import { useMediaStore } from '../../stores/mediaStore'
 import { useTimelineStore } from '../../stores/timelineStore'
@@ -82,7 +83,7 @@ async function extractMetadata(media: MediaFile): Promise<ExtendedMetadata> {
     }
   }
 
-  if (media.type === 'video' || media.type === 'audio') {
+  if (media.type === 'video') {
     if (media.duration) {
       base.duration = formatDuration(media.duration)
       base.durationSeconds = media.duration
@@ -115,28 +116,21 @@ async function extractMetadata(media: MediaFile): Promise<ExtendedMetadata> {
     }
   }
 
-  // Try to get audio info from AudioContext
-  if (media.type === 'audio' && media.url) {
+  // Extract embedded video audio metadata through the same path used by Audio QA.
+  if (media.type === 'video' && media.file) {
     try {
-      const response = await fetch(media.url)
-      const arrayBuffer = await response.arrayBuffer()
-      const audioContext = new AudioContext()
-      const audioBuffer = await audioContext.decodeAudioData(arrayBuffer)
-      base.sampleRate = `${audioBuffer.sampleRate} Hz`
-      base.channels =
-        audioBuffer.numberOfChannels === 1
-          ? 'Mono'
-          : audioBuffer.numberOfChannels === 2
-            ? 'Stereo'
-            : `${audioBuffer.numberOfChannels} channels`
-      base.duration = formatDuration(audioBuffer.duration)
-      base.durationSeconds = audioBuffer.duration
-      if (media.file?.size) {
-        base.bitrate = formatBitrate(media.file.size, audioBuffer.duration)
+      const audioBuffer = await extractPrimaryAudioBuffer(media.file)
+      if (audioBuffer) {
+        base.sampleRate = `${audioBuffer.sampleRate} Hz`
+        base.channels =
+          audioBuffer.numberOfChannels === 1
+            ? 'Mono'
+            : audioBuffer.numberOfChannels === 2
+              ? 'Stereo'
+              : `${audioBuffer.numberOfChannels} channels`
       }
-      audioContext.close()
-    } catch (e) {
-      // Ignore errors
+    } catch {
+      // Audio metadata is optional.
     }
   }
 
@@ -344,7 +338,7 @@ export function MetadataComparison() {
                 )}
 
                 {/* Video/Audio metadata */}
-                {(primaryType === 'video' || primaryType === 'audio') && (
+                {primaryType === 'video' && (
                   <>
                     <div className="h-2" />
                     <ComparisonRow
@@ -361,7 +355,7 @@ export function MetadataComparison() {
                 )}
 
                 {/* Audio specific */}
-                {primaryType === 'audio' && (
+                {primaryType === 'video' && (
                   <>
                     <ComparisonRow
                       label="Sample Rate"
