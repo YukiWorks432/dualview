@@ -72,7 +72,7 @@ export function SplitScreen() {
                 <VideoSurface
                   ref={videoRefs[index]}
                   media={media}
-                  clip={clipList[index]}
+                  clip={clipList[index] ?? null}
                   className="w-full h-full object-contain"
                 />
               ) : (
