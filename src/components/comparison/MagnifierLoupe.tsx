@@ -1,9 +1,11 @@
 import { Search } from 'lucide-react'
 import { useState, useEffect, useRef, useCallback } from 'react'
 
+import { getVisualFrameDimensions, type VisualFrameElement } from '../../lib/media/frameSource'
+
 interface MagnifierLoupeProps {
-  sourceARef: React.RefObject<HTMLImageElement | HTMLVideoElement | null>
-  sourceBRef: React.RefObject<HTMLImageElement | HTMLVideoElement | null>
+  sourceARef: React.RefObject<VisualFrameElement | null>
+  sourceBRef: React.RefObject<VisualFrameElement | null>
   containerRef: React.RefObject<HTMLDivElement | null>
   isEnabled: boolean
   onToggle: () => void
@@ -50,7 +52,7 @@ export function MagnifierLoupe({
   const drawLoupe = useCallback(
     (
       canvas: HTMLCanvasElement | null,
-      source: HTMLImageElement | HTMLVideoElement | null,
+      source: VisualFrameElement | null,
       sourceX: number,
       sourceY: number,
     ) => {
@@ -59,14 +61,7 @@ export function MagnifierLoupe({
       const ctx = canvas.getContext('2d')
       if (!ctx) return
 
-      let sourceWidth: number, sourceHeight: number
-      if (source instanceof HTMLVideoElement) {
-        sourceWidth = source.videoWidth
-        sourceHeight = source.videoHeight
-      } else {
-        sourceWidth = source.naturalWidth
-        sourceHeight = source.naturalHeight
-      }
+      const { width: sourceWidth, height: sourceHeight } = getVisualFrameDimensions(source)
 
       if (sourceWidth === 0 || sourceHeight === 0) return
 
