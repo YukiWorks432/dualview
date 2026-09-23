@@ -188,8 +188,8 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
       const mediaFile = await processFile(file)
       set((state) => ({
         files: state.files.map((item) =>
-          item.id === pendingId ? { ...mediaFile, id: pendingId } : item,
-        ),
+        item.id === pendingId ? { ...mediaFile, id: pendingId } : item,
+      ),
       }))
       return { ...mediaFile, id: pendingId }
     } catch (error) {
@@ -266,9 +266,7 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
     try {
       const newMediaFile = await processFile(file.file)
       set((state) => ({
-        files: state.files.map((item) =>
-          item.id === id ? { ...newMediaFile, id } : item,
-        ),
+        files: state.files.map((item) => (item.id === id ? { ...newMediaFile, id } : item)),
       }))
     } catch (error) {
       set((state) => ({
