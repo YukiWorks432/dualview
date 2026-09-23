@@ -39,7 +39,10 @@ export function TemporalDiffGraph({ videoARef, videoBRef, isVisible }: TemporalD
 
   // Compute difference between two video frames
   const computeFrameDifference = useCallback(
-    (videoA: VideoFrameElement, videoB: VideoFrameElement): { avgDiff: number; peakDiff: number } => {
+    (
+      videoA: VideoFrameElement,
+      videoB: VideoFrameElement,
+    ): { avgDiff: number; peakDiff: number } => {
       const canvas = document.createElement('canvas')
       const width = 160 // Sample at low resolution for speed
       const height = 90

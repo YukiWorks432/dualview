@@ -9,9 +9,10 @@ export function isVideoFrameReady(source: VideoFrameElement | null): boolean {
   return source.width > 0 && source.height > 0
 }
 
-export function getVideoFrameDimensions(
-  source: VideoFrameElement | null,
-): { width: number; height: number } {
+export function getVideoFrameDimensions(source: VideoFrameElement | null): {
+  width: number
+  height: number
+} {
   if (!source) return { width: 0, height: 0 }
   if (source instanceof HTMLVideoElement) {
     return { width: source.videoWidth, height: source.videoHeight }
@@ -27,9 +28,10 @@ export function isVisualFrameReady(source: VisualFrameElement | null): boolean {
   return isVideoFrameReady(source)
 }
 
-export function getVisualFrameDimensions(
-  source: VisualFrameElement | null,
-): { width: number; height: number } {
+export function getVisualFrameDimensions(source: VisualFrameElement | null): {
+  width: number
+  height: number
+} {
   if (!source) return { width: 0, height: 0 }
   if (source instanceof HTMLImageElement) {
     return { width: source.naturalWidth, height: source.naturalHeight }

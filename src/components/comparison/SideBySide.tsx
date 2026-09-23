@@ -11,9 +11,9 @@ import { useMediaStore } from '../../stores/mediaStore'
 import { usePlaybackStore } from '../../stores/playbackStore'
 import { useProjectStore } from '../../stores/projectStore'
 import { useTimelineStore } from '../../stores/timelineStore'
+import { VideoSurface } from '../media/VideoSurface'
 import { MagnifierLoupe, useMagnifier } from './MagnifierLoupe'
 import { MetricsOverlay } from './MetricsOverlay'
-import { VideoSurface } from '../media/VideoSurface'
 import { PixelInspector } from './PixelInspector'
 
 export function SideBySide() {

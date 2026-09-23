@@ -417,13 +417,21 @@ export function WebGLComparison() {
       const imgLoadedA = flipAB ? imagesLoaded.b : imagesLoaded.a
       const imgLoadedB = flipAB ? imagesLoaded.a : imagesLoaded.b
 
-      if (mediaForA?.type === 'video' && videoRefA.current && isVideoFrameReady(videoRefA.current)) {
+      if (
+        mediaForA?.type === 'video' &&
+        videoRefA.current &&
+        isVideoFrameReady(videoRefA.current)
+      ) {
         sourceA = videoRefA.current
       } else if (mediaForA?.type === 'image' && imgRefA.current && imgLoadedA) {
         sourceA = imgRefA.current
       }
 
-      if (mediaForB?.type === 'video' && videoRefB.current && isVideoFrameReady(videoRefB.current)) {
+      if (
+        mediaForB?.type === 'video' &&
+        videoRefB.current &&
+        isVideoFrameReady(videoRefB.current)
+      ) {
         sourceB = videoRefB.current
       } else if (mediaForB?.type === 'image' && imgRefB.current && imgLoadedB) {
         sourceB = imgRefB.current

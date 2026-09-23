@@ -7,8 +7,8 @@ import {
   type MouseEvent,
 } from 'react'
 
-import { useProResClipSync } from '../../hooks/useProResClipSync'
 import { useOptimizedClipSync } from '../../hooks/useOptimizedVideoSync'
+import { useProResClipSync } from '../../hooks/useProResClipSync'
 import type { VideoFrameElement } from '../../lib/media/frameSource'
 import type { MediaFile, TimelineClip } from '../../types'
 

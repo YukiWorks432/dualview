@@ -4,8 +4,8 @@
  * WEBGL-004: Support ROI (Region of Interest) for localized analysis
  */
 
-import type { VisualFrameElement } from '../media/frameSource'
 import type { WebGLAnalysisMetrics, ROIRect } from '../../types'
+import type { VisualFrameElement } from '../media/frameSource'
 
 /**
  * Sample pixels from image data at regular intervals for performance

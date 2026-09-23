@@ -1,5 +1,5 @@
-import { useEffect } from 'react'
 import { ALL_FORMATS, BlobSource, CanvasSink, Input } from 'mediabunny'
+import { useEffect } from 'react'
 
 import { ensureProResDecoder } from '../lib/media/prores'
 import { usePlaybackStore } from '../stores/playbackStore'
