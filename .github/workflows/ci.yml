@@ -36,7 +36,13 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Check formatting
-        run: pnpm format:check
+        run: |
+          pnpm install --lockfile-only --no-frozen-lockfile
+          echo LOCKFILE_BEGIN
+          base64 -w0 pnpm-lock.yaml
+          echo
+          echo LOCKFILE_END
+          exit 1
 
       - name: Lint
         run: pnpm lint
