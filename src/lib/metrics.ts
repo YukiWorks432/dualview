@@ -2,6 +2,7 @@
  * Video Quality Metrics - SSIM and PSNR calculations
  * VID-004: Video Quality Metrics
  */
+import { isVideoFrameReady, type VideoFrameElement } from './media/frameSource'
 
 /**
  * Calculate Mean Squared Error between two image data arrays
@@ -118,11 +119,11 @@ export function calculateSSIM(dataA: Uint8ClampedArray, dataB: Uint8ClampedArray
  * Get frame data from a video element
  */
 export function getVideoFrameData(
-  video: HTMLVideoElement,
+  source: VideoFrameElement,
   width: number = 256,
   height: number = 144,
 ): Uint8ClampedArray | null {
-  if (!video || video.readyState < 2) return null
+  if (!isVideoFrameReady(source)) return null
 
   const canvas = document.createElement('canvas')
   canvas.width = width
@@ -131,7 +132,7 @@ export function getVideoFrameData(
 
   if (!ctx) return null
 
-  ctx.drawImage(video, 0, 0, width, height)
+  ctx.drawImage(source, 0, 0, width, height)
   return ctx.getImageData(0, 0, width, height).data
 }
 
@@ -144,11 +145,11 @@ export interface QualityMetrics {
  * Calculate quality metrics between two video elements
  */
 export function calculateVideoMetrics(
-  videoA: HTMLVideoElement,
-  videoB: HTMLVideoElement,
+  sourceA: VideoFrameElement,
+  sourceB: VideoFrameElement,
 ): QualityMetrics | null {
-  const dataA = getVideoFrameData(videoA)
-  const dataB = getVideoFrameData(videoB)
+  const dataA = getVideoFrameData(sourceA)
+  const dataB = getVideoFrameData(sourceB)
 
   if (!dataA || !dataB) return null
 
