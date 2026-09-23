@@ -659,9 +659,8 @@ export function AudioComparison() {
   const mediaA = clipA ? getFile(clipA.mediaId) : null
   const mediaB = clipB ? getFile(clipB.mediaId) : null
 
-  // In audio comparison mode, we try to analyze any media that exists
-  // The browser will fail gracefully if it can't decode as audio
-  const hasAudio = !!(mediaA || mediaB)
+  // Audio QA is scoped to audio embedded in the current delivery videos.
+  const hasAudio = mediaA?.type === 'video' || mediaB?.type === 'video'
 
   const maxDuration = Math.max(
     analysisA.analysis?.duration || 0,
@@ -703,10 +702,9 @@ export function AudioComparison() {
     }
   }, [])
 
-  // Load audio files when they change
-  // Use mediaA?.url and mediaB?.url as dependencies to ensure effect runs when media changes
-  const mediaAUrl = mediaA?.url
-  const mediaBUrl = mediaB?.url
+  // Analyze only video sources. Standalone audio files are intentionally unsupported.
+  const mediaAUrl = mediaA?.type === 'video' ? mediaA.url : undefined
+  const mediaBUrl = mediaB?.type === 'video' ? mediaB.url : undefined
 
   useEffect(() => {
     let cancelled = false
@@ -934,9 +932,9 @@ export function AudioComparison() {
             <div className="flex flex-col items-center gap-4">
               <Disc className="w-16 h-16 text-text-muted/30" />
               <div className="text-center">
-                <p className="text-sm font-medium text-text-secondary">No Audio Files</p>
+                <p className="text-sm font-medium text-text-secondary">No Video Audio</p>
                 <p className="text-xs text-text-muted mt-1">
-                  Add audio files to Track A and/or Track B
+                  Add video files to Track A and/or Track B
                 </p>
               </div>
             </div>
