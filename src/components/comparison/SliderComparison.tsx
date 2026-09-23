@@ -4,6 +4,7 @@ import { useRef, useState, useCallback, useEffect, useMemo } from 'react'
 import { useDropZone } from '../../hooks/useDropZone'
 import { useSyncedZoom } from '../../hooks/useSyncedZoom'
 import type { VideoFrameElement } from '../../lib/media/frameSource'
+import { SUPPORTED_MEDIA_ACCEPT } from '../../lib/media/fileTypes'
 import { cn } from '../../lib/utils'
 import { useMediaStore } from '../../stores/mediaStore'
 import { usePlaybackStore } from '../../stores/playbackStore'
@@ -375,7 +376,7 @@ export function SliderComparison() {
       <input
         ref={dropZoneA.fileInputRef}
         type="file"
-        accept="video/*,.mov,.mkv,image/*,audio/*,.glb,.gltf"
+        accept={SUPPORTED_MEDIA_ACCEPT}
         multiple
         className="hidden"
         onChange={dropZoneA.handleFileInputChange}
@@ -383,7 +384,7 @@ export function SliderComparison() {
       <input
         ref={dropZoneB.fileInputRef}
         type="file"
-        accept="video/*,.mov,.mkv,image/*,audio/*,.glb,.gltf"
+        accept={SUPPORTED_MEDIA_ACCEPT}
         multiple
         className="hidden"
         onChange={dropZoneB.handleFileInputChange}
