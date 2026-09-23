@@ -1,7 +1,7 @@
 import { Upload, Film, Image, AlertCircle, Link, Clipboard, Monitor } from 'lucide-react'
 import { useCallback, useState, useEffect } from 'react'
 
-import { isLikelyVideoFile } from '../../lib/media/fileTypes'
+import { SUPPORTED_MEDIA_ACCEPT, isSupportedMediaFile } from '../../lib/media/fileTypes'
 import { captureScreenAsFile, isScreenCaptureSupported } from '../../lib/screenCapture'
 import { cn } from '../../lib/utils'
 import { useMediaStore } from '../../stores/mediaStore'
@@ -91,7 +91,7 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
         const file = files[i]
 
         // Delivery review intentionally accepts only images and videos.
-        if (!isLikelyVideoFile(file) && !file.type.startsWith('image/')) {
+        if (!isSupportedMediaFile(file)) {
           invalidFiles.push(file.name)
           setUploadProgress((prev) => ({ ...prev, current: i + 1 }))
           continue
@@ -216,7 +216,7 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
     const input = document.createElement('input')
     input.type = 'file'
     input.multiple = true
-    input.accept = 'video/*,.mov,.qt,.mp4,.m4v,.webm,.mkv,image/*'
+    input.accept = SUPPORTED_MEDIA_ACCEPT
     input.onchange = (e) => {
       const target = e.target as HTMLInputElement
       handleFiles(target.files, 'a')
@@ -228,7 +228,7 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
     const input = document.createElement('input')
     input.type = 'file'
     input.multiple = true
-    input.accept = 'video/*,.mov,.qt,.mp4,.m4v,.webm,.mkv,image/*'
+    input.accept = SUPPORTED_MEDIA_ACCEPT
     input.onchange = (e) => {
       const target = e.target as HTMLInputElement
       handleFiles(target.files, 'b')
@@ -240,7 +240,7 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
     const input = document.createElement('input')
     input.type = 'file'
     input.multiple = true
-    input.accept = 'video/*,.mov,.qt,.mp4,.m4v,.webm,.mkv,image/*'
+    input.accept = SUPPORTED_MEDIA_ACCEPT
     input.onchange = (e) => {
       const target = e.target as HTMLInputElement
       handleFiles(target.files, 'auto')
