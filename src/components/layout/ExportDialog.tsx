@@ -1260,6 +1260,26 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
     }
   }
 
+  // Get available engines and variants for transition UI
+  const transitionEngines = useMemo(() => getAllEngines(), [])
+  const transitionVariants = useMemo(() => getAllVariants(transitionEngine), [transitionEngine])
+  const transitionVariantOptions = useMemo(
+    () =>
+      transitionVariants.map((value) => ({
+        value,
+        label: getShader(transitionEngine, value)?.label || value,
+      })),
+    [transitionEngine, transitionVariants],
+  )
+  const transitionShaderCount = useMemo(() => getTotalShaderCount(), [])
+
+  // Handle engine change - reset variant to first available
+  const handleEngineChange = (engine: TransitionEngine) => {
+    setTransitionEngine(engine)
+    const variants = getAllVariants(engine)
+    setTransitionVariant(variants[0] || 'crossfade')
+  }
+
   const handleTransitionExport = async () => {
     setIsExportingTransition(true)
     setExporting(true)
