@@ -1,11 +1,8 @@
 import {
   Film,
   Image,
-  Music,
   Trash2,
   Plus,
-  Box,
-  FileText,
   Layers,
   X,
   Search,
@@ -47,9 +44,6 @@ const FILTER_CONFIG: FilterConfig[] = [
   { type: 'all', label: 'All', icon: <Layers className="w-3 h-3" />, shortcut: '`' },
   { type: 'video', label: 'Video', icon: <Film className="w-3 h-3" />, shortcut: '1' },
   { type: 'image', label: 'Image', icon: <Image className="w-3 h-3" />, shortcut: '2' },
-  { type: 'audio', label: 'Audio', icon: <Music className="w-3 h-3" />, shortcut: '3' },
-  { type: 'prompt', label: 'Text', icon: <FileText className="w-3 h-3" />, shortcut: '4' },
-  { type: 'model', label: '3D', icon: <Box className="w-3 h-3" />, shortcut: '5' },
 ]
 
 // MEDIA-012: Status indicator component
@@ -250,7 +244,7 @@ export function MediaLibrary() {
 
   const canAddToTrack = (mediaType: string, trackType: 'a' | 'b') => {
     const track = tracks.find((t) => t.type === trackType)
-    return track?.acceptedTypes.includes(mediaType as 'video' | 'image' | 'audio' | 'model')
+    return track?.acceptedTypes.includes(mediaType as MediaType)
   }
 
   // Check if we have search or filter active
@@ -267,8 +261,6 @@ export function MediaLibrary() {
         <div className="flex justify-center gap-2">
           <Film className="w-4 h-4 text-accent/50" />
           <Image className="w-4 h-4 text-secondary/50" />
-          <Music className="w-4 h-4 text-accent/50" />
-          <Box className="w-4 h-4 text-secondary/50" />
         </div>
         <p className="text-sm font-medium text-text-secondary">No media yet</p>
         <p className="text-xs">Drop files above to get started</p>
@@ -494,8 +486,6 @@ export function MediaLibrary() {
                   <div className="text-text-muted">
                     {file.type === 'video' && <Film className="w-5 h-5" />}
                     {file.type === 'image' && <Image className="w-5 h-5" />}
-                    {file.type === 'audio' && <Music className="w-5 h-5" />}
-                    {file.type === 'model' && <Box className="w-5 h-5" />}
                   </div>
                 )}
                 {/* MEDIA-012: Error overlay */}
