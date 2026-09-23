@@ -183,7 +183,9 @@ export function Sidebar({ onCollapse, isMobileOpen, onMobileClose, onOpenProject
       </div>
 
       {/* Project lineage links */}
-      <div className="shrink-0 p-3 border-t border-border/50 bg-background/50 safe-area-bottom text-[10px]">
+      <div
+        className="shrink-0 p-3 border-t border-border/50 bg-background/50 safe-area-bottom text-[10px]"
+      >
         <div className="space-y-2">
           <div>
             <div className="text-text-muted mb-1">Maintained fork</div>
@@ -245,7 +247,6 @@ export function Sidebar({ onCollapse, isMobileOpen, onMobileClose, onOpenProject
           </div>
         </div>
       </div>
-
     </aside>
   )
 
