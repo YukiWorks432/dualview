@@ -6,9 +6,16 @@
 import { AlertTriangle, X, ChevronDown } from 'lucide-react'
 import { useEffect, useRef, useState, useCallback } from 'react'
 
+import {
+  getVisualFrameDimensions,
+  isVisualFrameReady,
+  type VideoFrameElement,
+  type VisualFrameElement,
+} from '../../lib/media/frameSource'
+
 interface GamutWarningOverlayProps {
-  videoARef: React.RefObject<HTMLVideoElement | null>
-  videoBRef: React.RefObject<HTMLVideoElement | null>
+  videoARef: React.RefObject<VideoFrameElement | null>
+  videoBRef: React.RefObject<VideoFrameElement | null>
   imageARef?: React.RefObject<HTMLImageElement | null>
   imageBRef?: React.RefObject<HTMLImageElement | null>
   isVisible: boolean
@@ -181,7 +188,7 @@ export function GamutWarningOverlay({
   // Process image and generate overlay
   const processImage = useCallback(
     (
-      source: HTMLVideoElement | HTMLImageElement | null,
+      source: VisualFrameElement | null,
       sampleCanvas: HTMLCanvasElement | null,
       overlayCanvas: HTMLCanvasElement | null,
       gamut: ColorSpaceGamut,
@@ -192,16 +199,8 @@ export function GamutWarningOverlay({
       const overlayCtx = overlayCanvas.getContext('2d')
       if (!ctx || !overlayCtx) return null
 
-      let width: number, height: number
-      if (source instanceof HTMLVideoElement) {
-        if (source.readyState < 2) return null
-        width = source.videoWidth
-        height = source.videoHeight
-      } else {
-        width = source.naturalWidth
-        height = source.naturalHeight
-      }
-
+      if (!isVisualFrameReady(source)) return null
+      const { width, height } = getVisualFrameDimensions(source)
       if (width === 0 || height === 0) return null
 
       // Use reduced resolution for analysis
