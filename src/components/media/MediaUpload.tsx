@@ -2,13 +2,10 @@ import {
   Upload,
   Film,
   Image,
-  Music,
   AlertCircle,
   Link,
   Clipboard,
   Monitor,
-  Box,
-  FileSpreadsheet,
 } from 'lucide-react'
 import { useCallback, useState, useEffect } from 'react'
 
@@ -101,22 +98,8 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
       for (let i = 0; i < files.length; i++) {
         const file = files[i]
 
-        // Validate file type (including 3D models and documents by extension)
-        const extension = file.name.toLowerCase().split('.').pop()
-        const isModel = extension === 'glb' || extension === 'gltf'
-        const isDocument =
-          extension === 'csv' ||
-          extension === 'xlsx' ||
-          extension === 'xls' ||
-          extension === 'docx' ||
-          extension === 'pdf'
-        if (
-          !isLikelyVideoFile(file) &&
-          !file.type.startsWith('image/') &&
-          !file.type.startsWith('audio/') &&
-          !isModel &&
-          !isDocument
-        ) {
+        // Delivery review intentionally accepts only images and videos.
+        if (!isLikelyVideoFile(file) && !file.type.startsWith('image/')) {
           invalidFiles.push(file.name)
           setUploadProgress((prev) => ({ ...prev, current: i + 1 }))
           continue
@@ -241,7 +224,7 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
     const input = document.createElement('input')
     input.type = 'file'
     input.multiple = true
-    input.accept = 'video/*,.mov,.mkv,image/*,audio/*,.glb,.gltf,.csv,.xlsx,.xls,.docx,.pdf'
+    input.accept = 'video/*,.mov,.qt,.mp4,.m4v,.webm,.mkv,image/*'
     input.onchange = (e) => {
       const target = e.target as HTMLInputElement
       handleFiles(target.files, 'a')
@@ -253,7 +236,7 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
     const input = document.createElement('input')
     input.type = 'file'
     input.multiple = true
-    input.accept = 'video/*,.mov,.mkv,image/*,audio/*,.glb,.gltf,.csv,.xlsx,.xls,.docx,.pdf'
+    input.accept = 'video/*,.mov,.qt,.mp4,.m4v,.webm,.mkv,image/*'
     input.onchange = (e) => {
       const target = e.target as HTMLInputElement
       handleFiles(target.files, 'b')
@@ -265,7 +248,7 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
     const input = document.createElement('input')
     input.type = 'file'
     input.multiple = true
-    input.accept = 'video/*,.mov,.mkv,image/*,audio/*,.glb,.gltf,.csv,.xlsx,.xls,.docx,.pdf'
+    input.accept = 'video/*,.mov,.qt,.mp4,.m4v,.webm,.mkv,image/*'
     input.onchange = (e) => {
       const target = e.target as HTMLInputElement
       handleFiles(target.files, 'auto')
@@ -426,9 +409,6 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
           <div className="flex gap-2 mt-2">
             <Film className="w-3 h-3 text-text-muted/50" />
             <Image className="w-3 h-3 text-text-muted/50" />
-            <Music className="w-3 h-3 text-text-muted/50" />
-            <Box className="w-3 h-3 text-text-muted/50" />
-            <FileSpreadsheet className="w-3 h-3 text-text-muted/50" />
           </div>
         </div>
       </div>
