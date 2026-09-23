@@ -4,6 +4,7 @@
  */
 import { useCallback, useRef } from 'react'
 
+import { getVisualFrameDimensions, type VisualFrameElement } from '../lib/media/frameSource'
 import { useProjectStore } from '../stores/projectStore'
 
 export function usePixelInspector() {
@@ -13,7 +14,7 @@ export function usePixelInspector() {
   // Get pixel color from an image or video element
   const getPixelColor = useCallback(
     (
-      element: HTMLImageElement | HTMLVideoElement,
+      element: VisualFrameElement,
       x: number,
       y: number,
     ): { r: number; g: number; b: number } | null => {
@@ -26,10 +27,7 @@ export function usePixelInspector() {
         if (!ctx) return null
 
         // Get the natural dimensions
-        const width =
-          element instanceof HTMLVideoElement ? element.videoWidth : element.naturalWidth
-        const height =
-          element instanceof HTMLVideoElement ? element.videoHeight : element.naturalHeight
+        const { width, height } = getVisualFrameDimensions(element)
 
         if (width === 0 || height === 0) return null
 
@@ -58,7 +56,7 @@ export function usePixelInspector() {
 
   // Handle click on a media element
   const handlePixelClick = useCallback(
-    (e: React.MouseEvent, element: HTMLImageElement | HTMLVideoElement | null, side: 'a' | 'b') => {
+    (e: React.MouseEvent, element: VisualFrameElement | null, side: 'a' | 'b') => {
       if (!pixelInspectorEnabled || !element) return
 
       // Get the click position relative to the element
@@ -67,10 +65,7 @@ export function usePixelInspector() {
       const clickY = e.clientY - rect.top
 
       // Get the natural dimensions
-      const naturalWidth =
-        element instanceof HTMLVideoElement ? element.videoWidth : element.naturalWidth
-      const naturalHeight =
-        element instanceof HTMLVideoElement ? element.videoHeight : element.naturalHeight
+      const { width: naturalWidth, height: naturalHeight } = getVisualFrameDimensions(element)
 
       if (naturalWidth === 0 || naturalHeight === 0) return
 
@@ -119,7 +114,7 @@ export function usePixelInspector() {
 
   // Create props to spread on media containers
   const createInspectorProps = useCallback(
-    (element: React.RefObject<HTMLImageElement | HTMLVideoElement | null>, side: 'a' | 'b') => ({
+    (element: React.RefObject<VisualFrameElement | null>, side: 'a' | 'b') => ({
       onClick: pixelInspectorEnabled
         ? (e: React.MouseEvent) => handlePixelClick(e, element.current, side)
         : undefined,
