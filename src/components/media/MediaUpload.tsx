@@ -1,12 +1,4 @@
-import {
-  Upload,
-  Film,
-  Image,
-  AlertCircle,
-  Link,
-  Clipboard,
-  Monitor,
-} from 'lucide-react'
+import { Upload, Film, Image, AlertCircle, Link, Clipboard, Monitor } from 'lucide-react'
 import { useCallback, useState, useEffect } from 'react'
 
 import { isLikelyVideoFile } from '../../lib/media/fileTypes'
