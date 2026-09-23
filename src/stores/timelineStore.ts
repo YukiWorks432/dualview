@@ -162,7 +162,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
       id: 'track-a',
       name: 'Track A',
       type: 'a',
-      acceptedTypes: ['video', 'image', 'audio', 'model'],
+      acceptedTypes: ['video', 'image'],
       clips: [],
       muted: false,
       locked: false,
@@ -171,7 +171,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
       id: 'track-b',
       name: 'Track B',
       type: 'b',
-      acceptedTypes: ['video', 'image', 'audio', 'model'],
+      acceptedTypes: ['video', 'image'],
       clips: [],
       muted: false,
       locked: false,
@@ -310,13 +310,13 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
     const acceptedTypes: MediaType[] = (() => {
       switch (type) {
         case 'audio':
-          return ['audio']
+          return ['video']
         case 'text':
-          return ['prompt'] // Text/prompts for captions
+          return []
         case 'media':
-          return ['video', 'image', 'model']
+          return ['video', 'image']
         default:
-          return ['video', 'image', 'audio', 'model']
+          return ['video', 'image']
       }
     })()
 
@@ -942,7 +942,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
         id: generateId(),
         name: 'Audio',
         type: 'audio',
-        acceptedTypes: ['audio'],
+        acceptedTypes: ['video'],
         clips: [],
         muted: false,
         locked: false,
