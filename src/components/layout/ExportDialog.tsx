@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+
 import { GIF_PRESETS } from '../../lib/gifEncoder'
 import { isWebCodecsSupported } from '../../lib/mp4Encoder'
 import { createAvcMp4Muxer } from '../../lib/mp4Muxer'
@@ -1823,7 +1824,6 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
               onExport={(copyToClipboard) => void handleScreenshotExport(copyToClipboard)}
             />
           )}
-
 
           {exportMode === 'stitch' && (
             <StitchExportPanel
