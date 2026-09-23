@@ -80,7 +80,7 @@
 | -------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
 | **Original project** | [gokayfem/dualview](https://github.com/gokayfem/dualview) · [dualview.ai](https://dualview.ai)                                   |
 | **Original creator** | [Gökay Aydoğan](https://github.com/gokayfem) · [@gokayfem](https://x.com/gokayfem)                                               |
-| **Maintained fork**  | [dualview.hanayuki.xyz](https://dualview.hanayuki.xyz) · [YukiWorks432/dualview](https://github.com/YukiWorks432/dualview)                            |
+| **Maintained fork**  | [dualview.hanayuki.xyz](https://dualview.hanayuki.xyz) · [YukiWorks432/dualview](https://github.com/YukiWorks432/dualview)       |
 | **Fork maintainer**  | [YukiWorks432](https://github.com/YukiWorks432) · [@YuK1_Works](https://x.com/YuK1_Works) · [hanayuki.xyz](https://hanayuki.xyz) |
 
 ---
