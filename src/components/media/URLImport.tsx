@@ -29,16 +29,14 @@ export function URLImport({ isOpen, onClose }: URLImportProps) {
     }
   }
 
-  const getMediaType = (contentType: string, url: string): 'video' | 'image' | 'audio' | null => {
+  const getMediaType = (contentType: string, url: string): 'video' | 'image' | null => {
     if (contentType.startsWith('video/')) return 'video'
     if (contentType.startsWith('image/')) return 'image'
-    if (contentType.startsWith('audio/')) return 'audio'
 
     // Check file extension as fallback
     const ext = url.split('.').pop()?.toLowerCase()
     if (['mp4', 'webm', 'mov', 'avi', 'mkv'].includes(ext || '')) return 'video'
     if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'].includes(ext || '')) return 'image'
-    if (['mp3', 'wav', 'ogg', 'flac', 'm4a', 'aac'].includes(ext || '')) return 'audio'
 
     return null
   }
@@ -74,7 +72,7 @@ export function URLImport({ isOpen, onClose }: URLImportProps) {
       const mediaType = getMediaType(contentType, url)
 
       if (!mediaType) {
-        throw new Error('Unsupported media type. Please use video, image, or audio URLs.')
+        throw new Error('Unsupported media type. Please use a video or image URL.')
       }
 
       // Get the blob
