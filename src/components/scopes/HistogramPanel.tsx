@@ -6,9 +6,15 @@
 import { X, BarChart3, Layers, Scale } from 'lucide-react'
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 
+import {
+  getVisualFrameDimensions,
+  isVisualFrameReady,
+  type VideoFrameElement,
+} from '../../lib/media/frameSource'
+
 interface HistogramPanelProps {
-  videoARef: React.RefObject<HTMLVideoElement | null>
-  videoBRef: React.RefObject<HTMLVideoElement | null>
+  videoARef: React.RefObject<VideoFrameElement | null>
+  videoBRef: React.RefObject<VideoFrameElement | null>
   imageARef?: React.RefObject<HTMLImageElement | null>
   imageBRef?: React.RefObject<HTMLImageElement | null>
   isVisible: boolean
@@ -126,7 +132,7 @@ export function HistogramPanel({
   // Get image data from source
   const getImageData = useCallback(
     (
-      videoRef: React.RefObject<HTMLVideoElement | null>,
+      videoRef: React.RefObject<VideoFrameElement | null>,
       imageRef?: React.RefObject<HTMLImageElement | null>,
       sampleCanvas?: HTMLCanvasElement | null,
     ): ImageData | null => {
@@ -138,16 +144,8 @@ export function HistogramPanel({
       const source = videoRef?.current || imageRef?.current
       if (!source) return null
 
-      let width: number, height: number
-      if (source instanceof HTMLVideoElement) {
-        if (source.readyState < 2) return null
-        width = source.videoWidth
-        height = source.videoHeight
-      } else {
-        width = source.naturalWidth
-        height = source.naturalHeight
-      }
-
+      if (!isVisualFrameReady(source)) return null
+      const { width, height } = getVisualFrameDimensions(source)
       if (width === 0 || height === 0) return null
 
       // Sample at reduced resolution for performance

@@ -29,7 +29,12 @@ import {
 } from 'lucide-react'
 import { useEffect, useRef, useCallback, useState, useMemo } from 'react'
 
-import { useOptimizedClipSync } from '../../hooks/useOptimizedVideoSync'
+import {
+  getVisualFrameDimensions,
+  isVideoFrameReady,
+  type VideoFrameElement,
+  type VisualFrameElement,
+} from '../../lib/media/frameSource'
 import {
   generatePDFReport,
   downloadBlob,
@@ -43,6 +48,7 @@ import { usePlaybackStore } from '../../stores/playbackStore'
 import { useProjectStore } from '../../stores/projectStore'
 import { useTimelineStore } from '../../stores/timelineStore'
 import type { ROIRect } from '../../types'
+import { VideoSurface } from '../media/VideoSurface'
 import { HistogramPanel, ColorWheelPanel, GamutWarningOverlay } from '../scopes'
 import { BatchComparison, BatchComparisonToggle } from './BatchComparison'
 import { CustomShaderEditor, ShaderEditorToggle } from './CustomShaderEditor'
@@ -54,8 +60,8 @@ export function WebGLComparison() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const rendererRef = useRef<WebGLComparisonRenderer | null>(null)
-  const videoARef = useRef<HTMLVideoElement>(null)
-  const videoBRef = useRef<HTMLVideoElement>(null)
+  const videoARef = useRef<VideoFrameElement>(null)
+  const videoBRef = useRef<VideoFrameElement>(null)
   const imgARef = useRef<HTMLImageElement>(null)
   const imgBRef = useRef<HTMLImageElement>(null)
   const animationRef = useRef<number>(0)
@@ -169,54 +175,6 @@ export function WebGLComparison() {
   // Video elements keep stable src, we just swap which ref maps to which texture
   const mediaA = webglComparisonSettings.flipAB ? stableMediaB : stableMediaA
   const mediaB = webglComparisonSettings.flipAB ? stableMediaA : stableMediaB
-
-  // Use the optimized clip sync hook for videos (respects play/pause state)
-  useOptimizedClipSync(videoARef, activeClipA || firstClipA)
-  useOptimizedClipSync(videoBRef, activeClipB || firstClipB)
-
-  // Track when videos are ready for texture upload (have decoded at least one frame)
-  // Use stable media refs so flipAB doesn't reset this state
-  const [videosReady, setVideosReady] = useState({ a: false, b: false })
-
-  // Ensure videos load their first frame for texture (even when paused)
-  // IMPORTANT: Use stableMediaA/B URLs so this doesn't reset when flipAB changes
-  useEffect(() => {
-    // Only reset when the actual source URLs change, not when flipAB toggles
-    setVideosReady({ a: false, b: false })
-
-    const videoA = videoARef.current
-    const videoB = videoBRef.current
-
-    const handleLoadedDataA = () => {
-      setVideosReady((prev) => ({ ...prev, a: true }))
-    }
-    const handleLoadedDataB = () => {
-      setVideosReady((prev) => ({ ...prev, b: true }))
-    }
-
-    // Small delay to let video elements update their src
-    const checkReady = setTimeout(() => {
-      if (videoA && stableMediaA?.type === 'video') {
-        videoA.addEventListener('loadeddata', handleLoadedDataA)
-        // If already loaded, mark as ready
-        if (videoA.readyState >= 2) {
-          setVideosReady((prev) => ({ ...prev, a: true }))
-        }
-      }
-      if (videoB && stableMediaB?.type === 'video') {
-        videoB.addEventListener('loadeddata', handleLoadedDataB)
-        if (videoB.readyState >= 2) {
-          setVideosReady((prev) => ({ ...prev, b: true }))
-        }
-      }
-    }, 50)
-
-    return () => {
-      clearTimeout(checkReady)
-      videoA?.removeEventListener('loadeddata', handleLoadedDataA)
-      videoB?.removeEventListener('loadeddata', handleLoadedDataB)
-    }
-  }, [stableMediaA?.url, stableMediaB?.url, stableMediaA?.type, stableMediaB?.type])
 
   // Initialize renderer
   useEffect(() => {
@@ -344,19 +302,12 @@ export function WebGLComparison() {
     const imgBSource = flipAB ? imgARef.current : imgBRef.current
     const mediaForA = flipAB ? stableMediaB : stableMediaA
     const mediaForB = flipAB ? stableMediaA : stableMediaB
-    const readyA = flipAB ? videosReady.b : videosReady.a
-    const readyB = flipAB ? videosReady.a : videosReady.b
     const imgLoadedA = flipAB ? imagesLoaded.b : imagesLoaded.a
     const imgLoadedB = flipAB ? imagesLoaded.a : imagesLoaded.b
 
     // Update texture A
     if (mediaForA) {
-      if (
-        mediaForA.type === 'video' &&
-        textureASource &&
-        textureASource.readyState >= 2 &&
-        readyA
-      ) {
+      if (mediaForA.type === 'video' && textureASource && isVideoFrameReady(textureASource)) {
         renderer.updateTexture('A', textureASource)
       } else if (mediaForA.type === 'image' && imgASource && imgLoadedA) {
         renderer.updateTexture('A', imgASource)
@@ -365,12 +316,7 @@ export function WebGLComparison() {
 
     // Update texture B
     if (mediaForB) {
-      if (
-        mediaForB.type === 'video' &&
-        textureBSource &&
-        textureBSource.readyState >= 2 &&
-        readyB
-      ) {
+      if (mediaForB.type === 'video' && textureBSource && isVideoFrameReady(textureBSource)) {
         renderer.updateTexture('B', textureBSource)
       } else if (mediaForB.type === 'image' && imgBSource && imgLoadedB) {
         renderer.updateTexture('B', imgBSource)
@@ -384,8 +330,9 @@ export function WebGLComparison() {
       textureBHeight = 1080
 
     if (mediaForA?.type === 'video' && textureASource) {
-      textureAWidth = textureASource.videoWidth || 1920
-      textureAHeight = textureASource.videoHeight || 1080
+      const dimensions = getVisualFrameDimensions(textureASource)
+      textureAWidth = dimensions.width || 1920
+      textureAHeight = dimensions.height || 1080
     } else if (mediaForA?.type === 'image' && imgASource) {
       textureAWidth = imgASource.naturalWidth || 1920
       textureAHeight = imgASource.naturalHeight || 1080
@@ -395,8 +342,9 @@ export function WebGLComparison() {
     }
 
     if (mediaForB?.type === 'video' && textureBSource) {
-      textureBWidth = textureBSource.videoWidth || 1920
-      textureBHeight = textureBSource.videoHeight || 1080
+      const dimensions = getVisualFrameDimensions(textureBSource)
+      textureBWidth = dimensions.width || 1920
+      textureBHeight = dimensions.height || 1080
     } else if (mediaForB?.type === 'image' && imgBSource) {
       textureBWidth = imgBSource.naturalWidth || 1920
       textureBHeight = imgBSource.naturalHeight || 1080
@@ -424,7 +372,7 @@ export function WebGLComparison() {
 
     // Continue animation loop
     animationRef.current = requestAnimationFrame(render)
-  }, [stableMediaA, stableMediaB, mousePos, imagesLoaded, videosReady])
+  }, [stableMediaA, stableMediaB, mousePos, imagesLoaded])
 
   // Start render loop
   useEffect(() => {
@@ -457,8 +405,8 @@ export function WebGLComparison() {
       const flipAB = useProjectStore.getState().webglComparisonSettings.flipAB
 
       // Get source elements - respect flipAB for correct A/B mapping
-      let sourceA: HTMLVideoElement | HTMLImageElement | null = null
-      let sourceB: HTMLVideoElement | HTMLImageElement | null = null
+      let sourceA: VisualFrameElement | null = null
+      let sourceB: VisualFrameElement | null = null
 
       const mediaForA = flipAB ? stableMediaB : stableMediaA
       const mediaForB = flipAB ? stableMediaA : stableMediaB
@@ -469,13 +417,21 @@ export function WebGLComparison() {
       const imgLoadedA = flipAB ? imagesLoaded.b : imagesLoaded.a
       const imgLoadedB = flipAB ? imagesLoaded.a : imagesLoaded.b
 
-      if (mediaForA?.type === 'video' && videoRefA.current && videoRefA.current.readyState >= 2) {
+      if (
+        mediaForA?.type === 'video' &&
+        videoRefA.current &&
+        isVideoFrameReady(videoRefA.current)
+      ) {
         sourceA = videoRefA.current
       } else if (mediaForA?.type === 'image' && imgRefA.current && imgLoadedA) {
         sourceA = imgRefA.current
       }
 
-      if (mediaForB?.type === 'video' && videoRefB.current && videoRefB.current.readyState >= 2) {
+      if (
+        mediaForB?.type === 'video' &&
+        videoRefB.current &&
+        isVideoFrameReady(videoRefB.current)
+      ) {
         sourceB = videoRefB.current
       } else if (mediaForB?.type === 'image' && imgRefB.current && imgLoadedB) {
         sourceB = imgRefB.current
@@ -577,8 +533,7 @@ export function WebGLComparison() {
                 ? imgRefA.current
                 : null
           if (sourceA) {
-            const srcWidth = 'videoWidth' in sourceA ? sourceA.videoWidth : sourceA.naturalWidth
-            const srcHeight = 'videoHeight' in sourceA ? sourceA.videoHeight : sourceA.naturalHeight
+            const { width: srcWidth, height: srcHeight } = getVisualFrameDimensions(sourceA)
             ctx.drawImage(sourceA, x * srcWidth, (1 - y) * srcHeight, 1, 1, 0, 0, 1, 1)
             const data = ctx.getImageData(0, 0, 1, 1).data
             pixelA = { r: data[0], g: data[1], b: data[2] }
@@ -592,8 +547,7 @@ export function WebGLComparison() {
                 ? imgRefB.current
                 : null
           if (sourceB) {
-            const srcWidth = 'videoWidth' in sourceB ? sourceB.videoWidth : sourceB.naturalWidth
-            const srcHeight = 'videoHeight' in sourceB ? sourceB.videoHeight : sourceB.naturalHeight
+            const { width: srcWidth, height: srcHeight } = getVisualFrameDimensions(sourceB)
             ctx.drawImage(sourceB, x * srcWidth, (1 - y) * srcHeight, 1, 1, 0, 0, 1, 1)
             const data = ctx.getImageData(0, 0, 1, 1).data
             pixelB = { r: data[0], g: data[1], b: data[2] }
@@ -1026,39 +980,25 @@ export function WebGLComparison() {
                 : 'default',
       }}
     >
-      {/* Video elements for texture sources - STABLE sources, never swapped by flipAB */}
-      <video
-        ref={videoARef}
-        src={stableMediaA?.type === 'video' ? stableMediaA.url : undefined}
-        style={{
-          position: 'absolute',
-          width: '1px',
-          height: '1px',
-          opacity: 0,
-          pointerEvents: 'none',
-          zIndex: -1,
-        }}
-        muted
-        playsInline
-        loop
-        preload="auto"
-      />
-      <video
-        ref={videoBRef}
-        src={stableMediaB?.type === 'video' ? stableMediaB.url : undefined}
-        style={{
-          position: 'absolute',
-          width: '1px',
-          height: '1px',
-          opacity: 0,
-          pointerEvents: 'none',
-          zIndex: -1,
-        }}
-        muted
-        playsInline
-        loop
-        preload="auto"
-      />
+      {/* Video surfaces for texture sources - stable sources, never swapped by flipAB */}
+      {stableMediaA?.type === 'video' && (
+        <VideoSurface
+          ref={videoARef}
+          media={stableMediaA}
+          clip={activeClipA || firstClipA}
+          className="hidden"
+          dataTrack="a"
+        />
+      )}
+      {stableMediaB?.type === 'video' && (
+        <VideoSurface
+          ref={videoBRef}
+          media={stableMediaB}
+          clip={activeClipB || firstClipB}
+          className="hidden"
+          dataTrack="b"
+        />
+      )}
 
       {/* Hidden image elements for texture sources - STABLE sources */}
       {stableMediaA?.type === 'image' && (

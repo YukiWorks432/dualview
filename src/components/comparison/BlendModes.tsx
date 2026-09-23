@@ -1,12 +1,13 @@
 import { useRef, useEffect, useCallback, useMemo } from 'react'
 
-import { useOptimizedClipSync } from '../../hooks/useOptimizedVideoSync'
 import { useSyncedZoom } from '../../hooks/useSyncedZoom'
+import type { VideoFrameElement } from '../../lib/media/frameSource'
 import { useMediaStore } from '../../stores/mediaStore'
 import { usePlaybackStore } from '../../stores/playbackStore'
 import { useProjectStore } from '../../stores/projectStore'
 import { useTimelineStore } from '../../stores/timelineStore'
 import type { BlendMode } from '../../types'
+import { VideoSurface } from '../media/VideoSurface'
 
 const blendModeMap: Record<BlendMode, GlobalCompositeOperation> = {
   difference: 'difference',
@@ -17,8 +18,8 @@ const blendModeMap: Record<BlendMode, GlobalCompositeOperation> = {
 
 export function BlendModes() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const videoARef = useRef<HTMLVideoElement>(null)
-  const videoBRef = useRef<HTMLVideoElement>(null)
+  const videoARef = useRef<VideoFrameElement>(null)
+  const videoBRef = useRef<VideoFrameElement>(null)
   const animationRef = useRef<number | undefined>(undefined)
 
   const { blendMode } = useProjectStore()
@@ -53,10 +54,6 @@ export function BlendModes() {
   const rawMediaB = displayClipB ? getFile(displayClipB.mediaId) : null
   const mediaA = rawMediaA?.type === 'video' || rawMediaA?.type === 'image' ? rawMediaA : null
   const mediaB = rawMediaB?.type === 'video' || rawMediaB?.type === 'image' ? rawMediaB : null
-
-  // Use optimized clip-aware video sync (native playback with drift correction)
-  useOptimizedClipSync(videoARef, activeClipA || firstClipA)
-  useOptimizedClipSync(videoBRef, activeClipB || firstClipB)
 
   const renderFrame = useCallback(() => {
     const canvas = canvasRef.current
@@ -152,25 +149,21 @@ export function BlendModes() {
 
       {/* Hidden video elements for canvas drawing */}
       {mediaA?.type === 'video' && (
-        <video
+        <VideoSurface
           ref={videoARef}
-          src={mediaA.url}
+          media={mediaA}
+          clip={activeClipA || firstClipA}
           className="hidden"
-          data-track="a"
-          muted
-          playsInline
-          crossOrigin="anonymous"
+          dataTrack="a"
         />
       )}
       {mediaB?.type === 'video' && (
-        <video
+        <VideoSurface
           ref={videoBRef}
-          src={mediaB.url}
+          media={mediaB}
+          clip={activeClipB || firstClipB}
           className="hidden"
-          data-track="b"
-          muted
-          playsInline
-          crossOrigin="anonymous"
+          dataTrack="b"
         />
       )}
 

@@ -2,22 +2,23 @@ import { Upload } from 'lucide-react'
 import { useRef, useEffect, useMemo } from 'react'
 
 import { useDropZone } from '../../hooks/useDropZone'
-import { useOptimizedClipSync } from '../../hooks/useOptimizedVideoSync'
 import { usePixelInspector } from '../../hooks/usePixelInspector'
 import { useSyncedZoom } from '../../hooks/useSyncedZoom'
+import type { VideoFrameElement } from '../../lib/media/frameSource'
 import { calculateVideoMetrics } from '../../lib/metrics'
 import { cn } from '../../lib/utils'
 import { useMediaStore } from '../../stores/mediaStore'
 import { usePlaybackStore } from '../../stores/playbackStore'
 import { useProjectStore } from '../../stores/projectStore'
 import { useTimelineStore } from '../../stores/timelineStore'
+import { VideoSurface } from '../media/VideoSurface'
 import { MagnifierLoupe, useMagnifier } from './MagnifierLoupe'
 import { MetricsOverlay } from './MetricsOverlay'
 import { PixelInspector } from './PixelInspector'
 
 export function SideBySide() {
-  const videoARef = useRef<HTMLVideoElement>(null)
-  const videoBRef = useRef<HTMLVideoElement>(null)
+  const videoARef = useRef<VideoFrameElement>(null)
+  const videoBRef = useRef<VideoFrameElement>(null)
   const imgARef = useRef<HTMLImageElement>(null)
   const imgBRef = useRef<HTMLImageElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -59,11 +60,6 @@ export function SideBySide() {
   const mediaA = rawMediaA?.type === 'video' || rawMediaA?.type === 'image' ? rawMediaA : null
   const mediaB = rawMediaB?.type === 'video' || rawMediaB?.type === 'image' ? rawMediaB : null
 
-  // Use optimized clip-aware video sync (native playback with drift correction)
-  // Pass the active clip (or first clip as fallback) for sync
-  useOptimizedClipSync(videoARef, activeClipA || firstClipA)
-  useOptimizedClipSync(videoBRef, activeClipB || firstClipB)
-
   // Calculate quality metrics (VID-004)
   useEffect(() => {
     if (!showMetrics) return
@@ -98,14 +94,14 @@ export function SideBySide() {
       <input
         ref={dropZoneA.fileInputRef}
         type="file"
-        accept="video/*,image/*,audio/*"
+        accept="video/*,.mov,.mkv,image/*,audio/*"
         className="hidden"
         onChange={dropZoneA.handleFileInputChange}
       />
       <input
         ref={dropZoneB.fileInputRef}
         type="file"
-        accept="video/*,image/*,audio/*"
+        accept="video/*,.mov,.mkv,image/*,audio/*"
         className="hidden"
         onChange={dropZoneB.handleFileInputChange}
       />
@@ -118,8 +114,8 @@ export function SideBySide() {
 
       {/* Magnifier Loupe */}
       <MagnifierLoupe
-        sourceARef={sourceARef as React.RefObject<HTMLImageElement | HTMLVideoElement | null>}
-        sourceBRef={sourceBRef as React.RefObject<HTMLImageElement | HTMLVideoElement | null>}
+        sourceARef={sourceARef}
+        sourceBRef={sourceBRef}
         containerRef={containerRef}
         isEnabled={magnifier.isEnabled}
         onToggle={magnifier.toggle}
@@ -152,16 +148,14 @@ export function SideBySide() {
         <div className="w-full h-full" style={transformStyle}>
           {mediaA ? (
             mediaA.type === 'video' ? (
-              <video
+              <VideoSurface
                 ref={videoARef}
-                src={mediaA.url}
+                media={mediaA}
+                clip={activeClipA || firstClipA}
                 className="w-full h-full object-contain"
-                data-track="a"
+                dataTrack="a"
                 style={pixelInspectorEnabled ? { cursor: 'crosshair' } : undefined}
                 onClick={(e) => handlePixelClick(e, videoARef.current, 'a')}
-                muted
-                playsInline
-                preload="auto"
               />
             ) : (
               <img
@@ -230,16 +224,14 @@ export function SideBySide() {
         <div className="w-full h-full" style={transformStyle}>
           {mediaB ? (
             mediaB.type === 'video' ? (
-              <video
+              <VideoSurface
                 ref={videoBRef}
-                src={mediaB.url}
+                media={mediaB}
+                clip={activeClipB || firstClipB}
                 className="w-full h-full object-contain"
-                data-track="b"
+                dataTrack="b"
                 style={pixelInspectorEnabled ? { cursor: 'crosshair' } : undefined}
                 onClick={(e) => handlePixelClick(e, videoBRef.current, 'b')}
-                muted
-                playsInline
-                preload="auto"
               />
             ) : (
               <img

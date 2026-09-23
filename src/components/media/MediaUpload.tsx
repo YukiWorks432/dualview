@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import { useCallback, useState, useEffect } from 'react'
 
+import { isLikelyVideoFile } from '../../lib/media/fileTypes'
 import { captureScreenAsFile, isScreenCaptureSupported } from '../../lib/screenCapture'
 import { cn } from '../../lib/utils'
 import { useMediaStore } from '../../stores/mediaStore'
@@ -110,7 +111,7 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
           extension === 'docx' ||
           extension === 'pdf'
         if (
-          !file.type.startsWith('video/') &&
+          !isLikelyVideoFile(file) &&
           !file.type.startsWith('image/') &&
           !file.type.startsWith('audio/') &&
           !isModel &&
@@ -240,7 +241,7 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
     const input = document.createElement('input')
     input.type = 'file'
     input.multiple = true
-    input.accept = 'video/*,image/*,audio/*,.glb,.gltf,.csv,.xlsx,.xls,.docx,.pdf'
+    input.accept = 'video/*,.mov,.mkv,image/*,audio/*,.glb,.gltf,.csv,.xlsx,.xls,.docx,.pdf'
     input.onchange = (e) => {
       const target = e.target as HTMLInputElement
       handleFiles(target.files, 'a')
@@ -252,7 +253,7 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
     const input = document.createElement('input')
     input.type = 'file'
     input.multiple = true
-    input.accept = 'video/*,image/*,audio/*,.glb,.gltf,.csv,.xlsx,.xls,.docx,.pdf'
+    input.accept = 'video/*,.mov,.mkv,image/*,audio/*,.glb,.gltf,.csv,.xlsx,.xls,.docx,.pdf'
     input.onchange = (e) => {
       const target = e.target as HTMLInputElement
       handleFiles(target.files, 'b')
@@ -264,7 +265,7 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
     const input = document.createElement('input')
     input.type = 'file'
     input.multiple = true
-    input.accept = 'video/*,image/*,audio/*,.glb,.gltf,.csv,.xlsx,.xls,.docx,.pdf'
+    input.accept = 'video/*,.mov,.mkv,image/*,audio/*,.glb,.gltf,.csv,.xlsx,.xls,.docx,.pdf'
     input.onchange = (e) => {
       const target = e.target as HTMLInputElement
       handleFiles(target.files, 'auto')

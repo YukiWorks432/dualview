@@ -13,13 +13,14 @@ import { Maximize2, Minimize2, Grid2X2, Upload } from 'lucide-react'
 import { useRef, useEffect, useCallback, useMemo } from 'react'
 
 import { useDropZone } from '../../hooks/useDropZone'
-import { useOptimizedClipSync } from '../../hooks/useOptimizedVideoSync'
 import { useSyncedZoom } from '../../hooks/useSyncedZoom'
+import type { VideoFrameElement } from '../../lib/media/frameSource'
 import { cn } from '../../lib/utils'
 import { useMediaStore } from '../../stores/mediaStore'
 import { usePlaybackStore } from '../../stores/playbackStore'
 import { useProjectStore } from '../../stores/projectStore'
 import { useTimelineStore } from '../../stores/timelineStore'
+import { VideoSurface } from '../media/VideoSurface'
 
 interface QuadrantProps {
   index: number
@@ -42,7 +43,7 @@ function Quadrant({
   zoom,
   isHidden,
 }: QuadrantProps) {
-  const videoRef = useRef<HTMLVideoElement>(null)
+  const videoRef = useRef<VideoFrameElement>(null)
   const imgRef = useRef<HTMLImageElement>(null)
   const { getFile } = useMediaStore()
   const { tracks } = useTimelineStore()
@@ -66,9 +67,6 @@ function Quadrant({
     )
   }, [track, currentTime])
 
-  // Sync video playback
-  useOptimizedClipSync(videoRef, activeClip)
-
   // Labels for quadrants
   const labels = ['1', '2', '3', '4']
   const colors = ['#ff5722', '#cddc39', '#2196f3', '#9c27b0']
@@ -87,7 +85,7 @@ function Quadrant({
       <input
         ref={dropZone.fileInputRef}
         type="file"
-        accept="video/*,image/*"
+        accept="video/*,.mov,.mkv,image/*"
         className="hidden"
         onChange={dropZone.handleFileInputChange}
       />
@@ -95,13 +93,11 @@ function Quadrant({
       <div className="w-full h-full" style={transformStyle}>
         {media ? (
           media.type === 'video' ? (
-            <video
+            <VideoSurface
               ref={videoRef}
-              src={media.url}
+              media={media}
+              clip={activeClip}
               className="w-full h-full object-contain"
-              muted
-              playsInline
-              preload="auto"
             />
           ) : media.type === 'image' ? (
             <img

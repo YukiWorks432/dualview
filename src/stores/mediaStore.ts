@@ -1,6 +1,8 @@
 import { create } from 'zustand'
 
 import { getDocumentType, parseDocument, generateDocumentThumbnail } from '../lib/documentParser'
+import { isLikelyVideoFile } from '../lib/media/fileTypes'
+import { probeVideoFile } from '../lib/media/prores'
 import { generateId } from '../lib/utils'
 import type { MediaFile, MediaType } from '../types'
 import { useTimelineStore } from './timelineStore'
@@ -22,11 +24,56 @@ interface MediaStore {
   retryProcessing: (id: string) => Promise<void>
 }
 
+async function loadNativeVideo(url: string): Promise<HTMLVideoElement> {
+  const video = document.createElement('video')
+  video.src = url
+  video.preload = 'auto'
+  video.muted = true
+
+  await new Promise<void>((resolve, reject) => {
+    const cleanup = () => {
+      video.removeEventListener('loadeddata', handleLoaded)
+      video.removeEventListener('error', handleError)
+    }
+    const handleLoaded = () => {
+      cleanup()
+      resolve()
+    }
+    const handleError = () => {
+      cleanup()
+      reject(new Error('The browser could not decode this video'))
+    }
+
+    if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+      resolve()
+      return
+    }
+
+    video.addEventListener('loadeddata', handleLoaded, { once: true })
+    video.addEventListener('error', handleError, { once: true })
+  })
+
+  return video
+}
+
+function createVideoThumbnail(video: HTMLVideoElement): string | undefined {
+  if (video.videoWidth === 0 || video.videoHeight === 0) return undefined
+
+  const canvas = document.createElement('canvas')
+  canvas.width = 160
+  canvas.height = Math.max(1, Math.round((160 * video.videoHeight) / video.videoWidth))
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return undefined
+
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+  return canvas.toDataURL('image/jpeg', 0.7)
+}
+
 async function processFile(file: File): Promise<MediaFile> {
   const id = generateId()
   const url = URL.createObjectURL(file)
 
-  // Detect file type including 3D models and documents
+  // Detect file type including containers whose browser-provided MIME type may be empty.
   const extension = file.name.toLowerCase().split('.').pop()
   const isModel = extension === 'glb' || extension === 'gltf'
   const documentType = getDocumentType(file.name)
@@ -35,7 +82,7 @@ async function processFile(file: File): Promise<MediaFile> {
     ? documentType
     : isModel
       ? 'model'
-      : file.type.startsWith('video/')
+      : isLikelyVideoFile(file)
         ? 'video'
         : file.type.startsWith('image/')
           ? 'image'
@@ -47,44 +94,55 @@ async function processFile(file: File): Promise<MediaFile> {
     type,
     url,
     file,
-    status: 'processing', // MEDIA-012: Initial status
+    status: 'processing',
     processingProgress: 0,
   }
 
-  // Get video/image dimensions and duration
+  // Get video/image dimensions and duration.
   if (type === 'video') {
-    const video = document.createElement('video')
-    video.src = url
-    video.preload = 'metadata'
+    let probeError: unknown = null
 
-    await new Promise<void>((resolve) => {
-      video.onloadedmetadata = () => {
-        mediaFile.duration = video.duration
-        mediaFile.width = video.videoWidth
-        mediaFile.height = video.videoHeight
-        resolve()
-      }
-    })
+    try {
+      const probe = await probeVideoFile(file)
+      mediaFile.videoCodec = probe.codec ?? undefined
+      mediaFile.playbackBackend = probe.codec === 'prores' ? 'mediabunny' : 'native'
+      mediaFile.hasAlpha = probe.hasAlpha
+      mediaFile.duration = probe.duration
+      mediaFile.width = probe.width
+      mediaFile.height = probe.height
+      mediaFile.thumbnail = probe.thumbnail
 
-    // Generate thumbnail
-    video.currentTime = 0
-    await new Promise<void>((resolve) => {
-      video.onseeked = () => {
-        const canvas = document.createElement('canvas')
-        canvas.width = 160
-        canvas.height = 90
-        const ctx = canvas.getContext('2d')
-        if (ctx) {
-          ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
-          mediaFile.thumbnail = canvas.toDataURL('image/jpeg', 0.7)
+      if (probe.codec === 'prores') {
+        if (!probe.decodable) {
+          throw new Error('This ProRes stream could not be decoded')
         }
-        resolve()
+
+        mediaFile.status = 'ready'
+        mediaFile.processingProgress = 100
+        return mediaFile
       }
-    })
+    } catch (error) {
+      probeError = error
+      console.warn('Mediabunny video probe failed; falling back to native video metadata:', error)
+    }
+
+    try {
+      const video = await loadNativeVideo(url)
+      mediaFile.playbackBackend = 'native'
+      mediaFile.duration = mediaFile.duration ?? video.duration
+      mediaFile.width = mediaFile.width ?? video.videoWidth
+      mediaFile.height = mediaFile.height ?? video.videoHeight
+      mediaFile.thumbnail = createVideoThumbnail(video)
+    } catch (nativeError) {
+      if (probeError instanceof Error) {
+        throw new Error(`${probeError.message}; ${(nativeError as Error).message}`)
+      }
+      throw nativeError
+    }
   } else if (type === 'image') {
     const img = new Image()
     img.src = url
-    await new Promise<void>((resolve) => {
+    await new Promise<void>((resolve, reject) => {
       img.onload = () => {
         mediaFile.width = img.naturalWidth
         mediaFile.height = img.naturalHeight
@@ -99,17 +157,19 @@ async function processFile(file: File): Promise<MediaFile> {
         }
         resolve()
       }
+      img.onerror = () => reject(new Error('The browser could not decode this image'))
     })
   } else if (type === 'audio') {
     const audio = document.createElement('audio')
     audio.src = url
     audio.preload = 'metadata'
 
-    await new Promise<void>((resolve) => {
+    await new Promise<void>((resolve, reject) => {
       audio.onloadedmetadata = () => {
         mediaFile.duration = audio.duration
         resolve()
       }
+      audio.onerror = () => reject(new Error('The browser could not decode this audio file'))
     })
 
     // TL-006: Extract waveform peaks for timeline preview
@@ -195,7 +255,7 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
       ? documentType
       : isModel
         ? 'model'
-        : file.type.startsWith('video/')
+        : isLikelyVideoFile(file)
           ? 'video'
           : file.type.startsWith('image/')
             ? 'image'

@@ -2,13 +2,14 @@ import { Upload } from 'lucide-react'
 import { useRef, useState, useCallback, useEffect, useMemo } from 'react'
 
 import { useDropZone } from '../../hooks/useDropZone'
-import { useOptimizedClipSync } from '../../hooks/useOptimizedVideoSync'
 import { useSyncedZoom } from '../../hooks/useSyncedZoom'
+import type { VideoFrameElement } from '../../lib/media/frameSource'
 import { cn } from '../../lib/utils'
 import { useMediaStore } from '../../stores/mediaStore'
 import { usePlaybackStore } from '../../stores/playbackStore'
 import { useProjectStore } from '../../stores/projectStore'
 import { useTimelineStore } from '../../stores/timelineStore'
+import { VideoSurface } from '../media/VideoSurface'
 
 interface VideoBounds {
   left: number
@@ -25,8 +26,8 @@ interface VideoBounds {
  */
 export function SliderComparison() {
   const containerRef = useRef<HTMLDivElement>(null)
-  const videoARef = useRef<HTMLVideoElement>(null)
-  const videoBRef = useRef<HTMLVideoElement>(null)
+  const videoARef = useRef<VideoFrameElement>(null)
+  const videoBRef = useRef<VideoFrameElement>(null)
   const [isDragging, setIsDragging] = useState(false)
   const [videoBounds, setVideoBounds] = useState<VideoBounds | null>(null)
 
@@ -69,15 +70,9 @@ export function SliderComparison() {
   const mediaA = rawMediaA?.type === 'video' || rawMediaA?.type === 'image' ? rawMediaA : null
   const mediaB = rawMediaB?.type === 'video' || rawMediaB?.type === 'image' ? rawMediaB : null
 
-  // Use optimized clip-aware video sync (native playback with drift correction)
-  useOptimizedClipSync(videoARef, activeClipA || firstClipA)
-  useOptimizedClipSync(videoBRef, activeClipB || firstClipB)
-
   // Calculate video bounds within container (accounting for object-contain)
   const calculateVideoBounds = useCallback(() => {
     const container = containerRef.current
-    const videoA = videoARef.current
-    const videoB = videoBRef.current
 
     if (!container) return
 
@@ -89,18 +84,10 @@ export function SliderComparison() {
     let videoWidth = 0
     let videoHeight = 0
 
-    // Try video A first
-    if (videoA && videoA.videoWidth > 0) {
-      videoWidth = videoA.videoWidth
-      videoHeight = videoA.videoHeight
-    } else if (mediaA?.width && mediaA?.height) {
+    // Import probing provides display dimensions for both native video and ProRes.
+    if (mediaA?.width && mediaA?.height) {
       videoWidth = mediaA.width
       videoHeight = mediaA.height
-    }
-    // Fall back to video B if A not available
-    else if (videoB && videoB.videoWidth > 0) {
-      videoWidth = videoB.videoWidth
-      videoHeight = videoB.videoHeight
     } else if (mediaB?.width && mediaB?.height) {
       videoWidth = mediaB.width
       videoHeight = mediaB.height
@@ -148,22 +135,6 @@ export function SliderComparison() {
       return () => resizeObserver.disconnect()
     }
   }, [calculateVideoBounds])
-
-  // Recalculate when video metadata loads
-  useEffect(() => {
-    const videoA = videoARef.current
-    const videoB = videoBRef.current
-
-    const handleLoadedMetadata = () => calculateVideoBounds()
-
-    videoA?.addEventListener('loadedmetadata', handleLoadedMetadata)
-    videoB?.addEventListener('loadedmetadata', handleLoadedMetadata)
-
-    return () => {
-      videoA?.removeEventListener('loadedmetadata', handleLoadedMetadata)
-      videoB?.removeEventListener('loadedmetadata', handleLoadedMetadata)
-    }
-  }, [calculateVideoBounds, mediaA, mediaB])
 
   // Handle touch events for mobile support
   const handleTouchMove = useCallback(
@@ -344,13 +315,12 @@ export function SliderComparison() {
         >
           {mediaB || mediaA ? (
             (mediaB || mediaA)!.type === 'video' ? (
-              <video
+              <VideoSurface
                 ref={videoBRef}
-                src={(mediaB || mediaA)!.url}
+                media={(mediaB || mediaA)!}
+                clip={mediaB ? activeClipB || firstClipB : activeClipA || firstClipA}
                 className="w-full h-full object-contain"
-                data-track="b"
-                muted
-                playsInline
+                dataTrack="b"
               />
             ) : (
               <img
@@ -379,13 +349,12 @@ export function SliderComparison() {
           <div style={clippedMediaStyle}>
             {mediaA || mediaB ? (
               (mediaA || mediaB)!.type === 'video' ? (
-                <video
+                <VideoSurface
                   ref={videoARef}
-                  src={(mediaA || mediaB)!.url}
+                  media={(mediaA || mediaB)!}
+                  clip={mediaA ? activeClipA || firstClipA : activeClipB || firstClipB}
                   className="w-full h-full object-contain"
-                  data-track="a"
-                  muted
-                  playsInline
+                  dataTrack="a"
                 />
               ) : (
                 <img
@@ -406,7 +375,7 @@ export function SliderComparison() {
       <input
         ref={dropZoneA.fileInputRef}
         type="file"
-        accept="video/*,image/*,audio/*,.glb,.gltf"
+        accept="video/*,.mov,.mkv,image/*,audio/*,.glb,.gltf"
         multiple
         className="hidden"
         onChange={dropZoneA.handleFileInputChange}
@@ -414,7 +383,7 @@ export function SliderComparison() {
       <input
         ref={dropZoneB.fileInputRef}
         type="file"
-        accept="video/*,image/*,audio/*,.glb,.gltf"
+        accept="video/*,.mov,.mkv,image/*,audio/*,.glb,.gltf"
         multiple
         className="hidden"
         onChange={dropZoneB.handleFileInputChange}

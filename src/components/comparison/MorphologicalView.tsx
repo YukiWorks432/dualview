@@ -24,12 +24,17 @@ import {
 } from 'lucide-react'
 import { useRef, useEffect, useState, useCallback, useMemo } from 'react'
 
-import { useOptimizedClipSync } from '../../hooks/useOptimizedVideoSync'
+import {
+  getVisualFrameDimensions,
+  isVideoFrameReady,
+  type VideoFrameElement,
+} from '../../lib/media/frameSource'
 import { useMediaStore } from '../../stores/mediaStore'
 import { usePlaybackStore } from '../../stores/playbackStore'
 import { useProjectStore } from '../../stores/projectStore'
 import { useTimelineStore } from '../../stores/timelineStore'
 import type { MorphOperation, MorphElementSize, MorphElementShape } from '../../types'
+import { VideoSurface } from '../media/VideoSurface'
 
 // Generate structuring element kernel
 function generateKernel(size: MorphElementSize, shape: MorphElementShape): number[][] {
@@ -160,7 +165,7 @@ function applyGradient(imageData: ImageData, kernel: number[][], kernelSize: num
 export function MorphologicalView() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-  const videoARef = useRef<HTMLVideoElement>(null)
+  const videoARef = useRef<VideoFrameElement>(null)
   const imgARef = useRef<HTMLImageElement>(null)
   const animationRef = useRef<number>(0)
   const processedImageRef = useRef<ImageData | null>(null)
@@ -193,9 +198,6 @@ export function MorphologicalView() {
   const displayClipA = activeClipA || firstClipA
   const rawMediaA = displayClipA ? getFile(displayClipA.mediaId) : null
   const mediaA = rawMediaA?.type === 'video' || rawMediaA?.type === 'image' ? rawMediaA : null
-
-  // Sync video playback
-  useOptimizedClipSync(videoARef, activeClipA || firstClipA)
 
   // Handle image load
   const handleImageALoad = useCallback(() => {
@@ -257,7 +259,7 @@ export function MorphologicalView() {
 
     const isReady =
       mediaA?.type === 'video'
-        ? (videoARef.current?.readyState || 0) >= 2
+        ? isVideoFrameReady(videoARef.current)
         : mediaA?.type === 'image' && imagesLoaded.a
 
     if (!isReady || morphologicalSettings.operations.length === 0) {
@@ -269,8 +271,7 @@ export function MorphologicalView() {
 
     // Create temporary canvas for processing
     const tempCanvas = document.createElement('canvas')
-    const srcWidth = 'videoWidth' in source ? source.videoWidth : source.naturalWidth
-    const srcHeight = 'videoHeight' in source ? source.videoHeight : source.naturalHeight
+    const { width: srcWidth, height: srcHeight } = getVisualFrameDimensions(source)
 
     // Limit processing resolution for performance
     const maxDim = 512
@@ -334,7 +335,7 @@ export function MorphologicalView() {
     const sourceAReady =
       sourceA &&
       (mediaA?.type === 'video'
-        ? (videoARef.current?.readyState || 0) >= 2
+        ? isVideoFrameReady(videoARef.current)
         : mediaA?.type === 'image' && imagesLoaded.a)
 
     if (!sourceA || !sourceAReady) {
@@ -474,22 +475,16 @@ export function MorphologicalView() {
 
   return (
     <div ref={containerRef} className="w-full h-full relative bg-black overflow-hidden">
-      {/* Hidden video element */}
-      <video
-        ref={videoARef}
-        src={mediaA?.type === 'video' ? mediaA.url : undefined}
-        style={{
-          position: 'absolute',
-          width: '1px',
-          height: '1px',
-          opacity: 0,
-          pointerEvents: 'none',
-        }}
-        muted
-        playsInline
-        loop
-        preload="auto"
-      />
+      {/* Hidden video surface */}
+      {mediaA?.type === 'video' && (
+        <VideoSurface
+          ref={videoARef}
+          media={mediaA}
+          clip={activeClipA || firstClipA}
+          className="hidden"
+          dataTrack="a"
+        />
+      )}
 
       {/* Hidden image element */}
       {mediaA?.type === 'image' && (

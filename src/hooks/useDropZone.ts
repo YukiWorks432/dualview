@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef } from 'react'
 
+import { isLikelyVideoFile } from '../lib/media/fileTypes'
 import { useMediaStore } from '../stores/mediaStore'
 import { useTimelineStore } from '../stores/timelineStore'
 
@@ -60,7 +61,7 @@ export function useDropZone({ trackType }: UseDropZoneOptions) {
         const extension = file.name.toLowerCase().split('.').pop()
         const isModel = extension === 'glb' || extension === 'gltf'
         if (
-          !file.type.startsWith('video/') &&
+          !isLikelyVideoFile(file) &&
           !file.type.startsWith('image/') &&
           !file.type.startsWith('audio/') &&
           !isModel
@@ -104,7 +105,7 @@ export function useDropZone({ trackType }: UseDropZoneOptions) {
         const ext = file.name.toLowerCase().split('.').pop()
         const is3DModel = ext === 'glb' || ext === 'gltf'
         if (
-          !file.type.startsWith('video/') &&
+          !isLikelyVideoFile(file) &&
           !file.type.startsWith('image/') &&
           !file.type.startsWith('audio/') &&
           !is3DModel

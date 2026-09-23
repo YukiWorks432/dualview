@@ -27,7 +27,7 @@ interface SyncState {
  * Applies speed and reverse properties for real-time preview.
  * Note: Ease curves are applied only during export for performance.
  */
-function calculateMediaTime(timelineTime: number, clip: TimelineClip): number | null {
+export function calculateMediaTime(timelineTime: number, clip: TimelineClip): number | null {
   if (timelineTime < clip.startTime || timelineTime >= clip.endTime) {
     return null
   }

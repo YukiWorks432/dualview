@@ -7,6 +7,7 @@
 import { Play, Pause, BarChart2, Loader2 } from 'lucide-react'
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 
+import { isVideoFrameReady, type VideoFrameElement } from '../../lib/media/frameSource'
 import { usePlaybackStore } from '../../stores/playbackStore'
 import { useTimelineStore } from '../../stores/timelineStore'
 
@@ -17,8 +18,8 @@ interface DifferenceDataPoint {
 }
 
 interface TemporalDiffGraphProps {
-  videoARef: React.RefObject<HTMLVideoElement | null>
-  videoBRef: React.RefObject<HTMLVideoElement | null>
+  videoARef: React.RefObject<VideoFrameElement | null>
+  videoBRef: React.RefObject<VideoFrameElement | null>
   isVisible: boolean
 }
 
@@ -38,7 +39,10 @@ export function TemporalDiffGraph({ videoARef, videoBRef, isVisible }: TemporalD
 
   // Compute difference between two video frames
   const computeFrameDifference = useCallback(
-    (videoA: HTMLVideoElement, videoB: HTMLVideoElement): { avgDiff: number; peakDiff: number } => {
+    (
+      videoA: VideoFrameElement,
+      videoB: VideoFrameElement,
+    ): { avgDiff: number; peakDiff: number } => {
       const canvas = document.createElement('canvas')
       const width = 160 // Sample at low resolution for speed
       const height = 90
@@ -91,48 +95,40 @@ export function TemporalDiffGraph({ videoARef, videoBRef, isVisible }: TemporalD
     const points: DifferenceDataPoint[] = []
     const totalSamples = Math.ceil(duration / sampleInterval)
 
-    // Store original time
-    const originalTimeA = videoA.currentTime
-    const originalTimeB = videoB.currentTime
-
-    for (let i = 0; i <= totalSamples; i++) {
-      const time = Math.min(i * sampleInterval, duration)
-
-      // Seek both videos to this time
-      videoA.currentTime = time
-      videoB.currentTime = time
-
-      // Wait for both to seek
-      await Promise.all([
-        new Promise<void>((resolve) => {
-          const handler = () => {
-            videoA.removeEventListener('seeked', handler)
-            resolve()
-          }
-          videoA.addEventListener('seeked', handler)
-        }),
-        new Promise<void>((resolve) => {
-          const handler = () => {
-            videoB.removeEventListener('seeked', handler)
-            resolve()
-          }
-          videoB.addEventListener('seeked', handler)
-        }),
-      ])
-
-      // Compute difference
-      const diff = computeFrameDifference(videoA, videoB)
-      points.push({ time, ...diff })
-
-      setAnalysisProgress(((i + 1) / totalSamples) * 100)
-
-      // Yield to UI
-      await new Promise((resolve) => setTimeout(resolve, 0))
+    // Drive both native and Mediabunny surfaces through the shared playback clock.
+    const originalTime = usePlaybackStore.getState().currentTime
+    const wasPlaying = usePlaybackStore.getState().isPlaying
+    if (wasPlaying) {
+      usePlaybackStore.getState().pause()
     }
 
-    // Restore original time
-    videoA.currentTime = originalTimeA
-    videoB.currentTime = originalTimeB
+    try {
+      for (let i = 0; i <= totalSamples; i++) {
+        const time = Math.min(i * sampleInterval, duration)
+        seek(time)
+
+        // Native <video> seeking and ProRes WASM decoding both complete asynchronously.
+        // Two animation frames allow the shared surfaces to present the requested frame.
+        await new Promise<void>((resolve) => {
+          requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+        })
+
+        if (!isVideoFrameReady(videoA) || !isVideoFrameReady(videoB)) {
+          continue
+        }
+
+        const diff = computeFrameDifference(videoA, videoB)
+        points.push({ time, ...diff })
+        setAnalysisProgress(((i + 1) / totalSamples) * 100)
+
+        await new Promise((resolve) => setTimeout(resolve, 0))
+      }
+    } finally {
+      seek(originalTime)
+      if (wasPlaying) {
+        usePlaybackStore.getState().play()
+      }
+    }
 
     setData(points)
     setIsAnalyzing(false)

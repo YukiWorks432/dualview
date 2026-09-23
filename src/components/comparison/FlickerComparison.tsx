@@ -4,16 +4,18 @@
  */
 import { useRef, useState, useEffect, useCallback, useMemo } from 'react'
 
-import { useOptimizedClipSync } from '../../hooks/useOptimizedVideoSync'
 import { useSyncedZoom } from '../../hooks/useSyncedZoom'
+import type { VideoFrameElement } from '../../lib/media/frameSource'
 import { cn } from '../../lib/utils'
 import { useMediaStore } from '../../stores/mediaStore'
 import { usePlaybackStore } from '../../stores/playbackStore'
 import { useTimelineStore } from '../../stores/timelineStore'
+import type { TimelineClip } from '../../types'
+import { VideoSurface } from '../media/VideoSurface'
 
 export function FlickerComparison() {
-  const videoARef = useRef<HTMLVideoElement>(null)
-  const videoBRef = useRef<HTMLVideoElement>(null)
+  const videoARef = useRef<VideoFrameElement>(null)
+  const videoBRef = useRef<VideoFrameElement>(null)
   const [showA, setShowA] = useState(true)
   const [flickerSpeed, setFlickerSpeed] = useState(500) // ms
   const [autoFlicker, setAutoFlicker] = useState(true)
@@ -49,10 +51,6 @@ export function FlickerComparison() {
   const rawMediaB = displayClipB ? getFile(displayClipB.mediaId) : null
   const mediaA = rawMediaA?.type === 'video' || rawMediaA?.type === 'image' ? rawMediaA : null
   const mediaB = rawMediaB?.type === 'video' || rawMediaB?.type === 'image' ? rawMediaB : null
-
-  // Use optimized clip-aware video sync (native playback with drift correction)
-  useOptimizedClipSync(videoARef, activeClipA || firstClipA)
-  useOptimizedClipSync(videoBRef, activeClipB || firstClipB)
 
   // Toggle manually
   const toggle = useCallback(() => {
@@ -92,7 +90,8 @@ export function FlickerComparison() {
 
   const renderMedia = (
     media: typeof mediaA,
-    ref: React.RefObject<HTMLVideoElement | null>,
+    clip: TimelineClip | null,
+    ref: React.RefObject<VideoFrameElement | null>,
     track: 'a' | 'b',
   ) => {
     if (!media) {
@@ -105,13 +104,12 @@ export function FlickerComparison() {
 
     if (media.type === 'video') {
       return (
-        <video
+        <VideoSurface
           ref={ref}
-          src={media.url}
+          media={media}
+          clip={clip}
           className="w-full h-full object-contain"
-          data-track={track}
-          muted
-          playsInline
+          dataTrack={track}
         />
       )
     }
@@ -153,7 +151,7 @@ export function FlickerComparison() {
         )}
       >
         <div className="w-full h-full" style={transformStyle}>
-          {renderMedia(mediaA, videoARef, 'a')}
+          {renderMedia(mediaA, activeClipA || firstClipA, videoARef, 'a')}
         </div>
       </div>
 
@@ -165,7 +163,7 @@ export function FlickerComparison() {
         )}
       >
         <div className="w-full h-full" style={transformStyle}>
-          {renderMedia(mediaB, videoBRef, 'b')}
+          {renderMedia(mediaB, activeClipB || firstClipB, videoBRef, 'b')}
         </div>
       </div>
 

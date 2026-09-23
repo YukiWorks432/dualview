@@ -5,6 +5,7 @@
  */
 
 import type { WebGLAnalysisMetrics, ROIRect } from '../../types'
+import type { VisualFrameElement } from '../media/frameSource'
 
 /**
  * Sample pixels from image data at regular intervals for performance
@@ -273,8 +274,8 @@ export function computeMetricsFromWebGLCanvas(
   _gl: WebGLRenderingContext,
   width: number,
   height: number,
-  videoA: HTMLVideoElement | HTMLImageElement,
-  videoB: HTMLVideoElement | HTMLImageElement,
+  videoA: VisualFrameElement,
+  videoB: VisualFrameElement,
   threshold: number = 10,
   roi?: ROIRect | null,
 ): WebGLAnalysisMetrics {
