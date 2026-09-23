@@ -882,7 +882,7 @@ export function WebGLComparison() {
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/*,video/*"
+            accept={SUPPORTED_MEDIA_ACCEPT}
             className="hidden"
             onChange={handleFileChange}
           />
