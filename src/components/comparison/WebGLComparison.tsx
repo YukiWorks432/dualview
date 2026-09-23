@@ -29,11 +29,6 @@ import {
 } from 'lucide-react'
 import { useEffect, useRef, useCallback, useState, useMemo } from 'react'
 
-import {
-  getVisualFrameDimensions,
-  isVideoFrameReady,
-  type VideoFrameElement,
-  type VisualFrameElement,
 import { SUPPORTED_MEDIA_ACCEPT } from '../../lib/media/fileTypes'
 import {
   getVisualFrameDimensions,
