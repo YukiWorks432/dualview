@@ -1,6 +1,6 @@
-import { Box, Camera, Download, FileText, Layers, Sparkles, type LucideIcon } from 'lucide-react'
+import { Camera, Download, FileText, Layers, Sparkles, type LucideIcon } from 'lucide-react'
 
-export type ExportMode = 'video' | 'screenshot' | 'pdf' | '3d' | 'transition' | 'stitch'
+export type ExportMode = 'video' | 'screenshot' | 'pdf' | 'transition' | 'stitch'
 
 interface ExportModeDefinition {
   value: ExportMode
@@ -14,7 +14,6 @@ const exportModes: ExportModeDefinition[] = [
   { value: 'stitch', label: 'Stitch', icon: Layers, title: 'Stitch clips into a single video' },
   { value: 'transition', label: 'FX', icon: Sparkles },
   { value: 'screenshot', label: 'Image', icon: Camera },
-  { value: '3d', label: '3D', icon: Box },
   { value: 'pdf', label: 'PDF', icon: FileText },
 ]
 
@@ -26,7 +25,7 @@ interface ExportModeTabsProps {
 export function ExportModeTabs({ value, onValueChange }: ExportModeTabsProps) {
   return (
     <div
-      className="mb-4 grid grid-cols-6 gap-1 border-b border-border pb-1"
+      className="mb-4 grid grid-cols-5 gap-1 border-b border-border pb-1"
       role="tablist"
       aria-label="Export mode"
     >
