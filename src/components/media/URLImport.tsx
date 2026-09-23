@@ -22,8 +22,8 @@ export function URLImport({ isOpen, onClose }: URLImportProps) {
 
   const validateUrl = (url: string): boolean => {
     try {
-      new URL(url)
-      return true
+      const parsed = new URL(url)
+      return parsed.protocol === 'http:' || parsed.protocol === 'https:'
     } catch {
       return false
     }
@@ -50,7 +50,7 @@ export function URLImport({ isOpen, onClose }: URLImportProps) {
     }
 
     if (!validateUrl(url)) {
-      setError('Invalid URL format')
+      setError('Please enter a valid HTTP or HTTPS URL')
       return
     }
 
@@ -62,6 +62,8 @@ export function URLImport({ isOpen, onClose }: URLImportProps) {
       // Fetch the media
       const response = await fetch(url, {
         mode: 'cors',
+        credentials: 'omit',
+        referrerPolicy: 'no-referrer',
       })
 
       if (!response.ok) {
@@ -143,7 +145,10 @@ export function URLImport({ isOpen, onClose }: URLImportProps) {
               disabled={isLoading}
               onKeyDown={(e) => e.key === 'Enter' && handleImport()}
             />
-            <p className="text-xs text-text-muted mt-1">Supports video, image, and audio URLs</p>
+            <p className="text-xs text-text-muted mt-1">
+              Direct HTTP(S) media URLs only. The source must allow cross-origin browser access
+              (CORS).
+            </p>
           </div>
 
           {error && (
