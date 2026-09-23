@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 
-import { isLikelyVideoFile } from '../lib/media/fileTypes'
+import { getSupportedMediaType } from '../lib/media/fileTypes'
 import { probeVideoFile } from '../lib/media/prores'
 import { generateId } from '../lib/utils'
 import type { MediaFile } from '../types'
@@ -21,13 +21,6 @@ interface MediaStore {
   retryProcessing: (id: string) => Promise<void>
 }
 
-type SupportedMediaType = 'video' | 'image'
-
-function getSupportedMediaType(file: File): SupportedMediaType {
-  if (isLikelyVideoFile(file)) return 'video'
-  if (file.type.startsWith('image/')) return 'image'
-  throw new Error('DualView only accepts image and video files')
-}
 
 async function loadNativeVideo(url: string): Promise<HTMLVideoElement> {
   const video = document.createElement('video')
@@ -78,6 +71,7 @@ async function processFile(file: File): Promise<MediaFile> {
   const id = generateId()
   const url = URL.createObjectURL(file)
   const type = getSupportedMediaType(file)
+  if (!type) throw new Error('DualView only accepts image and video files')
 
   const mediaFile: MediaFile = {
     id,
@@ -164,6 +158,7 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
   addFile: async (file: File) => {
     const pendingId = generateId()
     const pendingType = getSupportedMediaType(file)
+    if (!pendingType) throw new Error('DualView only accepts image and video files')
 
     const pendingFile: MediaFile = {
       id: pendingId,
