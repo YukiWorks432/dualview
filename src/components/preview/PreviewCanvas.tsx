@@ -7,25 +7,14 @@ import { SideBySide } from '../comparison/SideBySide'
 import { SliderComparison } from '../comparison/SliderComparison'
 import { SplitScreen } from '../comparison/SplitScreen'
 
-const PromptDiff = lazy(() =>
-  import('../comparison/PromptDiff').then((module) => ({ default: module.PromptDiff })),
-)
 const DifferenceHeatmap = lazy(() =>
   import('../comparison/DifferenceHeatmap').then((module) => ({
     default: module.DifferenceHeatmap,
   })),
 )
-const JsonDiffView = lazy(() =>
-  import('../comparison/JsonDiffView').then((module) => ({ default: module.JsonDiffView })),
-)
 const AudioComparison = lazy(() =>
   import('../comparison/AudioComparison').then((module) => ({
     default: module.AudioComparison,
-  })),
-)
-const Model3DComparison = lazy(() =>
-  import('../comparison/Model3DComparison').then((module) => ({
-    default: module.Model3DComparison,
   })),
 )
 const WebGLComparison = lazy(() =>
@@ -51,11 +40,6 @@ const GridTileComparison = lazy(() =>
 const MorphologicalView = lazy(() =>
   import('../comparison/MorphologicalView').then((module) => ({
     default: module.MorphologicalView,
-  })),
-)
-const DocumentComparison = lazy(() =>
-  import('../comparison/DocumentComparison').then((module) => ({
-    default: module.DocumentComparison,
   })),
 )
 
@@ -143,7 +127,7 @@ export const PreviewCanvas = forwardRef<PreviewCanvasHandle, PreviewCanvasProps>
         <div
           ref={containerRef}
           className={`w-full h-full max-w-[1920px] relative ${
-            isTimelineVisible && comparisonMode !== 'document' ? 'max-h-[1080px] aspect-video' : ''
+            isTimelineVisible ? 'max-h-[1080px] aspect-video' : ''
           }`}
         >
           <Suspense fallback={<ComparisonLoadingFallback />}>
@@ -152,17 +136,13 @@ export const PreviewCanvas = forwardRef<PreviewCanvasHandle, PreviewCanvasProps>
             {comparisonMode === 'blend' && <BlendModes />}
             {comparisonMode === 'split' && <SplitScreen />}
             {comparisonMode === 'flicker' && <FlickerComparison />}
-            {comparisonMode === 'prompt-diff' && <PromptDiff />}
-            {comparisonMode === 'json-diff' && <JsonDiffView />}
             {comparisonMode === 'heatmap' && <DifferenceHeatmap />}
             {comparisonMode === 'audio' && <AudioComparison />}
-            {comparisonMode === 'model-3d' && <Model3DComparison />}
             {comparisonMode === 'webgl-compare' && <WebGLComparison />}
             {comparisonMode === 'quad' && <QuadComparison />}
             {comparisonMode === 'radial-loupe' && <RadialLoupeComparison />}
             {comparisonMode === 'grid-tile' && <GridTileComparison />}
             {comparisonMode === 'morphological' && <MorphologicalView />}
-            {comparisonMode === 'document' && <DocumentComparison />}
           </Suspense>
         </div>
 
