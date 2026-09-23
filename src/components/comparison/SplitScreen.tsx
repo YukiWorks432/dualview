@@ -1,11 +1,13 @@
-import { useRef, useEffect, useCallback } from 'react'
+import { useRef } from 'react'
 
 import { useSyncedZoom } from '../../hooks/useSyncedZoom'
+import type { VideoFrameElement } from '../../lib/media/frameSource'
 import { cn } from '../../lib/utils'
 import { useMediaStore } from '../../stores/mediaStore'
 import { useProjectStore } from '../../stores/projectStore'
 import { useTimelineStore } from '../../stores/timelineStore'
 import type { SplitLayout } from '../../types'
+import { VideoSurface } from '../media/VideoSurface'
 
 const layoutClasses: Record<SplitLayout, string> = {
   '2x1': 'grid-cols-2 grid-rows-1',
@@ -14,13 +16,13 @@ const layoutClasses: Record<SplitLayout, string> = {
 }
 
 export function SplitScreen() {
-  const videoARef = useRef<HTMLVideoElement>(null)
-  const videoBRef = useRef<HTMLVideoElement>(null)
-  const videoCRef = useRef<HTMLVideoElement>(null)
-  const videoDRef = useRef<HTMLVideoElement>(null)
+  const videoARef = useRef<VideoFrameElement>(null)
+  const videoBRef = useRef<VideoFrameElement>(null)
+  const videoCRef = useRef<VideoFrameElement>(null)
+  const videoDRef = useRef<VideoFrameElement>(null)
 
   const { splitLayout } = useProjectStore()
-  const { currentTime, isPlaying, tracks, playbackSpeed, loopRegion, seek } = useTimelineStore()
+  const { tracks } = useTimelineStore()
   const { getFile } = useMediaStore()
   const { zoom, resetZoom, getTransformStyle, containerProps } = useSyncedZoom()
 
@@ -38,66 +40,6 @@ export function SplitScreen() {
   const clipList = [clipA, clipB, null, null].slice(0, slots)
   const mediaList = [mediaA, mediaB, null, null].slice(0, slots)
   const videoRefs = [videoARef, videoBRef, videoCRef, videoDRef].slice(0, slots)
-
-  // Calculate media time from timeline time based on clip's inPoint
-  const getMediaTime = useCallback((timelineTime: number, clip: typeof clipA | null) => {
-    if (!clip) return timelineTime
-    const clipOffset = timelineTime - clip.startTime
-    return clip.inPoint + clipOffset
-  }, [])
-
-  // Convert media time back to timeline time
-  const getTimelineTimeFromA = useCallback(
-    (mediaTime: number) => {
-      if (!clipA) return mediaTime
-      return clipA.startTime + (mediaTime - clipA.inPoint)
-    },
-    [clipA],
-  )
-
-  // Apply playback speed (VID-002)
-  useEffect(() => {
-    videoRefs.forEach((ref) => {
-      if (ref.current) ref.current.playbackRate = playbackSpeed
-    })
-  }, [playbackSpeed, videoRefs])
-
-  // Handle loop region (VID-003)
-  useEffect(() => {
-    const videoA = videoARef.current
-    if (!videoA || !isPlaying || !loopRegion) return
-
-    const handleTimeUpdate = () => {
-      const timelineTime = getTimelineTimeFromA(videoA.currentTime)
-      if (timelineTime >= loopRegion.outPoint) {
-        videoRefs.forEach((ref, index) => {
-          if (ref.current) {
-            ref.current.currentTime = getMediaTime(loopRegion.inPoint, clipList[index])
-          }
-        })
-        seek(loopRegion.inPoint)
-      }
-    }
-
-    videoA.addEventListener('timeupdate', handleTimeUpdate)
-    return () => videoA.removeEventListener('timeupdate', handleTimeUpdate)
-  }, [isPlaying, loopRegion, seek, videoRefs, getTimelineTimeFromA, getMediaTime, clipList])
-
-  useEffect(() => {
-    videoRefs.forEach((ref, index) => {
-      const media = mediaList[index]
-      const clip = clipList[index]
-      if (ref.current && media?.type === 'video') {
-        const mediaTime = getMediaTime(currentTime, clip)
-        ref.current.currentTime = mediaTime
-        if (isPlaying) {
-          ref.current.play().catch(() => {})
-        } else {
-          ref.current.pause()
-        }
-      }
-    })
-  }, [currentTime, isPlaying, mediaList, videoRefs, getMediaTime, clipList])
 
   const transformStyle = getTransformStyle()
 
@@ -127,13 +69,11 @@ export function SplitScreen() {
           <div className="w-full h-full" style={transformStyle}>
             {media ? (
               media.type === 'video' ? (
-                <video
+                <VideoSurface
                   ref={videoRefs[index]}
-                  src={media.url}
+                  media={media}
+                  clip={clipList[index]}
                   className="w-full h-full object-contain"
-                  muted
-                  playsInline
-                  loop
                 />
               ) : (
                 <img
