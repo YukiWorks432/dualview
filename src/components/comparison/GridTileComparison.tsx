@@ -12,17 +12,18 @@
 import { Grid, Play, Pause, RotateCcw } from 'lucide-react'
 import { useRef, useEffect, useState, useCallback, useMemo } from 'react'
 
-import { useOptimizedClipSync } from '../../hooks/useOptimizedVideoSync'
+import { isVideoFrameReady, type VideoFrameElement } from '../../lib/media/frameSource'
 import { useMediaStore } from '../../stores/mediaStore'
 import { usePlaybackStore } from '../../stores/playbackStore'
 import { useProjectStore } from '../../stores/projectStore'
 import { useTimelineStore } from '../../stores/timelineStore'
+import { VideoSurface } from '../media/VideoSurface'
 
 export function GridTileComparison() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-  const videoARef = useRef<HTMLVideoElement>(null)
-  const videoBRef = useRef<HTMLVideoElement>(null)
+  const videoARef = useRef<VideoFrameElement>(null)
+  const videoBRef = useRef<VideoFrameElement>(null)
   const imgARef = useRef<HTMLImageElement>(null)
   const imgBRef = useRef<HTMLImageElement>(null)
   const animationRef = useRef<number>(0)
@@ -62,10 +63,6 @@ export function GridTileComparison() {
   const rawMediaB = displayClipB ? getFile(displayClipB.mediaId) : null
   const mediaA = rawMediaA?.type === 'video' || rawMediaA?.type === 'image' ? rawMediaA : null
   const mediaB = rawMediaB?.type === 'video' || rawMediaB?.type === 'image' ? rawMediaB : null
-
-  // Sync video playback
-  useOptimizedClipSync(videoARef, activeClipA || firstClipA)
-  useOptimizedClipSync(videoBRef, activeClipB || firstClipB)
 
   // Handle image load
   const handleImageALoad = useCallback(() => {
@@ -135,12 +132,12 @@ export function GridTileComparison() {
       const sourceAReady =
         sourceA &&
         (mediaA?.type === 'video'
-          ? (videoARef.current?.readyState || 0) >= 2
+          ? isVideoFrameReady(videoARef.current)
           : mediaA?.type === 'image' && imagesLoaded.a)
       const sourceBReady =
         sourceB &&
         (mediaB?.type === 'video'
-          ? (videoBRef.current?.readyState || 0) >= 2
+          ? isVideoFrameReady(videoBRef.current)
           : mediaB?.type === 'image' && imagesLoaded.b)
 
       // If no sources, show placeholder
@@ -332,36 +329,24 @@ export function GridTileComparison() {
       style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
     >
       {/* Hidden video elements */}
-      <video
-        ref={videoARef}
-        src={mediaA?.type === 'video' ? mediaA.url : undefined}
-        style={{
-          position: 'absolute',
-          width: '1px',
-          height: '1px',
-          opacity: 0,
-          pointerEvents: 'none',
-        }}
-        muted
-        playsInline
-        loop
-        preload="auto"
-      />
-      <video
-        ref={videoBRef}
-        src={mediaB?.type === 'video' ? mediaB.url : undefined}
-        style={{
-          position: 'absolute',
-          width: '1px',
-          height: '1px',
-          opacity: 0,
-          pointerEvents: 'none',
-        }}
-        muted
-        playsInline
-        loop
-        preload="auto"
-      />
+      {mediaA?.type === 'video' && (
+        <VideoSurface
+          ref={videoARef}
+          media={mediaA}
+          clip={activeClipA || firstClipA}
+          className="hidden"
+          dataTrack="a"
+        />
+      )}
+      {mediaB?.type === 'video' && (
+        <VideoSurface
+          ref={videoBRef}
+          media={mediaB}
+          clip={activeClipB || firstClipB}
+          className="hidden"
+          dataTrack="b"
+        />
+      )}
 
       {/* Hidden image elements */}
       {mediaA?.type === 'image' && (
