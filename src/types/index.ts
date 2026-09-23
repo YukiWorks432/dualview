@@ -229,6 +229,10 @@ export interface MediaFile {
   status: MediaStatus
   statusMessage?: string // Error message or processing info
   processingProgress?: number // 0-100 for progress display
+  // Video decode metadata
+  videoCodec?: string
+  playbackBackend?: 'native' | 'mediabunny'
+  hasAlpha?: boolean
   // Document-specific metadata (CSV, Excel, DOCX, PDF)
   documentMeta?: DocumentMetadata
 }
