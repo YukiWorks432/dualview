@@ -9,6 +9,7 @@ import { Timeline } from './components/timeline/Timeline'
 import { KeyboardShortcutsHelp } from './components/ui/KeyboardShortcutsHelp'
 import { getComparisonModeByKeyboardCode } from './config/comparisonModes'
 import { useKeyboardShortcutsHelp } from './hooks/useKeyboardShortcutsHelp'
+import { isSupportedMediaFile } from './lib/media/fileTypes'
 import { captureCanvasScreenshot, downloadBlob } from './lib/screenshotExport'
 import { useHistoryStore } from './stores/historyStore'
 import { useMediaStore } from './stores/mediaStore'
@@ -297,7 +298,7 @@ export default function App() {
 
       for (let i = 0; i < files.length; i++) {
         const file = files[i]
-        if (file.type.startsWith('video/') || file.type.startsWith('image/')) {
+        if (isSupportedMediaFile(file)) {
           const mediaFile = await addFile(file)
 
           // Auto-add to timeline (respecting accepted types)
