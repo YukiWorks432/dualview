@@ -1,5 +1,22 @@
 import { ALL_FORMATS, AudioBufferSink, BlobSource, Input } from 'mediabunny'
 
+export class PlaybackRequestGate {
+  private generation = 0
+
+  begin(): number {
+    this.generation += 1
+    return this.generation
+  }
+
+  invalidate(): void {
+    this.generation += 1
+  }
+
+  isCurrent(generation: number): boolean {
+    return generation === this.generation
+  }
+}
+
 export interface PrimaryAudioTrackMetadata {
   sampleRate: number
   numberOfChannels: number
