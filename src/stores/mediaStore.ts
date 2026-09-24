@@ -1,10 +1,9 @@
 import { create } from 'zustand'
 
-import { getDocumentType, parseDocument, generateDocumentThumbnail } from '../lib/documentParser'
-import { isLikelyVideoFile } from '../lib/media/fileTypes'
+import { getSupportedMediaType } from '../lib/media/fileTypes'
 import { probeVideoFile } from '../lib/media/prores'
 import { generateId } from '../lib/utils'
-import type { MediaFile, MediaType } from '../types'
+import type { MediaFile } from '../types'
 import { useTimelineStore } from './timelineStore'
 
 interface MediaStore {
@@ -12,14 +11,12 @@ interface MediaStore {
   selectedIds: string[]
 
   addFile: (file: File) => Promise<MediaFile>
-  addPrompt: (promptText: string, name?: string) => Promise<MediaFile>
   removeFile: (id: string) => void
   selectFile: (id: string) => void
   deselectFile: (id: string) => void
   clearSelection: () => void
   getFile: (id: string) => MediaFile | undefined
   clearFiles: () => void
-  // MEDIA-012: Status management
   updateStatus: (id: string, status: MediaFile['status'], message?: string) => void
   retryProcessing: (id: string) => Promise<void>
 }
@@ -72,21 +69,8 @@ function createVideoThumbnail(video: HTMLVideoElement): string | undefined {
 async function processFile(file: File): Promise<MediaFile> {
   const id = generateId()
   const url = URL.createObjectURL(file)
-
-  // Detect file type including containers whose browser-provided MIME type may be empty.
-  const extension = file.name.toLowerCase().split('.').pop()
-  const isModel = extension === 'glb' || extension === 'gltf'
-  const documentType = getDocumentType(file.name)
-
-  const type: MediaType = documentType
-    ? documentType
-    : isModel
-      ? 'model'
-      : isLikelyVideoFile(file)
-        ? 'video'
-        : file.type.startsWith('image/')
-          ? 'image'
-          : 'audio'
+  const type = getSupportedMediaType(file)
+  if (!type) throw new Error('DualView only accepts image and video files')
 
   const mediaFile: MediaFile = {
     id,
@@ -98,7 +82,6 @@ async function processFile(file: File): Promise<MediaFile> {
     processingProgress: 0,
   }
 
-  // Get video/image dimensions and duration.
   if (type === 'video') {
     let probeError: unknown = null
 
@@ -134,12 +117,13 @@ async function processFile(file: File): Promise<MediaFile> {
       mediaFile.height = mediaFile.height ?? video.videoHeight
       mediaFile.thumbnail = createVideoThumbnail(video)
     } catch (nativeError) {
+      URL.revokeObjectURL(url)
       if (probeError instanceof Error) {
         throw new Error(`${probeError.message}; ${(nativeError as Error).message}`)
       }
       throw nativeError
     }
-  } else if (type === 'image') {
+  } else {
     const img = new Image()
     img.src = url
     await new Promise<void>((resolve, reject) => {
@@ -159,83 +143,10 @@ async function processFile(file: File): Promise<MediaFile> {
       }
       img.onerror = () => reject(new Error('The browser could not decode this image'))
     })
-  } else if (type === 'audio') {
-    const audio = document.createElement('audio')
-    audio.src = url
-    audio.preload = 'metadata'
-
-    await new Promise<void>((resolve, reject) => {
-      audio.onloadedmetadata = () => {
-        mediaFile.duration = audio.duration
-        resolve()
-      }
-      audio.onerror = () => reject(new Error('The browser could not decode this audio file'))
-    })
-
-    // TL-006: Extract waveform peaks for timeline preview
-    try {
-      const response = await fetch(url)
-      const arrayBuffer = await response.arrayBuffer()
-      const audioContext = new AudioContext()
-      const audioBuffer = await audioContext.decodeAudioData(arrayBuffer)
-
-      // Get channel data
-      const channelData = audioBuffer.getChannelData(0)
-      const samples = 100 // Number of peaks for timeline preview
-      const blockSize = Math.floor(channelData.length / samples)
-      const peaks: number[] = []
-
-      for (let i = 0; i < samples; i++) {
-        const start = i * blockSize
-        let max = 0
-
-        for (let j = 0; j < blockSize; j++) {
-          const value = Math.abs(channelData[start + j] || 0)
-          if (value > max) max = value
-        }
-
-        peaks.push(max)
-      }
-
-      audioContext.close()
-      mediaFile.waveformPeaks = peaks
-    } catch (error) {
-      console.warn('Failed to extract waveform:', error)
-    }
-  } else if (type === 'model') {
-    // Set default duration for 3D models (5 seconds = one full rotation)
-    mediaFile.duration = 5
-
-    // Generate thumbnail for 3D model only when a model is actually imported.
-    try {
-      const { generateModelThumbnail } = await import('../lib/modelThumbnail')
-      const thumbnail = await generateModelThumbnail(url)
-      if (thumbnail) {
-        mediaFile.thumbnail = thumbnail
-      }
-    } catch (error) {
-      console.warn('Failed to generate model thumbnail:', error)
-    }
-  } else if (type === 'csv' || type === 'excel' || type === 'docx' || type === 'pdf') {
-    // Parse document and extract metadata
-    try {
-      const documentMeta = await parseDocument(file)
-      if (documentMeta) {
-        mediaFile.documentMeta = documentMeta
-      }
-      // Generate document thumbnail
-      mediaFile.thumbnail = generateDocumentThumbnail(type)
-      // Documents don't have duration, set a default for timeline
-      mediaFile.duration = 10
-    } catch (error) {
-      console.warn('Failed to parse document:', error)
-    }
   }
 
-  // MEDIA-012: Mark as ready after all processing
   mediaFile.status = 'ready'
   mediaFile.processingProgress = 100
-
   return mediaFile
 }
 
@@ -244,24 +155,9 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
   selectedIds: [],
 
   addFile: async (file: File) => {
-    // MEDIA-012: Create pending entry first
     const pendingId = generateId()
-
-    // Detect file type including 3D models and documents (same logic as processFile)
-    const extension = file.name.toLowerCase().split('.').pop()
-    const isModel = extension === 'glb' || extension === 'gltf'
-    const documentType = getDocumentType(file.name)
-    const pendingType: MediaType = documentType
-      ? documentType
-      : isModel
-        ? 'model'
-        : isLikelyVideoFile(file)
-          ? 'video'
-          : file.type.startsWith('image/')
-            ? 'image'
-            : file.type.startsWith('audio/')
-              ? 'audio'
-              : 'model'
+    const pendingType = getSupportedMediaType(file)
+    if (!pendingType) throw new Error('DualView only accepts image and video files')
 
     const pendingFile: MediaFile = {
       id: pendingId,
@@ -273,76 +169,48 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
       processingProgress: 0,
     }
 
+    set((state) => ({ files: [...state.files, pendingFile] }))
     set((state) => ({
-      files: [...state.files, pendingFile],
-    }))
-
-    // Update status to processing
-    set((state) => ({
-      files: state.files.map((f) =>
-        f.id === pendingId ? { ...f, status: 'processing' as const, processingProgress: 10 } : f,
+      files: state.files.map((item) =>
+        item.id === pendingId
+          ? { ...item, status: 'processing' as const, processingProgress: 10 }
+          : item,
       ),
     }))
 
     try {
       const mediaFile = await processFile(file)
-      // Replace pending with processed file, keeping the pending ID
       set((state) => ({
-        files: state.files.map((f) => (f.id === pendingId ? { ...mediaFile, id: pendingId } : f)),
+        files: state.files.map((item) =>
+          item.id === pendingId ? { ...mediaFile, id: pendingId } : item,
+        ),
       }))
       return { ...mediaFile, id: pendingId }
     } catch (error) {
-      // MEDIA-012: Mark as error
       set((state) => ({
-        files: state.files.map((f) =>
-          f.id === pendingId
+        files: state.files.map((item) =>
+          item.id === pendingId
             ? {
-                ...f,
+                ...item,
                 status: 'error' as const,
                 statusMessage: error instanceof Error ? error.message : 'Processing failed',
               }
-            : f,
+            : item,
         ),
       }))
       throw error
     }
   },
 
-  addPrompt: async (promptText: string, name?: string) => {
-    const id = generateId()
-    const fileName = name || `prompt-${Date.now()}.txt`
-    const file = new File([promptText], fileName, { type: 'text/plain' })
-    const url = URL.createObjectURL(file)
-
-    const mediaFile: MediaFile = {
-      id,
-      name: fileName,
-      type: 'prompt',
-      url,
-      file,
-      promptText,
-      status: 'ready', // MEDIA-012: Prompts are immediately ready
-    }
-
-    set((state) => ({
-      files: [...state.files, mediaFile],
-    }))
-
-    return mediaFile
-  },
-
   removeFile: (id: string) => {
-    const file = get().files.find((f) => f.id === id)
-    if (file) {
-      URL.revokeObjectURL(file.url)
-    }
+    const file = get().files.find((item) => item.id === id)
+    if (file?.url) URL.revokeObjectURL(file.url)
 
-    // Cascade delete: remove all clips using this media from the timeline
     useTimelineStore.getState().removeClipsByMediaId(id)
 
     set((state) => ({
-      files: state.files.filter((f) => f.id !== id),
-      selectedIds: state.selectedIds.filter((i) => i !== id),
+      files: state.files.filter((item) => item.id !== id),
+      selectedIds: state.selectedIds.filter((selectedId) => selectedId !== id),
     }))
   },
 
@@ -354,68 +222,56 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
 
   deselectFile: (id: string) => {
     set((state) => ({
-      selectedIds: state.selectedIds.filter((i) => i !== id),
+      selectedIds: state.selectedIds.filter((selectedId) => selectedId !== id),
     }))
   },
 
-  clearSelection: () => {
-    set({ selectedIds: [] })
-  },
+  clearSelection: () => set({ selectedIds: [] }),
 
-  getFile: (id: string) => {
-    return get().files.find((f) => f.id === id)
-  },
+  getFile: (id: string) => get().files.find((item) => item.id === id),
 
   clearFiles: () => {
-    // Revoke all blob URLs
     get().files.forEach((file) => {
-      if (file.url.startsWith('blob:')) {
-        URL.revokeObjectURL(file.url)
-      }
+      if (file.url.startsWith('blob:')) URL.revokeObjectURL(file.url)
     })
     set({ files: [], selectedIds: [] })
   },
 
-  // MEDIA-012: Update file status
   updateStatus: (id: string, status: MediaFile['status'], message?: string) => {
     set((state) => ({
-      files: state.files.map((f) => (f.id === id ? { ...f, status, statusMessage: message } : f)),
+      files: state.files.map((item) =>
+        item.id === id ? { ...item, status, statusMessage: message } : item,
+      ),
     }))
   },
 
-  // MEDIA-012: Retry failed processing
   retryProcessing: async (id: string) => {
-    const file = get().files.find((f) => f.id === id)
+    const file = get().files.find((item) => item.id === id)
     if (!file || file.status !== 'error') return
 
-    // Mark as pending
     set((state) => ({
-      files: state.files.map((f) =>
-        f.id === id
-          ? { ...f, status: 'pending' as const, statusMessage: undefined, processingProgress: 0 }
-          : f,
+      files: state.files.map((item) =>
+        item.id === id
+          ? { ...item, status: 'pending' as const, statusMessage: undefined, processingProgress: 0 }
+          : item,
       ),
     }))
 
     try {
       const newMediaFile = await processFile(file.file)
       set((state) => ({
-        files: state.files.map((f) =>
-          f.id === id
-            ? { ...newMediaFile, id } // Keep original ID
-            : f,
-        ),
+        files: state.files.map((item) => (item.id === id ? { ...newMediaFile, id } : item)),
       }))
     } catch (error) {
       set((state) => ({
-        files: state.files.map((f) =>
-          f.id === id
+        files: state.files.map((item) =>
+          item.id === id
             ? {
-                ...f,
+                ...item,
                 status: 'error' as const,
                 statusMessage: error instanceof Error ? error.message : 'Retry failed',
               }
-            : f,
+            : item,
         ),
       }))
     }

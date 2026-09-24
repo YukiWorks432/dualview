@@ -1,6 +1,7 @@
 import { ChevronDown, FileSearch, Equal, ArrowUpDown } from 'lucide-react'
 import { useState, useEffect } from 'react'
 
+import { getPrimaryAudioTrackMetadata } from '../../lib/media/audio'
 import { cn } from '../../lib/utils'
 import { useMediaStore } from '../../stores/mediaStore'
 import { useTimelineStore } from '../../stores/timelineStore'
@@ -82,7 +83,7 @@ async function extractMetadata(media: MediaFile): Promise<ExtendedMetadata> {
     }
   }
 
-  if (media.type === 'video' || media.type === 'audio') {
+  if (media.type === 'video') {
     if (media.duration) {
       base.duration = formatDuration(media.duration)
       base.durationSeconds = media.duration
@@ -93,7 +94,7 @@ async function extractMetadata(media: MediaFile): Promise<ExtendedMetadata> {
   }
 
   // Try to get more video info from video element
-  if (media.type === 'video' && media.url) {
+  if (media.type === 'video' && media.url && media.playbackBackend !== 'mediabunny') {
     try {
       const video = document.createElement('video')
       video.src = media.url
@@ -115,28 +116,21 @@ async function extractMetadata(media: MediaFile): Promise<ExtendedMetadata> {
     }
   }
 
-  // Try to get audio info from AudioContext
-  if (media.type === 'audio' && media.url) {
+  // Read embedded audio track metadata without decoding the full program.
+  if (media.type === 'video' && media.file) {
     try {
-      const response = await fetch(media.url)
-      const arrayBuffer = await response.arrayBuffer()
-      const audioContext = new AudioContext()
-      const audioBuffer = await audioContext.decodeAudioData(arrayBuffer)
-      base.sampleRate = `${audioBuffer.sampleRate} Hz`
-      base.channels =
-        audioBuffer.numberOfChannels === 1
-          ? 'Mono'
-          : audioBuffer.numberOfChannels === 2
-            ? 'Stereo'
-            : `${audioBuffer.numberOfChannels} channels`
-      base.duration = formatDuration(audioBuffer.duration)
-      base.durationSeconds = audioBuffer.duration
-      if (media.file?.size) {
-        base.bitrate = formatBitrate(media.file.size, audioBuffer.duration)
+      const audioMetadata = await getPrimaryAudioTrackMetadata(media.file)
+      if (audioMetadata) {
+        base.sampleRate = `${audioMetadata.sampleRate} Hz`
+        base.channels =
+          audioMetadata.numberOfChannels === 1
+            ? 'Mono'
+            : audioMetadata.numberOfChannels === 2
+              ? 'Stereo'
+              : `${audioMetadata.numberOfChannels} channels`
       }
-      audioContext.close()
-    } catch (e) {
-      // Ignore errors
+    } catch {
+      // Audio metadata is optional.
     }
   }
 
@@ -204,18 +198,25 @@ export function MetadataComparison() {
 
   // Extract metadata when media changes
   useEffect(() => {
+    let cancelled = false
+
     const extract = async () => {
       setIsLoading(true)
       const [mA, mB] = await Promise.all([
         mediaA ? extractMetadata(mediaA) : Promise.resolve(null),
         mediaB ? extractMetadata(mediaB) : Promise.resolve(null),
       ])
+      if (cancelled) return
       setMetadataA(mA)
       setMetadataB(mB)
       setIsLoading(false)
     }
-    extract()
-  }, [mediaA?.id, mediaB?.id])
+
+    void extract()
+    return () => {
+      cancelled = true
+    }
+  }, [mediaA, mediaB])
 
   if (!mediaA && !mediaB) {
     return null
@@ -344,7 +345,7 @@ export function MetadataComparison() {
                 )}
 
                 {/* Video/Audio metadata */}
-                {(primaryType === 'video' || primaryType === 'audio') && (
+                {primaryType === 'video' && (
                   <>
                     <div className="h-2" />
                     <ComparisonRow
@@ -361,7 +362,7 @@ export function MetadataComparison() {
                 )}
 
                 {/* Audio specific */}
-                {primaryType === 'audio' && (
+                {primaryType === 'video' && (
                   <>
                     <ComparisonRow
                       label="Sample Rate"

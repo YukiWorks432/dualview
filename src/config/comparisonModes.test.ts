@@ -16,7 +16,7 @@ describe('comparison mode registry', () => {
   it('maps primary number shortcuts from one source of truth', () => {
     expect(getComparisonModeByKeyboardCode('Digit1')).toBe('slider')
     expect(getComparisonModeByKeyboardCode('Digit3')).toBe('webgl-compare')
-    expect(getComparisonModeByKeyboardCode('Digit8')).toBe('document')
+    expect(getComparisonModeByKeyboardCode('Digit4')).toBe('audio')
   })
 
   it('does not steal timeline editing shortcuts', () => {

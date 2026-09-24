@@ -1,6 +1,7 @@
 import { Link, X, Loader2, AlertCircle, CheckCircle } from 'lucide-react'
 import { useState } from 'react'
 
+import { getFileNameFromUrl, isSupportedMediaFile } from '../../lib/media/fileTypes'
 import { cn } from '../../lib/utils'
 import { useMediaStore } from '../../stores/mediaStore'
 import { useTimelineStore } from '../../stores/timelineStore'
@@ -27,20 +28,6 @@ export function URLImport({ isOpen, onClose }: URLImportProps) {
     } catch {
       return false
     }
-  }
-
-  const getMediaType = (contentType: string, url: string): 'video' | 'image' | 'audio' | null => {
-    if (contentType.startsWith('video/')) return 'video'
-    if (contentType.startsWith('image/')) return 'image'
-    if (contentType.startsWith('audio/')) return 'audio'
-
-    // Check file extension as fallback
-    const ext = url.split('.').pop()?.toLowerCase()
-    if (['mp4', 'webm', 'mov', 'avi', 'mkv'].includes(ext || '')) return 'video'
-    if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'].includes(ext || '')) return 'image'
-    if (['mp3', 'wav', 'ogg', 'flac', 'm4a', 'aac'].includes(ext || '')) return 'audio'
-
-    return null
   }
 
   const handleImport = async () => {
@@ -71,18 +58,15 @@ export function URLImport({ isOpen, onClose }: URLImportProps) {
       }
 
       const contentType = response.headers.get('content-type') || ''
-      const mediaType = getMediaType(contentType, url)
-
-      if (!mediaType) {
-        throw new Error('Unsupported media type. Please use video, image, or audio URLs.')
-      }
-
-      // Get the blob
       const blob = await response.blob()
 
-      // Create a file from the blob
-      const fileName = url.split('/').pop()?.split('?')[0] || `imported-${Date.now()}`
+      // Apply the same MIME/extension policy as local imports. URL.pathname avoids
+      // query/hash suffixes interfering with extension detection.
+      const fileName = getFileNameFromUrl(url) || `imported-${Date.now()}`
       const file = new File([blob], fileName, { type: blob.type || contentType })
+      if (!isSupportedMediaFile(file)) {
+        throw new Error('Unsupported media type. Please use a video or image URL.')
+      }
 
       // Add to media store
       const mediaFile = await addFile(file)

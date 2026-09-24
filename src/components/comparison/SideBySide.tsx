@@ -4,6 +4,7 @@ import { useRef, useEffect, useMemo } from 'react'
 import { useDropZone } from '../../hooks/useDropZone'
 import { usePixelInspector } from '../../hooks/usePixelInspector'
 import { useSyncedZoom } from '../../hooks/useSyncedZoom'
+import { SUPPORTED_MEDIA_ACCEPT } from '../../lib/media/fileTypes'
 import type { VideoFrameElement } from '../../lib/media/frameSource'
 import { calculateVideoMetrics } from '../../lib/metrics'
 import { cn } from '../../lib/utils'
@@ -94,14 +95,14 @@ export function SideBySide() {
       <input
         ref={dropZoneA.fileInputRef}
         type="file"
-        accept="video/*,.mov,.mkv,image/*,audio/*"
+        accept={SUPPORTED_MEDIA_ACCEPT}
         className="hidden"
         onChange={dropZoneA.handleFileInputChange}
       />
       <input
         ref={dropZoneB.fileInputRef}
         type="file"
-        accept="video/*,.mov,.mkv,image/*,audio/*"
+        accept={SUPPORTED_MEDIA_ACCEPT}
         className="hidden"
         onChange={dropZoneB.handleFileInputChange}
       />

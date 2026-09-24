@@ -29,6 +29,7 @@ import {
 } from 'lucide-react'
 import { useEffect, useRef, useCallback, useState, useMemo } from 'react'
 
+import { SUPPORTED_MEDIA_ACCEPT } from '../../lib/media/fileTypes'
 import {
   getVisualFrameDimensions,
   isVideoFrameReady,
@@ -882,7 +883,7 @@ export function WebGLComparison() {
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/*,video/*"
+            accept={SUPPORTED_MEDIA_ACCEPT}
             className="hidden"
             onChange={handleFileChange}
           />

@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef } from 'react'
 
-import { isLikelyVideoFile } from '../lib/media/fileTypes'
+import { isSupportedMediaFile } from '../lib/media/fileTypes'
 import { useMediaStore } from '../stores/mediaStore'
 import { useTimelineStore } from '../stores/timelineStore'
 
@@ -57,17 +57,7 @@ export function useDropZone({ trackType }: UseDropZoneOptions) {
       for (let i = 0; i < files.length; i++) {
         const file = files[i]
 
-        // Validate file type (including 3D models by extension)
-        const extension = file.name.toLowerCase().split('.').pop()
-        const isModel = extension === 'glb' || extension === 'gltf'
-        if (
-          !isLikelyVideoFile(file) &&
-          !file.type.startsWith('image/') &&
-          !file.type.startsWith('audio/') &&
-          !isModel
-        ) {
-          continue
-        }
+        if (!isSupportedMediaFile(file)) continue
 
         try {
           const mediaFile = await addFile(file)
@@ -101,17 +91,7 @@ export function useDropZone({ trackType }: UseDropZoneOptions) {
       for (let i = 0; i < files.length; i++) {
         const file = files[i]
 
-        // Validate file type (including 3D models by extension)
-        const ext = file.name.toLowerCase().split('.').pop()
-        const is3DModel = ext === 'glb' || ext === 'gltf'
-        if (
-          !isLikelyVideoFile(file) &&
-          !file.type.startsWith('image/') &&
-          !file.type.startsWith('audio/') &&
-          !is3DModel
-        ) {
-          continue
-        }
+        if (!isSupportedMediaFile(file)) continue
 
         try {
           const mediaFile = await addFile(file)

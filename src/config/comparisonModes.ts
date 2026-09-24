@@ -1,12 +1,8 @@
 import {
   AudioLines,
   Blend,
-  Box,
-  Braces,
   Circle,
   Columns2,
-  FileSpreadsheet,
-  FileText,
   Flame,
   Grid,
   Grid2X2,
@@ -60,42 +56,10 @@ export const comparisonModeDefinitions: ComparisonModeDefinition[] = [
   {
     mode: 'audio',
     icon: AudioLines,
-    label: 'Audio',
-    description: 'Compare waveforms',
+    label: 'Audio QA',
+    description: 'Compare audio embedded in the current videos',
     group: 'primary',
     shortcut: { key: '4', code: 'Digit4' },
-  },
-  {
-    mode: 'prompt-diff',
-    icon: FileText,
-    label: 'Prompt',
-    description: 'Compare text and prompts',
-    group: 'primary',
-    shortcut: { key: '5', code: 'Digit5' },
-  },
-  {
-    mode: 'json-diff',
-    icon: Braces,
-    label: 'JSON',
-    description: 'Compare structured JSON data',
-    group: 'primary',
-    shortcut: { key: '6', code: 'Digit6' },
-  },
-  {
-    mode: 'model-3d',
-    icon: Box,
-    label: '3D',
-    description: 'Compare GLB and GLTF models',
-    group: 'primary',
-    shortcut: { key: '7', code: 'Digit7' },
-  },
-  {
-    mode: 'document',
-    icon: FileSpreadsheet,
-    label: 'Document',
-    description: 'Compare CSV, Excel, DOCX, and PDF',
-    group: 'primary',
-    shortcut: { key: '8', code: 'Digit8' },
   },
   {
     mode: 'split',
@@ -198,7 +162,5 @@ export function getComparisonModeByKeyboardCode(code: string): ComparisonMode | 
 }
 
 export function getComparisonModeDefinition(mode: ComparisonMode): ComparisonModeDefinition {
-  const definition = comparisonModeById.get(mode)
-  if (!definition) throw new Error(`Unknown comparison mode: ${mode}`)
-  return definition
+  return comparisonModeById.get(mode) ?? comparisonModeById.get('slider')!
 }

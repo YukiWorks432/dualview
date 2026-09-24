@@ -36,6 +36,12 @@ import {
   type AudioAnalysisResult,
   type LoudnessMetrics,
 } from '../../lib/audio'
+import {
+  AudioSourceRegistry,
+  createAudioPlaybackSource,
+  extractPrimaryAudioBuffer,
+  PlaybackRequestGate,
+} from '../../lib/media/audio'
 import { cn, formatTime } from '../../lib/utils'
 import { useMediaStore } from '../../stores/mediaStore'
 import { usePlaybackStore } from '../../stores/playbackStore'
@@ -48,6 +54,10 @@ interface AudioAnalysisState {
   buffer: AudioBuffer | null
   analysis: AudioAnalysisResult | null
   peaks: number[]
+}
+
+function createEmptyAudioAnalysisState(): AudioAnalysisState {
+  return { buffer: null, analysis: null, peaks: [] }
 }
 
 // Loudness meter component
@@ -624,8 +634,9 @@ function GoniometerCanvas({
 }
 
 export function AudioComparison() {
-  const audioARef = useRef<HTMLAudioElement>(null)
-  const audioBRef = useRef<HTMLAudioElement>(null)
+  const playbackContextRef = useRef<AudioContext | null>(null)
+  const sourceRegistryRef = useRef(new AudioSourceRegistry())
+  const playbackRequestGateRef = useRef(new PlaybackRequestGate())
 
   // State
   const [viewMode, setViewMode] = useState<AudioViewMode>('all')
@@ -633,21 +644,13 @@ export function AudioComparison() {
   const [volumeA] = useState(1)
   const [volumeB] = useState(1)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
-  const [analysisA, setAnalysisA] = useState<AudioAnalysisState>({
-    buffer: null,
-    analysis: null,
-    peaks: [],
-  })
-  const [analysisB, setAnalysisB] = useState<AudioAnalysisState>({
-    buffer: null,
-    analysis: null,
-    peaks: [],
-  })
+  const [analysisA, setAnalysisA] = useState<AudioAnalysisState>(createEmptyAudioAnalysisState)
+  const [analysisB, setAnalysisB] = useState<AudioAnalysisState>(createEmptyAudioAnalysisState)
   const [targetPlatform, setTargetPlatform] = useState<keyof typeof LOUDNESS_TARGETS>('spotify')
   const [showSettings, setShowSettings] = useState(false)
 
   // Store state
-  const { currentTime, isPlaying, seek, togglePlay } = usePlaybackStore()
+  const { currentTime, isPlaying, playbackSpeed, seek, togglePlay } = usePlaybackStore()
   const { tracks } = useTimelineStore()
   const { getFile } = useMediaStore()
 
@@ -659,9 +662,7 @@ export function AudioComparison() {
   const mediaA = clipA ? getFile(clipA.mediaId) : null
   const mediaB = clipB ? getFile(clipB.mediaId) : null
 
-  // In audio comparison mode, we try to analyze any media that exists
-  // The browser will fail gracefully if it can't decode as audio
-  const hasAudio = !!(mediaA || mediaB)
+  const hasAudio = analysisA.buffer !== null || analysisB.buffer !== null
 
   const maxDuration = Math.max(
     analysisA.analysis?.duration || 0,
@@ -669,128 +670,151 @@ export function AudioComparison() {
     1,
   )
 
-  // Load and analyze audio
-  const loadAudio = useCallback(async (url: string): Promise<AudioAnalysisState> => {
+  // Extract the primary embedded audio track through Mediabunny so this also works for
+  // containers/codecs that the browser cannot play natively (for example ProRes MOV).
+  const loadAudio = useCallback(async (file: File): Promise<AudioAnalysisState> => {
     try {
-      const response = await fetch(url)
-      const arrayBuffer = await response.arrayBuffer()
-      const audioContext = new AudioContext()
-      const buffer = await audioContext.decodeAudioData(arrayBuffer)
+      const buffer = await extractPrimaryAudioBuffer(file)
+      if (!buffer) return { buffer: null, analysis: null, peaks: [] }
 
-      // Run analysis
       const analysis = await analyzeAudio(buffer)
-
-      // Extract peaks for waveform
-      const channelData = buffer.getChannelData(0)
-      const samples = 500
-      const blockSize = Math.floor(channelData.length / samples)
-      const peaks: number[] = []
-
-      for (let i = 0; i < samples; i++) {
-        let max = 0
-        for (let j = 0; j < blockSize; j++) {
-          const value = Math.abs(channelData[i * blockSize + j] || 0)
-          if (value > max) max = value
-        }
-        peaks.push(max)
+      return {
+        buffer,
+        analysis,
+        peaks: Array.from(analysis.waveformPeaks),
       }
-
-      audioContext.close()
-      return { buffer, analysis, peaks }
     } catch (error) {
-      console.error('Failed to load audio:', error)
+      console.error('Failed to load embedded video audio:', error)
       return { buffer: null, analysis: null, peaks: [] }
     }
   }, [])
 
-  // Load audio files when they change
-  // Use mediaA?.url and mediaB?.url as dependencies to ensure effect runs when media changes
-  const mediaAUrl = mediaA?.url
-  const mediaBUrl = mediaB?.url
+  const mediaAFile = mediaA?.type === 'video' ? mediaA.file : undefined
+  const mediaBFile = mediaB?.type === 'video' ? mediaB.file : undefined
+
+  const stopAudioSources = useCallback(() => {
+    sourceRegistryRef.current.stopAll()
+  }, [])
+
+  const invalidateAudioPlayback = useCallback(() => {
+    playbackRequestGateRef.current.invalidate()
+    stopAudioSources()
+  }, [stopAudioSources])
 
   useEffect(() => {
     let cancelled = false
 
+    // Stop obsolete playback immediately. State resets happen after yielding once so
+    // the effect does not synchronously cascade another render.
+    invalidateAudioPlayback()
+
     const loadFiles = async () => {
-      if (!mediaAUrl && !mediaBUrl) return
+      await Promise.resolve()
+      if (cancelled) return
+
+      setAnalysisA(createEmptyAudioAnalysisState())
+      setAnalysisB(createEmptyAudioAnalysisState())
+
+      if (!mediaAFile && !mediaBFile) {
+        setIsAnalyzing(false)
+        return
+      }
 
       setIsAnalyzing(true)
 
-      // Load A
-      if (mediaAUrl) {
-        try {
-          const result = await loadAudio(mediaAUrl)
-          if (!cancelled) setAnalysisA(result)
-        } catch {
-          if (!cancelled) setAnalysisA({ buffer: null, analysis: null, peaks: [] })
-        }
-      } else {
-        if (!cancelled) setAnalysisA({ buffer: null, analysis: null, peaks: [] })
-      }
+      const nextA = mediaAFile ? await loadAudio(mediaAFile) : createEmptyAudioAnalysisState()
+      if (cancelled) return
+      setAnalysisA(nextA)
 
-      // Load B
-      if (mediaBUrl) {
-        try {
-          const result = await loadAudio(mediaBUrl)
-          if (!cancelled) setAnalysisB(result)
-        } catch {
-          if (!cancelled) setAnalysisB({ buffer: null, analysis: null, peaks: [] })
-        }
-      } else {
-        if (!cancelled) setAnalysisB({ buffer: null, analysis: null, peaks: [] })
-      }
-
-      if (!cancelled) setIsAnalyzing(false)
+      const nextB = mediaBFile ? await loadAudio(mediaBFile) : createEmptyAudioAnalysisState()
+      if (cancelled) return
+      setAnalysisB(nextB)
+      setIsAnalyzing(false)
     }
 
-    loadFiles()
+    void loadFiles()
 
     return () => {
       cancelled = true
     }
-  }, [mediaAUrl, mediaBUrl, loadAudio])
+  }, [invalidateAudioPlayback, loadAudio, mediaAFile, mediaBFile])
 
-  // Audio playback handling - play/pause and volume
-  useEffect(() => {
-    const audioA = audioARef.current
-    const audioB = audioBRef.current
+  const startAudioPlayback = useCallback(
+    async (time: number) => {
+      const requestGeneration = playbackRequestGateRef.current.begin()
+      stopAudioSources()
 
-    if (audioA) {
-      audioA.volume = activeAudio === 'b' ? 0 : volumeA
-      if (isPlaying && activeAudio !== 'b') {
-        audioA.play().catch(() => {})
-      } else {
-        audioA.pause()
+      if (!analysisA.buffer && !analysisB.buffer) return
+
+      const context = playbackContextRef.current ?? new AudioContext()
+      playbackContextRef.current = context
+      if (context.state === 'suspended') {
+        try {
+          await context.resume()
+        } catch {
+          return
+        }
       }
-    }
 
-    if (audioB) {
-      audioB.volume = activeAudio === 'a' ? 0 : volumeB
-      if (isPlaying && activeAudio !== 'a') {
-        audioB.play().catch(() => {})
-      } else {
-        audioB.pause()
+      // resume() may wait for a user gesture. Do not let an obsolete request start
+      // after pause, source replacement, unmount, or a newer start request.
+      if (
+        !playbackRequestGateRef.current.isCurrent(requestGeneration) ||
+        !usePlaybackStore.getState().isPlaying
+      ) {
+        return
       }
-    }
-  }, [isPlaying, activeAudio, volumeA, volumeB])
 
-  // Sync audio position on seek events (not on every frame update)
+      const sourceA =
+        activeAudio !== 'b'
+          ? createAudioPlaybackSource(context, analysisA.buffer, playbackSpeed, volumeA, time)
+          : null
+      const sourceB =
+        activeAudio !== 'a'
+          ? createAudioPlaybackSource(context, analysisB.buffer, playbackSpeed, volumeB, time)
+          : null
+      sourceRegistryRef.current.track(sourceA, sourceB)
+    },
+    [
+      activeAudio,
+      analysisA.buffer,
+      analysisB.buffer,
+      playbackSpeed,
+      stopAudioSources,
+      volumeA,
+      volumeB,
+    ],
+  )
+
   useEffect(() => {
-    const handleSeek = (e: CustomEvent<{ time: number }>) => {
-      const time = e.detail.time
-      if (audioARef.current) audioARef.current.currentTime = time
-      if (audioBRef.current) audioBRef.current.currentTime = time
+    if (isPlaying) {
+      void startAudioPlayback(usePlaybackStore.getState().currentTime)
+    } else {
+      invalidateAudioPlayback()
+    }
+  }, [invalidateAudioPlayback, isPlaying, startAudioPlayback])
+
+  useEffect(() => {
+    const handleSeek = (event: CustomEvent<{ time: number }>) => {
+      if (usePlaybackStore.getState().isPlaying) {
+        void startAudioPlayback(event.detail.time)
+      } else {
+        invalidateAudioPlayback()
+      }
     }
 
     window.addEventListener('playback-seek', handleSeek as EventListener)
     return () => window.removeEventListener('playback-seek', handleSeek as EventListener)
-  }, [])
+  }, [invalidateAudioPlayback, startAudioPlayback])
 
-  // Initial sync when component mounts or audio changes
-  useEffect(() => {
-    if (audioARef.current) audioARef.current.currentTime = currentTime
-    if (audioBRef.current) audioBRef.current.currentTime = currentTime
-  }, [mediaA?.url, mediaB?.url]) // Only sync on media change, not currentTime
+  useEffect(
+    () => () => {
+      invalidateAudioPlayback()
+      void playbackContextRef.current?.close()
+      playbackContextRef.current = null
+    },
+    [invalidateAudioPlayback],
+  )
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -934,9 +958,9 @@ export function AudioComparison() {
             <div className="flex flex-col items-center gap-4">
               <Disc className="w-16 h-16 text-text-muted/30" />
               <div className="text-center">
-                <p className="text-sm font-medium text-text-secondary">No Audio Files</p>
+                <p className="text-sm font-medium text-text-secondary">No Embedded Audio</p>
                 <p className="text-xs text-text-muted mt-1">
-                  Add audio files to Track A and/or Track B
+                  Neither current video has a decodable audio track
                 </p>
               </div>
             </div>
@@ -1111,10 +1135,6 @@ export function AudioComparison() {
           </div>
         ) : null}
       </div>
-
-      {/* Hidden audio elements */}
-      {mediaA && <audio ref={audioARef} src={mediaA.url} preload="auto" className="hidden" />}
-      {mediaB && <audio ref={audioBRef} src={mediaB.url} preload="auto" className="hidden" />}
 
       {/* Keyboard hints */}
       <div className="h-7 bg-surface border-t border-border flex items-center justify-center gap-4 text-[10px] text-text-muted shrink-0">

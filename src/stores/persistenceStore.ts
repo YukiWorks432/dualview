@@ -11,6 +11,7 @@
 import { v4 as uuidv4 } from 'uuid'
 import { create } from 'zustand'
 
+import { comparisonModeDefinitions } from '../config/comparisonModes'
 import {
   initDB,
   saveProject,
@@ -25,6 +26,7 @@ import {
   type MediaManifestEntry,
 } from '../lib/indexedDB'
 import type { ClipKeyframes } from '../lib/keyframes'
+import type { TimelineTrack } from '../types'
 import { useKeyframeStore } from './keyframeStore'
 import { useMediaStore } from './mediaStore'
 import { useProjectStore } from './projectStore'
@@ -164,7 +166,6 @@ function getMediaManifest(): MediaManifestEntry[] {
     duration: f.duration,
     width: f.width,
     height: f.height,
-    promptText: f.promptText,
     waveformPeaks: f.waveformPeaks,
     // MEDIA-012: Include status (stored files should always be 'ready')
     status: f.status || 'ready',
@@ -229,7 +230,7 @@ export const usePersistenceStore = create<PersistenceStore>((set, get) => ({
           id: 'track-a',
           name: 'Track A',
           type: 'a',
-          acceptedTypes: ['video', 'image', 'audio', 'model'],
+          acceptedTypes: ['video', 'image'],
           clips: [],
           muted: false,
           locked: false,
@@ -238,7 +239,7 @@ export const usePersistenceStore = create<PersistenceStore>((set, get) => ({
           id: 'track-b',
           name: 'Track B',
           type: 'b',
-          acceptedTypes: ['video', 'image', 'audio', 'model'],
+          acceptedTypes: ['video', 'image'],
           clips: [],
           muted: false,
           locked: false,
@@ -347,7 +348,10 @@ export const usePersistenceStore = create<PersistenceStore>((set, get) => ({
 
       // Restore media files
       const mediaStore = useMediaStore.getState()
+      const restoredMediaIds = new Set<string>()
       for (const entry of projectRecord.mediaManifest) {
+        if (entry.type !== 'video' && entry.type !== 'image') continue
+
         const blob = mediaBlobs.get(entry.id)
         if (blob) {
           // Create a File from the blob
@@ -362,22 +366,25 @@ export const usePersistenceStore = create<PersistenceStore>((set, get) => ({
                 ? {
                     ...f,
                     id: entry.id,
-                    promptText: entry.promptText,
-                    waveformPeaks: entry.waveformPeaks,
                   }
                 : f,
             ),
           }))
-        } else if (entry.type === 'prompt' && entry.promptText) {
-          // Restore prompt entries
-          await mediaStore.addPrompt(entry.promptText, entry.name)
+          restoredMediaIds.add(entry.id)
         }
       }
 
-      // Restore timeline state
+      // Restore timeline state. Legacy clips that point at removed media types are dropped.
       const timelineState = JSON.parse(projectRecord.timelineState)
+      const tracks: TimelineTrack[] = (timelineState.tracks as TimelineTrack[]).map((track) => ({
+        ...track,
+        acceptedTypes: ['video', 'image'],
+        clips: track.clips.filter((clip) => restoredMediaIds.has(clip.mediaId)),
+      }))
+      const restoredClipIds = new Set(tracks.flatMap((track) => track.clips.map((clip) => clip.id)))
+
       useTimelineStore.setState({
-        tracks: timelineState.tracks,
+        tracks,
         currentTime: timelineState.currentTime || 0,
         duration: timelineState.duration || 30,
         zoom: timelineState.zoom || 1,
@@ -392,8 +399,14 @@ export const usePersistenceStore = create<PersistenceStore>((set, get) => ({
 
       // Restore project settings
       const projectSettings = JSON.parse(projectRecord.projectSettings)
+      const comparisonMode = comparisonModeDefinitions.some(
+        (definition) => definition.mode === projectSettings.comparisonMode,
+      )
+        ? projectSettings.comparisonMode
+        : 'slider'
+
       useProjectStore.setState({
-        comparisonMode: projectSettings.comparisonMode || 'slider',
+        comparisonMode,
         blendMode: projectSettings.blendMode || 'difference',
         splitLayout: projectSettings.splitLayout || '2x1',
         sliderPosition: projectSettings.sliderPosition ?? 50,
@@ -412,7 +425,11 @@ export const usePersistenceStore = create<PersistenceStore>((set, get) => ({
 
       // KEYFRAME-001: Restore keyframe data
       if (projectRecord.keyframeData) {
-        const keyframeMap = deserializeKeyframeData(projectRecord.keyframeData)
+        const keyframeMap = new Map(
+          [...deserializeKeyframeData(projectRecord.keyframeData)].filter(([clipId]) =>
+            restoredClipIds.has(clipId),
+          ),
+        )
         useKeyframeStore.setState({ clipKeyframes: keyframeMap })
       } else {
         // Clear keyframes if project has none
@@ -637,8 +654,7 @@ export const usePersistenceStore = create<PersistenceStore>((set, get) => ({
         id: existingTrack?.id || `track-${type}`,
         name: templateConfig.trackNames[index] || `Track ${type.toUpperCase()}`,
         type,
-        acceptedTypes:
-          existingTrack?.acceptedTypes || (['video', 'image', 'audio', 'model'] as const),
+        acceptedTypes: ['video', 'image'] as TimelineTrack['acceptedTypes'],
         clips: existingTrack?.clips || [],
         muted: existingTrack?.muted || false,
         locked: existingTrack?.locked || false,
