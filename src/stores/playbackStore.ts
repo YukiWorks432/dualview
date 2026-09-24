@@ -77,9 +77,11 @@ export const usePlaybackStore = create<PlaybackStore>((set, get) => {
 
     // Handle loop region
     const loopRegion = useTimelineStore.getState().loopRegion
+    let didLoop = false
     if (loopRegion && loopRegion.inPoint < loopRegion.outPoint) {
       if (newTime >= loopRegion.outPoint) {
         newTime = loopRegion.inPoint
+        didLoop = true
       }
     } else {
       // Stop one frame before end to show final frame (OpenCut pattern)
@@ -113,6 +115,15 @@ export const usePlaybackStore = create<PlaybackStore>((set, get) => {
 
     // Sync currentTime with timeline store for components that use it
     useTimelineStore.setState({ currentTime: newTime })
+
+    // Loop wraps are discontinuous seeks. Notify all media sync paths explicitly.
+    if (didLoop) {
+      window.dispatchEvent(
+        new CustomEvent('playback-seek', {
+          detail: { time: newTime },
+        }),
+      )
+    }
 
     // Dispatch update event for video sync
     window.dispatchEvent(
