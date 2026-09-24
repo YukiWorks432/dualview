@@ -1,7 +1,7 @@
 import { ChevronDown, FileSearch, Equal, ArrowUpDown } from 'lucide-react'
 import { useState, useEffect } from 'react'
 
-import { extractPrimaryAudioBuffer } from '../../lib/media/audio'
+import { getPrimaryAudioTrackMetadata } from '../../lib/media/audio'
 import { cn } from '../../lib/utils'
 import { useMediaStore } from '../../stores/mediaStore'
 import { useTimelineStore } from '../../stores/timelineStore'
@@ -94,7 +94,7 @@ async function extractMetadata(media: MediaFile): Promise<ExtendedMetadata> {
   }
 
   // Try to get more video info from video element
-  if (media.type === 'video' && media.url) {
+  if (media.type === 'video' && media.url && media.playbackBackend !== 'mediabunny') {
     try {
       const video = document.createElement('video')
       video.src = media.url
@@ -116,18 +116,18 @@ async function extractMetadata(media: MediaFile): Promise<ExtendedMetadata> {
     }
   }
 
-  // Extract embedded video audio metadata through the same path used by Audio QA.
+  // Read embedded audio track metadata without decoding the full program.
   if (media.type === 'video' && media.file) {
     try {
-      const audioBuffer = await extractPrimaryAudioBuffer(media.file)
-      if (audioBuffer) {
-        base.sampleRate = `${audioBuffer.sampleRate} Hz`
+      const audioMetadata = await getPrimaryAudioTrackMetadata(media.file)
+      if (audioMetadata) {
+        base.sampleRate = `${audioMetadata.sampleRate} Hz`
         base.channels =
-          audioBuffer.numberOfChannels === 1
+          audioMetadata.numberOfChannels === 1
             ? 'Mono'
-            : audioBuffer.numberOfChannels === 2
+            : audioMetadata.numberOfChannels === 2
               ? 'Stereo'
-              : `${audioBuffer.numberOfChannels} channels`
+              : `${audioMetadata.numberOfChannels} channels`
       }
     } catch {
       // Audio metadata is optional.
@@ -198,18 +198,25 @@ export function MetadataComparison() {
 
   // Extract metadata when media changes
   useEffect(() => {
+    let cancelled = false
+
     const extract = async () => {
       setIsLoading(true)
       const [mA, mB] = await Promise.all([
         mediaA ? extractMetadata(mediaA) : Promise.resolve(null),
         mediaB ? extractMetadata(mediaB) : Promise.resolve(null),
       ])
+      if (cancelled) return
       setMetadataA(mA)
       setMetadataB(mB)
       setIsLoading(false)
     }
-    extract()
-  }, [mediaA?.id, mediaB?.id])
+
+    void extract()
+    return () => {
+      cancelled = true
+    }
+  }, [mediaA, mediaB])
 
   if (!mediaA && !mediaB) {
     return null
