@@ -25,3 +25,12 @@ export function getSupportedMediaType(file: File): SupportedMediaType | null {
 export function isSupportedMediaFile(file: File): boolean {
   return getSupportedMediaType(file) !== null
 }
+
+export function getFileNameFromUrl(url: string): string {
+  try {
+    const pathname = new URL(url).pathname
+    return pathname.split('/').filter(Boolean).pop() || ''
+  } catch {
+    return ''
+  }
+}
