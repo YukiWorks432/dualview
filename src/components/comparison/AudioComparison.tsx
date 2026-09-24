@@ -707,23 +707,25 @@ export function AudioComparison() {
   useEffect(() => {
     let cancelled = false
 
-    // A source change must immediately invalidate old analysis/playback so removed
-    // or replaced videos can never leave stale audio visible or audible.
+    // Stop obsolete playback immediately. State resets happen after yielding once so
+    // the effect does not synchronously cascade another render.
     invalidateAudioPlayback()
-    setAnalysisA(createEmptyAudioAnalysisState())
-    setAnalysisB(createEmptyAudioAnalysisState())
-
-    if (!mediaAFile && !mediaBFile) {
-      setIsAnalyzing(false)
-      return () => {
-        cancelled = true
-      }
-    }
-
-    setIsAnalyzing(true)
 
     const loadFiles = async () => {
-      const nextA = mediaAFile ? await loadAudio(mediaAFile) : createEmptyAudioAnalysisState()
+      await Promise.resolve()
+      if (cancelled) return
+
+      setAnalysisA(createEmptyAudioAnalysisState())
+      setAnalysisB(createEmptyAudioAnalysisState())
+
+      if (!mediaAFile && !mediaBFile) {
+        setIsAnalyzing(false)
+        return
+      }
+
+      setIsAnalyzing(true)
+
+      const nextA = await loadAudio(mediaAFile)
       if (cancelled) return
       setAnalysisA(nextA)
 
@@ -766,13 +768,12 @@ export function AudioComparison() {
         return
       }
 
-      const startSource = (
+      const createSource = (
         buffer: AudioBuffer | null,
         volume: number,
         enabled: boolean,
-        sourceRef: React.MutableRefObject<AudioBufferSourceNode | null>,
-      ) => {
-        if (!buffer || !enabled || time >= buffer.duration) return
+      ): AudioBufferSourceNode | null => {
+        if (!buffer || !enabled || time >= buffer.duration) return null
 
         const source = context.createBufferSource()
         const gain = context.createGain()
@@ -782,14 +783,24 @@ export function AudioComparison() {
         source.connect(gain)
         gain.connect(context.destination)
         source.start(0, Math.max(0, time))
-        source.onended = () => {
-          if (sourceRef.current === source) sourceRef.current = null
-        }
-        sourceRef.current = source
+        return source
       }
 
-      startSource(analysisA.buffer, volumeA, activeAudio !== 'b', sourceARef)
-      startSource(analysisB.buffer, volumeB, activeAudio !== 'a', sourceBRef)
+      const sourceA = createSource(analysisA.buffer, volumeA, activeAudio !== 'b')
+      const sourceB = createSource(analysisB.buffer, volumeB, activeAudio !== 'a')
+      sourceARef.current = sourceA
+      sourceBRef.current = sourceB
+
+      if (sourceA) {
+        sourceA.onended = () => {
+          if (sourceARef.current === sourceA) sourceARef.current = null
+        }
+      }
+      if (sourceB) {
+        sourceB.onended = () => {
+          if (sourceBRef.current === sourceB) sourceBRef.current = null
+        }
+      }
     },
     [
       activeAudio,
