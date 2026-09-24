@@ -36,7 +36,7 @@ import {
   type AudioAnalysisResult,
   type LoudnessMetrics,
 } from '../../lib/audio'
-import { extractPrimaryAudioBuffer } from '../../lib/media/audio'
+import { extractPrimaryAudioBuffer, PlaybackRequestGate } from '../../lib/media/audio'
 import { cn, formatTime } from '../../lib/utils'
 import { useMediaStore } from '../../stores/mediaStore'
 import { usePlaybackStore } from '../../stores/playbackStore'
@@ -632,7 +632,7 @@ export function AudioComparison() {
   const playbackContextRef = useRef<AudioContext | null>(null)
   const sourceARef = useRef<AudioBufferSourceNode | null>(null)
   const sourceBRef = useRef<AudioBufferSourceNode | null>(null)
-  const playbackGenerationRef = useRef(0)
+  const playbackRequestGateRef = useRef(new PlaybackRequestGate())
 
   // State
   const [viewMode, setViewMode] = useState<AudioViewMode>('all')
@@ -700,7 +700,7 @@ export function AudioComparison() {
   }, [])
 
   const invalidateAudioPlayback = useCallback(() => {
-    playbackGenerationRef.current += 1
+    playbackRequestGateRef.current.invalidate()
     stopAudioSources()
   }, [stopAudioSources])
 
@@ -743,8 +743,7 @@ export function AudioComparison() {
 
   const startAudioPlayback = useCallback(
     async (time: number) => {
-      const requestGeneration = playbackGenerationRef.current + 1
-      playbackGenerationRef.current = requestGeneration
+      const requestGeneration = playbackRequestGateRef.current.begin()
       stopAudioSources()
 
       if (!analysisA.buffer && !analysisB.buffer) return
@@ -756,7 +755,7 @@ export function AudioComparison() {
       // resume() may wait for a user gesture. Do not let an obsolete request start
       // after pause, source replacement, unmount, or a newer start request.
       if (
-        playbackGenerationRef.current !== requestGeneration ||
+        !playbackRequestGateRef.current.isCurrent(requestGeneration) ||
         !usePlaybackStore.getState().isPlaying
       ) {
         return
