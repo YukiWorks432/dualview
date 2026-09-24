@@ -242,17 +242,26 @@ function calculateStereoWidth(
 /**
  * Generate waveform peaks for visualization
  */
-function generateWaveformPeaks(data: Float32Array, numPeaks: number): Float32Array {
+export function generateWaveformPeaks(
+  channels: readonly Float32Array[],
+  numPeaks: number,
+): Float32Array {
+  if (channels.length === 0 || numPeaks <= 0) return new Float32Array(0)
+
+  const length = Math.max(...channels.map((channel) => channel.length))
   const peaks = new Float32Array(numPeaks)
-  const samplesPerPeak = Math.floor(data.length / numPeaks)
+  if (length === 0) return peaks
 
   for (let i = 0; i < numPeaks; i++) {
+    const start = Math.floor((i * length) / numPeaks)
+    const end = Math.min(length, Math.max(start + 1, Math.floor(((i + 1) * length) / numPeaks)))
     let maxVal = 0
-    const start = i * samplesPerPeak
-    const end = Math.min(start + samplesPerPeak, data.length)
 
-    for (let j = start; j < end; j++) {
-      maxVal = Math.max(maxVal, Math.abs(data[j]))
+    for (const channel of channels) {
+      const channelEnd = Math.min(end, channel.length)
+      for (let j = start; j < channelEnd; j++) {
+        maxVal = Math.max(maxVal, Math.abs(channel[j]))
+      }
     }
 
     peaks[i] = maxVal
@@ -366,12 +375,6 @@ export async function analyzeAudio(audioBuffer: AudioBuffer): Promise<AudioAnaly
   const leftChannel = audioBuffer.getChannelData(0)
   const rightChannel = channels > 1 ? audioBuffer.getChannelData(1) : leftChannel
 
-  // Mix to mono for some calculations
-  const mono = new Float32Array(leftChannel.length)
-  for (let i = 0; i < mono.length; i++) {
-    mono[i] = (leftChannel[i] + rightChannel[i]) / 2
-  }
-
   // Calculate LUFS
   const lufs = calculateLUFS(audioBuffer)
 
@@ -399,8 +402,11 @@ export async function analyzeAudio(audioBuffer: AudioBuffer): Promise<AudioAnaly
   // Calculate crest factor
   const crestFactor = linearToDb(samplePeak) - linearToDb(rms)
 
-  // Generate waveform peaks
-  const waveformPeaks = generateWaveformPeaks(mono, 500)
+  // Preserve energy from every channel so anti-phase stereo material does not disappear.
+  const waveformChannels = Array.from({ length: channels }, (_, index) =>
+    audioBuffer.getChannelData(index),
+  )
+  const waveformPeaks = generateWaveformPeaks(waveformChannels, 500)
 
   // Spectral analysis (placeholder - will be done in real-time by WebGL)
   const spectral: SpectralData = {
