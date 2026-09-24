@@ -1,5 +1,36 @@
 import { ALL_FORMATS, AudioBufferSink, BlobSource, Input } from 'mediabunny'
 
+
+export interface PrimaryAudioTrackMetadata {
+  sampleRate: number
+  numberOfChannels: number
+}
+
+export async function getPrimaryAudioTrackMetadata(
+  file: File,
+): Promise<PrimaryAudioTrackMetadata | null> {
+  const input = new Input({
+    formats: ALL_FORMATS,
+    source: new BlobSource(file),
+  })
+
+  try {
+    if (!(await input.canRead())) return null
+
+    const track = await input.getPrimaryAudioTrack()
+    if (!track) return null
+
+    const [sampleRate, numberOfChannels] = await Promise.all([
+      track.getSampleRate(),
+      track.getNumberOfChannels(),
+    ])
+
+    return { sampleRate, numberOfChannels }
+  } finally {
+    input.dispose()
+  }
+}
+
 export async function extractPrimaryAudioBuffer(file: File): Promise<AudioBuffer | null> {
   const input = new Input({
     formats: ALL_FORMATS,
