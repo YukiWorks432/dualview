@@ -36,7 +36,7 @@ import {
   type AudioAnalysisResult,
   type LoudnessMetrics,
 } from '../../lib/audio'
-import { extractPrimaryAudioBuffer, PlaybackRequestGate } from '../../lib/media/audio'
+import { AudioSourceRegistry, extractPrimaryAudioBuffer, PlaybackRequestGate } from '../../lib/media/audio'
 import { cn, formatTime } from '../../lib/utils'
 import { useMediaStore } from '../../stores/mediaStore'
 import { usePlaybackStore } from '../../stores/playbackStore'
@@ -630,8 +630,7 @@ function GoniometerCanvas({
 
 export function AudioComparison() {
   const playbackContextRef = useRef<AudioContext | null>(null)
-  const sourceARef = useRef<AudioBufferSourceNode | null>(null)
-  const sourceBRef = useRef<AudioBufferSourceNode | null>(null)
+  const sourceRegistryRef = useRef(new AudioSourceRegistry())
   const playbackRequestGateRef = useRef(new PlaybackRequestGate())
 
   // State
@@ -689,14 +688,7 @@ export function AudioComparison() {
   const mediaBFile = mediaB?.type === 'video' ? mediaB.file : undefined
 
   const stopAudioSources = useCallback(() => {
-    for (const sourceRef of [sourceARef, sourceBRef]) {
-      try {
-        sourceRef.current?.stop()
-      } catch {
-        // The source may already have ended.
-      }
-      sourceRef.current = null
-    }
+    sourceRegistryRef.current.stopAll()
   }, [])
 
   const invalidateAudioPlayback = useCallback(() => {
@@ -788,19 +780,7 @@ export function AudioComparison() {
 
       const sourceA = createSource(analysisA.buffer, volumeA, activeAudio !== 'b')
       const sourceB = createSource(analysisB.buffer, volumeB, activeAudio !== 'a')
-      sourceARef.current = sourceA
-      sourceBRef.current = sourceB
-
-      if (sourceA) {
-        sourceA.onended = () => {
-          if (sourceARef.current === sourceA) sourceARef.current = null
-        }
-      }
-      if (sourceB) {
-        sourceB.onended = () => {
-          if (sourceBRef.current === sourceB) sourceBRef.current = null
-        }
-      }
+      sourceRegistryRef.current.track(sourceA, sourceB)
     },
     [
       activeAudio,
