@@ -723,13 +723,12 @@ export function AudioComparison() {
     setIsAnalyzing(true)
 
     const loadFiles = async () => {
-      const [nextA, nextB] = await Promise.all([
-        mediaAFile ? loadAudio(mediaAFile) : Promise.resolve(createEmptyAudioAnalysisState()),
-        mediaBFile ? loadAudio(mediaBFile) : Promise.resolve(createEmptyAudioAnalysisState()),
-      ])
-
+      const nextA = mediaAFile ? await loadAudio(mediaAFile) : createEmptyAudioAnalysisState()
       if (cancelled) return
       setAnalysisA(nextA)
+
+      const nextB = mediaBFile ? await loadAudio(mediaBFile) : createEmptyAudioAnalysisState()
+      if (cancelled) return
       setAnalysisB(nextB)
       setIsAnalyzing(false)
     }
@@ -750,7 +749,13 @@ export function AudioComparison() {
 
       const context = playbackContextRef.current ?? new AudioContext()
       playbackContextRef.current = context
-      if (context.state === 'suspended') await context.resume()
+      if (context.state === 'suspended') {
+        try {
+          await context.resume()
+        } catch {
+          return
+        }
+      }
 
       // resume() may wait for a user gesture. Do not let an obsolete request start
       // after pause, source replacement, unmount, or a newer start request.
