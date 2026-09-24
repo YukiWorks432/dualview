@@ -1,5 +1,25 @@
 import { ALL_FORMATS, AudioBufferSink, BlobSource, Input } from 'mediabunny'
 
+export function createAudioPlaybackSource(
+  context: AudioContext,
+  buffer: AudioBuffer | null,
+  playbackRate: number,
+  volume: number,
+  offset: number,
+): AudioBufferSourceNode | null {
+  if (!buffer || offset >= buffer.duration) return null
+
+  const source = context.createBufferSource()
+  const gain = context.createGain()
+  source.buffer = buffer
+  source.playbackRate.value = playbackRate
+  gain.gain.value = volume
+  source.connect(gain)
+  gain.connect(context.destination)
+  source.start(0, Math.max(0, offset))
+  return source
+}
+
 export class AudioSourceRegistry {
   private sources = new Set<AudioBufferSourceNode>()
 
