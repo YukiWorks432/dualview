@@ -725,7 +725,7 @@ export function AudioComparison() {
 
       setIsAnalyzing(true)
 
-      const nextA = await loadAudio(mediaAFile)
+      const nextA = mediaAFile ? await loadAudio(mediaAFile) : createEmptyAudioAnalysisState()
       if (cancelled) return
       setAnalysisA(nextA)
 
