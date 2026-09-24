@@ -642,7 +642,7 @@ Toggle with `G` key.
 | Vitest 5  | Unit tests                           |
 | GitHub CI | Frozen install + full quality checks |
 
-Heavy comparison modes, document parsers, export tooling, PDF.js workers, and FFmpeg are split or self-hosted so they are loaded only when needed.
+Heavy comparison modes and export tooling are split so they are loaded only when needed.
 
 ---
 
@@ -681,6 +681,10 @@ pnpm preview
 The maintained web app is deployed as Cloudflare Workers Static Assets at
 [dualview.hanayuki.xyz](https://dualview.hanayuki.xyz). There is no application Worker or backend
 API in the deployment path; Wrangler uploads the Vite `dist/` output directly.
+
+The production bundle does not include `ffmpeg.wasm`. Video export uses browser-native WebCodecs
+and MediaRecorder paths plus gif.js, so the former `ffmpeg-core.wasm` asset-size constraint does
+not apply to the deployed `dist/`.
 
 ```bash
 pnpm build
