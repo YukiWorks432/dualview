@@ -1,6 +1,5 @@
 import { ALL_FORMATS, AudioBufferSink, BlobSource, Input } from 'mediabunny'
 
-
 export interface PrimaryAudioTrackMetadata {
   sampleRate: number
   numberOfChannels: number
