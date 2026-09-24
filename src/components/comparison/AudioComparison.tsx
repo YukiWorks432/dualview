@@ -51,6 +51,10 @@ interface AudioAnalysisState {
   peaks: number[]
 }
 
+function createEmptyAudioAnalysisState(): AudioAnalysisState {
+  return { buffer: null, analysis: null, peaks: [] }
+}
+
 // Loudness meter component
 function LoudnessMeter({
   label,
@@ -628,6 +632,7 @@ export function AudioComparison() {
   const playbackContextRef = useRef<AudioContext | null>(null)
   const sourceARef = useRef<AudioBufferSourceNode | null>(null)
   const sourceBRef = useRef<AudioBufferSourceNode | null>(null)
+  const playbackGenerationRef = useRef(0)
 
   // State
   const [viewMode, setViewMode] = useState<AudioViewMode>('all')
@@ -635,21 +640,13 @@ export function AudioComparison() {
   const [volumeA] = useState(1)
   const [volumeB] = useState(1)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
-  const [analysisA, setAnalysisA] = useState<AudioAnalysisState>({
-    buffer: null,
-    analysis: null,
-    peaks: [],
-  })
-  const [analysisB, setAnalysisB] = useState<AudioAnalysisState>({
-    buffer: null,
-    analysis: null,
-    peaks: [],
-  })
+  const [analysisA, setAnalysisA] = useState<AudioAnalysisState>(createEmptyAudioAnalysisState)
+  const [analysisB, setAnalysisB] = useState<AudioAnalysisState>(createEmptyAudioAnalysisState)
   const [targetPlatform, setTargetPlatform] = useState<keyof typeof LOUDNESS_TARGETS>('spotify')
   const [showSettings, setShowSettings] = useState(false)
 
   // Store state
-  const { currentTime, isPlaying, seek, togglePlay } = usePlaybackStore()
+  const { currentTime, isPlaying, playbackSpeed, seek, togglePlay } = usePlaybackStore()
   const { tracks } = useTimelineStore()
   const { getFile } = useMediaStore()
 
@@ -691,49 +688,7 @@ export function AudioComparison() {
   const mediaAFile = mediaA?.type === 'video' ? mediaA.file : undefined
   const mediaBFile = mediaB?.type === 'video' ? mediaB.file : undefined
 
-  useEffect(() => {
-    let cancelled = false
-
-    const loadFiles = async () => {
-      if (!mediaAFile && !mediaBFile) return
-
-      setIsAnalyzing(true)
-
-      // Load A
-      if (mediaAFile) {
-        try {
-          const result = await loadAudio(mediaAFile)
-          if (!cancelled) setAnalysisA(result)
-        } catch {
-          if (!cancelled) setAnalysisA({ buffer: null, analysis: null, peaks: [] })
-        }
-      } else {
-        if (!cancelled) setAnalysisA({ buffer: null, analysis: null, peaks: [] })
-      }
-
-      // Load B
-      if (mediaBFile) {
-        try {
-          const result = await loadAudio(mediaBFile)
-          if (!cancelled) setAnalysisB(result)
-        } catch {
-          if (!cancelled) setAnalysisB({ buffer: null, analysis: null, peaks: [] })
-        }
-      } else {
-        if (!cancelled) setAnalysisB({ buffer: null, analysis: null, peaks: [] })
-      }
-
-      if (!cancelled) setIsAnalyzing(false)
-    }
-
-    loadFiles()
-
-    return () => {
-      cancelled = true
-    }
-  }, [mediaAFile, mediaBFile, loadAudio])
-
-  const stopAudioPlayback = useCallback(() => {
+  const stopAudioSources = useCallback(() => {
     for (const sourceRef of [sourceARef, sourceBRef]) {
       try {
         sourceRef.current?.stop()
@@ -744,15 +699,68 @@ export function AudioComparison() {
     }
   }, [])
 
+  const invalidateAudioPlayback = useCallback(() => {
+    playbackGenerationRef.current += 1
+    stopAudioSources()
+  }, [stopAudioSources])
+
+  useEffect(() => {
+    let cancelled = false
+
+    // A source change must immediately invalidate old analysis/playback so removed
+    // or replaced videos can never leave stale audio visible or audible.
+    invalidateAudioPlayback()
+    setAnalysisA(createEmptyAudioAnalysisState())
+    setAnalysisB(createEmptyAudioAnalysisState())
+
+    if (!mediaAFile && !mediaBFile) {
+      setIsAnalyzing(false)
+      return () => {
+        cancelled = true
+      }
+    }
+
+    setIsAnalyzing(true)
+
+    const loadFiles = async () => {
+      const [nextA, nextB] = await Promise.all([
+        mediaAFile ? loadAudio(mediaAFile) : Promise.resolve(createEmptyAudioAnalysisState()),
+        mediaBFile ? loadAudio(mediaBFile) : Promise.resolve(createEmptyAudioAnalysisState()),
+      ])
+
+      if (cancelled) return
+      setAnalysisA(nextA)
+      setAnalysisB(nextB)
+      setIsAnalyzing(false)
+    }
+
+    void loadFiles()
+
+    return () => {
+      cancelled = true
+    }
+  }, [invalidateAudioPlayback, loadAudio, mediaAFile, mediaBFile])
+
   const startAudioPlayback = useCallback(
     async (time: number) => {
-      stopAudioPlayback()
+      const requestGeneration = playbackGenerationRef.current + 1
+      playbackGenerationRef.current = requestGeneration
+      stopAudioSources()
 
       if (!analysisA.buffer && !analysisB.buffer) return
 
       const context = playbackContextRef.current ?? new AudioContext()
       playbackContextRef.current = context
       if (context.state === 'suspended') await context.resume()
+
+      // resume() may wait for a user gesture. Do not let an obsolete request start
+      // after pause, source replacement, unmount, or a newer start request.
+      if (
+        playbackGenerationRef.current !== requestGeneration ||
+        !usePlaybackStore.getState().isPlaying
+      ) {
+        return
+      }
 
       const startSource = (
         buffer: AudioBuffer | null,
@@ -765,6 +773,7 @@ export function AudioComparison() {
         const source = context.createBufferSource()
         const gain = context.createGain()
         source.buffer = buffer
+        source.playbackRate.value = playbackSpeed
         gain.gain.value = volume
         source.connect(gain)
         gain.connect(context.destination)
@@ -778,37 +787,45 @@ export function AudioComparison() {
       startSource(analysisA.buffer, volumeA, activeAudio !== 'b', sourceARef)
       startSource(analysisB.buffer, volumeB, activeAudio !== 'a', sourceBRef)
     },
-    [activeAudio, analysisA.buffer, analysisB.buffer, stopAudioPlayback, volumeA, volumeB],
+    [
+      activeAudio,
+      analysisA.buffer,
+      analysisB.buffer,
+      playbackSpeed,
+      stopAudioSources,
+      volumeA,
+      volumeB,
+    ],
   )
 
   useEffect(() => {
     if (isPlaying) {
-      void startAudioPlayback(currentTime)
+      void startAudioPlayback(usePlaybackStore.getState().currentTime)
     } else {
-      stopAudioPlayback()
+      invalidateAudioPlayback()
     }
-  }, [isPlaying, startAudioPlayback, stopAudioPlayback])
+  }, [invalidateAudioPlayback, isPlaying, startAudioPlayback])
 
   useEffect(() => {
     const handleSeek = (event: CustomEvent<{ time: number }>) => {
-      if (isPlaying) {
+      if (usePlaybackStore.getState().isPlaying) {
         void startAudioPlayback(event.detail.time)
       } else {
-        stopAudioPlayback()
+        invalidateAudioPlayback()
       }
     }
 
     window.addEventListener('playback-seek', handleSeek as EventListener)
     return () => window.removeEventListener('playback-seek', handleSeek as EventListener)
-  }, [isPlaying, startAudioPlayback, stopAudioPlayback])
+  }, [invalidateAudioPlayback, startAudioPlayback])
 
   useEffect(
     () => () => {
-      stopAudioPlayback()
+      invalidateAudioPlayback()
       void playbackContextRef.current?.close()
       playbackContextRef.current = null
     },
-    [stopAudioPlayback],
+    [invalidateAudioPlayback],
   )
 
   // Keyboard shortcuts
