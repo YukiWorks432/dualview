@@ -38,6 +38,7 @@ import {
 } from '../../lib/audio'
 import {
   AudioSourceRegistry,
+  createAudioPlaybackSource,
   extractPrimaryAudioBuffer,
   PlaybackRequestGate,
 } from '../../lib/media/audio'
@@ -764,26 +765,14 @@ export function AudioComparison() {
         return
       }
 
-      const createSource = (
-        buffer: AudioBuffer | null,
-        volume: number,
-        enabled: boolean,
-      ): AudioBufferSourceNode | null => {
-        if (!buffer || !enabled || time >= buffer.duration) return null
-
-        const source = context.createBufferSource()
-        const gain = context.createGain()
-        source.buffer = buffer
-        source.playbackRate.value = playbackSpeed
-        gain.gain.value = volume
-        source.connect(gain)
-        gain.connect(context.destination)
-        source.start(0, Math.max(0, time))
-        return source
-      }
-
-      const sourceA = createSource(analysisA.buffer, volumeA, activeAudio !== 'b')
-      const sourceB = createSource(analysisB.buffer, volumeB, activeAudio !== 'a')
+      const sourceA =
+        activeAudio !== 'b'
+          ? createAudioPlaybackSource(context, analysisA.buffer, playbackSpeed, volumeA, time)
+          : null
+      const sourceB =
+        activeAudio !== 'a'
+          ? createAudioPlaybackSource(context, analysisB.buffer, playbackSpeed, volumeB, time)
+          : null
       sourceRegistryRef.current.track(sourceA, sourceB)
     },
     [
