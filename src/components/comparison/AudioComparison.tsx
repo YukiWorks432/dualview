@@ -36,7 +36,11 @@ import {
   type AudioAnalysisResult,
   type LoudnessMetrics,
 } from '../../lib/audio'
-import { AudioSourceRegistry, extractPrimaryAudioBuffer, PlaybackRequestGate } from '../../lib/media/audio'
+import {
+  AudioSourceRegistry,
+  extractPrimaryAudioBuffer,
+  PlaybackRequestGate,
+} from '../../lib/media/audio'
 import { cn, formatTime } from '../../lib/utils'
 import { useMediaStore } from '../../stores/mediaStore'
 import { usePlaybackStore } from '../../stores/playbackStore'
