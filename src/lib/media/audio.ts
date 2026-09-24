@@ -1,5 +1,30 @@
 import { ALL_FORMATS, AudioBufferSink, BlobSource, Input } from 'mediabunny'
 
+export class AudioSourceRegistry {
+  private sources = new Set<AudioBufferSourceNode>()
+
+  track(...sources: Array<AudioBufferSourceNode | null>): void {
+    for (const source of sources) {
+      if (!source) continue
+      this.sources.add(source)
+      source.onended = () => {
+        this.sources.delete(source)
+      }
+    }
+  }
+
+  stopAll(): void {
+    for (const source of this.sources) {
+      try {
+        source.stop()
+      } catch {
+        // The source may already have ended.
+      }
+    }
+    this.sources.clear()
+  }
+}
+
 export class PlaybackRequestGate {
   private generation = 0
 
