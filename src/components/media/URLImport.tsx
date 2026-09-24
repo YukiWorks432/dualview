@@ -30,7 +30,6 @@ export function URLImport({ isOpen, onClose }: URLImportProps) {
     }
   }
 
-
   const handleImport = async () => {
     if (!url.trim()) {
       setError('Please enter a URL')
