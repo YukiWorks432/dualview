@@ -15,7 +15,7 @@ class TestCustomEvent<T> {
 
 describe('playback loop synchronization', () => {
   let frameCallback: FrameRequestCallback | null = null
-  const dispatchEvent = vi.fn()
+  const dispatchEvent = vi.fn<(event: unknown) => boolean>(() => true)
 
   beforeEach(() => {
     frameCallback = null
