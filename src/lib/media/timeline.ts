@@ -7,6 +7,13 @@ export function findActiveClip(
   return clips.find((clip) => timelineTime >= clip.startTime && timelineTime < clip.endTime) ?? null
 }
 
+export function findDisplayedClip(
+  clips: readonly TimelineClip[],
+  timelineTime: number,
+): TimelineClip | null {
+  return findActiveClip(clips, timelineTime) ?? clips[0] ?? null
+}
+
 /**
  * Convert a timeline position into the source-media position represented by a clip.
  */
