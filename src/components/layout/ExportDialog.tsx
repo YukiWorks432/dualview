@@ -1,6 +1,7 @@
-import { useState, useMemo } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 
 import { GIF_PRESETS } from '../../lib/gifEncoder'
+import { isVisualFrameReady, type VisualFrameElement } from '../../lib/media/frameSource'
 import { isWebCodecsSupported } from '../../lib/mp4Encoder'
 import { createAvcMp4Muxer } from '../../lib/mp4Muxer'
 import {
@@ -55,6 +56,7 @@ interface ExportDialogProps {
   isOpen: boolean
   onClose: () => void
   canvasRef: React.RefObject<HTMLCanvasElement | null>
+  captureFrame: () => HTMLCanvasElement | null
 }
 
 function formatFileSize(bytes: number): string {
@@ -65,7 +67,7 @@ function formatFileSize(bytes: number): string {
   return `${(bytes / Math.pow(k, i)).toFixed(2)} ${sizes[i]}`
 }
 
-export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) {
+export function ExportDialog({ isOpen, onClose, canvasRef, captureFrame }: ExportDialogProps) {
   const {
     exportSettings,
     setExportSettings,
@@ -80,7 +82,6 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
   const [screenshotFormat, setScreenshotFormat] = useState<ScreenshotFormat>('png')
   const [screenshotResolution, setScreenshotResolution] = useState<ScreenshotResolution>('1080p')
   const [screenshotSource, setScreenshotSource] = useState<ScreenshotSource>('comparison')
-  const [screenshotSliderPos, setScreenshotSliderPos] = useState(50)
   const [screenshotQuality, setScreenshotQuality] = useState(95)
   const [isExporting, setIsExporting] = useState(false)
   const [isExportingScreenshot, setIsExportingScreenshot] = useState(false)
@@ -116,6 +117,30 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
   const { getFile } = useMediaStore()
   const { tracks, duration } = useTimelineStore()
   const { setExporting } = usePlaybackStore()
+  const exportLockRef = useRef(false)
+
+  const isAnyExporting =
+    isExporting ||
+    isExportingScreenshot ||
+    isExportingPDF ||
+    isExportingTransition ||
+    isExportingStitch
+
+  const acquireExportLock = useCallback(() => {
+    if (exportLockRef.current) return false
+    exportLockRef.current = true
+    return true
+  }, [])
+
+  const releaseExportLock = useCallback(() => {
+    exportLockRef.current = false
+  }, [])
+
+  const handleClose = useCallback(() => {
+    if (!exportLockRef.current && !isAnyExporting) {
+      onClose()
+    }
+  }, [isAnyExporting, onClose])
 
   const stitchTrackOptions = useMemo<StitchTrackOption[]>(
     () =>
@@ -138,55 +163,67 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
     [tracks, getFile],
   )
 
-  // Get video elements from the DOM using data-track attributes
+  const getVisualElements = () => {
+    const container = canvasRef.current?.parentElement?.parentElement
+    if (!container) return { mediaA: null, mediaB: null }
+
+    const findReadySurface = (track: 'a' | 'b'): VisualFrameElement | null => {
+      const selector =
+        `video[data-track="${track}"], img[data-track="${track}"], canvas[data-track="${track}"]`
+      const elements = Array.from(container.querySelectorAll(selector)) as VisualFrameElement[]
+      return elements.find((element) => isVisualFrameReady(element)) ?? null
+    }
+
+    return {
+      mediaA: findReadySurface('a'),
+      mediaB: findReadySurface('b'),
+    }
+  }
+
   const getVideoElements = () => {
     const container = canvasRef.current?.parentElement?.parentElement
     if (!container) return { videoA: null, videoB: null }
 
-    // Use data-track attributes to correctly identify A and B
     const videoA = container.querySelector('video[data-track="a"]') as HTMLVideoElement | null
     const videoB = container.querySelector('video[data-track="b"]') as HTMLVideoElement | null
-
     return { videoA, videoB }
   }
 
-  // Get image elements from the DOM using data-track attributes
-  const getImageElements = () => {
-    const container = canvasRef.current?.parentElement?.parentElement
-    if (!container) return { imgA: null, imgB: null }
-
-    const imgA = container.querySelector('img[data-track="a"]') as HTMLImageElement | null
-    const imgB = container.querySelector('img[data-track="b"]') as HTMLImageElement | null
-
-    return { imgA, imgB }
-  }
+  const hasProResBackend = (...mediaIds: Array<string | undefined>) =>
+    mediaIds.some((mediaId) => mediaId && getFile(mediaId)?.playbackBackend === 'mediabunny')
 
   const handleExport = async () => {
+    if (!acquireExportLock()) return
+
     setIsExporting(true)
-    setExporting(true) // Disable sync hooks during export
+    setExporting(true)
     setError(null)
     setProgress(0)
 
     try {
-      // Get video/image elements using data-track attributes
       const { videoA, videoB } = getVideoElements()
-      const { imgA, imgB } = getImageElements()
-
-      // Determine media sources
-      const mediaA = videoA || imgA
-      const mediaB = videoB || imgB
+      const { mediaA, mediaB } = getVisualElements()
 
       if (!mediaA && !mediaB) {
         throw new Error('No media to export')
       }
 
-      // Calculate loop duration based on longest video
-      const trackA = tracks.find((t) => t.type === 'a')
-      const trackB = tracks.find((t) => t.type === 'b')
+      const trackA = tracks.find((track) => track.type === 'a')
+      const trackB = tracks.find((track) => track.type === 'b')
       const clipA = trackA?.clips[0]
       const clipB = trackB?.clips[0]
       const fileA = clipA ? getFile(clipA.mediaId) : null
       const fileB = clipB ? getFile(clipB.mediaId) : null
+
+      if (
+        (clipA && fileA?.playbackBackend === 'mediabunny') ||
+        (clipB && fileB?.playbackBackend === 'mediabunny')
+      ) {
+        throw new Error(
+          'Animated export for ProRes is not supported yet. Use Image or PDF export for the current frame.',
+        )
+      }
+
       const loopDuration = Math.max(fileA?.duration || duration, fileB?.duration || duration, 1)
 
       // Create canvas for rendering
@@ -444,7 +481,7 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
       }
 
       // Function to draw single media (for A-only or B-only export)
-      const drawSingleMedia = (media: HTMLVideoElement | HTMLImageElement | null) => {
+      const drawSingleMedia = (media: VisualFrameElement | null) => {
         const width = 1920
         const height = 1080
         ctx.fillStyle = '#000'
@@ -1092,96 +1129,65 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
       setExportProgress({ status: 'error', progress: 0, message })
     } finally {
       setIsExporting(false)
-      setExporting(false) // Re-enable sync hooks
-      setSliderPosition(50) // Reset slider
+      setExporting(false)
+      setSliderPosition(50)
+      releaseExportLock()
     }
   }
 
   const handleScreenshotExport = async (copyToClipboard = false) => {
+    if (!acquireExportLock()) return
+
     setIsExportingScreenshot(true)
+    setError(null)
+
     try {
-      // Get resolution dimensions
       const resolutions = {
         '720p': { width: 1280, height: 720 },
         '1080p': { width: 1920, height: 1080 },
         '4k': { width: 3840, height: 2160 },
       }
       const { width, height } = resolutions[screenshotResolution]
-
-      // Get video/image elements using data-track attributes
-      const { videoA, videoB } = getVideoElements()
-      const { imgA, imgB } = getImageElements()
-
-      const mediaA = videoA || imgA
-      const mediaB = videoB || imgB
-
-      if (!mediaA && !mediaB) {
-        throw new Error('No media to capture')
-      }
-
-      // Create canvas at target resolution
       const canvas = document.createElement('canvas')
       canvas.width = width
       canvas.height = height
-      const ctx = canvas.getContext('2d')!
+      const ctx = canvas.getContext('2d')
+      if (!ctx) throw new Error('Failed to create screenshot canvas')
 
-      // Fill background
       ctx.fillStyle = '#000'
       ctx.fillRect(0, 0, width, height)
 
-      if (screenshotSource === 'a-only') {
-        // Draw only media A
-        if (mediaA) {
-          ctx.drawImage(mediaA, 0, 0, width, height)
+      if (screenshotSource === 'comparison') {
+        const comparisonFrame = captureFrame()
+        if (!comparisonFrame) {
+          throw new Error('Failed to capture the current comparison')
         }
-      } else if (screenshotSource === 'b-only') {
-        // Draw only media B
-        if (mediaB) {
-          ctx.drawImage(mediaB, 0, 0, width, height)
-        }
+        ctx.drawImage(comparisonFrame, 0, 0, width, height)
       } else {
-        // Comparison mode - draw with slider
-        // Draw media B as background
-        if (mediaB) {
-          ctx.drawImage(mediaB, 0, 0, width, height)
+        const { mediaA, mediaB } = getVisualElements()
+        const media = screenshotSource === 'a-only' ? mediaA : mediaB
+        if (!media || !isVisualFrameReady(media)) {
+          throw new Error(`No media ${screenshotSource === 'a-only' ? 'A' : 'B'} to capture`)
         }
-
-        // Draw media A with clip based on slider position
-        if (mediaA) {
-          const sliderX = (screenshotSliderPos / 100) * width
-          ctx.save()
-          ctx.beginPath()
-          ctx.rect(0, 0, sliderX, height)
-          ctx.clip()
-          ctx.drawImage(mediaA, 0, 0, width, height)
-          ctx.restore()
-
-          // Draw slider line
-          ctx.fillStyle = '#ffffff'
-          ctx.fillRect(sliderX - 1, 0, 2, height)
-        }
+        ctx.drawImage(media, 0, 0, width, height)
       }
 
-      // Convert to blob
       const mimeType = screenshotFormat === 'png' ? 'image/png' : 'image/jpeg'
       const quality = screenshotFormat === 'jpg' ? screenshotQuality / 100 : undefined
-
       const blob = await new Promise<Blob>((resolve, reject) => {
         canvas.toBlob(
-          (b) => (b ? resolve(b) : reject(new Error('Failed to create blob'))),
+          (result) => (result ? resolve(result) : reject(new Error('Failed to create blob'))),
           mimeType,
           quality,
         )
       })
 
       if (copyToClipboard) {
-        // Copy to clipboard
         try {
           await navigator.clipboard.write([new ClipboardItem({ [mimeType]: blob })])
           setExportProgress({ status: 'done', progress: 100, message: 'Copied to clipboard!' })
-        } catch (clipboardErr) {
-          console.error('Clipboard write failed:', clipboardErr)
-          // Fallback to download
+        } catch (clipboardError) {
+          console.error('Clipboard write failed:', clipboardError)
           const filename = `dualview-${screenshotSource}-${Date.now()}.${screenshotFormat}`
           downloadBlob(blob, filename)
           setExportProgress({
@@ -1196,20 +1202,27 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
         setExportProgress({ status: 'done', progress: 100, message: 'Screenshot saved!' })
       }
     } catch (err) {
+      const message = err instanceof Error ? err.message : 'Screenshot failed'
       console.error('Screenshot export failed:', err)
-      setError(err instanceof Error ? err.message : 'Screenshot failed')
+      setError(message)
+      setExportProgress({ status: 'error', progress: 0, message })
     } finally {
       setIsExportingScreenshot(false)
+      releaseExportLock()
     }
   }
 
   const handlePDFExport = async () => {
-    if (!canvasRef.current) return
+    if (!acquireExportLock()) return
 
     setIsExportingPDF(true)
+    setError(null)
+
     try {
-      // Capture screenshot first
-      const screenshotBlob = await captureCanvasScreenshot(canvasRef.current, 'png')
+      const comparisonFrame = captureFrame()
+      if (!comparisonFrame) throw new Error('Failed to capture the current comparison')
+
+      const screenshotBlob = await captureCanvasScreenshot(comparisonFrame, 'png')
       if (!screenshotBlob) throw new Error('Failed to capture screenshot')
 
       // Get media info
@@ -1254,9 +1267,13 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
       const filename = `dualview-report-${Date.now()}.pdf`
       downloadBlob(pdfBlob, filename)
     } catch (err) {
+      const message = err instanceof Error ? err.message : 'PDF export failed'
       console.error('PDF export failed:', err)
+      setError(message)
+      setExportProgress({ status: 'error', progress: 0, message })
     } finally {
       setIsExportingPDF(false)
+      releaseExportLock()
     }
   }
 
@@ -1281,21 +1298,32 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
   }
 
   const handleTransitionExport = async () => {
+    if (!acquireExportLock()) return
+
     setIsExportingTransition(true)
     setExporting(true)
     setError(null)
     setProgress(0)
 
     try {
-      // Get video/image elements
       const { videoA, videoB } = getVideoElements()
-      const { imgA, imgB } = getImageElements()
-
-      const mediaA = videoA || imgA
-      const mediaB = videoB || imgB
+      const { mediaA, mediaB } = getVisualElements()
 
       if (!mediaA || !mediaB) {
         throw new Error('Both media A and B are required for transition export')
+      }
+
+      const trackA = tracks.find((track) => track.type === 'a')
+      const trackB = tracks.find((track) => track.type === 'b')
+      const clipA = trackA?.clips[0]
+      const clipB = trackB?.clips[0]
+      const fileA = clipA ? getFile(clipA.mediaId) : null
+      const fileB = clipB ? getFile(clipB.mediaId) : null
+
+      if (fileA?.playbackBackend === 'mediabunny' || fileB?.playbackBackend === 'mediabunny') {
+        throw new Error(
+          'Transition export for ProRes is not supported yet. Use Image or PDF export for the current frame.',
+        )
       }
 
       // Check WebGL support
@@ -1304,12 +1332,6 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
       }
 
       // Get media durations
-      const trackA = tracks.find((t) => t.type === 'a')
-      const trackB = tracks.find((t) => t.type === 'b')
-      const clipA = trackA?.clips[0]
-      const clipB = trackB?.clips[0]
-      const fileA = clipA ? getFile(clipA.mediaId) : null
-      const fileB = clipB ? getFile(clipB.mediaId) : null
       const durationA = fileA?.duration || 0
       const durationB = fileB?.duration || 0
 
@@ -1693,12 +1715,27 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
     } finally {
       setIsExportingTransition(false)
       setExporting(false)
+      releaseExportLock()
     }
   }
 
   const handleStitchExport = async () => {
     const selectedTrack = tracks.find((track) => track.id === stitchTrackId)
     if (!selectedTrack || selectedTrack.clips.length === 0) return
+
+    if (hasProResBackend(...selectedTrack.clips.map((clip) => clip.mediaId))) {
+      setStitchProgress({
+        status: 'error',
+        progress: 0,
+        message:
+          'Stitch export for ProRes is not supported yet. Use the comparison view for review.',
+        currentClip: 0,
+        totalClips: selectedTrack.clips.length,
+      })
+      return
+    }
+
+    if (!acquireExportLock()) return
 
     setIsExportingStitch(true)
     setStitchProgress({
@@ -1741,6 +1778,7 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
       })
     } finally {
       setIsExportingStitch(false)
+      releaseExportLock()
     }
   }
 
@@ -1753,7 +1791,7 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
     <Dialog
       open={isOpen}
       onOpenChange={(open) => {
-        if (!open) onClose()
+        if (!open) handleClose()
       }}
     >
       <DialogContent
@@ -1762,8 +1800,8 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
       >
         <DialogTitle className="mb-2 text-lg font-semibold">Export Comparison</DialogTitle>
         <DialogDescription className="sr-only">
-          Configure and export the current comparison in video, image, 3D, transition, stitch, or
-          PDF format.
+          Configure and export the current comparison in video, image, transition, stitch, or PDF
+          format.
         </DialogDescription>
 
         <ExportReadiness
@@ -1771,7 +1809,11 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
           hasMediaB={Boolean(trackBForReadiness?.clips.length)}
         />
 
-        <ExportModeTabs value={exportMode} onValueChange={setExportMode} />
+        <ExportModeTabs
+          value={exportMode}
+          onValueChange={setExportMode}
+          disabled={isAnyExporting}
+        />
 
         <div className="space-y-4">
           {exportMode === 'video' && (
@@ -1783,7 +1825,7 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
               exportProgress={exportProgress}
               error={error}
               onSettingsChange={setExportSettings}
-              onClose={onClose}
+              onClose={handleClose}
               onExport={() => void handleExport()}
               onReset={() => {
                 setExportProgress({ status: 'idle', progress: 0 })
@@ -1816,7 +1858,7 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
               progress={progress}
               exportProgress={exportProgress}
               error={error}
-              onClose={onClose}
+              onClose={handleClose}
               onExport={() => void handleTransitionExport()}
               onReset={() => {
                 setExportProgress({ status: 'idle', progress: 0 })
@@ -1829,8 +1871,6 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
             <ScreenshotExportPanel
               source={screenshotSource}
               onSourceChange={setScreenshotSource}
-              sliderPosition={screenshotSliderPos}
-              onSliderPositionChange={setScreenshotSliderPos}
               resolution={screenshotResolution}
               onResolutionChange={setScreenshotResolution}
               format={screenshotFormat}
@@ -1840,7 +1880,7 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
               progress={exportProgress}
               error={error}
               isExporting={isExportingScreenshot}
-              onClose={onClose}
+              onClose={handleClose}
               onExport={(copyToClipboard) => void handleScreenshotExport(copyToClipboard)}
             />
           )}
@@ -1858,7 +1898,7 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
               onFpsChange={setStitchFps}
               progress={stitchProgress}
               isExporting={isExportingStitch}
-              onClose={onClose}
+              onClose={handleClose}
               onExport={() => void handleStitchExport()}
               onReset={() =>
                 setStitchProgress({
@@ -1881,7 +1921,7 @@ export function ExportDialog({ isOpen, onClose, canvasRef }: ExportDialogProps) 
               includeSettings={includeSettings}
               onIncludeSettingsChange={setIncludeSettings}
               isExporting={isExportingPDF}
-              onClose={onClose}
+              onClose={handleClose}
               onExport={() => void handlePDFExport()}
             />
           )}

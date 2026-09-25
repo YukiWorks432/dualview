@@ -20,9 +20,14 @@ const exportModes: ExportModeDefinition[] = [
 interface ExportModeTabsProps {
   value: ExportMode
   onValueChange: (value: ExportMode) => void
+  disabled?: boolean
 }
 
-export function ExportModeTabs({ value, onValueChange }: ExportModeTabsProps) {
+export function ExportModeTabs({
+  value,
+  onValueChange,
+  disabled = false,
+}: ExportModeTabsProps) {
   return (
     <div
       className="mb-4 grid grid-cols-5 gap-1 border-b border-border pb-1"
@@ -35,8 +40,9 @@ export function ExportModeTabs({ value, onValueChange }: ExportModeTabsProps) {
           type="button"
           role="tab"
           aria-selected={value === mode}
+          disabled={disabled}
           title={title}
-          className={`flex items-center justify-center gap-1 px-1 py-2 text-xs font-medium transition-colors ${
+          className={`flex items-center justify-center gap-1 px-1 py-2 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
             value === mode
               ? 'border-b-2 border-accent bg-surface-alt text-text-primary'
               : 'text-text-secondary hover:bg-surface-alt/50 hover:text-text-primary'

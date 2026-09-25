@@ -10,8 +10,6 @@ export type ScreenshotSource = 'comparison' | 'a-only' | 'b-only'
 interface ScreenshotExportPanelProps {
   source: ScreenshotSource
   onSourceChange: (source: ScreenshotSource) => void
-  sliderPosition: number
-  onSliderPositionChange: (position: number) => void
   resolution: ScreenshotResolution
   onResolutionChange: (resolution: ScreenshotResolution) => void
   format: ScreenshotFormat
@@ -28,8 +26,6 @@ interface ScreenshotExportPanelProps {
 export function ScreenshotExportPanel({
   source,
   onSourceChange,
-  sliderPosition,
-  onSliderPositionChange,
   resolution,
   onResolutionChange,
   format,
@@ -70,27 +66,9 @@ export function ScreenshotExportPanel({
       </fieldset>
 
       {source === 'comparison' && (
-        <div>
-          <label
-            htmlFor="screenshot-slider-position"
-            className="mb-2 block text-sm text-text-secondary"
-          >
-            Slider Position: {sliderPosition}%
-          </label>
-          <Slider
-            id="screenshot-slider-position"
-            value={sliderPosition}
-            onChange={(event) => onSliderPositionChange(Number(event.target.value))}
-            min={0}
-            max={100}
-            step={1}
-          />
-          <div className="mt-1 flex justify-between text-xs text-text-muted">
-            <span>Full A</span>
-            <span>50/50</span>
-            <span>Full B</span>
-          </div>
-        </div>
+        <p className="text-xs text-text-muted">
+          Comparison captures the current visible comparison mode and frame.
+        </p>
       )}
 
       <fieldset>
