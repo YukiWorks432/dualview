@@ -59,7 +59,7 @@ export function ComparisonModePicker() {
         <DialogContent
           showCloseButton={false}
           viewportClassName="items-end p-0 md:hidden"
-          className="max-h-[70vh] max-w-none overflow-y-auto rounded-b-none border-x-0 border-b-0"
+          className="max-h-[70vh] max-w-none overflow-y-auto ui-radius-top-lg border-x-0 border-b-0"
         >
           <div className="border-b border-border p-4">
             <DialogTitle className="text-sm font-semibold">Comparison Mode</DialogTitle>
@@ -75,7 +75,7 @@ export function ComparisonModePicker() {
                   <button
                     type="button"
                     onClick={() => setComparisonMode(mode)}
-                    className={`flex min-h-24 flex-col items-center justify-center gap-2 rounded-md border p-4 text-center outline-none focus-visible:ring-1 focus-visible:ring-accent ${
+                    className={`flex min-h-24 flex-col items-center justify-center gap-2 ui-radius-md border p-4 text-center outline-none focus-visible:ring-1 focus-visible:ring-accent ${
                       comparisonMode === mode
                         ? 'border-border-hover bg-surface-active text-text-primary'
                         : 'border-border bg-surface hover:border-border-hover hover:bg-surface-hover'
@@ -193,7 +193,7 @@ export function ComparisonModePicker() {
                     }
                   >
                     <span
-                      className={`flex h-8 w-8 items-center justify-center rounded-sm ${
+                      className={`flex h-8 w-8 items-center justify-center ui-radius-sm ${
                         comparisonMode === mode
                           ? 'bg-surface-hover text-accent'
                           : 'bg-surface-alt text-text-secondary'
