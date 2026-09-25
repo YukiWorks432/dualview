@@ -1192,7 +1192,9 @@ export function ExportDialog({ isOpen, onClose, canvasRef, captureFrame }: Expor
       if (screenshotSource === 'comparison') {
         const comparisonFrame = captureFrame({ width, height })
         if (!comparisonFrame) {
-          throw new Error('The current comparison frame is still loading. Try again after it is ready.')
+          throw new Error(
+            'The current comparison frame is still loading. Try again after it is ready.',
+          )
         }
         ctx.drawImage(comparisonFrame, 0, 0, width, height)
       } else {
@@ -1255,7 +1257,9 @@ export function ExportDialog({ isOpen, onClose, canvasRef, captureFrame }: Expor
     try {
       const comparisonFrame = captureFrame({ width: 1920, height: 1080 })
       if (!comparisonFrame) {
-        throw new Error('The current comparison frame is still loading. Try again after it is ready.')
+        throw new Error(
+          'The current comparison frame is still loading. Try again after it is ready.',
+        )
       }
 
       const screenshotBlob = await captureCanvasScreenshot(comparisonFrame, 'png')
