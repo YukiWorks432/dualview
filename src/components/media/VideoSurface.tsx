@@ -69,9 +69,13 @@ export const VideoSurface = forwardRef<VideoFrameElement, VideoSurfaceProps>(fun
     [forwardedRef],
   )
 
-  const handleNativeFramePending = useCallback((event: SyntheticEvent<HTMLVideoElement>) => {
-    event.currentTarget.dataset.frameReady = 'false'
-  }, [])
+  const handleNativeFramePending = useCallback(
+    (event: SyntheticEvent<HTMLVideoElement>) => {
+      event.currentTarget.dataset.frameReady = 'false'
+      onFrameReady?.()
+    },
+    [onFrameReady],
+  )
 
   const handleNativeFrameReady = useCallback(
     (event: SyntheticEvent<HTMLVideoElement>) => {
