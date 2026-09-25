@@ -44,8 +44,13 @@ const MorphologicalView = lazy(() =>
   })),
 )
 
+export interface CaptureFrameOptions {
+  width?: number
+  height?: number
+}
+
 export interface PreviewCanvasHandle {
-  captureFrame: () => HTMLCanvasElement | null
+  captureFrame: (options?: CaptureFrameOptions) => HTMLCanvasElement | null
 }
 
 interface PreviewCanvasProps {
@@ -69,13 +74,13 @@ export const PreviewCanvas = forwardRef<PreviewCanvasHandle, PreviewCanvasProps>
 
     // Expose captureFrame method to parent
     useImperativeHandle(ref, () => ({
-      captureFrame: () => {
+      captureFrame: (options) => {
         const container = containerRef.current
         const canvas = exportCanvasRef.current
         if (!container || !canvas) return null
 
-        canvas.width = 1920
-        canvas.height = 1080
+        canvas.width = options?.width ?? 1920
+        canvas.height = options?.height ?? 1080
         return captureVisualContainer(container, canvas)
       },
     }))
