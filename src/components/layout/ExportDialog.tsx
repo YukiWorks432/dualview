@@ -1325,6 +1325,10 @@ export function ExportDialog({ isOpen, onClose, canvasRef, captureFrame }: Expor
         )
       }
 
+      if (mediaA instanceof HTMLCanvasElement || mediaB instanceof HTMLCanvasElement) {
+        throw new Error('Transition export requires browser-native video or image sources.')
+      }
+
       // Check WebGL support
       if (!WebGLTransitionRenderer.isSupported()) {
         throw new Error('WebGL is not supported in this browser')
