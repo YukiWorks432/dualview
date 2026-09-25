@@ -74,13 +74,12 @@ export function Sidebar({ onCollapse, isMobileOpen, onMobileClose, onOpenProject
 
   // Desktop sidebar
   const sidebarContent = (
-    <SurfaceProvider value={1}>
-      <aside
-        className={`
-        surface-wash border-r border-border flex flex-col
-        ${isMobileOpen ? 'mobile-drawer animate-slide-in-left' : 'w-72 hide-mobile'}
-      `}
-      >
+    <aside
+      className={`
+      surface-wash border-r border-border flex flex-col
+      ${isMobileOpen ? 'mobile-drawer animate-slide-in-left' : 'w-72 hide-mobile'}
+    `}
+    >
       {/* Project controls - at top of sidebar */}
       <div className="flex items-center justify-between px-3 py-2 border-b border-border shrink-0 bg-surface-alt/50">
         <div className="flex items-center gap-1">
@@ -167,7 +166,11 @@ export function Sidebar({ onCollapse, isMobileOpen, onMobileClose, onOpenProject
       </div>
 
       <div className="flex-1 overflow-y-auto p-4">
-        {activeTab === 'media' && <MediaPanel />}
+        {activeTab === 'media' && (
+          <SurfaceProvider value={1}>
+            <MediaPanel />
+          </SurfaceProvider>
+        )}
         {activeTab === 'settings' && (
           <SettingsPanel
             comparisonMode={comparisonMode}
@@ -190,8 +193,8 @@ export function Sidebar({ onCollapse, isMobileOpen, onMobileClose, onOpenProject
         )}
       </div>
 
-        {/* Project lineage links */}
-        <div className="shrink-0 p-3 border-t border-border/50 bg-background/50 safe-area-bottom text-[10px]">
+      {/* Project lineage links */}
+      <div className="shrink-0 p-3 border-t border-border/50 bg-background/50 safe-area-bottom text-[10px]">
         <div className="space-y-2">
           <div>
             <div className="text-text-muted mb-1">Maintained fork</div>
@@ -252,9 +255,8 @@ export function Sidebar({ onCollapse, isMobileOpen, onMobileClose, onOpenProject
             </div>
           </div>
         </div>
-        </div>
-      </aside>
-    </SurfaceProvider>
+      </div>
+    </aside>
   )
 
   // Mobile: render with overlay backdrop
