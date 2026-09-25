@@ -32,6 +32,7 @@ import {
   analyzeAudio,
   formatLUFS,
   formatDb,
+  LOUDNESS_TARGET_LABELS,
   LOUDNESS_TARGETS,
   type AudioAnalysisResult,
   type LoudnessMetrics,
@@ -41,7 +42,9 @@ import {
   createAudioPlaybackSource,
   extractPrimaryAudioBuffer,
   PlaybackRequestGate,
+  type AudioTrackKey,
 } from '../../lib/media/audio'
+import { calculateMediaTime, calculateTimelineTime, findActiveClip } from '../../lib/media/timeline'
 import { cn, formatTime } from '../../lib/utils'
 import { useMediaStore } from '../../stores/mediaStore'
 import { usePlaybackStore } from '../../stores/playbackStore'
@@ -49,16 +52,25 @@ import { useTimelineStore } from '../../stores/timelineStore'
 
 type AudioViewMode = 'spectrogram' | 'spectrum' | 'goniometer' | 'loudness' | 'waveform' | 'all'
 type ActiveAudio = 'both' | 'a' | 'b'
+type AudioRestartScope = 'both' | AudioTrackKey
 
 interface AudioAnalysisState {
+  mediaId: string | null
   buffer: AudioBuffer | null
   analysis: AudioAnalysisResult | null
   peaks: number[]
+  error: string | null
 }
 
 function createEmptyAudioAnalysisState(): AudioAnalysisState {
-  return { buffer: null, analysis: null, peaks: [] }
+  return { mediaId: null, buffer: null, analysis: null, peaks: [], error: null }
 }
+
+function createAudioErrorState(mediaId: string, error: string): AudioAnalysisState {
+  return { mediaId, buffer: null, analysis: null, peaks: [], error }
+}
+
+const EMPTY_AUDIO_ANALYSIS_VIEW = createEmptyAudioAnalysisState()
 
 // Loudness meter component
 function LoudnessMeter({
@@ -119,11 +131,11 @@ function LoudnessMeter({
 
       {/* Meter bars */}
       <div className="space-y-1.5">
-        <MeterBar label="Momentary" value={metrics.momentary} min={-60} max={0} color={color} />
-        <MeterBar label="Short-term" value={metrics.shortTerm} min={-60} max={0} color={color} />
+        <MeterBar label="Tail 400 ms" value={metrics.momentary} min={-60} max={0} color={color} />
+        <MeterBar label="Tail 3 s" value={metrics.shortTerm} min={-60} max={0} color={color} />
         <MeterBar
-          label="True Peak"
-          value={metrics.truePeak}
+          label="Sample Peak"
+          value={metrics.samplePeak}
           min={-60}
           max={0}
           color={color}
@@ -295,9 +307,9 @@ function WaveformCanvas({
 }: {
   peaks: number[]
   color: string
-  currentTime: number
+  currentTime: number | null
   duration: number
-  onSeek: (time: number) => void
+  onSeek: (mediaTime: number) => void
   label: string
   mediaName?: string
 }) {
@@ -352,19 +364,20 @@ function WaveformCanvas({
     }
 
     const barWidth = width / peaks.length
-    const playheadPos = duration > 0 ? (currentTime / duration) * width : 0
+    const playheadPos =
+      currentTime !== null && duration > 0 ? (currentTime / duration) * width : null
 
     for (let i = 0; i < peaks.length; i++) {
       const x = i * barWidth
       const barHeight = peaks[i] * halfHeight * 0.9
-      const isPast = x < playheadPos
+      const isPast = playheadPos !== null && x < playheadPos
 
       ctx.fillStyle = isPast ? color : `${color}40`
       ctx.fillRect(x, halfHeight - barHeight, Math.max(1, barWidth - 1), barHeight * 2)
     }
 
     // Playhead
-    if (duration > 0) {
+    if (playheadPos !== null) {
       ctx.fillStyle = '#ffffff'
       ctx.fillRect(playheadPos - 1, 0, 2, height)
     }
@@ -637,58 +650,101 @@ export function AudioComparison() {
   const playbackContextRef = useRef<AudioContext | null>(null)
   const sourceRegistryRef = useRef(new AudioSourceRegistry())
   const playbackRequestGateRef = useRef(new PlaybackRequestGate())
+  const playingClipIdsRef = useRef<{ a: string | null; b: string | null }>({ a: null, b: null })
+  const startAudioPlaybackRef = useRef<(time: number, scope?: AudioRestartScope) => Promise<void>>(
+    async () => {},
+  )
 
   // State
   const [viewMode, setViewMode] = useState<AudioViewMode>('all')
   const [activeAudio, setActiveAudio] = useState<ActiveAudio>('both')
   const [volumeA] = useState(1)
   const [volumeB] = useState(1)
-  const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [isAnalyzingA, setIsAnalyzingA] = useState(false)
+  const [isAnalyzingB, setIsAnalyzingB] = useState(false)
   const [analysisA, setAnalysisA] = useState<AudioAnalysisState>(createEmptyAudioAnalysisState)
   const [analysisB, setAnalysisB] = useState<AudioAnalysisState>(createEmptyAudioAnalysisState)
+  const analysisARef = useRef(analysisA)
+  const analysisBRef = useRef(analysisB)
   const [targetPlatform, setTargetPlatform] = useState<keyof typeof LOUDNESS_TARGETS>('spotify')
   const [showSettings, setShowSettings] = useState(false)
 
   // Store state
   const { currentTime, isPlaying, playbackSpeed, seek, togglePlay } = usePlaybackStore()
-  const { tracks } = useTimelineStore()
+  const { tracks, duration: timelineDuration } = useTimelineStore()
   const { getFile } = useMediaStore()
 
-  // Get active clips - check BOTH track types for audio
-  const trackA = tracks.find((t) => t.type === 'a')
-  const trackB = tracks.find((t) => t.type === 'b')
-  const clipA = trackA?.clips[0]
-  const clipB = trackB?.clips[0]
-  const mediaA = clipA ? getFile(clipA.mediaId) : null
-  const mediaB = clipB ? getFile(clipB.mediaId) : null
+  const trackA = tracks.find((track) => track.type === 'a')
+  const trackB = tracks.find((track) => track.type === 'b')
+  const activeClipA = findActiveClip(trackA?.clips ?? [], currentTime)
+  const activeClipB = findActiveClip(trackB?.clips ?? [], currentTime)
+  const analysisClipA = activeClipA ?? trackA?.clips[0] ?? null
+  const analysisClipB = activeClipB ?? trackB?.clips[0] ?? null
+  const mediaA = analysisClipA ? getFile(analysisClipA.mediaId) : null
+  const mediaB = analysisClipB ? getFile(analysisClipB.mediaId) : null
 
-  const hasAudio = analysisA.buffer !== null || analysisB.buffer !== null
+  const analysisAIsCurrent = analysisA.mediaId === mediaA?.id
+  const analysisBIsCurrent = analysisB.mediaId === mediaB?.id
+  const displayAnalysisA = analysisAIsCurrent ? analysisA : EMPTY_AUDIO_ANALYSIS_VIEW
+  const displayAnalysisB = analysisBIsCurrent ? analysisB : EMPTY_AUDIO_ANALYSIS_VIEW
+  const hasAudio = displayAnalysisA.buffer !== null || displayAnalysisB.buffer !== null
+  const isAnalyzing = isAnalyzingA || isAnalyzingB
+  const audioErrors = [
+    analysisAIsCurrent && analysisA.error ? `A: ${analysisA.error}` : null,
+    analysisBIsCurrent && analysisB.error ? `B: ${analysisB.error}` : null,
+  ].filter((message): message is string => message !== null)
 
-  const maxDuration = Math.max(
-    analysisA.analysis?.duration || 0,
-    analysisB.analysis?.duration || 0,
-    1,
+  const mediaTimeA =
+    analysisClipA && analysisA.mediaId === analysisClipA.mediaId
+      ? calculateMediaTime(currentTime, analysisClipA)
+      : null
+  const mediaTimeB =
+    analysisClipB && analysisB.mediaId === analysisClipB.mediaId
+      ? calculateMediaTime(currentTime, analysisClipB)
+      : null
+
+  const seekFromMediaTime = useCallback(
+    (mediaTime: number, clip: typeof analysisClipA) => {
+      if (!clip) return
+      const timelineTime = calculateTimelineTime(mediaTime, clip)
+      if (timelineTime !== null) {
+        seek(timelineTime)
+      }
+    },
+    [seek],
   )
 
   // Extract the primary embedded audio track through Mediabunny so this also works for
   // containers/codecs that the browser cannot play natively (for example ProRes MOV).
-  const loadAudio = useCallback(async (file: File): Promise<AudioAnalysisState> => {
-    try {
-      const buffer = await extractPrimaryAudioBuffer(file)
-      if (!buffer) return { buffer: null, analysis: null, peaks: [] }
+  const loadAudio = useCallback(
+    async (mediaId: string, file: File, signal: AbortSignal): Promise<AudioAnalysisState> => {
+      try {
+        const buffer = await extractPrimaryAudioBuffer(file, signal)
+        if (!buffer || signal.aborted) return createEmptyAudioAnalysisState()
 
-      const analysis = await analyzeAudio(buffer)
-      return {
-        buffer,
-        analysis,
-        peaks: Array.from(analysis.waveformPeaks),
+        const analysis = await analyzeAudio(buffer)
+        if (signal.aborted) return createEmptyAudioAnalysisState()
+
+        return {
+          mediaId,
+          buffer,
+          analysis,
+          peaks: Array.from(analysis.waveformPeaks),
+          error: null,
+        }
+      } catch (error) {
+        if (signal.aborted) return createEmptyAudioAnalysisState()
+
+        const message = error instanceof Error ? error.message : 'Embedded audio analysis failed'
+        console.error('Failed to load embedded video audio:', error)
+        return createAudioErrorState(mediaId, message)
       }
-    } catch (error) {
-      console.error('Failed to load embedded video audio:', error)
-      return { buffer: null, analysis: null, peaks: [] }
-    }
-  }, [])
+    },
+    [],
+  )
 
+  const mediaAId = mediaA?.type === 'video' ? mediaA.id : undefined
+  const mediaBId = mediaB?.type === 'video' ? mediaB.id : undefined
   const mediaAFile = mediaA?.type === 'video' ? mediaA.file : undefined
   const mediaBFile = mediaB?.type === 'video' ? mediaB.file : undefined
 
@@ -696,55 +752,138 @@ export function AudioComparison() {
     sourceRegistryRef.current.stopAll()
   }, [])
 
-  const invalidateAudioPlayback = useCallback(() => {
+  const stopAudioTrack = useCallback((track: AudioTrackKey) => {
+    sourceRegistryRef.current.stop(track)
+  }, [])
+
+  const invalidatePendingAudioPlayback = useCallback(() => {
     playbackRequestGateRef.current.invalidate()
+  }, [])
+
+  const invalidateAudioPlayback = useCallback(() => {
+    invalidatePendingAudioPlayback()
+    playingClipIdsRef.current = { a: null, b: null }
     stopAudioSources()
-  }, [stopAudioSources])
+  }, [invalidatePendingAudioPlayback, stopAudioSources])
+
+  const updateAnalysisA = useCallback((next: AudioAnalysisState) => {
+    analysisARef.current = next
+    setAnalysisA(next)
+  }, [])
+
+  const updateAnalysisB = useCallback((next: AudioAnalysisState) => {
+    analysisBRef.current = next
+    setAnalysisB(next)
+  }, [])
 
   useEffect(() => {
     let cancelled = false
+    const abortController = new AbortController()
 
-    // Stop obsolete playback immediately. State resets happen after yielding once so
-    // the effect does not synchronously cascade another render.
-    invalidateAudioPlayback()
+    invalidatePendingAudioPlayback()
+    stopAudioTrack('a')
+    playingClipIdsRef.current.a = null
 
-    const loadFiles = async () => {
+    const loadFile = async () => {
       await Promise.resolve()
       if (cancelled) return
 
-      setAnalysisA(createEmptyAudioAnalysisState())
-      setAnalysisB(createEmptyAudioAnalysisState())
-
-      if (!mediaAFile && !mediaBFile) {
-        setIsAnalyzing(false)
+      if (!mediaAId || !mediaAFile) {
+        updateAnalysisA(createEmptyAudioAnalysisState())
+        setIsAnalyzingA(false)
         return
       }
 
-      setIsAnalyzing(true)
+      setIsAnalyzingA(true)
+      const next = await loadAudio(mediaAId, mediaAFile, abortController.signal)
+      if (cancelled || abortController.signal.aborted) return
 
-      const nextA = mediaAFile ? await loadAudio(mediaAFile) : createEmptyAudioAnalysisState()
-      if (cancelled) return
-      setAnalysisA(nextA)
+      updateAnalysisA(next)
+      setIsAnalyzingA(false)
 
-      const nextB = mediaBFile ? await loadAudio(mediaBFile) : createEmptyAudioAnalysisState()
-      if (cancelled) return
-      setAnalysisB(nextB)
-      setIsAnalyzing(false)
+      const playback = usePlaybackStore.getState()
+      const activeTrack = useTimelineStore.getState().tracks.find((track) => track.type === 'a')
+      const activeClip = findActiveClip(activeTrack?.clips ?? [], playback.currentTime)
+      if (playback.isPlaying && activeClip?.mediaId === next.mediaId) {
+        void startAudioPlaybackRef.current(playback.currentTime, 'a')
+      }
     }
 
-    void loadFiles()
+    void loadFile()
 
     return () => {
       cancelled = true
+      abortController.abort()
     }
-  }, [invalidateAudioPlayback, loadAudio, mediaAFile, mediaBFile])
+  }, [
+    invalidatePendingAudioPlayback,
+    loadAudio,
+    mediaAFile,
+    mediaAId,
+    stopAudioTrack,
+    updateAnalysisA,
+  ])
+
+  useEffect(() => {
+    let cancelled = false
+    const abortController = new AbortController()
+
+    invalidatePendingAudioPlayback()
+    stopAudioTrack('b')
+    playingClipIdsRef.current.b = null
+
+    const loadFile = async () => {
+      await Promise.resolve()
+      if (cancelled) return
+
+      if (!mediaBId || !mediaBFile) {
+        updateAnalysisB(createEmptyAudioAnalysisState())
+        setIsAnalyzingB(false)
+        return
+      }
+
+      setIsAnalyzingB(true)
+      const next = await loadAudio(mediaBId, mediaBFile, abortController.signal)
+      if (cancelled || abortController.signal.aborted) return
+
+      updateAnalysisB(next)
+      setIsAnalyzingB(false)
+
+      const playback = usePlaybackStore.getState()
+      const activeTrack = useTimelineStore.getState().tracks.find((track) => track.type === 'b')
+      const activeClip = findActiveClip(activeTrack?.clips ?? [], playback.currentTime)
+      if (playback.isPlaying && activeClip?.mediaId === next.mediaId) {
+        void startAudioPlaybackRef.current(playback.currentTime, 'b')
+      }
+    }
+
+    void loadFile()
+
+    return () => {
+      cancelled = true
+      abortController.abort()
+    }
+  }, [
+    invalidatePendingAudioPlayback,
+    loadAudio,
+    mediaBFile,
+    mediaBId,
+    stopAudioTrack,
+    updateAnalysisB,
+  ])
 
   const startAudioPlayback = useCallback(
-    async (time: number) => {
+    async (time: number, scope: AudioRestartScope = 'both') => {
       const requestGeneration = playbackRequestGateRef.current.begin()
-      stopAudioSources()
+      if (scope === 'both') {
+        stopAudioSources()
+      } else {
+        stopAudioTrack(scope)
+      }
 
-      if (!analysisA.buffer && !analysisB.buffer) return
+      const currentAnalysisA = analysisARef.current
+      const currentAnalysisB = analysisBRef.current
+      if (!currentAnalysisA.buffer && !currentAnalysisB.buffer) return
 
       const context = playbackContextRef.current ?? new AudioContext()
       playbackContextRef.current = context
@@ -756,8 +895,6 @@ export function AudioComparison() {
         }
       }
 
-      // resume() may wait for a user gesture. Do not let an obsolete request start
-      // after pause, source replacement, unmount, or a newer start request.
       if (
         !playbackRequestGateRef.current.isCurrent(requestGeneration) ||
         !usePlaybackStore.getState().isPlaying
@@ -765,26 +902,63 @@ export function AudioComparison() {
         return
       }
 
-      const sourceA =
-        activeAudio !== 'b'
-          ? createAudioPlaybackSource(context, analysisA.buffer, playbackSpeed, volumeA, time)
-          : null
-      const sourceB =
-        activeAudio !== 'a'
-          ? createAudioPlaybackSource(context, analysisB.buffer, playbackSpeed, volumeB, time)
-          : null
-      sourceRegistryRef.current.track(sourceA, sourceB)
+      const clipA = findActiveClip(trackA?.clips ?? [], time)
+      const clipB = findActiveClip(trackB?.clips ?? [], time)
+
+      const createSourceForClip = (
+        state: AudioAnalysisState,
+        clip: typeof clipA,
+        volume: number,
+      ) => {
+        if (!state.buffer || !clip || state.mediaId !== clip.mediaId || clip.reverse) return null
+
+        const mediaTime = calculateMediaTime(time, clip)
+        if (mediaTime === null) return null
+
+        const clipSpeed = clip.speed || 1
+        const timelineRemaining = Math.max(0, clip.endTime - time)
+        const sourceRemaining = Math.max(0, clip.outPoint - mediaTime)
+        const sourceDuration = Math.min(sourceRemaining, timelineRemaining * clipSpeed)
+
+        return createAudioPlaybackSource(
+          context,
+          state.buffer,
+          playbackSpeed * clipSpeed,
+          volume,
+          mediaTime,
+          sourceDuration,
+        )
+      }
+
+      if (scope === 'both' || scope === 'a') {
+        playingClipIdsRef.current.a = clipA?.id ?? null
+        const sourceA =
+          activeAudio !== 'b' ? createSourceForClip(currentAnalysisA, clipA, volumeA) : null
+        sourceRegistryRef.current.replace('a', sourceA)
+      }
+
+      if (scope === 'both' || scope === 'b') {
+        playingClipIdsRef.current.b = clipB?.id ?? null
+        const sourceB =
+          activeAudio !== 'a' ? createSourceForClip(currentAnalysisB, clipB, volumeB) : null
+        sourceRegistryRef.current.replace('b', sourceB)
+      }
     },
     [
       activeAudio,
-      analysisA.buffer,
-      analysisB.buffer,
       playbackSpeed,
       stopAudioSources,
+      stopAudioTrack,
+      trackA,
+      trackB,
       volumeA,
       volumeB,
     ],
   )
+
+  useEffect(() => {
+    startAudioPlaybackRef.current = startAudioPlayback
+  }, [startAudioPlayback])
 
   useEffect(() => {
     if (isPlaying) {
@@ -806,6 +980,31 @@ export function AudioComparison() {
     window.addEventListener('playback-seek', handleSeek as EventListener)
     return () => window.removeEventListener('playback-seek', handleSeek as EventListener)
   }, [invalidateAudioPlayback, startAudioPlayback])
+
+  useEffect(() => {
+    const handlePlaybackUpdate = (event: CustomEvent<{ time: number; isPlaying: boolean }>) => {
+      if (!event.detail.isPlaying) return
+
+      const nextA = findActiveClip(trackA?.clips ?? [], event.detail.time)?.id ?? null
+      const nextB = findActiveClip(trackB?.clips ?? [], event.detail.time)?.id ?? null
+      const playing = playingClipIdsRef.current
+
+      const changedA = nextA !== playing.a
+      const changedB = nextB !== playing.b
+
+      if (changedA && changedB) {
+        void startAudioPlayback(event.detail.time, 'both')
+      } else if (changedA) {
+        void startAudioPlayback(event.detail.time, 'a')
+      } else if (changedB) {
+        void startAudioPlayback(event.detail.time, 'b')
+      }
+    }
+
+    window.addEventListener('playback-update', handlePlaybackUpdate as EventListener)
+    return () =>
+      window.removeEventListener('playback-update', handlePlaybackUpdate as EventListener)
+  }, [startAudioPlayback, trackA, trackB])
 
   useEffect(
     () => () => {
@@ -884,7 +1083,7 @@ export function AudioComparison() {
             {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
           </button>
           <span className="text-xs font-mono text-text-muted ml-2">
-            {formatTime(currentTime)} / {formatTime(maxDuration)}
+            {formatTime(currentTime)} / {formatTime(timelineDuration)}
           </span>
         </div>
 
@@ -927,26 +1126,47 @@ export function AudioComparison() {
       {showSettings && (
         <div className="bg-surface border-b border-border px-4 py-3 flex items-center gap-6 text-xs shrink-0">
           <div className="flex items-center gap-2">
-            <span className="text-text-muted">Target Platform:</span>
+            <span className="text-text-muted">Loudness reference:</span>
             <select
               value={targetPlatform}
               onChange={(e) => setTargetPlatform(e.target.value as keyof typeof LOUDNESS_TARGETS)}
               className="bg-surface-hover border border-border px-2 py-1 text-xs"
             >
-              {Object.keys(LOUDNESS_TARGETS).map((key) => (
-                <option key={key} value={key}>
-                  {key.charAt(0).toUpperCase() + key.slice(1)} (
-                  {LOUDNESS_TARGETS[key as keyof typeof LOUDNESS_TARGETS]} LUFS)
-                </option>
-              ))}
+              {(Object.keys(LOUDNESS_TARGETS) as Array<keyof typeof LOUDNESS_TARGETS>).map(
+                (key) => (
+                  <option key={key} value={key}>
+                    {LOUDNESS_TARGET_LABELS[key]} ({LOUDNESS_TARGETS[key]} LUFS)
+                  </option>
+                ),
+              )}
             </select>
           </div>
+          <span className="text-text-muted">
+            Integrated loudness and stereo metrics describe the decoded source file. Tail meters
+            show the final 400 ms / 3 s of that source.
+          </span>
+        </div>
+      )}
+
+      {(isAnalyzing || audioErrors.length > 0) && hasAudio && (
+        <div className="border-b border-border bg-surface px-4 py-2 text-xs text-text-muted">
+          {isAnalyzing && (
+            <span>
+              Analyzing{' '}
+              {[isAnalyzingA ? 'A' : null, isAnalyzingB ? 'B' : null].filter(Boolean).join(' + ')}…
+            </span>
+          )}
+          {audioErrors.length > 0 && (
+            <span className={cn(isAnalyzing && 'ml-3', 'text-error')} role="alert">
+              {audioErrors.join(' · ')}
+            </span>
+          )}
         </div>
       )}
 
       {/* Main content area */}
       <div className="flex-1 overflow-hidden">
-        {isAnalyzing ? (
+        {isAnalyzing && !hasAudio ? (
           <div className="w-full h-full flex items-center justify-center">
             <div className="flex flex-col items-center gap-3">
               <div className="w-10 h-10 border-2 border-accent border-t-transparent rounded-full animate-spin" />
@@ -955,12 +1175,21 @@ export function AudioComparison() {
           </div>
         ) : !hasAudio ? (
           <div className="w-full h-full flex items-center justify-center">
-            <div className="flex flex-col items-center gap-4">
+            <div className="flex max-w-xl flex-col items-center gap-4 px-6">
               <Disc className="w-16 h-16 text-text-muted/30" />
               <div className="text-center">
-                <p className="text-sm font-medium text-text-secondary">No Embedded Audio</p>
-                <p className="text-xs text-text-muted mt-1">
-                  Neither current video has a decodable audio track
+                <p className="text-sm font-medium text-text-secondary">
+                  {audioErrors.length > 0 ? 'Audio Analysis Unavailable' : 'No Embedded Audio'}
+                </p>
+                <p
+                  className={cn(
+                    'mt-1 text-xs',
+                    audioErrors.length > 0 ? 'text-error' : 'text-text-muted',
+                  )}
+                >
+                  {audioErrors.length > 0
+                    ? audioErrors.join(' · ')
+                    : 'Neither current video has a decodable audio track'}
                 </p>
               </div>
             </div>
@@ -975,11 +1204,11 @@ export function AudioComparison() {
               </div>
               <div className={cn('flex-1', activeAudio === 'b' && 'opacity-50')}>
                 <WaveformCanvas
-                  peaks={analysisA.peaks}
+                  peaks={displayAnalysisA.peaks}
                   color="#ff5722"
-                  currentTime={currentTime}
-                  duration={maxDuration}
-                  onSeek={seek}
+                  currentTime={mediaTimeA}
+                  duration={displayAnalysisA.analysis?.duration || 0}
+                  onSeek={(mediaTime) => seekFromMediaTime(mediaTime, analysisClipA)}
                   label="A"
                   mediaName={mediaA?.name}
                 />
@@ -987,11 +1216,11 @@ export function AudioComparison() {
               <div className="h-px bg-border" />
               <div className={cn('flex-1', activeAudio === 'a' && 'opacity-50')}>
                 <WaveformCanvas
-                  peaks={analysisB.peaks}
+                  peaks={displayAnalysisB.peaks}
                   color="#cddc39"
-                  currentTime={currentTime}
-                  duration={maxDuration}
-                  onSeek={seek}
+                  currentTime={mediaTimeB}
+                  duration={displayAnalysisB.analysis?.duration || 0}
+                  onSeek={(mediaTime) => seekFromMediaTime(mediaTime, analysisClipB)}
                   label="B"
                   mediaName={mediaB?.name}
                 />
@@ -1004,10 +1233,10 @@ export function AudioComparison() {
                 ANALYSIS
               </div>
               <SpectrogramCanvas
-                analysisA={analysisA}
-                analysisB={analysisB}
+                analysisA={displayAnalysisA}
+                analysisB={displayAnalysisB}
                 currentTime={currentTime}
-                duration={maxDuration}
+                duration={timelineDuration}
               />
             </div>
 
@@ -1017,8 +1246,8 @@ export function AudioComparison() {
                 STEREO FIELD
               </div>
               <GoniometerCanvas
-                analysisA={analysisA}
-                analysisB={analysisB}
+                analysisA={displayAnalysisA}
+                analysisB={displayAnalysisB}
                 activeAudio={activeAudio}
               />
             </div>
@@ -1031,13 +1260,13 @@ export function AudioComparison() {
               <div className="flex gap-2 h-full pt-6">
                 <LoudnessMeter
                   label="Track A"
-                  metrics={analysisA.analysis?.loudness || null}
+                  metrics={displayAnalysisA.analysis?.loudness || null}
                   color="#ff5722"
                   targetPlatform={targetPlatform}
                 />
                 <LoudnessMeter
                   label="Track B"
-                  metrics={analysisB.analysis?.loudness || null}
+                  metrics={displayAnalysisB.analysis?.loudness || null}
                   color="#cddc39"
                   targetPlatform={targetPlatform}
                 />
@@ -1048,11 +1277,11 @@ export function AudioComparison() {
           <div className="w-full h-full flex flex-col">
             <div className={cn('flex-1 relative', activeAudio === 'b' && 'opacity-50')}>
               <WaveformCanvas
-                peaks={analysisA.peaks}
+                peaks={displayAnalysisA.peaks}
                 color="#ff5722"
-                currentTime={currentTime}
-                duration={maxDuration}
-                onSeek={seek}
+                currentTime={mediaTimeA}
+                duration={displayAnalysisA.analysis?.duration || 0}
+                onSeek={(mediaTime) => seekFromMediaTime(mediaTime, analysisClipA)}
                 label="A"
                 mediaName={mediaA?.name}
               />
@@ -1060,11 +1289,11 @@ export function AudioComparison() {
             <div className="h-px bg-border" />
             <div className={cn('flex-1 relative', activeAudio === 'a' && 'opacity-50')}>
               <WaveformCanvas
-                peaks={analysisB.peaks}
+                peaks={displayAnalysisB.peaks}
                 color="#cddc39"
-                currentTime={currentTime}
-                duration={maxDuration}
-                onSeek={seek}
+                currentTime={mediaTimeB}
+                duration={displayAnalysisB.analysis?.duration || 0}
+                onSeek={(mediaTime) => seekFromMediaTime(mediaTime, analysisClipB)}
                 label="B"
                 mediaName={mediaB?.name}
               />
@@ -1074,13 +1303,13 @@ export function AudioComparison() {
           <div className="w-full h-full flex p-4 gap-4">
             <LoudnessMeter
               label="Track A"
-              metrics={analysisA.analysis?.loudness || null}
+              metrics={displayAnalysisA.analysis?.loudness || null}
               color="#ff5722"
               targetPlatform={targetPlatform}
             />
             <LoudnessMeter
               label="Track B"
-              metrics={analysisB.analysis?.loudness || null}
+              metrics={displayAnalysisB.analysis?.loudness || null}
               color="#cddc39"
               targetPlatform={targetPlatform}
             />
@@ -1089,20 +1318,20 @@ export function AudioComparison() {
           <div className="w-full h-full flex">
             <div className="flex-1 relative">
               <GoniometerCanvas
-                analysisA={analysisA}
-                analysisB={analysisB}
+                analysisA={displayAnalysisA}
+                analysisB={displayAnalysisB}
                 activeAudio={activeAudio}
               />
             </div>
             <div className="w-64 bg-surface border-l border-border p-3 space-y-3 overflow-auto">
               <PhaseCorrelation
-                correlationA={analysisA.analysis?.stereo.correlation || 0}
-                correlationB={analysisB.analysis?.stereo.correlation || 0}
+                correlationA={displayAnalysisA.analysis?.stereo.correlation || 0}
+                correlationB={displayAnalysisB.analysis?.stereo.correlation || 0}
                 mode={activeAudio}
               />
               <StereoWidth
-                widthA={analysisA.analysis?.stereo.width || 0}
-                widthB={analysisB.analysis?.stereo.width || 0}
+                widthA={displayAnalysisA.analysis?.stereo.width || 0}
+                widthB={displayAnalysisB.analysis?.stereo.width || 0}
                 mode={activeAudio}
               />
               <div className="bg-surface-alt p-3">
@@ -1111,13 +1340,13 @@ export function AudioComparison() {
                   <div className="flex justify-between">
                     <span className="text-text-muted">Mid Level:</span>
                     <span className="font-mono text-accent">
-                      {formatDb(analysisA.analysis?.stereo.midLevel || -Infinity)}
+                      {formatDb(displayAnalysisA.analysis?.stereo.midLevel || -Infinity)}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-text-muted">Side Level:</span>
                     <span className="font-mono text-accent">
-                      {formatDb(analysisA.analysis?.stereo.sideLevel || -Infinity)}
+                      {formatDb(displayAnalysisA.analysis?.stereo.sideLevel || -Infinity)}
                     </span>
                   </div>
                 </div>
@@ -1127,10 +1356,10 @@ export function AudioComparison() {
         ) : viewMode === 'spectrogram' ? (
           <div className="w-full h-full relative">
             <SpectrogramCanvas
-              analysisA={analysisA}
-              analysisB={analysisB}
+              analysisA={displayAnalysisA}
+              analysisB={displayAnalysisB}
               currentTime={currentTime}
-              duration={maxDuration}
+              duration={timelineDuration}
             />
           </div>
         ) : null}

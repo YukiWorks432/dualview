@@ -9,8 +9,11 @@
  */
 import { useRef, useEffect, useCallback } from 'react'
 
+import { calculateMediaTime } from '../lib/media/timeline'
 import { usePlaybackStore } from '../stores/playbackStore'
 import type { TimelineClip } from '../types'
+
+export { calculateMediaTime } from '../lib/media/timeline'
 
 // Drift threshold in seconds - only sync if videos drift more than this
 const DRIFT_THRESHOLD = 0.05 // 50ms - good balance between smoothness and sync
@@ -20,34 +23,6 @@ interface SyncState {
   isPlaying: boolean
   lastSyncTime: number
   frameCallbackId: number | null
-}
-
-/**
- * Calculate media time from timeline time based on clip boundaries
- * Applies speed and reverse properties for real-time preview.
- * Note: Ease curves are applied only during export for performance.
- */
-export function calculateMediaTime(timelineTime: number, clip: TimelineClip): number | null {
-  if (timelineTime < clip.startTime || timelineTime >= clip.endTime) {
-    return null
-  }
-
-  const relativeTime = timelineTime - clip.startTime
-
-  // Apply speed - faster speed means we progress through media faster
-  const speed = clip.speed || 1
-  let mediaTime = clip.inPoint + relativeTime * speed
-
-  // Clamp to valid media range (accounts for speed making us go past outPoint)
-  mediaTime = Math.min(mediaTime, clip.outPoint)
-  mediaTime = Math.max(mediaTime, clip.inPoint)
-
-  // Apply reverse - flip the time within the media range
-  if (clip.reverse) {
-    mediaTime = clip.outPoint - (mediaTime - clip.inPoint)
-  }
-
-  return mediaTime
 }
 
 /**
@@ -66,7 +41,7 @@ function getEffectivePlaybackRate(clip: TimelineClip | null, baseSpeed: number):
 export function useOptimizedClipSync(
   videoRef: React.RefObject<HTMLVideoElement | null>,
   clip: TimelineClip | null,
-): { isVisible: boolean } {
+): void {
   const syncStateRef = useRef<SyncState>({
     isPlaying: false,
     lastSyncTime: 0,
@@ -95,7 +70,7 @@ export function useOptimizedClipSync(
         isVisibleRef.current = true
       }
     }
-  }, [videoRef, clip?.id])
+  }, [videoRef, clip])
 
   // Frame-accurate sync using requestVideoFrameCallback
   useEffect(() => {
@@ -162,15 +137,16 @@ export function useOptimizedClipSync(
 
     if (hasRVFC) {
       // Use requestVideoFrameCallback for frame-accurate sync
+      const syncState = syncStateRef.current
       const onFrame = () => {
         checkAndSync()
-        syncStateRef.current.frameCallbackId = video.requestVideoFrameCallback(onFrame)
+        syncState.frameCallbackId = video.requestVideoFrameCallback(onFrame)
       }
-      syncStateRef.current.frameCallbackId = video.requestVideoFrameCallback(onFrame)
+      syncState.frameCallbackId = video.requestVideoFrameCallback(onFrame)
 
       return () => {
-        if (syncStateRef.current.frameCallbackId !== null) {
-          video.cancelVideoFrameCallback(syncStateRef.current.frameCallbackId)
+        if (syncState.frameCallbackId !== null) {
+          video.cancelVideoFrameCallback(syncState.frameCallbackId)
         }
       }
     } else {
@@ -247,8 +223,6 @@ export function useOptimizedClipSync(
     window.addEventListener('playback-speed', handleSpeed as EventListener)
     return () => window.removeEventListener('playback-speed', handleSpeed as EventListener)
   }, [videoRef])
-
-  return { isVisible: isVisibleRef.current }
 }
 
 /**
@@ -315,15 +289,16 @@ export function useOptimizedVideoSync(
     }
 
     if (hasRVFC) {
+      const syncState = syncStateRef.current
       const onFrame = () => {
         checkAndSync()
-        syncStateRef.current.frameCallbackId = video.requestVideoFrameCallback(onFrame)
+        syncState.frameCallbackId = video.requestVideoFrameCallback(onFrame)
       }
-      syncStateRef.current.frameCallbackId = video.requestVideoFrameCallback(onFrame)
+      syncState.frameCallbackId = video.requestVideoFrameCallback(onFrame)
 
       return () => {
-        if (syncStateRef.current.frameCallbackId !== null) {
-          video.cancelVideoFrameCallback(syncStateRef.current.frameCallbackId)
+        if (syncState.frameCallbackId !== null) {
+          video.cancelVideoFrameCallback(syncState.frameCallbackId)
         }
       }
     } else {

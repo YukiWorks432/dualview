@@ -1,8 +1,8 @@
 export type VideoFrameElement = HTMLVideoElement | HTMLCanvasElement
 export type VisualFrameElement = VideoFrameElement | HTMLImageElement
 
-export function isVideoFrameReady(source: VideoFrameElement | null): boolean {
-  if (!source) return false
+export function isVideoFrameReady(source: VideoFrameElement | null): source is VideoFrameElement {
+  if (!source || source.dataset.frameReady === 'false') return false
   if (source instanceof HTMLVideoElement) {
     return source.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA
   }
@@ -20,7 +20,9 @@ export function getVideoFrameDimensions(source: VideoFrameElement | null): {
   return { width: source.width, height: source.height }
 }
 
-export function isVisualFrameReady(source: VisualFrameElement | null): boolean {
+export function isVisualFrameReady(
+  source: VisualFrameElement | null,
+): source is VisualFrameElement {
   if (!source) return false
   if (source instanceof HTMLImageElement) {
     return source.complete && source.naturalWidth > 0 && source.naturalHeight > 0

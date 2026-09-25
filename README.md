@@ -34,8 +34,8 @@
 </p>
 
 <p align="center">
-  Compare videos, images, audio, 3D models, documents, and text with professional-grade precision.<br>
-  GPU-accelerated analysis • 100+ transitions • Frame-accurate sync • Real-time metrics
+  Compare delivery-ready videos and images with synchronized playback, visual analysis, and embedded-audio QA.<br>
+  GPU-accelerated analysis • ProRes playback • Frame-accurate review • Exportable evidence
 </p>
 
 <br>
@@ -60,7 +60,6 @@
   <img src="https://img.shields.io/badge/React-19.3.0-61DAFB?style=flat-square&logo=react" alt="React">
   <img src="https://img.shields.io/badge/TypeScript-7.0.2-3178C6?style=flat-square&logo=typescript" alt="TypeScript">
   <img src="https://img.shields.io/badge/Vite-8.3.0-646CFF?style=flat-square&logo=vite" alt="Vite">
-  <img src="https://img.shields.io/badge/Three.js-0.186-000000?style=flat-square&logo=threedotjs" alt="Three.js">
   <img src="https://img.shields.io/badge/WebGL-GPU_Accelerated-990000?style=flat-square&logo=webgl" alt="WebGL">
   <img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" alt="License">
 </p>
@@ -87,18 +86,17 @@
 
 ## Why DualView?
 
-Whether you're a **VFX artist** comparing renders, an **AI researcher** evaluating model outputs, a **photographer** checking edits, or a **QA engineer** catching regressions — DualView gives you the tools to see differences that matter.
+This maintained fork focuses on **pre-delivery image and video review**: checking client revisions, render changes, compression artifacts, and accidental differences before delivery.
 
-> **Drop your files** → **Choose a mode** → **Analyze** → **Export**
+> **Drop A/B media** → **Choose a comparison mode** → **Inspect differences** → **Save evidence**
 
-| Type            | vs  | Analysis                                       |
-| :-------------- | :-: | :--------------------------------------------- |
-| 🎬 **Video**    |  ↔  | SSIM similarity, pixel difference, heatmaps    |
-| 🖼️ **Image**    |  ↔  | Delta E color diff, histogram, false color     |
-| 🎵 **Audio**    |  ↔  | LUFS loudness, stereo width, phase correlation |
-| 📦 **3D Model** |  ↔  | Side-by-side orbit view, wireframe toggle      |
-| 📄 **Document** |  ↔  | CSV, Excel, Word, PDF with cell/word diff      |
-| 📝 **Text**     |  ↔  | Character/word diff, syntax highlighting       |
+| Input                       | Review                                                                                |
+| :-------------------------- | :------------------------------------------------------------------------------------ |
+| 🎬 **Video**                | Synchronized playback, ProRes playback, scopes, SSIM/PSNR, heatmaps, WebGL analysis   |
+| 🖼️ **Image**                | Slider, side-by-side, pixel/color difference, loupe, histogram, WebGL analysis        |
+| 🎵 **Embedded video audio** | Waveform, integrated loudness reference, sample peak, phase correlation, stereo width |
+
+Standalone audio files, text/JSON, 3D models, and document comparison are not part of this maintained fork's current scope.
 
 ---
 
@@ -111,11 +109,11 @@ Whether you're a **VFX artist** comparing renders, an **AI researcher** evaluati
 ### 🎬 Video & Image
 
 - Frame-by-frame navigation
-- Synchronized playback (0.25x - 4x)
+- Synchronized playback
+- Apple ProRes playback in-browser
 - Loop regions with I/O points
 - Multi-clip timeline editing
 - Clip trimming & positioning
-- Filmstrip thumbnails on clips
 
 </td>
 <td width="50%">
@@ -124,50 +122,50 @@ Whether you're a **VFX artist** comparing renders, an **AI researcher** evaluati
 
 - SSIM & PSNR metrics
 - Delta E perceptual difference
-- Pixel inspector (RGB/HSL)
-- Histogram overlay
+- Difference heatmaps including alpha
+- Pixel inspector
 - Magnifier loupe
-- Video scopes (Waveform, Vectorscope)
+- Video scopes
 
 </td>
 </tr>
 <tr>
 <td width="50%">
 
-### 🎨 Professional Modes
+### 🎨 Comparison Modes
 
-- 15+ comparison modes
+- 12 image/video review modes
 - 50+ WebGL analysis shaders
-- False color exposure
-- Focus peaking
-- Zebra stripes
-- Zone system (Ansel Adams)
+- Slider and side-by-side review
+- Blend, flicker, heatmap, and grid views
+- Focus peaking and zebra analysis
+- Synchronized pan/zoom
 
 </td>
 <td width="50%">
 
 ### 📤 Export Options
 
-- MP4, WebM, GIF formats
-- 100+ GPU transitions
-- Sweep animations
-- Screenshots (PNG/JPEG)
-- Up to 4K resolution
+- Current comparison screenshots (PNG/JPEG)
 - PDF comparison reports
+- MP4, WebM, and GIF export for browser-native video
+- WebGL transition and stitch exports
+- Up to 4K screenshot resolution
+- ProRes current-frame evidence via Image/PDF export
 
 </td>
 </tr>
 <tr>
 <td width="50%">
 
-### 🎵 Audio Analysis
+### 🎵 Embedded Audio QA
 
+- Timeline-aware playback for trimmed/positioned clips
 - Waveform visualization with playhead
-- Goniometer / Stereo field display
-- LUFS metering (EBU R128 / ITU-R BS.1770)
-- True Peak & RMS measurement
+- Integrated loudness reference comparison
+- Sample Peak & RMS measurement
 - Phase correlation & stereo width
-- Platform loudness targets (Spotify, YouTube, etc.)
+- EBU R128 and ATSC A/85 reference targets
 
 </td>
 <td width="50%">
@@ -188,33 +186,29 @@ Whether you're a **VFX artist** comparing renders, an **AI researcher** evaluati
 
 <h2 id="comparison-modes">🎯 Comparison Modes</h2>
 
-DualView offers **16 comparison modes** to suit every workflow:
+DualView currently exposes **12 comparison modes**:
 
-### Core Modes
+### Primary Modes
 
-| Mode             | Key | Description                                                       |
-| ---------------- | --- | ----------------------------------------------------------------- |
-| **Slider**       | `1` | Draggable divider reveals A/B — vertical or horizontal            |
-| **Side by Side** | `2` | Split view with synchronized playback                             |
-| **Difference**   | `3` | GPU-accelerated difference analysis (50+ modes)                   |
-| **Audio**        | `4` | Professional audio analysis (waveform, goniometer, LUFS metering) |
-| **Prompt Diff**  | `5` | Text comparison with syntax highlighting                          |
-| **JSON Diff**    | `6` | Structural JSON tree comparison                                   |
-| **3D Model**     | `7` | GLB/GLTF model comparison with orbit controls                     |
-| **Document**     | `8` | CSV, Excel, Word, PDF comparison with cell/word diff              |
+| Mode             | Key | Description                                      |
+| ---------------- | --- | ------------------------------------------------ |
+| **Slider**       | `1` | Draggable A/B reveal                             |
+| **Side by Side** | `2` | View synchronized A/B media together             |
+| **Difference**   | `3` | GPU-accelerated visual difference analysis       |
+| **Audio QA**     | `4` | Analyze audio embedded in the current A/B videos |
 
-### Advanced Modes
+### Additional Modes
 
-| Mode              | Key | Description                                  |
-| ----------------- | --- | -------------------------------------------- |
-| **Quad View**     | —   | Four-panel layout for multi-angle comparison |
-| **Radial Loupe**  | —   | Magnifying lens follows cursor               |
-| **Grid Tile**     | —   | Checkerboard interleaving of A/B             |
-| **Blend Modes**   | —   | Difference, Overlay, Multiply, Screen        |
-| **Split Screen**  | —   | Grid layouts: 2×1, 1×2, 2×2                  |
-| **Flicker**       | —   | Auto-alternating A/B for spotting changes    |
-| **Heatmap**       | —   | Pixel difference with color mapping          |
-| **Morphological** | —   | Erosion, dilation, edge detection            |
+| Mode              | Description                                           |
+| ----------------- | ----------------------------------------------------- |
+| **Split Screen**  | Multi-panel image/video layout                        |
+| **Quad View**     | Four-panel comparison                                 |
+| **Blend Modes**   | Difference, overlay, multiply, and screen compositing |
+| **Flicker**       | Rapid A/B switching                                   |
+| **Heatmap**       | Pixel and alpha difference visualization              |
+| **Radial Loupe**  | Magnified circular comparison                         |
+| **Grid Tile**     | Checkerboard A/B comparison                           |
+| **Morphological** | Morphological difference operations                   |
 
 ---
 
@@ -333,129 +327,35 @@ The heart of DualView is its **GPU-accelerated analysis engine** with **50+ GLSL
 
 ---
 
-## 🎵 Professional Audio Analysis
+## 🎵 Embedded Video Audio QA
 
-DualView includes a **broadcast-grade audio analysis suite** for comparing audio files:
+Audio QA analyzes the primary audio track embedded in the videos on Track A and Track B. Standalone audio-file import is intentionally outside the maintained fork's current scope.
 
-### Visualization Modes
+The audio player follows timeline clip placement, trim in-points, and playback speed. Reverse-audio playback is currently not synthesized.
 
-| Mode         | Description                                      |
-| ------------ | ------------------------------------------------ |
-| **All**      | Dashboard view with all tools in a 2×2 grid      |
-| **Waveform** | Dual waveform display with playhead sync         |
-| **Loudness** | Side-by-side LUFS meters with platform targets   |
-| **Stereo**   | Goniometer with phase correlation & width meters |
-| **Analysis** | Frequency visualization overlay                  |
+### Measurements
 
-### Waveform Display
+| Measurement                | Current behavior                                                            |
+| -------------------------- | --------------------------------------------------------------------------- |
+| **Integrated loudness**    | Full decoded source-file estimate used against selectable reference targets |
+| **Tail 400 ms / Tail 3 s** | Final 400 ms / 3 s of the decoded source, not live playhead meters          |
+| **Sample Peak**            | Maximum decoded sample level; not presented as standards-compliant dBTP     |
+| **RMS**                    | Root mean square level                                                      |
+| **Phase correlation**      | Stereo phase relationship                                                   |
+| **Stereo width**           | Mid/side-derived width indicator                                            |
 
-Interactive waveform visualization:
+Reference targets include Spotify, YouTube, Apple Music, EBU R128 (-23 LUFS), and ATSC A/85 (-24 LUFS). The ±1 LU indicator is a convenience comparison, not a certification of platform or broadcast compliance.
 
-| Feature          | Description                          |
-| ---------------- | ------------------------------------ |
-| **Dual Track**   | A and B waveforms stacked vertically |
-| **Playhead**     | Synced playhead with click-to-seek   |
-| **Color Coded**  | Orange for Track A, Lime for Track B |
-| **Peak Display** | 500-sample peak visualization        |
-
-### Goniometer / Stereo Field
-
-Professional stereo field visualization:
-
-| Display               | Purpose                                   |
-| --------------------- | ----------------------------------------- |
-| **Lissajous Grid**    | L/R axes with M/S reference lines         |
-| **Stereo Ellipse**    | Width and correlation as ellipse shape    |
-| **Phase Correlation** | -1 (out of phase) to +1 (mono compatible) |
-| **Stereo Width**      | 0% (mono) to 100% (wide)                  |
-| **Mid/Side Levels**   | dB readout for M/S components             |
-
-### Loudness Metering (EBU R128)
-
-Industry-standard loudness measurement:
-
-| Metric              | Standard       | Description                |
-| ------------------- | -------------- | -------------------------- |
-| **Integrated LUFS** | ITU-R BS.1770  | Full program loudness      |
-| **Momentary**       | 400ms window   | Short-term peaks           |
-| **Short-term**      | 3s window      | Rolling average            |
-| **True Peak**       | dBTP           | Intersample peak detection |
-| **LRA**             | Loudness Range | Dynamic range in LU        |
-| **RMS**             | dBFS           | Root mean square level     |
-| **Crest Factor**    | dB             | Peak to RMS ratio          |
-
-### Platform Loudness Targets
-
-One-click compliance checking for major platforms:
-
-| Platform             | Target   | Tolerance |
-| -------------------- | -------- | --------- |
-| Spotify              | -14 LUFS | ±1 LU     |
-| YouTube              | -14 LUFS | ±1 LU     |
-| Apple Music          | -16 LUFS | ±1 LU     |
-| Amazon Music         | -14 LUFS | ±1 LU     |
-| Broadcast (EBU R128) | -24 LUFS | ±1 LU     |
-| Cinema (SMPTE)       | -27 LUFS | ±1 LU     |
-| Podcast              | -16 LUFS | ±1 LU     |
+To avoid exhausting browser memory on long or high-channel-count sources, embedded-audio analysis refuses decoded PCM estimates above 512 MiB and reports the reason in the Audio QA view.
 
 ### Audio Shortcuts
 
-| Key     | Action          |
-| ------- | --------------- |
-| `A`     | Solo Track A    |
-| `B`     | Solo Track B    |
-| `S`     | Play Both (A+B) |
-| `Space` | Play/Pause      |
-
----
-
-## 📄 Document Comparison
-
-Compare CSV, Excel, Word, and PDF documents with professional diff tools:
-
-### Supported Formats
-
-| Format    | Extensions      | Library        |
-| --------- | --------------- | -------------- |
-| **CSV**   | `.csv`          | PapaParse      |
-| **Excel** | `.xlsx`, `.xls` | SheetJS (xlsx) |
-| **Word**  | `.docx`         | Mammoth.js     |
-| **PDF**   | `.pdf`          | PDF.js         |
-
-### CSV & Excel Comparison
-
-| Feature          | Description                                     |
-| ---------------- | ----------------------------------------------- |
-| **Side-by-Side** | Tables A and B displayed next to each other     |
-| **Unified View** | Single table with inline diff highlighting      |
-| **Changes Only** | Filter to show only rows with differences       |
-| **Cell Diff**    | Added (green), Removed (red), Modified (yellow) |
-| **Sync Scroll**  | Synchronized scrolling between A and B          |
-| **Statistics**   | Row counts, change counts, match percentage     |
-| **Multi-Sheet**  | Excel workbook sheet navigation                 |
-
-### Word Document Comparison
-
-| Feature             | Description                              |
-| ------------------- | ---------------------------------------- |
-| **Word-Level Diff** | Highlights individual word changes       |
-| **Side-by-Side**    | Both documents with synced scrolling     |
-| **Unified View**    | Single document with inline changes      |
-| **Changes Only**    | Show only modified paragraphs            |
-| **Rich Formatting** | Preserves bold, italic, lists, tables    |
-| **Statistics**      | Word counts, added/removed, similarity % |
-
-### PDF Comparison
-
-| Feature               | Description                          |
-| --------------------- | ------------------------------------ |
-| **Visual Comparison** | Page-by-page image comparison        |
-| **Side-by-Side**      | Both PDFs with page sync             |
-| **Overlay Mode**      | Adjustable opacity overlay           |
-| **Slider Mode**       | Draggable wipe comparison            |
-| **Text Comparison**   | Extracted text with word diff        |
-| **Thumbnails**        | Page overview with change indicators |
-| **Statistics**        | Page counts, similarity percentage   |
+| Key     | Action        |
+| ------- | ------------- |
+| `A`     | Solo Track A  |
+| `B`     | Solo Track B  |
+| `S`     | Play both A+B |
+| `Space` | Play/Pause    |
 
 ---
 
@@ -509,8 +409,13 @@ Export with stunning WebGL shader transitions:
 
 - **Formats:** PNG, JPEG (with quality control)
 - **Resolutions:** 720p, 1080p, 4K
-- **Sources:** Comparison view, A only, B only
+- **Sources:** Current comparison view, A only, B only
 - **Clipboard:** One-click copy
+- **ProRes:** Current decoded frame is supported in screenshots and PDF reports
+
+> [!NOTE]
+> Animated Video/GIF, transition, and stitch export currently require browser-native video decoding.
+> ProRes sources are rejected for those export paths instead of producing stale or incorrect frames.
 
 ---
 
@@ -540,13 +445,13 @@ DualView is built for speed. Master these shortcuts:
 
 ### Modes & Views
 
-| Key       | Action                        |
-| --------- | ----------------------------- |
-| `1` - `8` | Switch comparison modes       |
-| `F`       | Flip A/B (in Difference mode) |
-| `P`       | Toggle focus peaking          |
-| `Z`       | Toggle zebra stripes          |
-| `G`       | Toggle video scopes           |
+| Key       | Action                          |
+| --------- | ------------------------------- |
+| `1` - `4` | Switch primary comparison modes |
+| `F`       | Flip A/B (in Difference mode)   |
+| `P`       | Toggle focus peaking            |
+| `Z`       | Toggle zebra stripes            |
+| `G`       | Toggle video scopes             |
 
 ### Timeline Editing
 
@@ -616,17 +521,14 @@ Toggle with `G` key.
 </td>
 <td>
 
-| Media          | Technology     |
-| -------------- | -------------- |
-| Video Encoding | WebCodecs API  |
-| MP4 Muxing     | Mediabunny     |
-| GIF Encoding   | gif.js         |
-| 3D Rendering   | Three.js       |
-| PDF Export     | jsPDF          |
-| CSV Parsing    | PapaParse      |
-| Excel Parsing  | SheetJS (xlsx) |
-| Word Parsing   | Mammoth.js     |
-| PDF Parsing    | PDF.js         |
+| Media               | Technology                |
+| ------------------- | ------------------------- |
+| Native video decode | Browser media pipeline    |
+| ProRes decode       | Mediabunny + TurboRes     |
+| Video encoding      | WebCodecs / MediaRecorder |
+| MP4 muxing          | Mediabunny                |
+| GIF encoding        | gif.js                    |
+| PDF export          | jsPDF                     |
 
 </td>
 </tr>
@@ -701,49 +603,30 @@ paths use the static `404.html` page instead of falling back to the application 
 ```
 src/
 ├── components/
-│   ├── comparison/        # 15+ comparison mode components
+│   ├── comparison/        # Image/video comparison and analysis modes
 │   │   ├── SliderComparison.tsx
 │   │   ├── SideBySide.tsx
-│   │   ├── WebGLComparison.tsx    # 50+ GPU analysis modes
-│   │   ├── AudioComparison.tsx    # Professional audio suite
-│   │   ├── Model3DComparison.tsx  # GLB/GLTF support
-│   │   ├── DocumentComparison.tsx # Document comparison wrapper
-│   │   ├── CSVComparison.tsx      # CSV/spreadsheet diff
-│   │   ├── ExcelComparison.tsx    # Excel workbook diff
-│   │   ├── DOCXComparison.tsx     # Word document diff
-│   │   ├── PDFComparison.tsx      # PDF visual/text diff
-│   │   └── ...
+│   │   ├── WebGLComparison.tsx
+│   │   ├── AudioComparison.tsx
+│   │   ├── BlendModes.tsx
+│   │   └── DifferenceHeatmap.tsx
+│   ├── export/            # Export configuration panels
 │   ├── layout/            # Header, Sidebar, ExportDialog
-│   ├── preview/           # Main preview canvas
+│   ├── media/             # Native/ProRes visual surfaces and import UI
+│   ├── preview/           # Main comparison capture surface
 │   ├── timeline/          # Timeline editor + clips
-│   ├── scopes/            # Video scopes (histogram, vectorscope)
-│   ├── audio/             # Audio waveform visualization
+│   ├── scopes/            # Video scopes
 │   └── ui/                # Reusable components
 ├── stores/                # Zustand state management
-│   ├── projectStore.ts    # Comparison settings
-│   ├── mediaStore.ts      # Media files
-│   ├── timelineStore.ts   # Tracks & clips
-│   ├── playbackStore.ts   # Playback state
-│   ├── historyStore.ts    # Undo/redo
-│   └── persistenceStore.ts# Project save/load
-├── hooks/                 # Custom React hooks
-│   ├── useOptimizedVideoSync.ts   # Frame-accurate sync
-│   ├── useSyncedZoom.ts           # Synchronized pan/zoom
-│   └── ...
+├── hooks/                 # Playback, ProRes and UI hooks
 ├── lib/
-│   ├── webgl/
-│   │   ├── shaders/       # 100+ transition shaders
-│   │   └── comparison-shaders/    # 50+ analysis shaders
-│   ├── audio/
-│   │   ├── AudioAnalyzer.ts       # LUFS, RMS, phase correlation
-│   │   ├── WebGLSpectrogramRenderer.ts   # GPU spectrogram
-│   │   ├── WebGLGoniometerRenderer.ts    # Stereo vectorscope
-│   │   └── WebGLSpectrumAnalyzer.ts      # Real-time FFT
-│   ├── documentParser.ts  # CSV, Excel, DOCX, PDF parsing
-│   ├── mp4Encoder.ts      # WebCodecs MP4 encoding
-│   ├── gifEncoder.ts      # GIF encoding
+│   ├── audio/             # Loudness, waveform and stereo analysis
+│   ├── media/             # File probing, ProRes/audio decode, timeline mapping
+│   ├── webgl/             # Comparison and transition shaders
+│   ├── mp4Encoder.ts
+│   ├── gifEncoder.ts
 │   └── metrics.ts         # SSIM/PSNR calculation
-└── types/                 # TypeScript definitions
+└── types/
 ```
 
 ---
@@ -754,44 +637,44 @@ src/
 <tr>
 <td width="50%">
 
-### 🎨 Creative Professionals
+### 🎨 Creative Delivery
 
-- Before/after retouching
+- Client revision verification
+- Before/after retouching checks
 - Color grading comparison
-- VFX render comparison
-- Animation quality check
-
-</td>
-<td width="50%">
-
-### 🤖 AI & ML
-
-- Model output comparison
-- Prompt iteration tracking
-- Image generation A/B testing
-- Upscaling quality analysis
-
-</td>
-</tr>
-<tr>
-<td width="50%">
-
-### 🎮 Game Development
-
-- Asset comparison
-- LOD quality check
-- Texture compression analysis
-- 3D model comparison
+- VFX render and animation QA
 
 </td>
 <td width="50%">
 
 ### 🔍 Quality Assurance
 
-- Visual regression testing
-- Compression artifact detection
+- Accidental-change detection
+- Compression artifact inspection
 - Frame-by-frame verification
-- Automated diff reports
+- Screenshot/PDF evidence for review
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+### 🎬 Video Finishing
+
+- ProRes source playback
+- Embedded audio loudness reference checks
+- Video scopes
+- A/B synchronization
+
+</td>
+<td width="50%">
+
+### 🤖 Generated Media Review
+
+- Image generation A/B comparison
+- Upscaling quality analysis
+- Video output comparison
+- Visual regression inspection
 
 </td>
 </tr>
@@ -809,6 +692,8 @@ src/
 | Safari 16.4+ | Supported       |
 
 MP4 export additionally depends on the browser exposing the WebCodecs `VideoEncoder` API.
+ProRes playback is decoded locally with Mediabunny/TurboRes; animated exports for ProRes are currently
+disabled, while current-frame Image and PDF export remain available.
 
 ---
 

@@ -5,6 +5,7 @@ import {
   type CSSProperties,
   type ForwardedRef,
   type MouseEvent,
+  type SyntheticEvent,
 } from 'react'
 
 import { useOptimizedClipSync } from '../../hooks/useOptimizedVideoSync'
@@ -19,6 +20,7 @@ interface VideoSurfaceProps {
   style?: CSSProperties
   dataTrack?: string
   onClick?: (event: MouseEvent<VideoFrameElement>) => void
+  onFrameReady?: () => void
 }
 
 function assignRef<T>(ref: ForwardedRef<T>, value: T | null) {
@@ -30,7 +32,7 @@ function assignRef<T>(ref: ForwardedRef<T>, value: T | null) {
 }
 
 export const VideoSurface = forwardRef<VideoFrameElement, VideoSurfaceProps>(function VideoSurface(
-  { media, clip, className, style, dataTrack, onClick },
+  { media, clip, className, style, dataTrack, onClick, onFrameReady },
   forwardedRef,
 ) {
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -38,11 +40,19 @@ export const VideoSurface = forwardRef<VideoFrameElement, VideoSurfaceProps>(fun
   const useMediabunny = media.playbackBackend === 'mediabunny'
 
   useOptimizedClipSync(videoRef, useMediabunny ? null : clip)
-  useProResClipSync(canvasRef, useMediabunny ? media : null, useMediabunny ? clip : null)
+  useProResClipSync(
+    canvasRef,
+    useMediabunny ? media : null,
+    useMediabunny ? clip : null,
+    onFrameReady,
+  )
 
   const setVideoRef = useCallback(
     (node: HTMLVideoElement | null) => {
       videoRef.current = node
+      if (node && node.dataset.frameReady === undefined) {
+        node.dataset.frameReady = 'false'
+      }
       assignRef(forwardedRef, node)
     },
     [forwardedRef],
@@ -51,9 +61,28 @@ export const VideoSurface = forwardRef<VideoFrameElement, VideoSurfaceProps>(fun
   const setCanvasRef = useCallback(
     (node: HTMLCanvasElement | null) => {
       canvasRef.current = node
+      if (node && node.dataset.frameReady === undefined) {
+        node.dataset.frameReady = 'false'
+      }
       assignRef(forwardedRef, node)
     },
     [forwardedRef],
+  )
+
+  const handleNativeFramePending = useCallback(
+    (event: SyntheticEvent<HTMLVideoElement>) => {
+      event.currentTarget.dataset.frameReady = 'false'
+      onFrameReady?.()
+    },
+    [onFrameReady],
+  )
+
+  const handleNativeFrameReady = useCallback(
+    (event: SyntheticEvent<HTMLVideoElement>) => {
+      event.currentTarget.dataset.frameReady = 'true'
+      onFrameReady?.()
+    },
+    [onFrameReady],
   )
 
   if (useMediabunny) {
@@ -76,6 +105,9 @@ export const VideoSurface = forwardRef<VideoFrameElement, VideoSurfaceProps>(fun
       style={style}
       data-track={dataTrack}
       onClick={onClick}
+      onLoadedData={handleNativeFrameReady}
+      onSeeking={handleNativeFramePending}
+      onSeeked={handleNativeFrameReady}
       muted
       playsInline
       preload="auto"

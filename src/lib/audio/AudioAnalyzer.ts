@@ -3,7 +3,7 @@
  *
  * Implements industry-standard audio metrics:
  * - LUFS (Loudness Units Full Scale) - EBU R128 / ITU-R BS.1770
- * - True Peak detection
+ * - Sample Peak
  * - RMS (Root Mean Square)
  * - Crest Factor (Peak to RMS ratio)
  * - Phase Correlation
@@ -20,7 +20,8 @@ export interface LoudnessMetrics {
   loudnessRange: number // LRA - dynamic range in LU
 
   // Peak measurements
-  truePeak: number // dBTP
+  // Kept for compatibility; this currently mirrors samplePeak and is not a standards-compliant dBTP value.
+  truePeak: number
   samplePeak: number // dBFS
 
   // RMS
@@ -142,31 +143,6 @@ function linearToDb(value: number): number {
  */
 function meanSquareToLUFS(meanSquare: number): number {
   return meanSquare > 0 ? -0.691 + 10 * Math.log10(meanSquare) : -Infinity
-}
-
-/**
- * Find true peak using 4x oversampling
- */
-function findTruePeak(data: Float32Array): number {
-  let maxPeak = 0
-
-  // Simple 4x oversampling using linear interpolation
-  // (A proper implementation would use sinc interpolation)
-  for (let i = 0; i < data.length - 1; i++) {
-    const current = Math.abs(data[i])
-    const next = Math.abs(data[i + 1])
-
-    maxPeak = Math.max(maxPeak, current, next)
-
-    // Check interpolated samples
-    for (let j = 1; j < 4; j++) {
-      const t = j / 4
-      const interpolated = Math.abs(data[i] * (1 - t) + data[i + 1] * t)
-      maxPeak = Math.max(maxPeak, interpolated)
-    }
-  }
-
-  return maxPeak
 }
 
 /**
@@ -388,7 +364,9 @@ export async function analyzeAudio(audioBuffer: AudioBuffer): Promise<AudioAnaly
     const absRight = Math.abs(rightChannel[i])
     if (absRight > samplePeak) samplePeak = absRight
   }
-  const truePeak = Math.max(findTruePeak(leftChannel), findTruePeak(rightChannel))
+  // A standards-compliant true-peak estimator requires a proper oversampling filter.
+  // Until that is implemented, keep the legacy field equal to sample peak and do not label it dBTP.
+  const truePeak = samplePeak
 
   // Calculate RMS
   const leftRms = Math.sqrt(calculateMeanSquare(leftChannel))
@@ -489,13 +467,27 @@ export const LOUDNESS_TARGETS = {
   appleMusic: -16,
   amazonMusic: -14,
   tidal: -14,
-  broadcast: -24, // EBU R128
-  cinema: -27, // SMPTE
+  ebuR128: -23,
+  atscA85: -24,
+  cinema: -27,
   podcast: -16,
 } as const
 
+export const LOUDNESS_TARGET_LABELS: Record<keyof typeof LOUDNESS_TARGETS, string> = {
+  spotify: 'Spotify',
+  youtube: 'YouTube',
+  appleMusic: 'Apple Music',
+  amazonMusic: 'Amazon Music',
+  tidal: 'TIDAL',
+  ebuR128: 'EBU R128',
+  atscA85: 'ATSC A/85',
+  cinema: 'Cinema reference',
+  podcast: 'Podcast reference',
+}
+
 /**
- * Check if audio meets platform loudness requirements
+ * Check if audio is within ±1 LU of a selected reference target.
+ * This is a convenience comparison, not a certification of platform or broadcast compliance.
  */
 export function checkLoudnessCompliance(
   integrated: number,

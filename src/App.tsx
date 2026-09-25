@@ -196,9 +196,16 @@ export default function App() {
           break
         case 'KeyS':
           // Quick screenshot (Shift+S)
-          if (e.shiftKey && canvasRef.current) {
+          if (e.shiftKey) {
             e.preventDefault()
-            captureCanvasScreenshot(canvasRef.current, 'png').then((blob) => {
+            const frame = previewRef.current?.captureFrame() ?? null
+            if (!frame) {
+              console.warn(
+                'Quick screenshot skipped because the current comparison frame is not ready',
+              )
+              break
+            }
+            captureCanvasScreenshot(frame, 'png').then((blob) => {
               if (blob) {
                 downloadBlob(blob, `dualview-screenshot-${Date.now()}.png`)
               }
@@ -394,7 +401,12 @@ export default function App() {
 
       {isExportOpen && (
         <Suspense fallback={null}>
-          <ExportDialog isOpen onClose={() => setIsExportOpen(false)} canvasRef={canvasRef} />
+          <ExportDialog
+            isOpen
+            onClose={() => setIsExportOpen(false)}
+            canvasRef={canvasRef}
+            captureFrame={(options) => previewRef.current?.captureFrame(options) ?? null}
+          />
         </Suspense>
       )}
       <KeyboardShortcutsHelp isOpen={shortcutsHelp.isOpen} onClose={shortcutsHelp.close} />

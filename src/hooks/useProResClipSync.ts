@@ -2,14 +2,16 @@ import { ALL_FORMATS, BlobSource, CanvasSink, Input } from 'mediabunny'
 import { useEffect } from 'react'
 
 import { ensureProResDecoder } from '../lib/media/prores'
+import { LatestRequestGate } from '../lib/media/requestGate'
+import { calculateMediaTime } from '../lib/media/timeline'
 import { usePlaybackStore } from '../stores/playbackStore'
 import type { MediaFile, TimelineClip } from '../types'
-import { calculateMediaTime } from './useOptimizedVideoSync'
 
 export function useProResClipSync(
   canvasRef: React.RefObject<HTMLCanvasElement | null>,
   media: MediaFile | null,
   clip: TimelineClip | null,
+  onFrameReady?: () => void,
 ): void {
   useEffect(() => {
     if (!media || media.playbackBackend !== 'mediabunny' || !clip) return
@@ -18,13 +20,21 @@ export function useProResClipSync(
     let input: Input | null = null
     let sink: CanvasSink | null = null
     let rendering = false
-    let queuedTimelineTime: number | null = null
+    let queuedRequest: { timelineTime: number; generation: number } | null = null
+    const requestGate = new LatestRequestGate()
+    let requestGeneration = requestGate.begin()
 
     const clearFrame = () => {
       const canvas = canvasRef.current
       const context = canvas?.getContext('2d')
+      if (canvas) {
+        canvas.dataset.frameReady = 'false'
+      }
       if (canvas && context) {
         context.clearRect(0, 0, canvas.width, canvas.height)
+      }
+      if (!usePlaybackStore.getState().isPlaying) {
+        onFrameReady?.()
       }
     }
 
@@ -33,18 +43,18 @@ export function useProResClipSync(
       rendering = true
 
       try {
-        while (!disposed && queuedTimelineTime !== null) {
-          const timelineTime = queuedTimelineTime
-          queuedTimelineTime = null
+        while (!disposed && queuedRequest !== null) {
+          const request = queuedRequest
+          queuedRequest = null
 
-          const mediaTime = calculateMediaTime(timelineTime, clip)
+          const mediaTime = calculateMediaTime(request.timelineTime, clip)
           if (mediaTime === null) {
             clearFrame()
             continue
           }
 
           const frame = await sink.getCanvas(mediaTime)
-          if (disposed || !frame) continue
+          if (disposed || !frame || !requestGate.isCurrent(request.generation)) continue
 
           const canvas = canvasRef.current
           if (!canvas) continue
@@ -60,6 +70,11 @@ export function useProResClipSync(
 
           context.clearRect(0, 0, canvas.width, canvas.height)
           context.drawImage(source, 0, 0, canvas.width, canvas.height)
+          canvas.dataset.frameReady = 'true'
+
+          if (!usePlaybackStore.getState().isPlaying) {
+            onFrameReady?.()
+          }
         }
       } catch (error) {
         if (!disposed) {
@@ -67,14 +82,22 @@ export function useProResClipSync(
         }
       } finally {
         rendering = false
-        if (!disposed && queuedTimelineTime !== null) {
+        if (!disposed && queuedRequest !== null) {
           void renderQueuedFrame()
         }
       }
     }
 
-    const requestFrame = (timelineTime: number) => {
-      queuedTimelineTime = timelineTime
+    const requestFrame = (timelineTime: number, invalidateInFlight = false) => {
+      if (invalidateInFlight) {
+        requestGeneration = requestGate.begin()
+      }
+
+      if (!usePlaybackStore.getState().isPlaying) {
+        clearFrame()
+      }
+
+      queuedRequest = { timelineTime, generation: requestGeneration }
       void renderQueuedFrame()
     }
 
@@ -108,16 +131,23 @@ export function useProResClipSync(
 
     const unsubscribe = usePlaybackStore.subscribe((state, previousState) => {
       if (state.currentTime !== previousState.currentTime) {
-        requestFrame(state.currentTime)
+        requestFrame(state.currentTime, !state.isPlaying)
       }
     })
 
+    const handlePlaybackSeek = (event: CustomEvent<{ time: number }>) => {
+      requestFrame(event.detail.time, true)
+    }
+
+    window.addEventListener('playback-seek', handlePlaybackSeek as EventListener)
     void initialize()
 
     return () => {
       disposed = true
-      queuedTimelineTime = null
+      requestGate.invalidate()
+      queuedRequest = null
       unsubscribe()
+      window.removeEventListener('playback-seek', handlePlaybackSeek as EventListener)
       input?.dispose()
     }
   }, [
@@ -133,5 +163,6 @@ export function useProResClipSync(
     clip?.outPoint,
     clip?.speed,
     clip?.reverse,
+    onFrameReady,
   ])
 }
