@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
 
+import { isExportTrackSelected } from '../../lib/exportSource'
 import { GIF_PRESETS } from '../../lib/gifEncoder'
 import {
   getVisualFrameDimensions,
@@ -245,11 +246,14 @@ export function ExportDialog({ isOpen, onClose, canvasRef, captureFrame }: Expor
       const fileA = clipA ? getFile(clipA.mediaId) : null
       const fileB = clipB ? getFile(clipB.mediaId) : null
 
+      const unsupportedA =
+        fileA?.playbackBackend === 'mediabunny' || mediaA instanceof HTMLCanvasElement
+      const unsupportedB =
+        fileB?.playbackBackend === 'mediabunny' || mediaB instanceof HTMLCanvasElement
+
       if (
-        (clipA && fileA?.playbackBackend === 'mediabunny') ||
-        (clipB && fileB?.playbackBackend === 'mediabunny') ||
-        mediaA instanceof HTMLCanvasElement ||
-        mediaB instanceof HTMLCanvasElement
+        (isExportTrackSelected(exportSettings.exportSource, 'a') && unsupportedA) ||
+        (isExportTrackSelected(exportSettings.exportSource, 'b') && unsupportedB)
       ) {
         throw new Error(
           'Animated export for ProRes is not supported yet. Use Image or PDF export for the current frame.',
