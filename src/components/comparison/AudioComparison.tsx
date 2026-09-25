@@ -728,6 +728,7 @@ export function AudioComparison() {
           buffer,
           analysis,
           peaks: Array.from(analysis.waveformPeaks),
+          error: null,
         }
       } catch (error) {
         if (signal.aborted) return createEmptyAudioAnalysisState()
