@@ -273,7 +273,7 @@ a {
 }
 
 .selected-ring {
-  box-shadow: inset 0 0 0 1px var(--color-accent);
+  box-shadow: inset 0 0 0 2px var(--color-accent);
 }
 
 .tooltip-arrow {
@@ -536,7 +536,6 @@ aside {
   width: 56px;
   height: 56px;
   background: var(--color-accent);
-  border-radius: var(--ui-radius-lg);
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.32);
   z-index: 30;
   display: none;
