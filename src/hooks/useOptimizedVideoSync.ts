@@ -223,7 +223,6 @@ export function useOptimizedClipSync(
     window.addEventListener('playback-speed', handleSpeed as EventListener)
     return () => window.removeEventListener('playback-speed', handleSpeed as EventListener)
   }, [videoRef])
-
 }
 
 /**
