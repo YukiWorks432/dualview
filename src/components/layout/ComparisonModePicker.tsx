@@ -75,7 +75,7 @@ export function ComparisonModePicker() {
                   <button
                     type="button"
                     onClick={() => setComparisonMode(mode)}
-                    className={`flex min-h-24 flex-col items-center justify-center gap-2 ui-radius-md border p-4 text-center outline-none focus-visible:ring-1 focus-visible:ring-accent ${
+                    className={`flex min-h-24 flex-col items-center justify-center gap-2 ui-radius-md border p-4 text-center outline-none focus-visible:ring-2 focus-visible:ring-accent ${
                       comparisonMode === mode
                         ? 'border-border-hover bg-surface-active text-text-primary'
                         : 'border-border bg-surface hover:border-border-hover hover:bg-surface-hover'
