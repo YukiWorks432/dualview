@@ -1,7 +1,12 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
 
 import { GIF_PRESETS } from '../../lib/gifEncoder'
-import { isVisualFrameReady, type VisualFrameElement } from '../../lib/media/frameSource'
+import {
+  getVisualFrameDimensions,
+  isVisualFrameReady,
+  type VisualFrameElement,
+} from '../../lib/media/frameSource'
+import { findDisplayedClip } from '../../lib/media/timeline'
 import { isWebCodecsSupported } from '../../lib/mp4Encoder'
 import { createAvcMp4Muxer } from '../../lib/mp4Muxer'
 import {
@@ -56,7 +61,7 @@ interface ExportDialogProps {
   isOpen: boolean
   onClose: () => void
   canvasRef: React.RefObject<HTMLCanvasElement | null>
-  captureFrame: () => HTMLCanvasElement | null
+  captureFrame: (options?: { width?: number; height?: number }) => HTMLCanvasElement | null
 }
 
 function formatFileSize(bytes: number): string {
@@ -116,7 +121,7 @@ export function ExportDialog({ isOpen, onClose, canvasRef, captureFrame }: Expor
   })
   const { getFile } = useMediaStore()
   const { tracks, duration } = useTimelineStore()
-  const { setExporting } = usePlaybackStore()
+  const { currentTime, setExporting } = usePlaybackStore()
   const exportLockRef = useRef(false)
 
   const isAnyExporting =
@@ -191,6 +196,34 @@ export function ExportDialog({ isOpen, onClose, canvasRef, captureFrame }: Expor
   const hasProResBackend = (...mediaIds: Array<string | undefined>) =>
     mediaIds.some((mediaId) => mediaId && getFile(mediaId)?.playbackBackend === 'mediabunny')
 
+  const getDisplayedTrackClip = (trackType: 'a' | 'b') => {
+    const track = tracks.find((candidate) => candidate.type === trackType)
+    return findDisplayedClip(track?.clips ?? [], currentTime)
+  }
+
+  const drawContainedMedia = (
+    context: CanvasRenderingContext2D,
+    media: VisualFrameElement,
+    width: number,
+    height: number,
+  ) => {
+    const source = getVisualFrameDimensions(media)
+    if (source.width <= 0 || source.height <= 0) {
+      throw new Error('Current media frame has no drawable dimensions')
+    }
+
+    const scale = Math.min(width / source.width, height / source.height)
+    const drawWidth = source.width * scale
+    const drawHeight = source.height * scale
+    context.drawImage(
+      media,
+      (width - drawWidth) / 2,
+      (height - drawHeight) / 2,
+      drawWidth,
+      drawHeight,
+    )
+  }
+
   const handleExport = async () => {
     if (!acquireExportLock()) return
 
@@ -207,16 +240,16 @@ export function ExportDialog({ isOpen, onClose, canvasRef, captureFrame }: Expor
         throw new Error('No media to export')
       }
 
-      const trackA = tracks.find((track) => track.type === 'a')
-      const trackB = tracks.find((track) => track.type === 'b')
-      const clipA = trackA?.clips[0]
-      const clipB = trackB?.clips[0]
+      const clipA = getDisplayedTrackClip('a')
+      const clipB = getDisplayedTrackClip('b')
       const fileA = clipA ? getFile(clipA.mediaId) : null
       const fileB = clipB ? getFile(clipB.mediaId) : null
 
       if (
         (clipA && fileA?.playbackBackend === 'mediabunny') ||
-        (clipB && fileB?.playbackBackend === 'mediabunny')
+        (clipB && fileB?.playbackBackend === 'mediabunny') ||
+        mediaA instanceof HTMLCanvasElement ||
+        mediaB instanceof HTMLCanvasElement
       ) {
         throw new Error(
           'Animated export for ProRes is not supported yet. Use Image or PDF export for the current frame.',
@@ -1157,18 +1190,20 @@ export function ExportDialog({ isOpen, onClose, canvasRef, captureFrame }: Expor
       ctx.fillRect(0, 0, width, height)
 
       if (screenshotSource === 'comparison') {
-        const comparisonFrame = captureFrame()
+        const comparisonFrame = captureFrame({ width, height })
         if (!comparisonFrame) {
-          throw new Error('Failed to capture the current comparison')
+          throw new Error('The current comparison frame is still loading. Try again after it is ready.')
         }
         ctx.drawImage(comparisonFrame, 0, 0, width, height)
       } else {
         const { mediaA, mediaB } = getVisualElements()
         const media = screenshotSource === 'a-only' ? mediaA : mediaB
         if (!media || !isVisualFrameReady(media)) {
-          throw new Error(`No media ${screenshotSource === 'a-only' ? 'A' : 'B'} to capture`)
+          throw new Error(
+            `Media ${screenshotSource === 'a-only' ? 'A' : 'B'} is not ready to capture`,
+          )
         }
-        ctx.drawImage(media, 0, 0, width, height)
+        drawContainedMedia(ctx, media, width, height)
       }
 
       const mimeType = screenshotFormat === 'png' ? 'image/png' : 'image/jpeg'
@@ -1218,17 +1253,17 @@ export function ExportDialog({ isOpen, onClose, canvasRef, captureFrame }: Expor
     setError(null)
 
     try {
-      const comparisonFrame = captureFrame()
-      if (!comparisonFrame) throw new Error('Failed to capture the current comparison')
+      const comparisonFrame = captureFrame({ width: 1920, height: 1080 })
+      if (!comparisonFrame) {
+        throw new Error('The current comparison frame is still loading. Try again after it is ready.')
+      }
 
       const screenshotBlob = await captureCanvasScreenshot(comparisonFrame, 'png')
       if (!screenshotBlob) throw new Error('Failed to capture screenshot')
 
       // Get media info
-      const trackA = tracks.find((t) => t.type === 'a')
-      const trackB = tracks.find((t) => t.type === 'b')
-      const clipA = trackA?.clips[0]
-      const clipB = trackB?.clips[0]
+      const clipA = getDisplayedTrackClip('a')
+      const clipB = getDisplayedTrackClip('b')
       const mediaA = clipA ? getFile(clipA.mediaId) : undefined
       const mediaB = clipB ? getFile(clipB.mediaId) : undefined
 
@@ -1312,10 +1347,8 @@ export function ExportDialog({ isOpen, onClose, canvasRef, captureFrame }: Expor
         throw new Error('Both media A and B are required for transition export')
       }
 
-      const trackA = tracks.find((track) => track.type === 'a')
-      const trackB = tracks.find((track) => track.type === 'b')
-      const clipA = trackA?.clips[0]
-      const clipB = trackB?.clips[0]
+      const clipA = getDisplayedTrackClip('a')
+      const clipB = getDisplayedTrackClip('b')
       const fileA = clipA ? getFile(clipA.mediaId) : null
       const fileB = clipB ? getFile(clipB.mediaId) : null
 
