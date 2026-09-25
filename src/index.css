@@ -105,6 +105,21 @@
   background-color: color-mix(in srgb, var(--surface-control) 90%, white);
 }
 
+.surface-outline {
+  border-color: var(--surface-control-border);
+  background-color: transparent;
+  box-shadow: none;
+}
+
+.surface-outline:hover {
+  border-color: var(--surface-border-hover);
+  background-color: color-mix(in srgb, var(--surface-current) 94%, white);
+}
+
+.surface-outline:active {
+  background-color: color-mix(in srgb, var(--surface-current) 90%, white);
+}
+
 .surface-interactive {
   transition:
     background-color 150ms ease-out,
@@ -512,7 +527,7 @@ aside {
   width: 85%;
   max-width: 320px;
   z-index: 50;
-  background: var(--color-surface);
+  background: var(--surface-1);
   box-shadow: 4px 0 20px rgba(0, 0, 0, 0.32);
 }
 
