@@ -166,13 +166,10 @@ export function Sidebar({ onCollapse, isMobileOpen, onMobileClose, onOpenProject
       </div>
 
       <div className="flex-1 overflow-y-auto p-4">
-        {activeTab === 'media' && (
-          <SurfaceProvider value={1}>
-            <MediaPanel />
-          </SurfaceProvider>
-        )}
-        {activeTab === 'settings' && (
-          <SettingsPanel
+        <SurfaceProvider value={1}>
+          {activeTab === 'media' && <MediaPanel />}
+          {activeTab === 'settings' && (
+            <SettingsPanel
             comparisonMode={comparisonMode}
             blendMode={blendMode}
             setBlendMode={setBlendMode}
@@ -189,8 +186,9 @@ export function Sidebar({ onCollapse, isMobileOpen, onMobileClose, onOpenProject
             webglComparisonSettings={webglComparisonSettings}
             setWebGLComparisonMode={setWebGLComparisonMode}
             setWebGLComparisonSettings={setWebGLComparisonSettings}
-          />
-        )}
+            />
+          )}
+        </SurfaceProvider>
       </div>
 
       {/* Project lineage links */}
@@ -419,7 +417,7 @@ function SettingsPanel({
   return (
     <div className="space-y-4">
       {/* Current mode indicator - helps with context */}
-      <div className="p-3 bg-accent/10 border border-accent/20">
+      <div className="ui-radius-lg border border-accent/20 bg-accent/10 p-3">
         <div className="text-[10px] uppercase tracking-wider text-accent font-medium mb-1">
           Current Mode
         </div>
@@ -433,7 +431,7 @@ function SettingsPanel({
 
       {/* WebGL Difference settings - show at top when in webgl-compare mode */}
       {comparisonMode === 'webgl-compare' && (
-        <div className="p-4 bg-surface-alt border border-border space-y-4 animate-slide-down">
+        <ElevatedSurface offset={1} className="ui-radius-lg space-y-4 border border-border p-4 animate-slide-down">
           <h3 className="text-sm font-semibold text-text-primary flex items-center gap-2">
             <Microscope className="w-4 h-4 text-accent" />
             Difference
@@ -740,17 +738,17 @@ function SettingsPanel({
               </div>
             </div>
           )}
-        </div>
+        </ElevatedSurface>
       )}
 
       {/* ASPECT-001: Aspect Ratio Presets */}
-      <div className="p-4 bg-surface-alt border border-border">
+      <ElevatedSurface offset={1} className="ui-radius-lg border border-border p-4">
         <AspectRatioSelector showCustomInput={true} />
-      </div>
+      </ElevatedSurface>
 
       {/* Mode-specific settings - Law of Common Region */}
       {comparisonMode === 'slider' && (
-        <div className="p-4 bg-surface-alt border border-border space-y-4 animate-slide-down">
+        <ElevatedSurface offset={1} className="ui-radius-lg space-y-4 border border-border p-4 animate-slide-down">
           <h3 className="text-sm font-semibold text-text-primary flex items-center gap-2">
             <Sliders className="w-4 h-4 text-accent" />
             Slider Settings
@@ -794,11 +792,11 @@ function SettingsPanel({
           <p className="text-[10px] text-text-muted">
             Press <kbd className="kbd">H</kbd> to toggle slider visibility
           </p>
-        </div>
+        </ElevatedSurface>
       )}
 
       {comparisonMode === 'blend' && (
-        <div className="p-4 bg-surface-alt border border-border space-y-4 animate-slide-down">
+        <ElevatedSurface offset={1} className="ui-radius-lg space-y-4 border border-border p-4 animate-slide-down">
           <h3 className="text-sm font-semibold text-text-primary flex items-center gap-2">
             <ChevronRight className="w-4 h-4 text-accent" />
             Blend Settings
@@ -814,11 +812,11 @@ function SettingsPanel({
               { value: 'screen', label: 'Screen (lighter result)' },
             ]}
           />
-        </div>
+        </ElevatedSurface>
       )}
 
       {comparisonMode === 'split' && (
-        <div className="p-4 bg-surface-alt border border-border space-y-4 animate-slide-down">
+        <ElevatedSurface offset={1} className="ui-radius-lg space-y-4 border border-border p-4 animate-slide-down">
           <h3 className="text-sm font-semibold text-text-primary flex items-center gap-2">
             <ChevronRight className="w-4 h-4 text-accent" />
             Split Layout
@@ -833,11 +831,11 @@ function SettingsPanel({
               { value: '2x2', label: 'Grid (4 corners)' },
             ]}
           />
-        </div>
+        </ElevatedSurface>
       )}
 
       {/* Export settings card - always visible */}
-      <div className="p-4 bg-surface-alt border border-border space-y-4">
+      <ElevatedSurface offset={1} className="ui-radius-lg space-y-4 border border-border p-4">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-semibold text-text-primary">Quick Export</h3>
           <kbd className="kbd">E</kbd>
@@ -883,10 +881,10 @@ function SettingsPanel({
             { value: '4k', label: '4K (Ultra HD)' },
           ]}
         />
-      </div>
+      </ElevatedSurface>
 
       {/* Keyboard shortcuts hint */}
-      <div className="p-3 border border-dashed border-border text-center">
+      <div className="ui-radius-lg border border-dashed border-border p-3 text-center">
         <p className="text-[10px] text-text-muted">
           Press <kbd className="kbd">?</kbd> for all keyboard shortcuts
         </p>
