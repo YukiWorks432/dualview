@@ -649,9 +649,9 @@ export function AudioComparison() {
   const sourceRegistryRef = useRef(new AudioSourceRegistry())
   const playbackRequestGateRef = useRef(new PlaybackRequestGate())
   const playingClipIdsRef = useRef<{ a: string | null; b: string | null }>({ a: null, b: null })
-  const startAudioPlaybackRef = useRef<
-    (time: number, scope?: AudioRestartScope) => Promise<void>
-  >(async () => {})
+  const startAudioPlaybackRef = useRef<(time: number, scope?: AudioRestartScope) => Promise<void>>(
+    async () => {},
+  )
 
   // State
   const [viewMode, setViewMode] = useState<AudioViewMode>('all')
@@ -1149,10 +1149,8 @@ export function AudioComparison() {
         <div className="border-b border-border bg-surface px-4 py-2 text-xs text-text-muted">
           {isAnalyzing && (
             <span>
-              Analyzing {[
-                isAnalyzingA ? 'A' : null,
-                isAnalyzingB ? 'B' : null,
-              ].filter(Boolean).join(' + ')}…
+              Analyzing{' '}
+              {[isAnalyzingA ? 'A' : null, isAnalyzingB ? 'B' : null].filter(Boolean).join(' + ')}…
             </span>
           )}
           {audioErrors.length > 0 && (
@@ -1180,7 +1178,12 @@ export function AudioComparison() {
                 <p className="text-sm font-medium text-text-secondary">
                   {audioErrors.length > 0 ? 'Audio Analysis Unavailable' : 'No Embedded Audio'}
                 </p>
-                <p className={cn('mt-1 text-xs', audioErrors.length > 0 ? 'text-error' : 'text-text-muted')}>
+                <p
+                  className={cn(
+                    'mt-1 text-xs',
+                    audioErrors.length > 0 ? 'text-error' : 'text-text-muted',
+                  )}
+                >
                   {audioErrors.length > 0
                     ? audioErrors.join(' · ')
                     : 'Neither current video has a decodable audio track'}
