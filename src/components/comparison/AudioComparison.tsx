@@ -866,7 +866,8 @@ export function AudioComparison() {
     }
 
     window.addEventListener('playback-update', handlePlaybackUpdate as EventListener)
-    return () => window.removeEventListener('playback-update', handlePlaybackUpdate as EventListener)
+    return () =>
+      window.removeEventListener('playback-update', handlePlaybackUpdate as EventListener)
   }, [startAudioPlayback, trackA, trackB])
 
   useEffect(
@@ -995,11 +996,13 @@ export function AudioComparison() {
               onChange={(e) => setTargetPlatform(e.target.value as keyof typeof LOUDNESS_TARGETS)}
               className="bg-surface-hover border border-border px-2 py-1 text-xs"
             >
-              {(Object.keys(LOUDNESS_TARGETS) as Array<keyof typeof LOUDNESS_TARGETS>).map((key) => (
-                <option key={key} value={key}>
-                  {LOUDNESS_TARGET_LABELS[key]} ({LOUDNESS_TARGETS[key]} LUFS)
-                </option>
-              ))}
+              {(Object.keys(LOUDNESS_TARGETS) as Array<keyof typeof LOUDNESS_TARGETS>).map(
+                (key) => (
+                  <option key={key} value={key}>
+                    {LOUDNESS_TARGET_LABELS[key]} ({LOUDNESS_TARGETS[key]} LUFS)
+                  </option>
+                ),
+              )}
             </select>
           </div>
           <span className="text-text-muted">

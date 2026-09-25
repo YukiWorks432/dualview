@@ -168,8 +168,7 @@ export function ExportDialog({ isOpen, onClose, canvasRef, captureFrame }: Expor
     if (!container) return { mediaA: null, mediaB: null }
 
     const findReadySurface = (track: 'a' | 'b'): VisualFrameElement | null => {
-      const selector =
-        `video[data-track="${track}"], img[data-track="${track}"], canvas[data-track="${track}"]`
+      const selector = `video[data-track="${track}"], img[data-track="${track}"], canvas[data-track="${track}"]`
       const elements = Array.from(container.querySelectorAll(selector)) as VisualFrameElement[]
       return elements.find((element) => isVisualFrameReady(element)) ?? null
     }

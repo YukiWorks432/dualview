@@ -90,10 +90,10 @@ This maintained fork focuses on **pre-delivery image and video review**: checkin
 
 > **Drop A/B media** → **Choose a comparison mode** → **Inspect differences** → **Save evidence**
 
-| Input | Review |
-| :---- | :----- |
-| 🎬 **Video** | Synchronized playback, ProRes playback, scopes, SSIM/PSNR, heatmaps, WebGL analysis |
-| 🖼️ **Image** | Slider, side-by-side, pixel/color difference, loupe, histogram, WebGL analysis |
+| Input                       | Review                                                                                |
+| :-------------------------- | :------------------------------------------------------------------------------------ |
+| 🎬 **Video**                | Synchronized playback, ProRes playback, scopes, SSIM/PSNR, heatmaps, WebGL analysis   |
+| 🖼️ **Image**                | Slider, side-by-side, pixel/color difference, loupe, histogram, WebGL analysis        |
 | 🎵 **Embedded video audio** | Waveform, integrated loudness reference, sample peak, phase correlation, stereo width |
 
 Standalone audio files, text/JSON, 3D models, and document comparison are not part of this maintained fork's current scope.
@@ -190,25 +190,25 @@ DualView currently exposes **12 comparison modes**:
 
 ### Primary Modes
 
-| Mode | Key | Description |
-| ---- | --- | ----------- |
-| **Slider** | `1` | Draggable A/B reveal |
-| **Side by Side** | `2` | View synchronized A/B media together |
-| **Difference** | `3` | GPU-accelerated visual difference analysis |
-| **Audio QA** | `4` | Analyze audio embedded in the current A/B videos |
+| Mode             | Key | Description                                      |
+| ---------------- | --- | ------------------------------------------------ |
+| **Slider**       | `1` | Draggable A/B reveal                             |
+| **Side by Side** | `2` | View synchronized A/B media together             |
+| **Difference**   | `3` | GPU-accelerated visual difference analysis       |
+| **Audio QA**     | `4` | Analyze audio embedded in the current A/B videos |
 
 ### Additional Modes
 
-| Mode | Description |
-| ---- | ----------- |
-| **Split Screen** | Multi-panel image/video layout |
-| **Quad View** | Four-panel comparison |
-| **Blend Modes** | Difference, overlay, multiply, and screen compositing |
-| **Flicker** | Rapid A/B switching |
-| **Heatmap** | Pixel and alpha difference visualization |
-| **Radial Loupe** | Magnified circular comparison |
-| **Grid Tile** | Checkerboard A/B comparison |
-| **Morphological** | Morphological difference operations |
+| Mode              | Description                                           |
+| ----------------- | ----------------------------------------------------- |
+| **Split Screen**  | Multi-panel image/video layout                        |
+| **Quad View**     | Four-panel comparison                                 |
+| **Blend Modes**   | Difference, overlay, multiply, and screen compositing |
+| **Flicker**       | Rapid A/B switching                                   |
+| **Heatmap**       | Pixel and alpha difference visualization              |
+| **Radial Loupe**  | Magnified circular comparison                         |
+| **Grid Tile**     | Checkerboard A/B comparison                           |
+| **Morphological** | Morphological difference operations                   |
 
 ---
 
@@ -335,25 +335,25 @@ The audio player follows timeline clip placement, trim in-points, and playback s
 
 ### Measurements
 
-| Measurement | Current behavior |
-| ----------- | ---------------- |
-| **Integrated loudness** | Full decoded source-file estimate used against selectable reference targets |
-| **Tail 400 ms / Tail 3 s** | Final 400 ms / 3 s of the decoded source, not live playhead meters |
-| **Sample Peak** | Maximum decoded sample level; not presented as standards-compliant dBTP |
-| **RMS** | Root mean square level |
-| **Phase correlation** | Stereo phase relationship |
-| **Stereo width** | Mid/side-derived width indicator |
+| Measurement                | Current behavior                                                            |
+| -------------------------- | --------------------------------------------------------------------------- |
+| **Integrated loudness**    | Full decoded source-file estimate used against selectable reference targets |
+| **Tail 400 ms / Tail 3 s** | Final 400 ms / 3 s of the decoded source, not live playhead meters          |
+| **Sample Peak**            | Maximum decoded sample level; not presented as standards-compliant dBTP     |
+| **RMS**                    | Root mean square level                                                      |
+| **Phase correlation**      | Stereo phase relationship                                                   |
+| **Stereo width**           | Mid/side-derived width indicator                                            |
 
 Reference targets include Spotify, YouTube, Apple Music, EBU R128 (-23 LUFS), and ATSC A/85 (-24 LUFS). The ±1 LU indicator is a convenience comparison, not a certification of platform or broadcast compliance.
 
 ### Audio Shortcuts
 
-| Key | Action |
-| --- | ------ |
-| `A` | Solo Track A |
-| `B` | Solo Track B |
-| `S` | Play both A+B |
-| `Space` | Play/Pause |
+| Key     | Action        |
+| ------- | ------------- |
+| `A`     | Solo Track A  |
+| `B`     | Solo Track B  |
+| `S`     | Play both A+B |
+| `Space` | Play/Pause    |
 
 ---
 
@@ -443,13 +443,13 @@ DualView is built for speed. Master these shortcuts:
 
 ### Modes & Views
 
-| Key       | Action                        |
-| --------- | ----------------------------- |
+| Key       | Action                          |
+| --------- | ------------------------------- |
 | `1` - `4` | Switch primary comparison modes |
-| `F`       | Flip A/B (in Difference mode) |
-| `P`       | Toggle focus peaking          |
-| `Z`       | Toggle zebra stripes          |
-| `G`       | Toggle video scopes           |
+| `F`       | Flip A/B (in Difference mode)   |
+| `P`       | Toggle focus peaking            |
+| `Z`       | Toggle zebra stripes            |
+| `G`       | Toggle video scopes             |
 
 ### Timeline Editing
 
@@ -508,25 +508,25 @@ Toggle with `G` key.
 <tr>
 <td>
 
-| Core | Version |
-| ---- | ------- |
-| React | 19.3.0 |
-| TypeScript | 7.0.2 |
-| Vite | 8.3.0 |
-| Zustand | 5.0.15 |
-| Tailwind CSS | 4.3.3 |
+| Core         | Version |
+| ------------ | ------- |
+| React        | 19.3.0  |
+| TypeScript   | 7.0.2   |
+| Vite         | 8.3.0   |
+| Zustand      | 5.0.15  |
+| Tailwind CSS | 4.3.3   |
 
 </td>
 <td>
 
-| Media | Technology |
-| ----- | ---------- |
-| Native video decode | Browser media pipeline |
-| ProRes decode | Mediabunny + TurboRes |
-| Video encoding | WebCodecs / MediaRecorder |
-| MP4 muxing | Mediabunny |
-| GIF encoding | gif.js |
-| PDF export | jsPDF |
+| Media               | Technology                |
+| ------------------- | ------------------------- |
+| Native video decode | Browser media pipeline    |
+| ProRes decode       | Mediabunny + TurboRes     |
+| Video encoding      | WebCodecs / MediaRecorder |
+| MP4 muxing          | Mediabunny                |
+| GIF encoding        | gif.js                    |
+| PDF export          | jsPDF                     |
 
 </td>
 </tr>

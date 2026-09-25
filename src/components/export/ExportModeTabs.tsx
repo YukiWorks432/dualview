@@ -23,11 +23,7 @@ interface ExportModeTabsProps {
   disabled?: boolean
 }
 
-export function ExportModeTabs({
-  value,
-  onValueChange,
-  disabled = false,
-}: ExportModeTabsProps) {
+export function ExportModeTabs({ value, onValueChange, disabled = false }: ExportModeTabsProps) {
   return (
     <div
       className="mb-4 grid grid-cols-5 gap-1 border-b border-border pb-1"

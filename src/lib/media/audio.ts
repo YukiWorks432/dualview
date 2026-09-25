@@ -22,7 +22,9 @@ export function createAudioPlaybackSource(
   gain.connect(context.destination)
 
   const safeDuration =
-    duration === undefined ? undefined : Math.max(0, Math.min(duration, buffer.duration - safeOffset))
+    duration === undefined
+      ? undefined
+      : Math.max(0, Math.min(duration, buffer.duration - safeOffset))
   if (safeDuration !== undefined && safeDuration <= 0) return null
 
   if (safeDuration === undefined) {

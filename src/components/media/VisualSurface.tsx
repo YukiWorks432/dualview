@@ -1,9 +1,4 @@
-import {
-  forwardRef,
-  type CSSProperties,
-  type ForwardedRef,
-  type MouseEvent,
-} from 'react'
+import { forwardRef, type CSSProperties, type ForwardedRef, type MouseEvent } from 'react'
 
 import type { VisualFrameElement } from '../../lib/media/frameSource'
 import type { MediaFile, TimelineClip } from '../../types'
