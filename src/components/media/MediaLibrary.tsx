@@ -285,7 +285,7 @@ export function MediaLibrary() {
           className={cn(
             'surface-control ui-radius-md w-full border px-7 py-1.5 text-xs',
             'placeholder:text-text-muted text-text-primary',
-            'focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20',
+            'focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20',
             'transition-colors',
           )}
         />
