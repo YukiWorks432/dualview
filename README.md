@@ -346,6 +346,8 @@ The audio player follows timeline clip placement, trim in-points, and playback s
 
 Reference targets include Spotify, YouTube, Apple Music, EBU R128 (-23 LUFS), and ATSC A/85 (-24 LUFS). The ±1 LU indicator is a convenience comparison, not a certification of platform or broadcast compliance.
 
+To avoid exhausting browser memory on long or high-channel-count sources, embedded-audio analysis refuses decoded PCM estimates above 512 MiB and reports the reason in the Audio QA view.
+
 ### Audio Shortcuts
 
 | Key     | Action        |
