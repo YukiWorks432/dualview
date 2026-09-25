@@ -16,7 +16,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
         <div className="relative">
           <select
             className={cn(
-              'h-8 w-full cursor-pointer appearance-none ui-radius-md border border-border bg-surface-alt px-2.5 pr-8 text-sm text-text-primary outline-none hover:border-border-hover focus:border-accent focus:ring-2 focus:ring-accent/40',
+              'h-8 w-full cursor-pointer appearance-none ui-radius-md surface-control border px-2.5 pr-8 text-sm text-text-primary outline-none focus:border-accent focus:ring-2 focus:ring-accent/40',
               className,
             )}
             ref={ref}
