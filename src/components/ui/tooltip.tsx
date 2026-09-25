@@ -2,6 +2,7 @@ import { Tooltip as TooltipPrimitive } from '@base-ui/react/tooltip'
 import * as React from 'react'
 
 import { cn } from '../../lib/utils'
+import { ElevatedSurface } from './surface'
 
 const TooltipProvider = TooltipPrimitive.Provider
 const TooltipRoot = TooltipPrimitive.Root
@@ -24,15 +25,17 @@ function TooltipContent({
   return (
     <TooltipPrimitive.Portal>
       <TooltipPrimitive.Positioner side={side} sideOffset={sideOffset} className="z-[70]">
-        <TooltipPrimitive.Popup
-          className={cn(
-            'ui-radius-sm border border-border bg-surface-alt px-2 py-1.5 text-xs text-text-primary shadow-[0_6px_18px_rgba(0,0,0,0.3)] data-[starting-style]:scale-[0.99] data-[starting-style]:opacity-0 data-[ending-style]:scale-[0.99] data-[ending-style]:opacity-0',
-            className,
-          )}
-          {...props}
-        >
-          {children}
-        </TooltipPrimitive.Popup>
+        <ElevatedSurface asChild offset={1}>
+          <TooltipPrimitive.Popup
+            className={cn(
+              'ui-radius-sm border border-transparent px-2 py-1.5 text-xs text-text-primary data-[starting-style]:scale-[0.99] data-[starting-style]:opacity-0 data-[ending-style]:scale-[0.99] data-[ending-style]:opacity-0',
+              className,
+            )}
+            {...props}
+          >
+            {children}
+          </TooltipPrimitive.Popup>
+        </ElevatedSurface>
       </TooltipPrimitive.Positioner>
     </TooltipPrimitive.Portal>
   )
