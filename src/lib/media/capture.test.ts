@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
-import { calculateObjectContainRect, calculateSourceCrop, intersectCaptureRects } from './capture'
+import {
+  calculateCaptureTransform,
+  calculateObjectContainRect,
+  calculateSourceCrop,
+  intersectCaptureRects,
+} from './capture'
 
 describe('capture geometry', () => {
   it('fits source content without stretching its aspect ratio', () => {
@@ -41,6 +46,14 @@ describe('capture geometry', () => {
       sy: 0,
       sw: 768,
       sh: 1080,
+    })
+  })
+
+  it('preserves preview aspect ratio inside a differently shaped output', () => {
+    expect(calculateCaptureTransform(1200, 800, 1920, 1080)).toEqual({
+      scale: 1.35,
+      offsetX: 150,
+      offsetY: 0,
     })
   })
 })
