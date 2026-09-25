@@ -4,21 +4,23 @@
  */
 import { useRef, useEffect, useCallback, useState } from 'react'
 
-import type { VideoFrameElement } from '../../lib/media/frameSource'
+import { isVisualFrameReady, type VisualFrameElement } from '../../lib/media/frameSource'
+import { calculateAverageRgbaDifference } from '../../lib/pixelDifference'
 import { cn } from '../../lib/utils'
 import { useMediaStore } from '../../stores/mediaStore'
 import { useTimelineStore } from '../../stores/timelineStore'
-import { VideoSurface } from '../media/VideoSurface'
+import { VisualSurface } from '../media/VisualSurface'
 
 type HeatmapMode = 'absolute' | 'amplified' | 'threshold'
 
 export function DifferenceHeatmap() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const videoARef = useRef<VideoFrameElement>(null)
-  const videoBRef = useRef<VideoFrameElement>(null)
+  const mediaARef = useRef<VisualFrameElement>(null)
+  const mediaBRef = useRef<VisualFrameElement>(null)
   const animationRef = useRef<number | undefined>(undefined)
 
   const [mode, setMode] = useState<HeatmapMode>('amplified')
+  const [frameRevision, setFrameRevision] = useState(0)
   const [threshold, setThreshold] = useState(10) // For threshold mode
   const [amplification, setAmplification] = useState(5) // For amplified mode
 
@@ -41,13 +43,13 @@ export function DifferenceHeatmap() {
     const ctx = canvas?.getContext('2d', { willReadFrequently: true })
     if (!canvas || !ctx) return
 
-    const videoA = videoARef.current
-    const videoB = videoBRef.current
+    const sourceA = mediaARef.current
+    const sourceB = mediaBRef.current
 
     // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-    if (!videoA || !videoB) {
+    if (!isVisualFrameReady(sourceA) || !isVisualFrameReady(sourceB)) {
       if (isPlaying) {
         animationRef.current = requestAnimationFrame(renderFrame)
       }
@@ -67,8 +69,8 @@ export function DifferenceHeatmap() {
     if (!ctxA || !ctxB) return
 
     // Draw videos to temp canvases
-    ctxA.drawImage(videoA, 0, 0, canvas.width, canvas.height)
-    ctxB.drawImage(videoB, 0, 0, canvas.width, canvas.height)
+    ctxA.drawImage(sourceA, 0, 0, canvas.width, canvas.height)
+    ctxB.drawImage(sourceB, 0, 0, canvas.width, canvas.height)
 
     // Get pixel data
     const dataA = ctxA.getImageData(0, 0, canvas.width, canvas.height)
@@ -77,12 +79,8 @@ export function DifferenceHeatmap() {
 
     // Calculate difference for each pixel
     for (let i = 0; i < dataA.data.length; i += 4) {
-      const rDiff = Math.abs(dataA.data[i] - dataB.data[i])
-      const gDiff = Math.abs(dataA.data[i + 1] - dataB.data[i + 1])
-      const bDiff = Math.abs(dataA.data[i + 2] - dataB.data[i + 2])
-
-      // Calculate total difference (0-255 scale)
-      const totalDiff = (rDiff + gDiff + bDiff) / 3
+      // Include alpha so transparent ProRes/image changes are not treated as identical.
+      const totalDiff = calculateAverageRgbaDifference(dataA.data, dataB.data, i)
 
       let r = 0,
         g = 0,
@@ -137,6 +135,10 @@ export function DifferenceHeatmap() {
     }
   }, [isPlaying, mode, threshold, amplification])
 
+  const handleFrameReady = useCallback(() => {
+    setFrameRevision((revision) => revision + 1)
+  }, [])
+
   // Start render loop
   useEffect(() => {
     renderFrame()
@@ -146,7 +148,7 @@ export function DifferenceHeatmap() {
         cancelAnimationFrame(animationRef.current)
       }
     }
-  }, [renderFrame])
+  }, [renderFrame, frameRevision])
 
   // Handle canvas resize
   useEffect(() => {
@@ -174,23 +176,27 @@ export function DifferenceHeatmap() {
     <div className="relative w-full h-full bg-black">
       <canvas ref={canvasRef} className="w-full h-full" />
 
-      {/* Hidden video elements for canvas drawing */}
-      {mediaA?.type === 'video' && (
-        <VideoSurface
-          ref={videoARef}
+      {/* Hidden visual surfaces for canvas drawing */}
+      {mediaA && (
+        <VisualSurface
+          ref={mediaARef}
           media={mediaA}
           clip={clipA || null}
           className="hidden"
           dataTrack="a"
+          alt="Track A"
+          onFrameReady={handleFrameReady}
         />
       )}
-      {mediaB?.type === 'video' && (
-        <VideoSurface
-          ref={videoBRef}
+      {mediaB && (
+        <VisualSurface
+          ref={mediaBRef}
           media={mediaB}
           clip={clipB || null}
           className="hidden"
           dataTrack="b"
+          alt="Track B"
+          onFrameReady={handleFrameReady}
         />
       )}
 

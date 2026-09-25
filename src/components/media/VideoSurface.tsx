@@ -19,6 +19,7 @@ interface VideoSurfaceProps {
   style?: CSSProperties
   dataTrack?: string
   onClick?: (event: MouseEvent<VideoFrameElement>) => void
+  onFrameReady?: () => void
 }
 
 function assignRef<T>(ref: ForwardedRef<T>, value: T | null) {
@@ -30,7 +31,7 @@ function assignRef<T>(ref: ForwardedRef<T>, value: T | null) {
 }
 
 export const VideoSurface = forwardRef<VideoFrameElement, VideoSurfaceProps>(function VideoSurface(
-  { media, clip, className, style, dataTrack, onClick },
+  { media, clip, className, style, dataTrack, onClick, onFrameReady },
   forwardedRef,
 ) {
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -38,7 +39,12 @@ export const VideoSurface = forwardRef<VideoFrameElement, VideoSurfaceProps>(fun
   const useMediabunny = media.playbackBackend === 'mediabunny'
 
   useOptimizedClipSync(videoRef, useMediabunny ? null : clip)
-  useProResClipSync(canvasRef, useMediabunny ? media : null, useMediabunny ? clip : null)
+  useProResClipSync(
+    canvasRef,
+    useMediabunny ? media : null,
+    useMediabunny ? clip : null,
+    onFrameReady,
+  )
 
   const setVideoRef = useCallback(
     (node: HTMLVideoElement | null) => {
@@ -76,6 +82,8 @@ export const VideoSurface = forwardRef<VideoFrameElement, VideoSurfaceProps>(fun
       style={style}
       data-track={dataTrack}
       onClick={onClick}
+      onLoadedData={onFrameReady}
+      onSeeked={onFrameReady}
       muted
       playsInline
       preload="auto"

@@ -1,13 +1,13 @@
-import { useRef, useEffect, useCallback, useMemo } from 'react'
+import { useRef, useEffect, useCallback, useMemo, useState } from 'react'
 
 import { useSyncedZoom } from '../../hooks/useSyncedZoom'
-import type { VideoFrameElement } from '../../lib/media/frameSource'
+import { isVisualFrameReady, type VisualFrameElement } from '../../lib/media/frameSource'
 import { useMediaStore } from '../../stores/mediaStore'
 import { usePlaybackStore } from '../../stores/playbackStore'
 import { useProjectStore } from '../../stores/projectStore'
 import { useTimelineStore } from '../../stores/timelineStore'
 import type { BlendMode } from '../../types'
-import { VideoSurface } from '../media/VideoSurface'
+import { VisualSurface } from '../media/VisualSurface'
 
 const blendModeMap: Record<BlendMode, GlobalCompositeOperation> = {
   difference: 'difference',
@@ -18,9 +18,10 @@ const blendModeMap: Record<BlendMode, GlobalCompositeOperation> = {
 
 export function BlendModes() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const videoARef = useRef<VideoFrameElement>(null)
-  const videoBRef = useRef<VideoFrameElement>(null)
+  const mediaARef = useRef<VisualFrameElement>(null)
+  const mediaBRef = useRef<VisualFrameElement>(null)
   const animationRef = useRef<number | undefined>(undefined)
+  const [frameRevision, setFrameRevision] = useState(0)
 
   const { blendMode } = useProjectStore()
   const { tracks } = useTimelineStore()
@@ -60,8 +61,8 @@ export function BlendModes() {
     const ctx = canvas?.getContext('2d')
     if (!canvas || !ctx) return
 
-    const videoA = videoARef.current
-    const videoB = videoBRef.current
+    const sourceA = mediaARef.current
+    const sourceB = mediaBRef.current
 
     // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height)
@@ -74,16 +75,15 @@ export function BlendModes() {
     ctx.scale(zoom, zoom)
     ctx.translate(-centerX, -centerY)
 
-    // Draw video B first (base layer)
-    if (videoB && mediaB?.type === 'video') {
+    // Draw B first (base layer), then A with the selected blend mode.
+    if (isVisualFrameReady(sourceB) && mediaB) {
       ctx.globalCompositeOperation = 'source-over'
-      ctx.drawImage(videoB, 0, 0, canvas.width, canvas.height)
+      ctx.drawImage(sourceB, 0, 0, canvas.width, canvas.height)
     }
 
-    // Draw video A with blend mode
-    if (videoA && mediaA?.type === 'video') {
+    if (isVisualFrameReady(sourceA) && mediaA) {
       ctx.globalCompositeOperation = blendModeMap[blendMode]
-      ctx.drawImage(videoA, 0, 0, canvas.width, canvas.height)
+      ctx.drawImage(sourceA, 0, 0, canvas.width, canvas.height)
     }
 
     // Reset composite operation and restore transform
@@ -95,7 +95,9 @@ export function BlendModes() {
     }
   }, [blendMode, isPlaying, mediaA, mediaB, zoom, panX, panY])
 
-  // Video sync is now handled by useClipAwareVideoSync hook
+  const handleFrameReady = useCallback(() => {
+    setFrameRevision((revision) => revision + 1)
+  }, [])
 
   // Start render loop
   useEffect(() => {
@@ -106,7 +108,7 @@ export function BlendModes() {
         cancelAnimationFrame(animationRef.current)
       }
     }
-  }, [renderFrame])
+  }, [renderFrame, frameRevision])
 
   // Handle canvas resize
   useEffect(() => {
@@ -147,23 +149,27 @@ export function BlendModes() {
         </div>
       )}
 
-      {/* Hidden video elements for canvas drawing */}
-      {mediaA?.type === 'video' && (
-        <VideoSurface
-          ref={videoARef}
+      {/* Hidden visual surfaces for canvas drawing */}
+      {mediaA && (
+        <VisualSurface
+          ref={mediaARef}
           media={mediaA}
           clip={activeClipA || firstClipA}
           className="hidden"
           dataTrack="a"
+          alt="Track A"
+          onFrameReady={handleFrameReady}
         />
       )}
-      {mediaB?.type === 'video' && (
-        <VideoSurface
-          ref={videoBRef}
+      {mediaB && (
+        <VisualSurface
+          ref={mediaBRef}
           media={mediaB}
           clip={activeClipB || firstClipB}
           className="hidden"
           dataTrack="b"
+          alt="Track B"
+          onFrameReady={handleFrameReady}
         />
       )}
 

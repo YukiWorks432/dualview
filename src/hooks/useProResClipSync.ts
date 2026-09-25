@@ -10,6 +10,7 @@ export function useProResClipSync(
   canvasRef: React.RefObject<HTMLCanvasElement | null>,
   media: MediaFile | null,
   clip: TimelineClip | null,
+  onFrameReady?: () => void,
 ): void {
   useEffect(() => {
     if (!media || media.playbackBackend !== 'mediabunny' || !clip) return
@@ -60,6 +61,10 @@ export function useProResClipSync(
 
           context.clearRect(0, 0, canvas.width, canvas.height)
           context.drawImage(source, 0, 0, canvas.width, canvas.height)
+
+          if (!usePlaybackStore.getState().isPlaying) {
+            onFrameReady?.()
+          }
         }
       } catch (error) {
         if (!disposed) {
@@ -133,5 +138,6 @@ export function useProResClipSync(
     clip?.outPoint,
     clip?.speed,
     clip?.reverse,
+    onFrameReady,
   ])
 }
