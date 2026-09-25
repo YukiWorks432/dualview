@@ -6,7 +6,7 @@ import { captureScreenAsFile, isScreenCaptureSupported } from '../../lib/screenC
 import { cn } from '../../lib/utils'
 import { useMediaStore } from '../../stores/mediaStore'
 import { useTimelineStore } from '../../stores/timelineStore'
-import { Button, ElevatedSurface } from '../ui'
+import { ElevatedSurface } from '../ui'
 import { URLImport } from './URLImport'
 
 interface MediaUploadProps {
@@ -290,29 +290,30 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
       {/* Track A and Track B drop zones side by side */}
       <div className="grid grid-cols-2 gap-2">
         {/* Media A Drop Zone */}
-        <div
+        <ElevatedSurface
+          offset={1}
           className={cn(
-            'border-2 border-dashed transition-all duration-200 cursor-pointer group',
+            'surface-interactive ui-radius-lg group cursor-pointer border-2 border-dashed transition-[border-color,box-shadow,opacity] duration-150',
             isDragOverA
-              ? 'border-orange-500 bg-orange-500/20 scale-[1.02]'
-              : 'border-orange-500/40 hover:border-orange-500 hover:bg-orange-500/10',
-            isUploading && 'opacity-50 pointer-events-none',
+              ? 'border-orange-500 shadow-[0_0_0_1px_rgba(249,115,22,0.22)]'
+              : 'border-orange-500/40 hover:border-orange-500',
+            isUploading && 'pointer-events-none opacity-50',
           )}
           onDrop={handleDropA}
           onDragOver={handleDragOverA}
           onDragLeave={handleDragLeaveA}
           onClick={handleClickA}
         >
-          <div className="flex flex-col items-center justify-center py-4 px-2">
+          <div className="flex flex-col items-center justify-center px-2 py-4">
             <div
               className={cn(
-                'p-1.5 mb-1 transition-colors',
+                'ui-radius-md mb-1 p-1.5 transition-colors',
                 isDragOverA ? 'bg-orange-500/30' : 'bg-orange-500/10 group-hover:bg-orange-500/20',
               )}
             >
               <Upload
                 className={cn(
-                  'w-5 h-5',
+                  'h-5 w-5',
                   isDragOverA
                     ? 'text-orange-500'
                     : 'text-orange-500/70 group-hover:text-orange-500',
@@ -321,75 +322,77 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
             </div>
             <p
               className={cn(
-                'text-xs text-center font-medium',
+                'text-center text-xs font-medium',
                 isDragOverA ? 'text-orange-500' : 'text-text-primary',
               )}
             >
               {isDragOverA ? 'Drop for A' : 'Media A'}
             </p>
-            <p className="text-[10px] text-text-muted mt-0.5">Track A</p>
+            <p className="mt-0.5 text-[10px] text-text-muted">Track A</p>
           </div>
-        </div>
+        </ElevatedSurface>
 
         {/* Media B Drop Zone */}
-        <div
+        <ElevatedSurface
+          offset={1}
           className={cn(
-            'border-2 border-dashed transition-all duration-200 cursor-pointer group',
+            'surface-interactive ui-radius-lg group cursor-pointer border-2 border-dashed transition-[border-color,box-shadow,opacity] duration-150',
             isDragOverB
-              ? 'border-lime-400 bg-lime-400/20 scale-[1.02]'
-              : 'border-lime-400/40 hover:border-lime-400 hover:bg-lime-400/10',
-            isUploading && 'opacity-50 pointer-events-none',
+              ? 'border-lime-400 shadow-[0_0_0_1px_rgba(163,230,53,0.22)]'
+              : 'border-lime-400/40 hover:border-lime-400',
+            isUploading && 'pointer-events-none opacity-50',
           )}
           onDrop={handleDropB}
           onDragOver={handleDragOverB}
           onDragLeave={handleDragLeaveB}
           onClick={handleClickB}
         >
-          <div className="flex flex-col items-center justify-center py-4 px-2">
+          <div className="flex flex-col items-center justify-center px-2 py-4">
             <div
               className={cn(
-                'p-1.5 mb-1 transition-colors',
+                'ui-radius-md mb-1 p-1.5 transition-colors',
                 isDragOverB ? 'bg-lime-400/30' : 'bg-lime-400/10 group-hover:bg-lime-400/20',
               )}
             >
               <Upload
                 className={cn(
-                  'w-5 h-5',
+                  'h-5 w-5',
                   isDragOverB ? 'text-lime-400' : 'text-lime-400/70 group-hover:text-lime-400',
                 )}
               />
             </div>
             <p
               className={cn(
-                'text-xs text-center font-medium',
+                'text-center text-xs font-medium',
                 isDragOverB ? 'text-lime-400' : 'text-text-primary',
               )}
             >
               {isDragOverB ? 'Drop for B' : 'Media B'}
             </p>
-            <p className="text-[10px] text-text-muted mt-0.5">Track B</p>
+            <p className="mt-0.5 text-[10px] text-text-muted">Track B</p>
           </div>
-        </div>
+        </ElevatedSurface>
       </div>
 
       {/* General drop zone for both */}
-      <div
+      <ElevatedSurface
+        offset={1}
         className={cn(
-          'border-2 border-dashed transition-all duration-200 cursor-pointer group',
+          'surface-interactive ui-radius-lg group cursor-pointer border-2 border-dashed transition-[border-color,box-shadow,opacity] duration-150',
           isDragOverGeneral
-            ? 'border-accent bg-accent/10 scale-[1.01]'
-            : 'border-border hover:border-accent/60 hover:bg-accent/5',
-          isUploading && 'opacity-50 pointer-events-none',
+            ? 'border-accent shadow-[0_0_0_1px_rgba(255,87,34,0.2)]'
+            : 'border-border hover:border-accent/60',
+          isUploading && 'pointer-events-none opacity-50',
         )}
         onDrop={handleDropGeneral}
         onDragOver={handleDragOverGeneral}
         onDragLeave={handleDragLeaveGeneral}
         onClick={handleClickGeneral}
       >
-        <div className="flex flex-col items-center justify-center py-4 px-4">
+        <div className="flex flex-col items-center justify-center px-4 py-4">
           <p
             className={cn(
-              'text-xs text-center',
+              'text-center text-xs',
               isDragOverGeneral ? 'text-accent' : 'text-text-muted',
             )}
           >
@@ -399,12 +402,12 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
                 ? 'Drop to add to both tracks'
                 : 'Drop multiple files (auto A/B)'}
           </p>
-          <div className="flex gap-2 mt-2">
-            <Film className="w-3 h-3 text-text-muted/50" />
+          <div className="mt-2 flex gap-2">
+            <Film className="h-3 w-3 text-text-muted/50" />
             <Image className="w-3 h-3 text-text-muted/50" />
           </div>
         </div>
-      </div>
+      </ElevatedSurface>
 
       {/* Import options */}
       <div className="grid grid-cols-3 gap-2">
@@ -413,7 +416,7 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
             e.stopPropagation()
             setIsURLImportOpen(true)
           }}
-          className="flex items-center justify-center gap-1 px-2 py-2 text-xs text-text-secondary hover:text-text-primary bg-surface-hover hover:bg-surface border border-border rounded transition-colors"
+          className="surface-control ui-radius-md flex items-center justify-center gap-1 border px-2 py-2 text-xs text-text-secondary transition-colors hover:text-text-primary"
         >
           <Link className="w-3 h-3" />
           URL
@@ -423,7 +426,7 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
             e.stopPropagation()
             navigator.clipboard.read().catch(() => {})
           }}
-          className="flex items-center justify-center gap-1 px-2 py-2 text-xs text-text-secondary hover:text-text-primary bg-surface-hover hover:bg-surface border border-border rounded transition-colors"
+          className="surface-control ui-radius-md flex items-center justify-center gap-1 border px-2 py-2 text-xs text-text-secondary transition-colors hover:text-text-primary"
           title="Ctrl+V to paste images"
         >
           <Clipboard className="w-3 h-3" />
@@ -436,7 +439,7 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
           }}
           disabled={isCapturing}
           className={cn(
-            'flex items-center justify-center gap-1 px-2 py-2 text-xs text-text-secondary hover:text-text-primary bg-surface-hover hover:bg-surface border border-border rounded transition-colors',
+            'surface-control ui-radius-md flex items-center justify-center gap-1 border px-2 py-2 text-xs text-text-secondary transition-colors hover:text-text-primary',
             isCapturing && 'opacity-50 cursor-wait',
           )}
           title="Capture screen region"
@@ -447,7 +450,7 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
       </div>
 
       {error && (
-        <div className="flex items-center gap-2 px-3 py-2 bg-error/10 border border-error/30 rounded text-error text-xs">
+        <div className="ui-radius-md flex items-center gap-2 border border-error/30 bg-error/10 px-3 py-2 text-xs text-error">
           <AlertCircle className="w-4 h-4 flex-shrink-0" />
           <span>{error}</span>
         </div>
