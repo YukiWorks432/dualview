@@ -1,5 +1,6 @@
 import { Suspense, forwardRef, lazy, useImperativeHandle, useRef } from 'react'
 
+import { captureVisualContainer } from '../../lib/media/capture'
 import { useProjectStore } from '../../stores/projectStore'
 import { BlendModes } from '../comparison/BlendModes'
 import { FlickerComparison } from '../comparison/FlickerComparison'
@@ -73,52 +74,9 @@ export const PreviewCanvas = forwardRef<PreviewCanvasHandle, PreviewCanvasProps>
         const canvas = exportCanvasRef.current
         if (!container || !canvas) return null
 
-        const ctx = canvas.getContext('2d')
-        if (!ctx) return null
-
-        const rect = container.getBoundingClientRect()
-
-        // Set canvas size to match container
         canvas.width = 1920
         canvas.height = 1080
-
-        // Calculate scale to fit container content to 1920x1080
-        const scaleX = 1920 / rect.width
-        const scaleY = 1080 / rect.height
-
-        // Fill background
-        ctx.fillStyle = '#0d0d0d'
-        ctx.fillRect(0, 0, 1920, 1080)
-
-        // Find all video, image, and canvas elements
-        const videos = container.querySelectorAll('video')
-        const images = container.querySelectorAll('img')
-        const canvases = container.querySelectorAll('canvas')
-
-        const drawMedia = (media: HTMLVideoElement | HTMLImageElement | HTMLCanvasElement) => {
-          const mediaRect = media.getBoundingClientRect()
-          const x = (mediaRect.left - rect.left) * scaleX
-          const y = (mediaRect.top - rect.top) * scaleY
-          const width = mediaRect.width * scaleX
-          const height = mediaRect.height * scaleY
-
-          try {
-            ctx.drawImage(media, x, y, width, height)
-          } catch (e) {
-            console.warn('Failed to draw media element:', e)
-          }
-        }
-
-        // Draw in order: videos first, then images, then canvases
-        videos.forEach((video) => {
-          if (!video.classList.contains('hidden')) drawMedia(video)
-        })
-        images.forEach((image) => drawMedia(image))
-        canvases.forEach((childCanvas) => {
-          if (childCanvas !== canvas) drawMedia(childCanvas)
-        })
-
-        return canvas
+        return captureVisualContainer(container, canvas)
       },
     }))
 
