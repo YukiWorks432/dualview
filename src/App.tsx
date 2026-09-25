@@ -199,6 +199,10 @@ export default function App() {
           if (e.shiftKey) {
             e.preventDefault()
             const frame = previewRef.current?.captureFrame() ?? null
+            if (!frame) {
+              console.warn('Quick screenshot skipped because the current comparison frame is not ready')
+              break
+            }
             captureCanvasScreenshot(frame, 'png').then((blob) => {
               if (blob) {
                 downloadBlob(blob, `dualview-screenshot-${Date.now()}.png`)
