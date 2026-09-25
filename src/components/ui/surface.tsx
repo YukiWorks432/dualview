@@ -30,9 +30,7 @@ interface SurfaceProviderProps {
 }
 
 export function SurfaceProvider({ value = SURFACE_MIN_LEVEL, children }: SurfaceProviderProps) {
-  return (
-    <SurfaceContext.Provider value={clampSurfaceLevel(value)}>{children}</SurfaceContext.Provider>
-  )
+  return <SurfaceContext.Provider value={clampSurfaceLevel(value)}>{children}</SurfaceContext.Provider>
 }
 
 type SurfaceStyle = CSSProperties & {
@@ -48,8 +46,7 @@ function createSurfaceStyle(
   style?: CSSProperties,
 ): SurfaceStyle {
   const controlLevel = resolveSurfaceLevel(level, 1)
-  const resolvedShadowLevel =
-    shadowLevel === null ? null : clampSurfaceLevel(shadowLevel ?? level)
+  const resolvedShadowLevel = shadowLevel === null ? null : clampSurfaceLevel(shadowLevel ?? level)
 
   return {
     '--surface-current': `var(--surface-${level})`,
