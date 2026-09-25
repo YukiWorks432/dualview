@@ -7,11 +7,11 @@ export const buttonVariants = cva(
       variant: {
         default: 'bg-accent text-white hover:bg-accent-hover active:bg-accent-hover',
         secondary:
-          'border-border bg-surface-alt text-text-primary hover:border-border-hover hover:bg-surface-hover active:bg-surface-active',
+          'surface-control text-text-primary active:surface-interactive-active',
         ghost:
-          'bg-transparent text-text-secondary hover:bg-surface-hover hover:text-text-primary active:bg-surface-active',
+          'surface-interactive bg-transparent text-text-secondary hover:text-text-primary active:surface-interactive-active',
         outline:
-          'border-border bg-transparent text-text-primary hover:border-border-hover hover:bg-surface-hover active:bg-surface-active',
+          'surface-control text-text-primary active:surface-interactive-active',
         destructive: 'border-error bg-error text-white hover:bg-error/90 active:bg-error/90',
       },
       size: {
