@@ -2,7 +2,7 @@ export type VideoFrameElement = HTMLVideoElement | HTMLCanvasElement
 export type VisualFrameElement = VideoFrameElement | HTMLImageElement
 
 export function isVideoFrameReady(source: VideoFrameElement | null): source is VideoFrameElement {
-  if (!source) return false
+  if (!source || source.dataset.frameReady === 'false') return false
   if (source instanceof HTMLVideoElement) {
     return source.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA
   }

@@ -24,8 +24,14 @@ export function useProResClipSync(
     const clearFrame = () => {
       const canvas = canvasRef.current
       const context = canvas?.getContext('2d')
+      if (canvas) {
+        canvas.dataset.frameReady = 'false'
+      }
       if (canvas && context) {
         context.clearRect(0, 0, canvas.width, canvas.height)
+      }
+      if (!usePlaybackStore.getState().isPlaying) {
+        onFrameReady?.()
       }
     }
 
@@ -61,6 +67,7 @@ export function useProResClipSync(
 
           context.clearRect(0, 0, canvas.width, canvas.height)
           context.drawImage(source, 0, 0, canvas.width, canvas.height)
+          canvas.dataset.frameReady = 'true'
 
           if (!usePlaybackStore.getState().isPlaying) {
             onFrameReady?.()
@@ -79,6 +86,9 @@ export function useProResClipSync(
     }
 
     const requestFrame = (timelineTime: number) => {
+      if (!usePlaybackStore.getState().isPlaying) {
+        clearFrame()
+      }
       queuedTimelineTime = timelineTime
       void renderQueuedFrame()
     }

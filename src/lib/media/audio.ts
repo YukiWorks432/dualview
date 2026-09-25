@@ -13,6 +13,12 @@ export function createAudioPlaybackSource(
   const safeOffset = Math.max(0, offset)
   if (safeOffset >= buffer.duration) return null
 
+  const safeDuration =
+    duration === undefined
+      ? undefined
+      : Math.max(0, Math.min(duration, buffer.duration - safeOffset))
+  if (safeDuration !== undefined && safeDuration <= 0) return null
+
   const source = context.createBufferSource()
   const gain = context.createGain()
   source.buffer = buffer
@@ -20,12 +26,6 @@ export function createAudioPlaybackSource(
   gain.gain.value = volume
   source.connect(gain)
   gain.connect(context.destination)
-
-  const safeDuration =
-    duration === undefined
-      ? undefined
-      : Math.max(0, Math.min(duration, buffer.duration - safeOffset))
-  if (safeDuration !== undefined && safeDuration <= 0) return null
 
   if (safeDuration === undefined) {
     source.start(0, safeOffset)
@@ -135,11 +135,16 @@ export async function extractPrimaryAudioBuffer(
     ])
     throwIfAborted(signal)
 
-    const duration =
+    const computedDuration = await track.computeDuration()
+    throwIfAborted(signal)
+
+    const duration = Math.max(
       metadataDuration !== null && Number.isFinite(metadataDuration) && metadataDuration > 0
         ? metadataDuration
-        : await track.computeDuration()
-    if (!Number.isFinite(duration) || duration <= 0) return null
+        : 0,
+      Number.isFinite(computedDuration) && computedDuration > 0 ? computedDuration : 0,
+    )
+    if (duration <= 0) return null
 
     const length = Math.max(1, Math.ceil(duration * sampleRate))
     const output = new AudioBuffer({ length, numberOfChannels, sampleRate })

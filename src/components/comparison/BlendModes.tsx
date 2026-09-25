@@ -67,6 +67,15 @@ export function BlendModes() {
     // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height)
 
+    const sourceAReady = !mediaA || isVisualFrameReady(sourceA)
+    const sourceBReady = !mediaB || isVisualFrameReady(sourceB)
+    if (!sourceAReady || !sourceBReady) {
+      if (isPlaying) {
+        animationRef.current = requestAnimationFrame(renderFrame)
+      }
+      return
+    }
+
     // Apply zoom and pan transforms (IMG-002)
     ctx.save()
     const centerX = canvas.width / 2

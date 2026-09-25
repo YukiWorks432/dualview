@@ -53,13 +53,14 @@ type AudioViewMode = 'spectrogram' | 'spectrum' | 'goniometer' | 'loudness' | 'w
 type ActiveAudio = 'both' | 'a' | 'b'
 
 interface AudioAnalysisState {
+  mediaId: string | null
   buffer: AudioBuffer | null
   analysis: AudioAnalysisResult | null
   peaks: number[]
 }
 
 function createEmptyAudioAnalysisState(): AudioAnalysisState {
-  return { buffer: null, analysis: null, peaks: [] }
+  return { mediaId: null, buffer: null, analysis: null, peaks: [] }
 }
 
 // Loudness meter component
@@ -677,7 +678,7 @@ export function AudioComparison() {
   // Extract the primary embedded audio track through Mediabunny so this also works for
   // containers/codecs that the browser cannot play natively (for example ProRes MOV).
   const loadAudio = useCallback(
-    async (file: File, signal: AbortSignal): Promise<AudioAnalysisState> => {
+    async (mediaId: string, file: File, signal: AbortSignal): Promise<AudioAnalysisState> => {
       try {
         const buffer = await extractPrimaryAudioBuffer(file, signal)
         if (!buffer || signal.aborted) return createEmptyAudioAnalysisState()
@@ -686,6 +687,7 @@ export function AudioComparison() {
         if (signal.aborted) return createEmptyAudioAnalysisState()
 
         return {
+          mediaId,
           buffer,
           analysis,
           peaks: Array.from(analysis.waveformPeaks),
@@ -700,6 +702,8 @@ export function AudioComparison() {
     [],
   )
 
+  const mediaAId = mediaA?.type === 'video' ? mediaA.id : undefined
+  const mediaBId = mediaB?.type === 'video' ? mediaB.id : undefined
   const mediaAFile = mediaA?.type === 'video' ? mediaA.file : undefined
   const mediaBFile = mediaB?.type === 'video' ? mediaB.file : undefined
 
@@ -735,15 +739,17 @@ export function AudioComparison() {
 
       setIsAnalyzing(true)
 
-      const nextA = mediaAFile
-        ? await loadAudio(mediaAFile, abortController.signal)
-        : createEmptyAudioAnalysisState()
+      const nextA =
+        mediaAId && mediaAFile
+          ? await loadAudio(mediaAId, mediaAFile, abortController.signal)
+          : createEmptyAudioAnalysisState()
       if (cancelled || abortController.signal.aborted) return
       setAnalysisA(nextA)
 
-      const nextB = mediaBFile
-        ? await loadAudio(mediaBFile, abortController.signal)
-        : createEmptyAudioAnalysisState()
+      const nextB =
+        mediaBId && mediaBFile
+          ? await loadAudio(mediaBId, mediaBFile, abortController.signal)
+          : createEmptyAudioAnalysisState()
       if (cancelled || abortController.signal.aborted) return
       setAnalysisB(nextB)
       setIsAnalyzing(false)
@@ -755,7 +761,7 @@ export function AudioComparison() {
       cancelled = true
       abortController.abort()
     }
-  }, [invalidateAudioPlayback, loadAudio, mediaAFile, mediaBFile])
+  }, [invalidateAudioPlayback, loadAudio, mediaAFile, mediaAId, mediaBFile, mediaBId])
 
   const startAudioPlayback = useCallback(
     async (time: number) => {
@@ -788,11 +794,11 @@ export function AudioComparison() {
       playingClipIdsRef.current = { a: clipA?.id ?? null, b: clipB?.id ?? null }
 
       const createSourceForClip = (
-        buffer: AudioBuffer | null,
+        state: AudioAnalysisState,
         clip: typeof clipA,
         volume: number,
       ) => {
-        if (!buffer || !clip || clip.reverse) return null
+        if (!state.buffer || !clip || state.mediaId !== clip.mediaId || clip.reverse) return null
 
         const mediaTime = calculateMediaTime(time, clip)
         if (mediaTime === null) return null
@@ -804,7 +810,7 @@ export function AudioComparison() {
 
         return createAudioPlaybackSource(
           context,
-          buffer,
+          state.buffer,
           playbackSpeed * clipSpeed,
           volume,
           mediaTime,
@@ -812,16 +818,14 @@ export function AudioComparison() {
         )
       }
 
-      const sourceA =
-        activeAudio !== 'b' ? createSourceForClip(analysisA.buffer, clipA, volumeA) : null
-      const sourceB =
-        activeAudio !== 'a' ? createSourceForClip(analysisB.buffer, clipB, volumeB) : null
+      const sourceA = activeAudio !== 'b' ? createSourceForClip(analysisA, clipA, volumeA) : null
+      const sourceB = activeAudio !== 'a' ? createSourceForClip(analysisB, clipB, volumeB) : null
       sourceRegistryRef.current.track(sourceA, sourceB)
     },
     [
       activeAudio,
-      analysisA.buffer,
-      analysisB.buffer,
+      analysisA,
+      analysisB,
       playbackSpeed,
       stopAudioSources,
       trackA,

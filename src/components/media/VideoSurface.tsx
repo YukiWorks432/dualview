@@ -5,6 +5,7 @@ import {
   type CSSProperties,
   type ForwardedRef,
   type MouseEvent,
+  type SyntheticEvent,
 } from 'react'
 
 import { useOptimizedClipSync } from '../../hooks/useOptimizedVideoSync'
@@ -49,6 +50,9 @@ export const VideoSurface = forwardRef<VideoFrameElement, VideoSurfaceProps>(fun
   const setVideoRef = useCallback(
     (node: HTMLVideoElement | null) => {
       videoRef.current = node
+      if (node && node.dataset.frameReady === undefined) {
+        node.dataset.frameReady = 'false'
+      }
       assignRef(forwardedRef, node)
     },
     [forwardedRef],
@@ -57,9 +61,24 @@ export const VideoSurface = forwardRef<VideoFrameElement, VideoSurfaceProps>(fun
   const setCanvasRef = useCallback(
     (node: HTMLCanvasElement | null) => {
       canvasRef.current = node
+      if (node && node.dataset.frameReady === undefined) {
+        node.dataset.frameReady = 'false'
+      }
       assignRef(forwardedRef, node)
     },
     [forwardedRef],
+  )
+
+  const handleNativeFramePending = useCallback((event: SyntheticEvent<HTMLVideoElement>) => {
+    event.currentTarget.dataset.frameReady = 'false'
+  }, [])
+
+  const handleNativeFrameReady = useCallback(
+    (event: SyntheticEvent<HTMLVideoElement>) => {
+      event.currentTarget.dataset.frameReady = 'true'
+      onFrameReady?.()
+    },
+    [onFrameReady],
   )
 
   if (useMediabunny) {
@@ -82,8 +101,9 @@ export const VideoSurface = forwardRef<VideoFrameElement, VideoSurfaceProps>(fun
       style={style}
       data-track={dataTrack}
       onClick={onClick}
-      onLoadedData={onFrameReady}
-      onSeeked={onFrameReady}
+      onLoadedData={handleNativeFrameReady}
+      onSeeking={handleNativeFramePending}
+      onSeeked={handleNativeFrameReady}
       muted
       playsInline
       preload="auto"
