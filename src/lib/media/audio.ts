@@ -130,11 +130,7 @@ export function estimateDecodedAudioBytes(
   numberOfChannels: number,
 ): number {
   if (duration <= 0 || sampleRate <= 0 || numberOfChannels <= 0) return 0
-  return (
-    Math.ceil(duration * sampleRate) *
-    numberOfChannels *
-    Float32Array.BYTES_PER_ELEMENT
-  )
+  return Math.ceil(duration * sampleRate) * numberOfChannels * Float32Array.BYTES_PER_ELEMENT
 }
 
 export function assertDecodedAudioSizeWithinLimit(
