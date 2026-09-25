@@ -26,7 +26,7 @@ function TooltipContent({
       <TooltipPrimitive.Positioner side={side} sideOffset={sideOffset} className="z-[70]">
         <TooltipPrimitive.Popup
           className={cn(
-            'border border-border bg-surface-alt px-2 py-1.5 text-xs text-text-primary shadow-xl data-[starting-style]:scale-95 data-[starting-style]:opacity-0 data-[ending-style]:scale-95 data-[ending-style]:opacity-0',
+            'rounded-sm border border-border bg-surface-alt px-2 py-1.5 text-xs text-text-primary shadow-[0_6px_18px_rgba(0,0,0,0.3)] data-[starting-style]:scale-[0.99] data-[starting-style]:opacity-0 data-[ending-style]:scale-[0.99] data-[ending-style]:opacity-0',
             className,
           )}
           {...props}

@@ -29,7 +29,7 @@ function DialogContent({
     <DialogPrimitive.Portal>
       <DialogPrimitive.Backdrop
         className={cn(
-          'fixed inset-0 z-50 bg-black/60 data-[starting-style]:opacity-0 data-[ending-style]:opacity-0',
+          'fixed inset-0 z-50 bg-black/55 data-[starting-style]:opacity-0 data-[ending-style]:opacity-0',
           backdropClassName,
         )}
       />
@@ -41,7 +41,7 @@ function DialogContent({
       >
         <DialogPrimitive.Popup
           className={cn(
-            'relative w-full max-w-lg border border-border bg-surface text-text-primary shadow-2xl outline-none data-[starting-style]:scale-[0.98] data-[starting-style]:opacity-0 data-[ending-style]:scale-[0.98] data-[ending-style]:opacity-0',
+            'relative w-full max-w-lg rounded-lg border border-border bg-surface text-text-primary shadow-[0_12px_32px_rgba(0,0,0,0.35)] outline-none data-[starting-style]:scale-[0.99] data-[starting-style]:opacity-0 data-[ending-style]:scale-[0.99] data-[ending-style]:opacity-0',
             className,
           )}
           {...props}
@@ -53,12 +53,12 @@ function DialogContent({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="absolute right-2 top-2 h-8 w-8"
+                  className="absolute right-2 top-2 h-7 w-7"
                   aria-label="Close dialog"
                 />
               }
             >
-              <X className="h-4 w-4" aria-hidden="true" />
+              <X className="h-3.5 w-3.5" aria-hidden="true" />
             </DialogPrimitive.Close>
           )}
         </DialogPrimitive.Popup>
