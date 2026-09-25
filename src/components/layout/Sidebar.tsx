@@ -847,10 +847,7 @@ function SettingsPanel({
       )}
 
       {/* Export settings card - always visible */}
-      <ElevatedSurface
-        offset={1}
-        className="ui-radius-lg space-y-4 border border-border p-4"
-      >
+      <ElevatedSurface offset={1} className="ui-radius-lg space-y-4 border border-border p-4">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-semibold text-text-primary">Quick Export</h3>
           <kbd className="kbd">E</kbd>
