@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
 import type { TimelineClip } from '../../types'
-import { calculateMediaTime, calculateTimelineTime, findActiveClip } from './timeline'
+import {
+  calculateMediaTime,
+  calculateTimelineTime,
+  findActiveClip,
+  findDisplayedClip,
+} from './timeline'
 
 function clip(overrides: Partial<TimelineClip> = {}): TimelineClip {
   return {
@@ -42,5 +47,13 @@ describe('timeline media mapping', () => {
     expect(calculateTimelineTime(9.9, clips[0])).toBeNull()
     expect(findActiveClip(clips, 21)?.id).toBe('later')
     expect(findActiveClip(clips, 18)).toBeNull()
+  })
+
+  it('uses the active clip for display and otherwise falls back to the first clip', () => {
+    const clips = [clip(), clip({ id: 'later', startTime: 20, endTime: 25 })]
+
+    expect(findDisplayedClip(clips, 21)?.id).toBe('later')
+    expect(findDisplayedClip(clips, 18)?.id).toBe('clip')
+    expect(findDisplayedClip([], 18)).toBeNull()
   })
 })
