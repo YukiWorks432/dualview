@@ -43,11 +43,7 @@ import {
   extractPrimaryAudioBuffer,
   PlaybackRequestGate,
 } from '../../lib/media/audio'
-import {
-  calculateMediaTime,
-  calculateTimelineTime,
-  findActiveClip,
-} from '../../lib/media/timeline'
+import { calculateMediaTime, calculateTimelineTime, findActiveClip } from '../../lib/media/timeline'
 import { cn, formatTime } from '../../lib/utils'
 import { useMediaStore } from '../../stores/mediaStore'
 import { usePlaybackStore } from '../../stores/playbackStore'
