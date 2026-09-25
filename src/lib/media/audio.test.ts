@@ -37,7 +37,6 @@ describe('PlaybackRequestGate', () => {
   })
 })
 
-
 describe('decoded audio memory guard', () => {
   it('estimates Float32 PCM storage before allocating an AudioBuffer', () => {
     expect(estimateDecodedAudioBytes(60, 48_000, 2)).toBe(23_040_000)
