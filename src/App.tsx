@@ -405,7 +405,7 @@ export default function App() {
             isOpen
             onClose={() => setIsExportOpen(false)}
             canvasRef={canvasRef}
-            captureFrame={() => previewRef.current?.captureFrame() ?? null}
+            captureFrame={(options) => previewRef.current?.captureFrame(options) ?? null}
           />
         </Suspense>
       )}
