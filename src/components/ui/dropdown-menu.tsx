@@ -2,6 +2,7 @@ import { Menu as MenuPrimitive } from '@base-ui/react/menu'
 import * as React from 'react'
 
 import { cn } from '../../lib/utils'
+import { ElevatedSurface } from './surface'
 
 const DropdownMenu = MenuPrimitive.Root
 const DropdownMenuTrigger = MenuPrimitive.Trigger
@@ -25,13 +26,15 @@ function DropdownMenuContent({
   return (
     <MenuPrimitive.Portal>
       <MenuPrimitive.Positioner align={align} side={side} sideOffset={sideOffset} className="z-50">
-        <MenuPrimitive.Popup
-          className={cn(
-            'min-w-40 ui-radius-md border border-border bg-surface py-1 text-text-primary shadow-[0_10px_28px_rgba(0,0,0,0.32)] outline-none data-[starting-style]:scale-[0.99] data-[starting-style]:opacity-0 data-[ending-style]:scale-[0.99] data-[ending-style]:opacity-0',
-            className,
-          )}
-          {...props}
-        />
+        <ElevatedSurface asChild offset={1}>
+          <MenuPrimitive.Popup
+            className={cn(
+              'min-w-40 ui-radius-md border border-transparent py-1 text-text-primary outline-none data-[starting-style]:scale-[0.99] data-[starting-style]:opacity-0 data-[ending-style]:scale-[0.99] data-[ending-style]:opacity-0',
+              className,
+            )}
+            {...props}
+          />
+        </ElevatedSurface>
       </MenuPrimitive.Positioner>
     </MenuPrimitive.Portal>
   )
