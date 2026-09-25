@@ -76,185 +76,183 @@ export function Sidebar({ onCollapse, isMobileOpen, onMobileClose, onOpenProject
   const sidebarContent = (
     <SurfaceProvider value={1}>
       <aside
-        className={`
-        surface-wash border-r border-border flex flex-col
-        ${isMobileOpen ? 'mobile-drawer animate-slide-in-left' : 'w-72 hide-mobile'}
-      `}
-      >
-      {/* Project controls - at top of sidebar */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-border shrink-0 bg-surface-alt/50">
-        <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            title="Open Projects"
-            onClick={onOpenProjects}
-            className="h-7 px-2 gap-1.5 text-xs"
-          >
-            <FolderOpen className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Projects</span>
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            title="Save Project (Ctrl+S)"
-            onClick={() => saveCurrentProject()}
-            disabled={saveStatus === 'saving' || !projectMetadata}
-            className={`h-7 px-2 gap-1.5 text-xs ${saveStatus === 'saving' ? 'animate-pulse' : ''}`}
-          >
-            <Save className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Save</span>
-          </Button>
+          className={`
+          surface-wash border-r border-border flex flex-col
+          ${isMobileOpen ? 'mobile-drawer animate-slide-in-left' : 'w-72 hide-mobile'}
+        `}
+        >
+          {/* Project controls - at top of sidebar */}
+        <div className="flex items-center justify-between px-3 py-2 border-b border-border shrink-0 bg-surface-alt/50">
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              title="Open Projects"
+              onClick={onOpenProjects}
+              className="h-7 px-2 gap-1.5 text-xs"
+            >
+              <FolderOpen className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Projects</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              title="Save Project (Ctrl+S)"
+              onClick={() => saveCurrentProject()}
+              disabled={saveStatus === 'saving' || !projectMetadata}
+              className={`h-7 px-2 gap-1.5 text-xs ${saveStatus === 'saving' ? 'animate-pulse' : ''}`}
+            >
+              <Save className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Save</span>
+            </Button>
+          </div>
+          {saveStatus === 'saved' && <span className="text-[10px] text-text-muted">Saved</span>}
+          {saveStatus === 'saving' && <span className="text-[10px] text-accent">Saving...</span>}
         </div>
-        {saveStatus === 'saved' && <span className="text-[10px] text-text-muted">Saved</span>}
-        {saveStatus === 'saving' && <span className="text-[10px] text-accent">Saving...</span>}
-      </div>
 
-      {/* Tab navigation - Jakob's Law: Familiar tab pattern */}
-      <div className="flex border-b border-border shrink-0">
-        {/* Mobile close button */}
-        {isMobileOpen && onMobileClose && (
-          <button
-            onClick={onMobileClose}
-            className="px-3 py-3 text-text-muted hover:text-text-primary hover:bg-surface-hover transition-all"
-            title="Close Sidebar"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        )}
-        <button
-          className={`flex-1 py-3 text-sm font-medium transition-all duration-150 relative ${
-            activeTab === 'media'
-              ? 'text-text-primary'
-              : 'text-text-secondary hover:text-text-primary'
-          }`}
-          onClick={() => setActiveTab('media')}
-        >
-          <FolderOpen
-            className={`w-4 h-4 inline-block mr-2 transition-transform ${activeTab === 'media' ? 'scale-110' : ''}`}
-          />
-          Media
-          {/* Active indicator - Von Restorff Effect */}
-          {activeTab === 'media' && (
-            <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-accent" />
+          {/* Tab navigation - Jakob's Law: Familiar tab pattern */}
+        <div className="flex border-b border-border shrink-0">
+          {/* Mobile close button */}
+          {isMobileOpen && onMobileClose && (
+            <button
+              onClick={onMobileClose}
+              className="px-3 py-3 text-text-muted hover:text-text-primary hover:bg-surface-hover transition-all"
+              title="Close Sidebar"
+            >
+              <X className="w-5 h-5" />
+            </button>
           )}
-        </button>
-        <button
-          className={`flex-1 py-3 text-sm font-medium transition-all duration-150 relative ${
-            activeTab === 'settings'
-              ? 'text-text-primary'
-              : 'text-text-secondary hover:text-text-primary'
-          }`}
-          onClick={() => setActiveTab('settings')}
-        >
-          <Settings
-            className={`w-4 h-4 inline-block mr-2 transition-transform ${activeTab === 'settings' ? 'scale-110' : ''}`}
-          />
-          Settings
-          {activeTab === 'settings' && (
-            <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-accent" />
-          )}
-        </button>
-        {onCollapse && !isMobileOpen && (
           <button
-            onClick={onCollapse}
-            className="px-2 text-text-muted hover:text-text-primary hover:bg-surface-hover transition-all duration-150 group hide-mobile"
-            title="Collapse Sidebar (B)"
+            className={`flex-1 py-3 text-sm font-medium transition-all duration-150 relative ${
+              activeTab === 'media'
+                ? 'text-text-primary'
+                : 'text-text-secondary hover:text-text-primary'
+            }`}
+            onClick={() => setActiveTab('media')}
           >
-            <ChevronLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
-          </button>
-        )}
-      </div>
-
-      <div className="flex-1 overflow-y-auto p-4">
-        <SurfaceProvider value={1}>
-          {activeTab === 'media' && <MediaPanel />}
-          {activeTab === 'settings' && (
-            <SettingsPanel
-              comparisonMode={comparisonMode}
-              blendMode={blendMode}
-              setBlendMode={setBlendMode}
-              splitLayout={splitLayout}
-              setSplitLayout={setSplitLayout}
-              sliderPosition={sliderPosition}
-              setSliderPosition={setSliderPosition}
-              sliderOrientation={sliderOrientation}
-              setSliderOrientation={setSliderOrientation}
-              hideSlider={hideSlider}
-              toggleHideSlider={toggleHideSlider}
-              exportSettings={exportSettings}
-              setExportSettings={setExportSettings}
-              webglComparisonSettings={webglComparisonSettings}
-              setWebGLComparisonMode={setWebGLComparisonMode}
-              setWebGLComparisonSettings={setWebGLComparisonSettings}
+            <FolderOpen
+              className={`w-4 h-4 inline-block mr-2 transition-transform ${activeTab === 'media' ? 'scale-110' : ''}`}
             />
+            Media
+            {/* Active indicator - Von Restorff Effect */}
+            {activeTab === 'media' && (
+              <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-accent" />
+            )}
+          </button>
+          <button
+            className={`flex-1 py-3 text-sm font-medium transition-all duration-150 relative ${
+              activeTab === 'settings'
+                ? 'text-text-primary'
+                : 'text-text-secondary hover:text-text-primary'
+            }`}
+            onClick={() => setActiveTab('settings')}
+          >
+            <Settings
+              className={`w-4 h-4 inline-block mr-2 transition-transform ${activeTab === 'settings' ? 'scale-110' : ''}`}
+            />
+            Settings
+            {activeTab === 'settings' && (
+              <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-accent" />
+            )}
+          </button>
+          {onCollapse && !isMobileOpen && (
+            <button
+              onClick={onCollapse}
+              className="px-2 text-text-muted hover:text-text-primary hover:bg-surface-hover transition-all duration-150 group hide-mobile"
+              title="Collapse Sidebar (B)"
+            >
+              <ChevronLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+            </button>
           )}
-        </SurfaceProvider>
-      </div>
+        </div>
 
-      {/* Project lineage links */}
-      <div className="shrink-0 p-3 border-t border-border/50 bg-background/50 safe-area-bottom text-[10px]">
-        <div className="space-y-2">
-          <div>
-            <div className="text-text-muted mb-1">Maintained fork</div>
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-              <a
-                href="https://github.com/YukiWorks432/dualview"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-text-secondary hover:text-text-primary transition-colors"
-              >
-                GitHub
-              </a>
-              <a
-                href="https://x.com/YuK1_Works"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-text-secondary hover:text-text-primary transition-colors"
-              >
-                @YuK1_Works
-              </a>
-              <a
-                href="https://hanayuki.xyz"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-text-secondary hover:text-text-primary transition-colors"
-              >
-                hanayuki.xyz
-              </a>
-            </div>
+          <div className="flex-1 overflow-y-auto p-4">
+            {activeTab === 'media' && <MediaPanel />}
+            {activeTab === 'settings' && (
+              <SettingsPanel
+                comparisonMode={comparisonMode}
+                blendMode={blendMode}
+                setBlendMode={setBlendMode}
+                splitLayout={splitLayout}
+                setSplitLayout={setSplitLayout}
+                sliderPosition={sliderPosition}
+                setSliderPosition={setSliderPosition}
+                sliderOrientation={sliderOrientation}
+                setSliderOrientation={setSliderOrientation}
+                hideSlider={hideSlider}
+                toggleHideSlider={toggleHideSlider}
+                exportSettings={exportSettings}
+                setExportSettings={setExportSettings}
+                webglComparisonSettings={webglComparisonSettings}
+                setWebGLComparisonMode={setWebGLComparisonMode}
+                setWebGLComparisonSettings={setWebGLComparisonSettings}
+              />
+            )}
           </div>
-          <div className="pt-2 border-t border-border/30">
-            <div className="text-text-muted mb-1">Original project</div>
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-              <a
-                href="https://github.com/gokayfem/dualview"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-text-muted hover:text-text-primary transition-colors"
-              >
-                GitHub
-              </a>
-              <a
-                href="https://dualview.ai"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-text-muted hover:text-text-primary transition-colors"
-              >
-                dualview.ai
-              </a>
-              <a
-                href="https://huggingface.co/gokaygokay"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-text-muted hover:text-text-primary transition-colors"
-              >
-                Hugging Face
-              </a>
+
+            {/* Project lineage links */}
+        <div className="shrink-0 p-3 border-t border-border/50 bg-background/50 safe-area-bottom text-[10px]">
+          <div className="space-y-2">
+            <div>
+              <div className="text-text-muted mb-1">Maintained fork</div>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                <a
+                  href="https://github.com/YukiWorks432/dualview"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-text-secondary hover:text-text-primary transition-colors"
+                >
+                  GitHub
+                </a>
+                <a
+                  href="https://x.com/YuK1_Works"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-text-secondary hover:text-text-primary transition-colors"
+                >
+                  @YuK1_Works
+                </a>
+                <a
+                  href="https://hanayuki.xyz"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-text-secondary hover:text-text-primary transition-colors"
+                >
+                  hanayuki.xyz
+                </a>
+              </div>
+            </div>
+            <div className="pt-2 border-t border-border/30">
+              <div className="text-text-muted mb-1">Original project</div>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                <a
+                  href="https://github.com/gokayfem/dualview"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-text-muted hover:text-text-primary transition-colors"
+                >
+                  GitHub
+                </a>
+                <a
+                  href="https://dualview.ai"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-text-muted hover:text-text-primary transition-colors"
+                >
+                  dualview.ai
+                </a>
+                <a
+                  href="https://huggingface.co/gokaygokay"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-text-muted hover:text-text-primary transition-colors"
+                >
+                  Hugging Face
+                </a>
+              </div>
             </div>
           </div>
         </div>
-      </div>
       </aside>
     </SurfaceProvider>
   )
