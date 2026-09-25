@@ -18,6 +18,12 @@ export interface SourceCrop {
   sh: number
 }
 
+export interface CaptureTransform {
+  scale: number
+  offsetX: number
+  offsetY: number
+}
+
 function right(rect: CaptureRect): number {
   return rect.left + rect.width
 }
@@ -77,6 +83,20 @@ export function calculateSourceCrop(
     sy: (visibleRect.top - contentRect.top) * scaleY,
     sw: visibleRect.width * scaleX,
     sh: visibleRect.height * scaleY,
+  }
+}
+
+export function calculateCaptureTransform(
+  containerWidth: number,
+  containerHeight: number,
+  outputWidth: number,
+  outputHeight: number,
+): CaptureTransform {
+  const scale = Math.min(outputWidth / containerWidth, outputHeight / containerHeight)
+  return {
+    scale,
+    offsetX: (outputWidth - containerWidth * scale) / 2,
+    offsetY: (outputHeight - containerHeight * scale) / 2,
   }
 }
 
@@ -162,33 +182,38 @@ function clipToAncestors(
 export function captureVisualContainer(
   container: HTMLElement,
   outputCanvas: HTMLCanvasElement,
-): HTMLCanvasElement {
+): HTMLCanvasElement | null {
   const context = outputCanvas.getContext('2d')
-  if (!context) return outputCanvas
+  if (!context) return null
 
   const containerRect = toCaptureRect(container.getBoundingClientRect())
-  if (containerRect.width <= 0 || containerRect.height <= 0) return outputCanvas
+  if (containerRect.width <= 0 || containerRect.height <= 0) return null
 
-  const scaleX = outputCanvas.width / containerRect.width
-  const scaleY = outputCanvas.height / containerRect.height
+  const { scale, offsetX, offsetY } = calculateCaptureTransform(
+    containerRect.width,
+    containerRect.height,
+    outputCanvas.width,
+    outputCanvas.height,
+  )
 
   context.clearRect(0, 0, outputCanvas.width, outputCanvas.height)
   context.fillStyle = '#0d0d0d'
   context.fillRect(0, 0, outputCanvas.width, outputCanvas.height)
 
   const surfaces = Array.from(container.querySelectorAll<VisualFrameElement>('video, img, canvas'))
+  let drawnSurfaceCount = 0
 
   for (const surface of surfaces) {
-    if (!isVisualFrameReady(surface)) continue
-
     const opacity = getElementOpacity(surface, container)
     if (opacity === null) continue
 
     const elementRect = toCaptureRect(surface.getBoundingClientRect())
     if (elementRect.width <= 0 || elementRect.height <= 0) continue
 
+    if (!isVisualFrameReady(surface)) return null
+
     const { width: sourceWidth, height: sourceHeight } = getVisualFrameDimensions(surface)
-    if (sourceWidth <= 0 || sourceHeight <= 0) continue
+    if (sourceWidth <= 0 || sourceHeight <= 0) return null
 
     const objectFit = getComputedStyle(surface).objectFit
     const contentRect =
@@ -201,21 +226,23 @@ export function captureVisualContainer(
     if (!visibleRect) continue
 
     const crop = calculateSourceCrop(contentRect, visibleRect, sourceWidth, sourceHeight)
-    const dx = (visibleRect.left - containerRect.left) * scaleX
-    const dy = (visibleRect.top - containerRect.top) * scaleY
-    const dw = visibleRect.width * scaleX
-    const dh = visibleRect.height * scaleY
+    const dx = offsetX + (visibleRect.left - containerRect.left) * scale
+    const dy = offsetY + (visibleRect.top - containerRect.top) * scale
+    const dw = visibleRect.width * scale
+    const dh = visibleRect.height * scale
 
     try {
       context.save()
       context.globalAlpha = opacity
       context.drawImage(surface, crop.sx, crop.sy, crop.sw, crop.sh, dx, dy, dw, dh)
       context.restore()
+      drawnSurfaceCount += 1
     } catch (error) {
       context.restore()
       console.warn('Failed to capture visual surface:', error)
+      return null
     }
   }
 
-  return outputCanvas
+  return drawnSurfaceCount > 0 ? outputCanvas : null
 }
