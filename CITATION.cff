@@ -11,7 +11,7 @@ authors:
   - name: 'YukiWorks432'
 contact:
   - name: 'YukiWorks432'
-abstract: 'An open-source side-by-side comparison and analysis tool for images, videos, audio, 3D models, documents, and text. This repository is a maintained fork of the original DualView project.'
+abstract: 'An open-source image and video A/B comparison tool for delivery review, with visual analysis and embedded video audio QA. This repository is a maintained fork of the original DualView project.'
 keywords:
   - media comparison
   - visual quality assurance
