@@ -4,6 +4,7 @@ import * as React from 'react'
 
 import { cn } from '../../lib/utils'
 import { Button } from './button'
+import { ElevatedSurface } from './surface'
 
 const Dialog = DialogPrimitive.Root
 const DialogTrigger = DialogPrimitive.Trigger
@@ -39,29 +40,31 @@ function DialogContent({
           viewportClassName,
         )}
       >
-        <DialogPrimitive.Popup
-          className={cn(
-            'relative w-full max-w-lg ui-radius-lg border border-border bg-surface text-text-primary shadow-[0_12px_32px_rgba(0,0,0,0.35)] outline-none data-[starting-style]:scale-[0.99] data-[starting-style]:opacity-0 data-[ending-style]:scale-[0.99] data-[ending-style]:opacity-0',
-            className,
-          )}
-          {...props}
-        >
-          {children}
-          {showCloseButton && (
-            <DialogPrimitive.Close
-              render={
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="absolute right-2 top-2 h-7 w-7"
-                  aria-label="Close dialog"
-                />
-              }
-            >
-              <X className="h-3.5 w-3.5" aria-hidden="true" />
-            </DialogPrimitive.Close>
-          )}
-        </DialogPrimitive.Popup>
+        <ElevatedSurface asChild offset={3}>
+          <DialogPrimitive.Popup
+            className={cn(
+              'relative w-full max-w-lg ui-radius-lg border border-transparent text-text-primary outline-none data-[starting-style]:scale-[0.99] data-[starting-style]:opacity-0 data-[ending-style]:scale-[0.99] data-[ending-style]:opacity-0',
+              className,
+            )}
+            {...props}
+          >
+            {children}
+            {showCloseButton && (
+              <DialogPrimitive.Close
+                render={
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-2 top-2 h-7 w-7"
+                    aria-label="Close dialog"
+                  />
+                }
+              >
+                <X className="h-3.5 w-3.5" aria-hidden="true" />
+              </DialogPrimitive.Close>
+            )}
+          </DialogPrimitive.Popup>
+        </ElevatedSurface>
       </DialogPrimitive.Viewport>
     </DialogPrimitive.Portal>
   )
