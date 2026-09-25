@@ -22,7 +22,14 @@ import { useTimelineStore } from '../../stores/timelineStore'
 import type { BlendMode, SplitLayout, ExportSettings, WebGLComparisonMode } from '../../types'
 import { MediaLibrary } from '../media/MediaLibrary'
 import { MediaUpload } from '../media/MediaUpload'
-import { Select, Slider, AspectRatioSelector, Button } from '../ui'
+import {
+  AspectRatioSelector,
+  Button,
+  ElevatedSurface,
+  Select,
+  Slider,
+  SurfaceProvider,
+} from '../ui'
 
 type Tab = 'media' | 'settings'
 
@@ -67,12 +74,13 @@ export function Sidebar({ onCollapse, isMobileOpen, onMobileClose, onOpenProject
 
   // Desktop sidebar
   const sidebarContent = (
-    <aside
-      className={`
-      bg-surface border-r border-border flex flex-col
-      ${isMobileOpen ? 'mobile-drawer animate-slide-in-left' : 'w-72 hide-mobile'}
-    `}
-    >
+    <SurfaceProvider value={1}>
+      <aside
+        className={`
+        surface-wash border-r border-border flex flex-col
+        ${isMobileOpen ? 'mobile-drawer animate-slide-in-left' : 'w-72 hide-mobile'}
+      `}
+      >
       {/* Project controls - at top of sidebar */}
       <div className="flex items-center justify-between px-3 py-2 border-b border-border shrink-0 bg-surface-alt/50">
         <div className="flex items-center gap-1">
@@ -182,8 +190,8 @@ export function Sidebar({ onCollapse, isMobileOpen, onMobileClose, onOpenProject
         )}
       </div>
 
-      {/* Project lineage links */}
-      <div className="shrink-0 p-3 border-t border-border/50 bg-background/50 safe-area-bottom text-[10px]">
+        {/* Project lineage links */}
+        <div className="shrink-0 p-3 border-t border-border/50 bg-background/50 safe-area-bottom text-[10px]">
         <div className="space-y-2">
           <div>
             <div className="text-text-muted mb-1">Maintained fork</div>
@@ -244,8 +252,9 @@ export function Sidebar({ onCollapse, isMobileOpen, onMobileClose, onOpenProject
             </div>
           </div>
         </div>
-      </div>
-    </aside>
+        </div>
+      </aside>
+    </SurfaceProvider>
   )
 
   // Mobile: render with overlay backdrop
@@ -276,9 +285,10 @@ function MediaPanel() {
   return (
     <div className="space-y-4">
       {/* Comparison readiness indicator - Zeigarnik Effect + Goal-Gradient Effect */}
-      <div
-        className={`p-3 border transition-all duration-300 ${
-          isReady ? 'bg-accent/10 border-accent/30' : 'bg-surface-alt border-border'
+      <ElevatedSurface
+        offset={1}
+        className={`ui-radius-lg border p-3 transition-[border-color,box-shadow] duration-200 ${
+          isReady ? 'border-accent/60' : 'border-border'
         }`}
       >
         <div className="flex items-center justify-between mb-2">
@@ -292,12 +302,12 @@ function MediaPanel() {
         {/* Progress bar with animation */}
         <div className="flex gap-1 mb-2">
           <div
-            className={`flex-1 h-1.5 transition-all duration-300 ${
+            className={`ui-radius-sm flex-1 h-1.5 transition-all duration-300 ${
               hasMediaA ? 'bg-accent' : 'bg-border animate-pulse-subtle'
             }`}
           />
           <div
-            className={`flex-1 h-1.5 transition-all duration-300 ${
+            className={`ui-radius-sm flex-1 h-1.5 transition-all duration-300 ${
               hasMediaB ? 'bg-secondary' : 'bg-border animate-pulse-subtle'
             }`}
           />
@@ -320,7 +330,7 @@ function MediaPanel() {
             💡 Drag files or paste URLs to add media
           </p>
         )}
-      </div>
+      </ElevatedSurface>
 
       <MediaUpload />
 
