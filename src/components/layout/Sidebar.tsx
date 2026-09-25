@@ -74,12 +74,13 @@ export function Sidebar({ onCollapse, isMobileOpen, onMobileClose, onOpenProject
 
   // Desktop sidebar
   const sidebarContent = (
-    <aside
-      className={`
-      surface-wash border-r border-border flex flex-col
-      ${isMobileOpen ? 'mobile-drawer animate-slide-in-left' : 'w-72 hide-mobile'}
-    `}
-    >
+    <SurfaceProvider value={1}>
+      <aside
+        className={`
+        surface-wash border-r border-border flex flex-col
+        ${isMobileOpen ? 'mobile-drawer animate-slide-in-left' : 'w-72 hide-mobile'}
+      `}
+      >
       {/* Project controls - at top of sidebar */}
       <div className="flex items-center justify-between px-3 py-2 border-b border-border shrink-0 bg-surface-alt/50">
         <div className="flex items-center gap-1">
@@ -254,7 +255,8 @@ export function Sidebar({ onCollapse, isMobileOpen, onMobileClose, onOpenProject
           </div>
         </div>
       </div>
-    </aside>
+      </aside>
+    </SurfaceProvider>
   )
 
   // Mobile: render with overlay backdrop
