@@ -32,6 +32,7 @@ import {
   analyzeAudio,
   formatLUFS,
   formatDb,
+  LOUDNESS_TARGET_LABELS,
   LOUDNESS_TARGETS,
   type AudioAnalysisResult,
   type LoudnessMetrics,
@@ -42,6 +43,7 @@ import {
   extractPrimaryAudioBuffer,
   PlaybackRequestGate,
 } from '../../lib/media/audio'
+import { calculateMediaTime, findActiveClip } from '../../lib/media/timeline'
 import { cn, formatTime } from '../../lib/utils'
 import { useMediaStore } from '../../stores/mediaStore'
 import { usePlaybackStore } from '../../stores/playbackStore'
@@ -119,11 +121,11 @@ function LoudnessMeter({
 
       {/* Meter bars */}
       <div className="space-y-1.5">
-        <MeterBar label="Momentary" value={metrics.momentary} min={-60} max={0} color={color} />
-        <MeterBar label="Short-term" value={metrics.shortTerm} min={-60} max={0} color={color} />
+        <MeterBar label="Tail 400 ms" value={metrics.momentary} min={-60} max={0} color={color} />
+        <MeterBar label="Tail 3 s" value={metrics.shortTerm} min={-60} max={0} color={color} />
         <MeterBar
-          label="True Peak"
-          value={metrics.truePeak}
+          label="Sample Peak"
+          value={metrics.samplePeak}
           min={-60}
           max={0}
           color={color}
@@ -637,6 +639,7 @@ export function AudioComparison() {
   const playbackContextRef = useRef<AudioContext | null>(null)
   const sourceRegistryRef = useRef(new AudioSourceRegistry())
   const playbackRequestGateRef = useRef(new PlaybackRequestGate())
+  const playingClipIdsRef = useRef<{ a: string | null; b: string | null }>({ a: null, b: null })
 
   // State
   const [viewMode, setViewMode] = useState<AudioViewMode>('all')
@@ -654,13 +657,14 @@ export function AudioComparison() {
   const { tracks } = useTimelineStore()
   const { getFile } = useMediaStore()
 
-  // Get active clips - check BOTH track types for audio
-  const trackA = tracks.find((t) => t.type === 'a')
-  const trackB = tracks.find((t) => t.type === 'b')
-  const clipA = trackA?.clips[0]
-  const clipB = trackB?.clips[0]
-  const mediaA = clipA ? getFile(clipA.mediaId) : null
-  const mediaB = clipB ? getFile(clipB.mediaId) : null
+  const trackA = tracks.find((track) => track.type === 'a')
+  const trackB = tracks.find((track) => track.type === 'b')
+  const activeClipA = findActiveClip(trackA?.clips ?? [], currentTime)
+  const activeClipB = findActiveClip(trackB?.clips ?? [], currentTime)
+  const analysisClipA = activeClipA ?? trackA?.clips[0] ?? null
+  const analysisClipB = activeClipB ?? trackB?.clips[0] ?? null
+  const mediaA = analysisClipA ? getFile(analysisClipA.mediaId) : null
+  const mediaB = analysisClipB ? getFile(analysisClipB.mediaId) : null
 
   const hasAudio = analysisA.buffer !== null || analysisB.buffer !== null
 
@@ -672,22 +676,29 @@ export function AudioComparison() {
 
   // Extract the primary embedded audio track through Mediabunny so this also works for
   // containers/codecs that the browser cannot play natively (for example ProRes MOV).
-  const loadAudio = useCallback(async (file: File): Promise<AudioAnalysisState> => {
-    try {
-      const buffer = await extractPrimaryAudioBuffer(file)
-      if (!buffer) return { buffer: null, analysis: null, peaks: [] }
+  const loadAudio = useCallback(
+    async (file: File, signal: AbortSignal): Promise<AudioAnalysisState> => {
+      try {
+        const buffer = await extractPrimaryAudioBuffer(file, signal)
+        if (!buffer || signal.aborted) return createEmptyAudioAnalysisState()
 
-      const analysis = await analyzeAudio(buffer)
-      return {
-        buffer,
-        analysis,
-        peaks: Array.from(analysis.waveformPeaks),
+        const analysis = await analyzeAudio(buffer)
+        if (signal.aborted) return createEmptyAudioAnalysisState()
+
+        return {
+          buffer,
+          analysis,
+          peaks: Array.from(analysis.waveformPeaks),
+        }
+      } catch (error) {
+        if (!signal.aborted) {
+          console.error('Failed to load embedded video audio:', error)
+        }
+        return createEmptyAudioAnalysisState()
       }
-    } catch (error) {
-      console.error('Failed to load embedded video audio:', error)
-      return { buffer: null, analysis: null, peaks: [] }
-    }
-  }, [])
+    },
+    [],
+  )
 
   const mediaAFile = mediaA?.type === 'video' ? mediaA.file : undefined
   const mediaBFile = mediaB?.type === 'video' ? mediaB.file : undefined
@@ -698,11 +709,13 @@ export function AudioComparison() {
 
   const invalidateAudioPlayback = useCallback(() => {
     playbackRequestGateRef.current.invalidate()
+    playingClipIdsRef.current = { a: null, b: null }
     stopAudioSources()
   }, [stopAudioSources])
 
   useEffect(() => {
     let cancelled = false
+    const abortController = new AbortController()
 
     // Stop obsolete playback immediately. State resets happen after yielding once so
     // the effect does not synchronously cascade another render.
@@ -722,12 +735,16 @@ export function AudioComparison() {
 
       setIsAnalyzing(true)
 
-      const nextA = mediaAFile ? await loadAudio(mediaAFile) : createEmptyAudioAnalysisState()
-      if (cancelled) return
+      const nextA = mediaAFile
+        ? await loadAudio(mediaAFile, abortController.signal)
+        : createEmptyAudioAnalysisState()
+      if (cancelled || abortController.signal.aborted) return
       setAnalysisA(nextA)
 
-      const nextB = mediaBFile ? await loadAudio(mediaBFile) : createEmptyAudioAnalysisState()
-      if (cancelled) return
+      const nextB = mediaBFile
+        ? await loadAudio(mediaBFile, abortController.signal)
+        : createEmptyAudioAnalysisState()
+      if (cancelled || abortController.signal.aborted) return
       setAnalysisB(nextB)
       setIsAnalyzing(false)
     }
@@ -736,6 +753,7 @@ export function AudioComparison() {
 
     return () => {
       cancelled = true
+      abortController.abort()
     }
   }, [invalidateAudioPlayback, loadAudio, mediaAFile, mediaBFile])
 
@@ -765,14 +783,39 @@ export function AudioComparison() {
         return
       }
 
+      const clipA = findActiveClip(trackA?.clips ?? [], time)
+      const clipB = findActiveClip(trackB?.clips ?? [], time)
+      playingClipIdsRef.current = { a: clipA?.id ?? null, b: clipB?.id ?? null }
+
+      const createSourceForClip = (
+        buffer: AudioBuffer | null,
+        clip: typeof clipA,
+        volume: number,
+      ) => {
+        if (!buffer || !clip || clip.reverse) return null
+
+        const mediaTime = calculateMediaTime(time, clip)
+        if (mediaTime === null) return null
+
+        const clipSpeed = clip.speed || 1
+        const timelineRemaining = Math.max(0, clip.endTime - time)
+        const sourceRemaining = Math.max(0, clip.outPoint - mediaTime)
+        const sourceDuration = Math.min(sourceRemaining, timelineRemaining * clipSpeed)
+
+        return createAudioPlaybackSource(
+          context,
+          buffer,
+          playbackSpeed * clipSpeed,
+          volume,
+          mediaTime,
+          sourceDuration,
+        )
+      }
+
       const sourceA =
-        activeAudio !== 'b'
-          ? createAudioPlaybackSource(context, analysisA.buffer, playbackSpeed, volumeA, time)
-          : null
+        activeAudio !== 'b' ? createSourceForClip(analysisA.buffer, clipA, volumeA) : null
       const sourceB =
-        activeAudio !== 'a'
-          ? createAudioPlaybackSource(context, analysisB.buffer, playbackSpeed, volumeB, time)
-          : null
+        activeAudio !== 'a' ? createSourceForClip(analysisB.buffer, clipB, volumeB) : null
       sourceRegistryRef.current.track(sourceA, sourceB)
     },
     [
@@ -781,6 +824,8 @@ export function AudioComparison() {
       analysisB.buffer,
       playbackSpeed,
       stopAudioSources,
+      trackA,
+      trackB,
       volumeA,
       volumeB,
     ],
@@ -806,6 +851,23 @@ export function AudioComparison() {
     window.addEventListener('playback-seek', handleSeek as EventListener)
     return () => window.removeEventListener('playback-seek', handleSeek as EventListener)
   }, [invalidateAudioPlayback, startAudioPlayback])
+
+  useEffect(() => {
+    const handlePlaybackUpdate = (event: CustomEvent<{ time: number; isPlaying: boolean }>) => {
+      if (!event.detail.isPlaying) return
+
+      const nextA = findActiveClip(trackA?.clips ?? [], event.detail.time)?.id ?? null
+      const nextB = findActiveClip(trackB?.clips ?? [], event.detail.time)?.id ?? null
+      const playing = playingClipIdsRef.current
+
+      if (nextA !== playing.a || nextB !== playing.b) {
+        void startAudioPlayback(event.detail.time)
+      }
+    }
+
+    window.addEventListener('playback-update', handlePlaybackUpdate as EventListener)
+    return () => window.removeEventListener('playback-update', handlePlaybackUpdate as EventListener)
+  }, [startAudioPlayback, trackA, trackB])
 
   useEffect(
     () => () => {
@@ -927,20 +989,23 @@ export function AudioComparison() {
       {showSettings && (
         <div className="bg-surface border-b border-border px-4 py-3 flex items-center gap-6 text-xs shrink-0">
           <div className="flex items-center gap-2">
-            <span className="text-text-muted">Target Platform:</span>
+            <span className="text-text-muted">Loudness reference:</span>
             <select
               value={targetPlatform}
               onChange={(e) => setTargetPlatform(e.target.value as keyof typeof LOUDNESS_TARGETS)}
               className="bg-surface-hover border border-border px-2 py-1 text-xs"
             >
-              {Object.keys(LOUDNESS_TARGETS).map((key) => (
+              {(Object.keys(LOUDNESS_TARGETS) as Array<keyof typeof LOUDNESS_TARGETS>).map((key) => (
                 <option key={key} value={key}>
-                  {key.charAt(0).toUpperCase() + key.slice(1)} (
-                  {LOUDNESS_TARGETS[key as keyof typeof LOUDNESS_TARGETS]} LUFS)
+                  {LOUDNESS_TARGET_LABELS[key]} ({LOUDNESS_TARGETS[key]} LUFS)
                 </option>
               ))}
             </select>
           </div>
+          <span className="text-text-muted">
+            Integrated loudness and stereo metrics describe the decoded source file. Tail meters
+            show the final 400 ms / 3 s of that source.
+          </span>
         </div>
       )}
 

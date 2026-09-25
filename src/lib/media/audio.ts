@@ -6,8 +6,12 @@ export function createAudioPlaybackSource(
   playbackRate: number,
   volume: number,
   offset: number,
+  duration?: number,
 ): AudioBufferSourceNode | null {
-  if (!buffer || offset >= buffer.duration) return null
+  if (!buffer) return null
+
+  const safeOffset = Math.max(0, offset)
+  if (safeOffset >= buffer.duration) return null
 
   const source = context.createBufferSource()
   const gain = context.createGain()
@@ -16,7 +20,16 @@ export function createAudioPlaybackSource(
   gain.gain.value = volume
   source.connect(gain)
   gain.connect(context.destination)
-  source.start(0, Math.max(0, offset))
+
+  const safeDuration =
+    duration === undefined ? undefined : Math.max(0, Math.min(duration, buffer.duration - safeOffset))
+  if (safeDuration !== undefined && safeDuration <= 0) return null
+
+  if (safeDuration === undefined) {
+    source.start(0, safeOffset)
+  } else {
+    source.start(0, safeOffset, safeDuration)
+  }
   return source
 }
 
@@ -92,37 +105,47 @@ export async function getPrimaryAudioTrackMetadata(
   }
 }
 
-export async function extractPrimaryAudioBuffer(file: File): Promise<AudioBuffer | null> {
+function throwIfAborted(signal?: AbortSignal): void {
+  if (!signal?.aborted) return
+  throw signal.reason instanceof Error ? signal.reason : new DOMException('Aborted', 'AbortError')
+}
+
+export async function extractPrimaryAudioBuffer(
+  file: File,
+  signal?: AbortSignal,
+): Promise<AudioBuffer | null> {
   const input = new Input({
     formats: ALL_FORMATS,
     source: new BlobSource(file),
   })
 
   try {
+    throwIfAborted(signal)
     if (!(await input.canRead())) return null
 
     const track = await input.getPrimaryAudioTrack()
     if (!track || !(await track.canDecode())) return null
 
-    const [sampleRate, numberOfChannels] = await Promise.all([
+    const [sampleRate, numberOfChannels, metadataDuration] = await Promise.all([
       track.getSampleRate(),
       track.getNumberOfChannels(),
+      track.getDurationFromMetadata(),
     ])
+    throwIfAborted(signal)
+
+    const duration =
+      metadataDuration !== null && Number.isFinite(metadataDuration) && metadataDuration > 0
+        ? metadataDuration
+        : await track.computeDuration()
+    if (!Number.isFinite(duration) || duration <= 0) return null
+
+    const length = Math.max(1, Math.ceil(duration * sampleRate))
+    const output = new AudioBuffer({ length, numberOfChannels, sampleRate })
     const sink = new AudioBufferSink(track)
-    const chunks: Array<{ buffer: AudioBuffer; timestamp: number; duration: number }> = []
-    let endTimestamp = 0
 
     for await (const chunk of sink.buffers()) {
-      chunks.push(chunk)
-      endTimestamp = Math.max(endTimestamp, chunk.timestamp + chunk.duration)
-    }
+      throwIfAborted(signal)
 
-    if (chunks.length === 0 || endTimestamp <= 0) return null
-
-    const length = Math.max(1, Math.ceil(endTimestamp * sampleRate))
-    const output = new AudioBuffer({ length, numberOfChannels, sampleRate })
-
-    for (const chunk of chunks) {
       let destinationOffset = Math.round(chunk.timestamp * sampleRate)
       let sourceOffset = 0
 
@@ -147,6 +170,7 @@ export async function extractPrimaryAudioBuffer(file: File): Promise<AudioBuffer
       }
     }
 
+    throwIfAborted(signal)
     return output
   } finally {
     input.dispose()

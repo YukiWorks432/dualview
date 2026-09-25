@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { generateWaveformPeaks } from './AudioAnalyzer'
+import { generateWaveformPeaks, LOUDNESS_TARGETS } from './AudioAnalyzer'
 
 describe('generateWaveformPeaks', () => {
   it('preserves anti-phase stereo energy', () => {
@@ -16,5 +16,10 @@ describe('generateWaveformPeaks', () => {
     const peaks = generateWaveformPeaks([new Float32Array([0.75])], 3)
 
     expect(peaks[0]).toBeCloseTo(0.75)
+  })
+
+  it('keeps EBU R128 and ATSC A/85 reference targets distinct', () => {
+    expect(LOUDNESS_TARGETS.ebuR128).toBe(-23)
+    expect(LOUDNESS_TARGETS.atscA85).toBe(-24)
   })
 })

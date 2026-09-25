@@ -2,9 +2,9 @@ import { ALL_FORMATS, BlobSource, CanvasSink, Input } from 'mediabunny'
 import { useEffect } from 'react'
 
 import { ensureProResDecoder } from '../lib/media/prores'
+import { calculateMediaTime } from '../lib/media/timeline'
 import { usePlaybackStore } from '../stores/playbackStore'
 import type { MediaFile, TimelineClip } from '../types'
-import { calculateMediaTime } from './useOptimizedVideoSync'
 
 export function useProResClipSync(
   canvasRef: React.RefObject<HTMLCanvasElement | null>,
