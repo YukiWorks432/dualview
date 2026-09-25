@@ -22,6 +22,7 @@ export function useProResClipSync(
     let rendering = false
     let queuedRequest: { timelineTime: number; generation: number } | null = null
     const requestGate = new LatestRequestGate()
+    let requestGeneration = requestGate.begin()
 
     const clearFrame = () => {
       const canvas = canvasRef.current
@@ -87,12 +88,16 @@ export function useProResClipSync(
       }
     }
 
-    const requestFrame = (timelineTime: number) => {
-      const generation = requestGate.begin()
+    const requestFrame = (timelineTime: number, invalidateInFlight = false) => {
+      if (invalidateInFlight) {
+        requestGeneration = requestGate.begin()
+      }
+
       if (!usePlaybackStore.getState().isPlaying) {
         clearFrame()
       }
-      queuedRequest = { timelineTime, generation }
+
+      queuedRequest = { timelineTime, generation: requestGeneration }
       void renderQueuedFrame()
     }
 
@@ -126,10 +131,15 @@ export function useProResClipSync(
 
     const unsubscribe = usePlaybackStore.subscribe((state, previousState) => {
       if (state.currentTime !== previousState.currentTime) {
-        requestFrame(state.currentTime)
+        requestFrame(state.currentTime, !state.isPlaying)
       }
     })
 
+    const handlePlaybackSeek = (event: CustomEvent<{ time: number }>) => {
+      requestFrame(event.detail.time, true)
+    }
+
+    window.addEventListener('playback-seek', handlePlaybackSeek as EventListener)
     void initialize()
 
     return () => {
@@ -137,6 +147,7 @@ export function useProResClipSync(
       requestGate.invalidate()
       queuedRequest = null
       unsubscribe()
+      window.removeEventListener('playback-seek', handlePlaybackSeek as EventListener)
       input?.dispose()
     }
   }, [
