@@ -316,7 +316,7 @@ export function MediaLibrary() {
                 'ui-radius-md flex items-center gap-1 px-2 py-1 text-[10px] font-medium transition-colors',
                 isActive
                   ? 'bg-accent text-white'
-                  : 'bg-surface-alt text-text-muted hover:bg-surface-hover hover:text-text-primary',
+                  : 'surface-control text-text-muted hover:text-text-primary',
               )}
               onClick={(e) => handleFilterClick(config.type, e.ctrlKey || e.metaKey)}
               title={`${config.label} (Alt+${config.shortcut})${
@@ -463,12 +463,13 @@ export function MediaLibrary() {
         }
 
         return (
-          <div
+          <ElevatedSurface
+            offset={1}
             key={file.id}
             draggable={canDrag}
             onDragStart={handleDragStart}
             className={cn(
-              'group relative rounded-lg overflow-hidden bg-surface-hover border transition-colors',
+              'surface-interactive ui-radius-lg group relative overflow-hidden border transition-colors',
               canDrag ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer',
               isSelected ? 'border-accent' : 'border-transparent hover:border-border-hover',
             )}
@@ -476,7 +477,7 @@ export function MediaLibrary() {
           >
             <div className="flex items-center gap-3 p-2">
               {/* Thumbnail */}
-              <div className="relative w-16 h-10 rounded bg-background flex items-center justify-center overflow-hidden flex-shrink-0">
+              <div className="ui-radius-md relative flex h-10 w-16 flex-shrink-0 items-center justify-center overflow-hidden bg-background">
                 {file.status === 'processing' && (
                   <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10">
                     <Loader2 className="w-4 h-4 text-blue-400 animate-spin" />
@@ -592,7 +593,7 @@ export function MediaLibrary() {
                 </Button>
               </div>
             </div>
-          </div>
+          </ElevatedSurface>
         )
       })}
     </div>
