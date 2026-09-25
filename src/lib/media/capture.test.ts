@@ -1,10 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import {
-  calculateObjectContainRect,
-  calculateSourceCrop,
-  intersectCaptureRects,
-} from './capture'
+import { calculateObjectContainRect, calculateSourceCrop, intersectCaptureRects } from './capture'
 
 describe('capture geometry', () => {
   it('fits source content without stretching its aspect ratio', () => {

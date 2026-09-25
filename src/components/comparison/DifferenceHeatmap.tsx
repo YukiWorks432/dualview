@@ -5,8 +5,8 @@
 import { useRef, useEffect, useCallback, useState } from 'react'
 
 import { isVisualFrameReady, type VisualFrameElement } from '../../lib/media/frameSource'
-import { calculateAverageRgbaDifference } from '../../lib/pixelDifference'
 import { findActiveClip } from '../../lib/media/timeline'
+import { calculateAverageRgbaDifference } from '../../lib/pixelDifference'
 import { cn } from '../../lib/utils'
 import { useMediaStore } from '../../stores/mediaStore'
 import { usePlaybackStore } from '../../stores/playbackStore'

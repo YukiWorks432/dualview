@@ -176,9 +176,7 @@ export function captureVisualContainer(
   context.fillStyle = '#0d0d0d'
   context.fillRect(0, 0, outputCanvas.width, outputCanvas.height)
 
-  const surfaces = Array.from(
-    container.querySelectorAll<VisualFrameElement>('video, img, canvas'),
-  )
+  const surfaces = Array.from(container.querySelectorAll<VisualFrameElement>('video, img, canvas'))
 
   for (const surface of surfaces) {
     if (!isVisualFrameReady(surface)) continue
