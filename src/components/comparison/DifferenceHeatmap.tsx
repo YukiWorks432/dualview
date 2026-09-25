@@ -52,6 +52,8 @@ export function DifferenceHeatmap() {
     const sourceA = mediaARef.current
     const sourceB = mediaBRef.current
 
+    canvas.dataset.frameReady = 'false'
+
     // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height)
 
@@ -135,6 +137,7 @@ export function DifferenceHeatmap() {
     }
 
     ctx.putImageData(output, 0, 0)
+    canvas.dataset.frameReady = 'true'
 
     if (isPlaying) {
       animationRef.current = requestAnimationFrame(renderFrame)
@@ -180,7 +183,7 @@ export function DifferenceHeatmap() {
 
   return (
     <div className="relative w-full h-full bg-black">
-      <canvas ref={canvasRef} className="w-full h-full" />
+      <canvas ref={canvasRef} className="w-full h-full" data-frame-ready="false" />
 
       {/* Hidden visual surfaces for canvas drawing */}
       {mediaA && (
