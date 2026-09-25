@@ -102,6 +102,10 @@
   background-color: color-mix(in srgb, var(--surface-control) 94%, white);
 }
 
+.surface-control:active {
+  background-color: color-mix(in srgb, var(--surface-control) 90%, white);
+}
+
 .surface-interactive {
   transition:
     background-color 150ms ease-out,
@@ -110,12 +114,15 @@
 }
 
 .surface-interactive:hover {
-  border-color: var(--surface-border-hover);
   background-color: color-mix(in srgb, var(--surface-current) 94%, white);
 }
 
-.surface-interactive-active {
+.surface-interactive:active {
   background-color: color-mix(in srgb, var(--surface-current) 90%, white);
+}
+
+.surface-highlighted[data-highlighted] {
+  background-color: color-mix(in srgb, var(--surface-current) 94%, white);
 }
 
 html,
