@@ -8,7 +8,7 @@ export const buttonVariants = cva(
         default: 'bg-accent text-white hover:bg-accent-hover active:bg-accent-hover',
         secondary: 'surface-control text-text-primary',
         ghost: 'surface-interactive bg-transparent text-text-secondary hover:text-text-primary',
-        outline: 'surface-control text-text-primary',
+        outline: 'surface-outline text-text-primary',
         destructive: 'border-error bg-error text-white hover:bg-error/90 active:bg-error/90',
       },
       size: {
