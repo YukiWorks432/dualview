@@ -30,7 +30,9 @@ interface SurfaceProviderProps {
 }
 
 export function SurfaceProvider({ value = SURFACE_MIN_LEVEL, children }: SurfaceProviderProps) {
-  return <SurfaceContext.Provider value={clampSurfaceLevel(value)}>{children}</SurfaceContext.Provider>
+  return (
+    <SurfaceContext.Provider value={clampSurfaceLevel(value)}>{children}</SurfaceContext.Provider>
+  )
 }
 
 type SurfaceStyle = CSSProperties & {
