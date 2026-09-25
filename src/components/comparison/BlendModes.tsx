@@ -64,8 +64,12 @@ export function BlendModes() {
     const sourceA = mediaARef.current
     const sourceB = mediaBRef.current
 
+    canvas.dataset.frameReady = 'false'
+
     // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+    if (!mediaA && !mediaB) return
 
     const sourceAReady = !mediaA || isVisualFrameReady(sourceA)
     const sourceBReady = !mediaB || isVisualFrameReady(sourceB)
@@ -98,6 +102,7 @@ export function BlendModes() {
     // Reset composite operation and restore transform
     ctx.globalCompositeOperation = 'source-over'
     ctx.restore()
+    canvas.dataset.frameReady = 'true'
 
     if (isPlaying) {
       animationRef.current = requestAnimationFrame(renderFrame)
@@ -140,7 +145,7 @@ export function BlendModes() {
 
   return (
     <div className="relative w-full h-full bg-black" {...containerProps}>
-      <canvas ref={canvasRef} className="w-full h-full" />
+      <canvas ref={canvasRef} className="w-full h-full" data-frame-ready="false" />
 
       {/* Zoom indicator (IMG-002) */}
       {zoom > 1 && (
