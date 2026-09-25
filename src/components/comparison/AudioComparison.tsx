@@ -70,6 +70,8 @@ function createAudioErrorState(mediaId: string, error: string): AudioAnalysisSta
   return { mediaId, buffer: null, analysis: null, peaks: [], error }
 }
 
+const EMPTY_AUDIO_ANALYSIS_VIEW = createEmptyAudioAnalysisState()
+
 // Loudness meter component
 function LoudnessMeter({
   label,
@@ -683,9 +685,9 @@ export function AudioComparison() {
 
   const analysisAIsCurrent = analysisA.mediaId === mediaA?.id
   const analysisBIsCurrent = analysisB.mediaId === mediaB?.id
-  const hasAudio =
-    (analysisAIsCurrent && analysisA.buffer !== null) ||
-    (analysisBIsCurrent && analysisB.buffer !== null)
+  const displayAnalysisA = analysisAIsCurrent ? analysisA : EMPTY_AUDIO_ANALYSIS_VIEW
+  const displayAnalysisB = analysisBIsCurrent ? analysisB : EMPTY_AUDIO_ANALYSIS_VIEW
+  const hasAudio = displayAnalysisA.buffer !== null || displayAnalysisB.buffer !== null
   const isAnalyzing = isAnalyzingA || isAnalyzingB
   const audioErrors = [
     analysisAIsCurrent && analysisA.error ? `A: ${analysisA.error}` : null,
@@ -1202,10 +1204,10 @@ export function AudioComparison() {
               </div>
               <div className={cn('flex-1', activeAudio === 'b' && 'opacity-50')}>
                 <WaveformCanvas
-                  peaks={analysisA.peaks}
+                  peaks={displayAnalysisA.peaks}
                   color="#ff5722"
                   currentTime={mediaTimeA}
-                  duration={analysisA.analysis?.duration || 0}
+                  duration={displayAnalysisA.analysis?.duration || 0}
                   onSeek={(mediaTime) => seekFromMediaTime(mediaTime, analysisClipA)}
                   label="A"
                   mediaName={mediaA?.name}
@@ -1214,10 +1216,10 @@ export function AudioComparison() {
               <div className="h-px bg-border" />
               <div className={cn('flex-1', activeAudio === 'a' && 'opacity-50')}>
                 <WaveformCanvas
-                  peaks={analysisB.peaks}
+                  peaks={displayAnalysisB.peaks}
                   color="#cddc39"
                   currentTime={mediaTimeB}
-                  duration={analysisB.analysis?.duration || 0}
+                  duration={displayAnalysisB.analysis?.duration || 0}
                   onSeek={(mediaTime) => seekFromMediaTime(mediaTime, analysisClipB)}
                   label="B"
                   mediaName={mediaB?.name}
@@ -1231,8 +1233,8 @@ export function AudioComparison() {
                 ANALYSIS
               </div>
               <SpectrogramCanvas
-                analysisA={analysisA}
-                analysisB={analysisB}
+                analysisA={displayAnalysisA}
+                analysisB={displayAnalysisB}
                 currentTime={currentTime}
                 duration={timelineDuration}
               />
@@ -1244,8 +1246,8 @@ export function AudioComparison() {
                 STEREO FIELD
               </div>
               <GoniometerCanvas
-                analysisA={analysisA}
-                analysisB={analysisB}
+                analysisA={displayAnalysisA}
+                analysisB={displayAnalysisB}
                 activeAudio={activeAudio}
               />
             </div>
@@ -1258,13 +1260,13 @@ export function AudioComparison() {
               <div className="flex gap-2 h-full pt-6">
                 <LoudnessMeter
                   label="Track A"
-                  metrics={analysisA.analysis?.loudness || null}
+                  metrics={displayAnalysisA.analysis?.loudness || null}
                   color="#ff5722"
                   targetPlatform={targetPlatform}
                 />
                 <LoudnessMeter
                   label="Track B"
-                  metrics={analysisB.analysis?.loudness || null}
+                  metrics={displayAnalysisB.analysis?.loudness || null}
                   color="#cddc39"
                   targetPlatform={targetPlatform}
                 />
@@ -1275,10 +1277,10 @@ export function AudioComparison() {
           <div className="w-full h-full flex flex-col">
             <div className={cn('flex-1 relative', activeAudio === 'b' && 'opacity-50')}>
               <WaveformCanvas
-                peaks={analysisA.peaks}
+                peaks={displayAnalysisA.peaks}
                 color="#ff5722"
                 currentTime={mediaTimeA}
-                duration={analysisA.analysis?.duration || 0}
+                duration={displayAnalysisA.analysis?.duration || 0}
                 onSeek={(mediaTime) => seekFromMediaTime(mediaTime, analysisClipA)}
                 label="A"
                 mediaName={mediaA?.name}
@@ -1287,10 +1289,10 @@ export function AudioComparison() {
             <div className="h-px bg-border" />
             <div className={cn('flex-1 relative', activeAudio === 'a' && 'opacity-50')}>
               <WaveformCanvas
-                peaks={analysisB.peaks}
+                peaks={displayAnalysisB.peaks}
                 color="#cddc39"
                 currentTime={mediaTimeB}
-                duration={analysisB.analysis?.duration || 0}
+                duration={displayAnalysisB.analysis?.duration || 0}
                 onSeek={(mediaTime) => seekFromMediaTime(mediaTime, analysisClipB)}
                 label="B"
                 mediaName={mediaB?.name}
@@ -1301,13 +1303,13 @@ export function AudioComparison() {
           <div className="w-full h-full flex p-4 gap-4">
             <LoudnessMeter
               label="Track A"
-              metrics={analysisA.analysis?.loudness || null}
+              metrics={displayAnalysisA.analysis?.loudness || null}
               color="#ff5722"
               targetPlatform={targetPlatform}
             />
             <LoudnessMeter
               label="Track B"
-              metrics={analysisB.analysis?.loudness || null}
+              metrics={displayAnalysisB.analysis?.loudness || null}
               color="#cddc39"
               targetPlatform={targetPlatform}
             />
@@ -1316,20 +1318,20 @@ export function AudioComparison() {
           <div className="w-full h-full flex">
             <div className="flex-1 relative">
               <GoniometerCanvas
-                analysisA={analysisA}
-                analysisB={analysisB}
+                analysisA={displayAnalysisA}
+                analysisB={displayAnalysisB}
                 activeAudio={activeAudio}
               />
             </div>
             <div className="w-64 bg-surface border-l border-border p-3 space-y-3 overflow-auto">
               <PhaseCorrelation
-                correlationA={analysisA.analysis?.stereo.correlation || 0}
-                correlationB={analysisB.analysis?.stereo.correlation || 0}
+                correlationA={displayAnalysisA.analysis?.stereo.correlation || 0}
+                correlationB={displayAnalysisB.analysis?.stereo.correlation || 0}
                 mode={activeAudio}
               />
               <StereoWidth
-                widthA={analysisA.analysis?.stereo.width || 0}
-                widthB={analysisB.analysis?.stereo.width || 0}
+                widthA={displayAnalysisA.analysis?.stereo.width || 0}
+                widthB={displayAnalysisB.analysis?.stereo.width || 0}
                 mode={activeAudio}
               />
               <div className="bg-surface-alt p-3">
@@ -1338,13 +1340,13 @@ export function AudioComparison() {
                   <div className="flex justify-between">
                     <span className="text-text-muted">Mid Level:</span>
                     <span className="font-mono text-accent">
-                      {formatDb(analysisA.analysis?.stereo.midLevel || -Infinity)}
+                      {formatDb(displayAnalysisA.analysis?.stereo.midLevel || -Infinity)}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-text-muted">Side Level:</span>
                     <span className="font-mono text-accent">
-                      {formatDb(analysisA.analysis?.stereo.sideLevel || -Infinity)}
+                      {formatDb(displayAnalysisA.analysis?.stereo.sideLevel || -Infinity)}
                     </span>
                   </div>
                 </div>
@@ -1354,8 +1356,8 @@ export function AudioComparison() {
         ) : viewMode === 'spectrogram' ? (
           <div className="w-full h-full relative">
             <SpectrogramCanvas
-              analysisA={analysisA}
-              analysisB={analysisB}
+              analysisA={displayAnalysisA}
+              analysisB={displayAnalysisB}
               currentTime={currentTime}
               duration={timelineDuration}
             />
