@@ -35,28 +35,38 @@ export function createAudioPlaybackSource(
   return source
 }
 
-export class AudioSourceRegistry {
-  private sources = new Set<AudioBufferSourceNode>()
+export type AudioTrackKey = 'a' | 'b'
 
-  track(...sources: Array<AudioBufferSourceNode | null>): void {
-    for (const source of sources) {
-      if (!source) continue
-      this.sources.add(source)
-      source.onended = () => {
-        this.sources.delete(source)
+export class AudioSourceRegistry {
+  private sources = new Map<AudioTrackKey, AudioBufferSourceNode>()
+
+  replace(track: AudioTrackKey, source: AudioBufferSourceNode | null): void {
+    this.stop(track)
+    if (!source) return
+
+    this.sources.set(track, source)
+    source.onended = () => {
+      if (this.sources.get(track) === source) {
+        this.sources.delete(track)
       }
     }
   }
 
-  stopAll(): void {
-    for (const source of this.sources) {
-      try {
-        source.stop()
-      } catch {
-        // The source may already have ended.
-      }
+  stop(track: AudioTrackKey): void {
+    const source = this.sources.get(track)
+    if (!source) return
+
+    try {
+      source.stop()
+    } catch {
+      // The source may already have ended.
     }
-    this.sources.clear()
+    this.sources.delete(track)
+  }
+
+  stopAll(): void {
+    this.stop('a')
+    this.stop('b')
   }
 }
 
@@ -112,6 +122,37 @@ function throwIfAborted(signal?: AbortSignal): void {
   throw signal.reason instanceof Error ? signal.reason : new DOMException('Aborted', 'AbortError')
 }
 
+export const MAX_DECODED_AUDIO_BYTES = 512 * 1024 * 1024
+
+export function estimateDecodedAudioBytes(
+  duration: number,
+  sampleRate: number,
+  numberOfChannels: number,
+): number {
+  if (duration <= 0 || sampleRate <= 0 || numberOfChannels <= 0) return 0
+  return (
+    Math.ceil(duration * sampleRate) *
+    numberOfChannels *
+    Float32Array.BYTES_PER_ELEMENT
+  )
+}
+
+export function assertDecodedAudioSizeWithinLimit(
+  duration: number,
+  sampleRate: number,
+  numberOfChannels: number,
+  maxBytes = MAX_DECODED_AUDIO_BYTES,
+): void {
+  const estimatedBytes = estimateDecodedAudioBytes(duration, sampleRate, numberOfChannels)
+  if (estimatedBytes <= maxBytes) return
+
+  const requiredMiB = Math.ceil(estimatedBytes / (1024 * 1024))
+  const limitMiB = Math.floor(maxBytes / (1024 * 1024))
+  throw new Error(
+    `Embedded audio analysis would require about ${requiredMiB} MiB of decoded PCM, exceeding the ${limitMiB} MiB safety limit.`,
+  )
+}
+
 export async function extractPrimaryAudioBuffer(
   file: File,
   signal?: AbortSignal,
@@ -145,6 +186,8 @@ export async function extractPrimaryAudioBuffer(
       Number.isFinite(computedDuration) && computedDuration > 0 ? computedDuration : 0,
     )
     if (duration <= 0) return null
+
+    assertDecodedAudioSizeWithinLimit(duration, sampleRate, numberOfChannels)
 
     const length = Math.max(1, Math.ceil(duration * sampleRate))
     const output = new AudioBuffer({ length, numberOfChannels, sampleRate })
