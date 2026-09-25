@@ -84,7 +84,9 @@ export function ComparisonModePicker() {
                 }
               >
                 <Icon
-                  className={`h-6 w-6 ${comparisonMode === mode ? 'text-accent' : 'text-text-secondary'}`}
+                  className={`h-6 w-6 ${
+                    comparisonMode === mode ? 'text-accent' : 'text-text-secondary'
+                  }`}
                   aria-hidden="true"
                 />
                 <span className="text-sm font-medium">{label}</span>
@@ -186,7 +188,9 @@ export function ComparisonModePicker() {
                   <DropdownMenuItem
                     key={mode}
                     onClick={() => setComparisonMode(mode)}
-                    className={comparisonMode === mode ? 'bg-surface-active text-text-primary' : undefined}
+                    className={
+                      comparisonMode === mode ? 'bg-surface-active text-text-primary' : undefined
+                    }
                   >
                     <span
                       className={`flex h-8 w-8 items-center justify-center rounded-sm ${
