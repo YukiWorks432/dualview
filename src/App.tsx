@@ -200,7 +200,9 @@ export default function App() {
             e.preventDefault()
             const frame = previewRef.current?.captureFrame() ?? null
             if (!frame) {
-              console.warn('Quick screenshot skipped because the current comparison frame is not ready')
+              console.warn(
+                'Quick screenshot skipped because the current comparison frame is not ready',
+              )
               break
             }
             captureCanvasScreenshot(frame, 'png').then((blob) => {
