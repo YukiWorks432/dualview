@@ -170,22 +170,22 @@ export function Sidebar({ onCollapse, isMobileOpen, onMobileClose, onOpenProject
           {activeTab === 'media' && <MediaPanel />}
           {activeTab === 'settings' && (
             <SettingsPanel
-            comparisonMode={comparisonMode}
-            blendMode={blendMode}
-            setBlendMode={setBlendMode}
-            splitLayout={splitLayout}
-            setSplitLayout={setSplitLayout}
-            sliderPosition={sliderPosition}
-            setSliderPosition={setSliderPosition}
-            sliderOrientation={sliderOrientation}
-            setSliderOrientation={setSliderOrientation}
-            hideSlider={hideSlider}
-            toggleHideSlider={toggleHideSlider}
-            exportSettings={exportSettings}
-            setExportSettings={setExportSettings}
-            webglComparisonSettings={webglComparisonSettings}
-            setWebGLComparisonMode={setWebGLComparisonMode}
-            setWebGLComparisonSettings={setWebGLComparisonSettings}
+              comparisonMode={comparisonMode}
+              blendMode={blendMode}
+              setBlendMode={setBlendMode}
+              splitLayout={splitLayout}
+              setSplitLayout={setSplitLayout}
+              sliderPosition={sliderPosition}
+              setSliderPosition={setSliderPosition}
+              sliderOrientation={sliderOrientation}
+              setSliderOrientation={setSliderOrientation}
+              hideSlider={hideSlider}
+              toggleHideSlider={toggleHideSlider}
+              exportSettings={exportSettings}
+              setExportSettings={setExportSettings}
+              webglComparisonSettings={webglComparisonSettings}
+              setWebGLComparisonMode={setWebGLComparisonMode}
+              setWebGLComparisonSettings={setWebGLComparisonSettings}
             />
           )}
         </SurfaceProvider>
@@ -431,7 +431,10 @@ function SettingsPanel({
 
       {/* WebGL Difference settings - show at top when in webgl-compare mode */}
       {comparisonMode === 'webgl-compare' && (
-        <ElevatedSurface offset={1} className="ui-radius-lg space-y-4 border border-border p-4 animate-slide-down">
+        <ElevatedSurface
+          offset={1}
+          className="ui-radius-lg space-y-4 border border-border p-4 animate-slide-down"
+        >
           <h3 className="text-sm font-semibold text-text-primary flex items-center gap-2">
             <Microscope className="w-4 h-4 text-accent" />
             Difference
@@ -721,7 +724,7 @@ function SettingsPanel({
           {/* SCOPE-007: Zone System info */}
           {(webglComparisonSettings.mode === 'exposure-zone-system' ||
             webglComparisonSettings.mode === 'exposure-zone-compare') && (
-            <div className="text-[10px] text-text-muted space-y-1 p-2 bg-background/50 rounded">
+            <div className="ui-radius-md space-y-1 bg-background/50 p-2 text-[10px] text-text-muted">
               <p className="font-medium text-text-secondary">Ansel Adams Zone System:</p>
               <div className="grid grid-cols-2 gap-x-2">
                 <span style={{ color: '#000' }}>Zone 0: Pure black</span>
@@ -748,7 +751,10 @@ function SettingsPanel({
 
       {/* Mode-specific settings - Law of Common Region */}
       {comparisonMode === 'slider' && (
-        <ElevatedSurface offset={1} className="ui-radius-lg space-y-4 border border-border p-4 animate-slide-down">
+        <ElevatedSurface
+          offset={1}
+          className="ui-radius-lg space-y-4 border border-border p-4 animate-slide-down"
+        >
           <h3 className="text-sm font-semibold text-text-primary flex items-center gap-2">
             <Sliders className="w-4 h-4 text-accent" />
             Slider Settings
@@ -757,7 +763,7 @@ function SettingsPanel({
           {/* Hide/Show Slider toggle */}
           <button
             onClick={toggleHideSlider}
-            className={`w-full flex items-center justify-between p-3 border transition-colors ${
+            className={`ui-radius-md flex w-full items-center justify-between border p-3 transition-colors ${
               hideSlider
                 ? 'border-accent bg-accent/10 text-accent'
                 : 'border-border hover:border-border-hover'
@@ -796,7 +802,10 @@ function SettingsPanel({
       )}
 
       {comparisonMode === 'blend' && (
-        <ElevatedSurface offset={1} className="ui-radius-lg space-y-4 border border-border p-4 animate-slide-down">
+        <ElevatedSurface
+          offset={1}
+          className="ui-radius-lg space-y-4 border border-border p-4 animate-slide-down"
+        >
           <h3 className="text-sm font-semibold text-text-primary flex items-center gap-2">
             <ChevronRight className="w-4 h-4 text-accent" />
             Blend Settings
@@ -816,7 +825,10 @@ function SettingsPanel({
       )}
 
       {comparisonMode === 'split' && (
-        <ElevatedSurface offset={1} className="ui-radius-lg space-y-4 border border-border p-4 animate-slide-down">
+        <ElevatedSurface
+          offset={1}
+          className="ui-radius-lg space-y-4 border border-border p-4 animate-slide-down"
+        >
           <h3 className="text-sm font-semibold text-text-primary flex items-center gap-2">
             <ChevronRight className="w-4 h-4 text-accent" />
             Split Layout
@@ -835,7 +847,10 @@ function SettingsPanel({
       )}
 
       {/* Export settings card - always visible */}
-      <ElevatedSurface offset={1} className="ui-radius-lg space-y-4 border border-border p-4">
+      <ElevatedSurface
+        offset={1}
+        className="ui-radius-lg space-y-4 border border-border p-4"
+      >
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-semibold text-text-primary">Quick Export</h3>
           <kbd className="kbd">E</kbd>
