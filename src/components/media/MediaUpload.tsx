@@ -6,6 +6,7 @@ import { captureScreenAsFile, isScreenCaptureSupported } from '../../lib/screenC
 import { cn } from '../../lib/utils'
 import { useMediaStore } from '../../stores/mediaStore'
 import { useTimelineStore } from '../../stores/timelineStore'
+import { Button, ElevatedSurface } from '../ui'
 import { URLImport } from './URLImport'
 
 interface MediaUploadProps {
