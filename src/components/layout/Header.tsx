@@ -18,21 +18,21 @@ export function Header({ onExport, onShowShortcuts, onToggleSidebar }: HeaderPro
   const { undo, redo, canUndo, canRedo } = useHistoryStore()
 
   return (
-    <header className="flex h-12 items-center justify-between border-b border-border bg-surface px-2 md:px-3">
+    <header className="flex h-12 items-center justify-between border-b border-border bg-surface px-2 min-[769px]:h-10 md:px-3">
       <div className="flex items-center gap-1.5 md:gap-2">
         <Button
           variant="ghost"
           size="icon"
           onClick={onToggleSidebar}
-          className="show-mobile -ml-1 h-9 w-9 text-text-muted"
+          className="show-mobile -ml-1 h-8 w-8 text-text-muted"
           aria-label="Toggle sidebar"
         >
           <Menu className="h-4 w-4" aria-hidden="true" />
         </Button>
 
-        <h1 className="text-base font-bold text-text-primary">DualView</h1>
+        <h1 className="text-sm font-semibold text-text-primary">DualView</h1>
 
-        <div className="hide-mobile h-5 w-px bg-border" />
+        <div className="hide-mobile h-4 w-px bg-border" />
 
         <div className="hide-mobile flex items-center gap-0.5">
           <Button
@@ -83,7 +83,7 @@ export function Header({ onExport, onShowShortcuts, onToggleSidebar }: HeaderPro
         <Button
           variant="ghost"
           size="sm"
-          className={`group h-7 gap-1 px-2 text-xs ${isPlaying ? 'bg-accent/10 text-accent' : ''}`}
+          className={`group h-7 gap-1 px-2 text-xs ${isPlaying ? 'bg-surface-active text-text-primary' : ''}`}
           onClick={togglePlay}
           title="Toggle playback (Space)"
         >
@@ -97,11 +97,11 @@ export function Header({ onExport, onShowShortcuts, onToggleSidebar }: HeaderPro
 
         <Button
           size="sm"
-          className="primary-glow group relative h-7 gap-1 overflow-hidden bg-accent px-2 text-xs text-white hover:bg-accent-hover md:px-3"
+          className="group relative h-7 gap-1 overflow-hidden px-2 text-xs md:px-3"
           onClick={onExport}
           title="Export (E)"
         >
-          <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-500 group-hover:translate-x-full" />
+          <span className="absolute inset-0 bg-white/5 opacity-0 transition-opacity duration-150 group-hover:opacity-100" />
           <Download className="relative z-10 h-3.5 w-3.5" aria-hidden="true" />
           <span className="relative z-10 hidden md:inline">Export</span>
         </Button>

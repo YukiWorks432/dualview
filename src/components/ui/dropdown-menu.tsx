@@ -2,6 +2,7 @@ import { Menu as MenuPrimitive } from '@base-ui/react/menu'
 import * as React from 'react'
 
 import { cn } from '../../lib/utils'
+import { ElevatedSurface } from './surface'
 
 const DropdownMenu = MenuPrimitive.Root
 const DropdownMenuTrigger = MenuPrimitive.Trigger
@@ -25,13 +26,15 @@ function DropdownMenuContent({
   return (
     <MenuPrimitive.Portal>
       <MenuPrimitive.Positioner align={align} side={side} sideOffset={sideOffset} className="z-50">
-        <MenuPrimitive.Popup
-          className={cn(
-            'min-w-40 border border-border bg-surface py-1 text-text-primary shadow-2xl outline-none data-[starting-style]:scale-[0.98] data-[starting-style]:opacity-0 data-[ending-style]:scale-[0.98] data-[ending-style]:opacity-0',
-            className,
-          )}
-          {...props}
-        />
+        <ElevatedSurface asChild offset={1}>
+          <MenuPrimitive.Popup
+            className={cn(
+              'min-w-40 ui-radius-md border border-transparent py-1 text-text-primary outline-none data-[starting-style]:scale-[0.99] data-[starting-style]:opacity-0 data-[ending-style]:scale-[0.99] data-[ending-style]:opacity-0',
+              className,
+            )}
+            {...props}
+          />
+        </ElevatedSurface>
       </MenuPrimitive.Positioner>
     </MenuPrimitive.Portal>
   )
@@ -44,7 +47,7 @@ function DropdownMenuItem({
   return (
     <MenuPrimitive.Item
       className={cn(
-        'flex cursor-default select-none items-center gap-2 px-3 py-2 text-sm outline-none data-[highlighted]:bg-surface-hover data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+        'surface-highlighted mx-1 flex cursor-default select-none items-center gap-2 ui-radius-sm px-2 py-1.5 text-sm outline-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
         className,
       )}
       {...props}

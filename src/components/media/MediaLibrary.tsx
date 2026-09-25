@@ -18,7 +18,7 @@ import { cn, formatTime } from '../../lib/utils'
 import { useMediaStore } from '../../stores/mediaStore'
 import { useTimelineStore } from '../../stores/timelineStore'
 import type { MediaType, MediaStatus } from '../../types'
-import { Button } from '../ui'
+import { Button, ElevatedSurface } from '../ui'
 
 // Drag data type for media items
 export const MEDIA_DRAG_TYPE = 'application/x-dualview-media'
@@ -257,14 +257,17 @@ export function MediaLibrary() {
 
   if (files.length === 0) {
     return (
-      <div className="text-center py-6 text-text-muted space-y-2">
+      <ElevatedSurface
+        offset={1}
+        className="ui-radius-lg space-y-2 border border-border py-6 text-center text-text-muted"
+      >
         <div className="flex justify-center gap-2">
-          <Film className="w-4 h-4 text-accent/50" />
-          <Image className="w-4 h-4 text-secondary/50" />
+          <Film className="h-4 w-4 text-accent/50" />
+          <Image className="h-4 w-4 text-secondary/50" />
         </div>
         <p className="text-sm font-medium text-text-secondary">No media yet</p>
         <p className="text-xs">Drop files above to get started</p>
-      </div>
+      </ElevatedSurface>
     )
   }
 
@@ -280,9 +283,9 @@ export function MediaLibrary() {
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className={cn(
-            'w-full pl-7 pr-7 py-1.5 rounded text-xs bg-surface-alt border border-transparent',
+            'surface-control ui-radius-md w-full border px-7 py-1.5 text-xs',
             'placeholder:text-text-muted text-text-primary',
-            'focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20',
+            'focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20',
             'transition-colors',
           )}
         />
@@ -310,10 +313,10 @@ export function MediaLibrary() {
             <button
               key={config.type}
               className={cn(
-                'flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium transition-colors',
+                'ui-radius-md flex items-center gap-1 px-2 py-1 text-[10px] font-medium transition-colors',
                 isActive
                   ? 'bg-accent text-white'
-                  : 'bg-surface-alt text-text-muted hover:bg-surface-hover hover:text-text-primary',
+                  : 'surface-control text-text-muted hover:text-text-primary',
               )}
               onClick={(e) => handleFilterClick(config.type, e.ctrlKey || e.metaKey)}
               title={`${config.label} (Alt+${config.shortcut})${
@@ -322,7 +325,7 @@ export function MediaLibrary() {
             >
               {config.icon}
               <span>{config.label}</span>
-              <span className={cn('px-1 rounded-sm', isActive ? 'bg-white/20' : 'bg-background')}>
+              <span className={cn('ui-radius-sm px-1', isActive ? 'bg-white/20' : 'bg-background')}>
                 {count}
               </span>
             </button>
@@ -332,7 +335,7 @@ export function MediaLibrary() {
         {/* Clear filters button when not showing 'all' */}
         {!activeFilters.has('all') && (
           <button
-            className="flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium text-text-muted hover:text-text-primary hover:bg-surface-hover transition-colors"
+            className="surface-interactive ui-radius-md flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-text-muted transition-colors hover:text-text-primary"
             onClick={() => setActiveFilters(new Set(['all']))}
             title="Clear filters"
           >
@@ -347,7 +350,7 @@ export function MediaLibrary() {
             {statusCounts.error > 0 && (
               <button
                 className={cn(
-                  'flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium transition-colors',
+                  'ui-radius-md flex items-center gap-1 px-2 py-1 text-[10px] font-medium transition-colors',
                   statusFilter === 'error'
                     ? 'bg-red-500/20 text-red-400'
                     : 'text-text-muted hover:bg-surface-hover hover:text-red-400',
@@ -362,7 +365,7 @@ export function MediaLibrary() {
             {statusCounts.processing > 0 && (
               <button
                 className={cn(
-                  'flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium transition-colors',
+                  'ui-radius-md flex items-center gap-1 px-2 py-1 text-[10px] font-medium transition-colors',
                   statusFilter === 'processing'
                     ? 'bg-blue-500/20 text-blue-400'
                     : 'text-text-muted hover:bg-surface-hover hover:text-blue-400',
@@ -379,7 +382,7 @@ export function MediaLibrary() {
             {statusCounts.pending > 0 && (
               <button
                 className={cn(
-                  'flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium transition-colors',
+                  'ui-radius-md flex items-center gap-1 px-2 py-1 text-[10px] font-medium transition-colors',
                   statusFilter === 'pending'
                     ? 'bg-amber-500/20 text-amber-400'
                     : 'text-text-muted hover:bg-surface-hover hover:text-amber-400',
@@ -397,7 +400,10 @@ export function MediaLibrary() {
 
       {/* Empty filter/search state */}
       {showFilterEmptyState && (
-        <div className="text-center py-6 text-text-muted space-y-2">
+        <ElevatedSurface
+          offset={1}
+          className="ui-radius-lg space-y-2 border border-border py-6 text-center text-text-muted"
+        >
           <Search className="w-8 h-8 mx-auto opacity-30" />
           <p className="text-sm font-medium text-text-secondary">No matching media</p>
           <p className="text-xs">
@@ -425,7 +431,7 @@ export function MediaLibrary() {
                 ? 'search'
                 : 'filters'}
           </button>
-        </div>
+        </ElevatedSurface>
       )}
 
       {/* File list */}
@@ -457,12 +463,13 @@ export function MediaLibrary() {
         }
 
         return (
-          <div
+          <ElevatedSurface
+            offset={1}
             key={file.id}
             draggable={canDrag}
             onDragStart={handleDragStart}
             className={cn(
-              'group relative rounded-lg overflow-hidden bg-surface-hover border transition-colors',
+              'surface-interactive ui-radius-lg group relative overflow-hidden border transition-colors',
               canDrag ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer',
               isSelected ? 'border-accent' : 'border-transparent hover:border-border-hover',
             )}
@@ -470,7 +477,7 @@ export function MediaLibrary() {
           >
             <div className="flex items-center gap-3 p-2">
               {/* Thumbnail */}
-              <div className="relative w-16 h-10 rounded bg-background flex items-center justify-center overflow-hidden flex-shrink-0">
+              <div className="ui-radius-md relative flex h-10 w-16 flex-shrink-0 items-center justify-center overflow-hidden bg-background">
                 {file.status === 'processing' && (
                   <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10">
                     <Loader2 className="w-4 h-4 text-blue-400 animate-spin" />
@@ -586,7 +593,7 @@ export function MediaLibrary() {
                 </Button>
               </div>
             </div>
-          </div>
+          </ElevatedSurface>
         )
       })}
     </div>

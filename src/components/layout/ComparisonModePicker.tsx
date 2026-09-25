@@ -47,7 +47,7 @@ export function ComparisonModePicker() {
             <Button
               variant="secondary"
               size="sm"
-              className="show-mobile h-9 items-center gap-2 px-3"
+              className="show-mobile h-8 items-center gap-2 px-3"
               aria-label="Choose comparison mode"
             />
           }
@@ -59,7 +59,7 @@ export function ComparisonModePicker() {
         <DialogContent
           showCloseButton={false}
           viewportClassName="items-end p-0 md:hidden"
-          className="max-h-[70vh] max-w-none overflow-y-auto border-x-0 border-b-0"
+          className="max-h-[70vh] max-w-none overflow-y-auto ui-radius-top-lg border-x-0 border-b-0"
         >
           <div className="border-b border-border p-4">
             <DialogTitle className="text-sm font-semibold">Comparison Mode</DialogTitle>
@@ -75,15 +75,20 @@ export function ComparisonModePicker() {
                   <button
                     type="button"
                     onClick={() => setComparisonMode(mode)}
-                    className={`flex min-h-24 flex-col items-center justify-center gap-2 border p-4 text-center outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+                    className={`flex min-h-24 flex-col items-center justify-center gap-2 ui-radius-md border p-4 text-center outline-none focus-visible:ring-2 focus-visible:ring-accent ${
                       comparisonMode === mode
-                        ? 'border-accent bg-accent/15 text-accent'
-                        : 'border-border bg-surface-alt hover:border-accent/50'
+                        ? 'border-border-hover bg-surface-active text-text-primary'
+                        : 'border-border bg-surface hover:border-border-hover hover:bg-surface-hover'
                     }`}
                   />
                 }
               >
-                <Icon className="h-6 w-6" aria-hidden="true" />
+                <Icon
+                  className={`h-6 w-6 ${
+                    comparisonMode === mode ? 'text-accent' : 'text-text-secondary'
+                  }`}
+                  aria-hidden="true"
+                />
                 <span className="text-sm font-medium">{label}</span>
                 <span className="text-[10px] text-text-muted">{description}</span>
               </DialogClose>
@@ -97,19 +102,19 @@ export function ComparisonModePicker() {
         role="tablist"
         aria-label="Comparison modes"
       >
-        {primaryComparisonModes.map(({ mode, icon: Icon, label, shortcut, description }, index) => (
+        {primaryComparisonModes.map(({ mode, icon: Icon, label, shortcut, description }) => (
           <TooltipRoot key={mode}>
             <TooltipTrigger
               render={
                 <Button
-                  variant={comparisonMode === mode ? 'secondary' : 'ghost'}
+                  variant="ghost"
                   size="sm"
                   onClick={() => setComparisonMode(mode)}
                   className={`relative h-7 gap-1 px-2 text-xs ${
                     comparisonMode === mode
-                      ? 'bg-accent/15 text-accent shadow-[inset_0_0_0_1px_rgba(255,87,34,0.3)]'
-                      : 'hover:bg-surface-hover'
-                  } ${index === 0 ? 'primary-glow' : ''}`}
+                      ? 'border-border-hover bg-surface-active text-text-primary'
+                      : 'border-transparent'
+                  }`}
                   aria-selected={comparisonMode === mode}
                   aria-label={`${label} comparison mode`}
                   role="tab"
@@ -122,7 +127,7 @@ export function ComparisonModePicker() {
               />
               <span className="hidden lg:inline">{label}</span>
               {comparisonMode === mode && (
-                <span className="absolute -bottom-0.5 left-1/2 h-0.5 w-3/4 -translate-x-1/2 bg-accent" />
+                <span className="absolute -bottom-px left-1/2 h-px w-3/4 -translate-x-1/2 bg-accent" />
               )}
             </TooltipTrigger>
             <TooltipContent>
@@ -144,10 +149,12 @@ export function ComparisonModePicker() {
           <DropdownMenuTrigger
             render={
               <Button
-                variant={activeSecondaryMode ? 'secondary' : 'ghost'}
+                variant="ghost"
                 size="sm"
                 className={`h-7 gap-1 px-2 text-xs ${
-                  activeSecondaryMode ? 'bg-accent/15 text-accent' : ''
+                  activeSecondaryMode
+                    ? 'border-border-hover bg-surface-active text-text-primary'
+                    : 'border-transparent'
                 }`}
                 aria-label="More comparison modes"
               />
@@ -155,7 +162,7 @@ export function ComparisonModePicker() {
           >
             {activeSecondaryMode && ActiveSecondaryIcon ? (
               <>
-                <ActiveSecondaryIcon className="h-3.5 w-3.5" aria-hidden="true" />
+                <ActiveSecondaryIcon className="h-3.5 w-3.5 text-accent" aria-hidden="true" />
                 <span className="hidden lg:inline">{activeSecondaryMode.label}</span>
               </>
             ) : (
@@ -173,7 +180,7 @@ export function ComparisonModePicker() {
             {comparisonModeGroups.map((group, index) => (
               <DropdownMenuGroup key={group.id}>
                 {index > 0 && <DropdownMenuSeparator />}
-                <DropdownMenuLabel className="pb-0 text-[10px] uppercase tracking-wider text-accent">
+                <DropdownMenuLabel className="pb-0 text-[10px] uppercase tracking-wider">
                   {group.name}
                 </DropdownMenuLabel>
                 <div className="px-3 pb-1 text-[9px] text-text-muted">{group.description}</div>
@@ -181,11 +188,15 @@ export function ComparisonModePicker() {
                   <DropdownMenuItem
                     key={mode}
                     onClick={() => setComparisonMode(mode)}
-                    className={comparisonMode === mode ? 'bg-accent/10 text-accent' : undefined}
+                    className={
+                      comparisonMode === mode ? 'bg-surface-active text-text-primary' : undefined
+                    }
                   >
                     <span
-                      className={`flex h-8 w-8 items-center justify-center ${
-                        comparisonMode === mode ? 'bg-accent/20' : 'bg-surface-alt'
+                      className={`flex h-8 w-8 items-center justify-center ui-radius-sm ${
+                        comparisonMode === mode
+                          ? 'bg-surface-hover text-accent'
+                          : 'bg-surface-alt text-text-secondary'
                       }`}
                     >
                       <Icon className="h-4 w-4" aria-hidden="true" />
