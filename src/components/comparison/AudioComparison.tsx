@@ -42,6 +42,7 @@ import {
   createAudioPlaybackSource,
   extractPrimaryAudioBuffer,
   PlaybackRequestGate,
+  type AudioTrackKey,
 } from '../../lib/media/audio'
 import { calculateMediaTime, calculateTimelineTime, findActiveClip } from '../../lib/media/timeline'
 import { cn, formatTime } from '../../lib/utils'
@@ -51,16 +52,22 @@ import { useTimelineStore } from '../../stores/timelineStore'
 
 type AudioViewMode = 'spectrogram' | 'spectrum' | 'goniometer' | 'loudness' | 'waveform' | 'all'
 type ActiveAudio = 'both' | 'a' | 'b'
+type AudioRestartScope = 'both' | AudioTrackKey
 
 interface AudioAnalysisState {
   mediaId: string | null
   buffer: AudioBuffer | null
   analysis: AudioAnalysisResult | null
   peaks: number[]
+  error: string | null
 }
 
 function createEmptyAudioAnalysisState(): AudioAnalysisState {
-  return { mediaId: null, buffer: null, analysis: null, peaks: [] }
+  return { mediaId: null, buffer: null, analysis: null, peaks: [], error: null }
+}
+
+function createAudioErrorState(mediaId: string, error: string): AudioAnalysisState {
+  return { mediaId, buffer: null, analysis: null, peaks: [], error }
 }
 
 // Loudness meter component
@@ -642,15 +649,21 @@ export function AudioComparison() {
   const sourceRegistryRef = useRef(new AudioSourceRegistry())
   const playbackRequestGateRef = useRef(new PlaybackRequestGate())
   const playingClipIdsRef = useRef<{ a: string | null; b: string | null }>({ a: null, b: null })
+  const startAudioPlaybackRef = useRef<
+    (time: number, scope?: AudioRestartScope) => Promise<void>
+  >(async () => {})
 
   // State
   const [viewMode, setViewMode] = useState<AudioViewMode>('all')
   const [activeAudio, setActiveAudio] = useState<ActiveAudio>('both')
   const [volumeA] = useState(1)
   const [volumeB] = useState(1)
-  const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [isAnalyzingA, setIsAnalyzingA] = useState(false)
+  const [isAnalyzingB, setIsAnalyzingB] = useState(false)
   const [analysisA, setAnalysisA] = useState<AudioAnalysisState>(createEmptyAudioAnalysisState)
   const [analysisB, setAnalysisB] = useState<AudioAnalysisState>(createEmptyAudioAnalysisState)
+  const analysisARef = useRef(analysisA)
+  const analysisBRef = useRef(analysisB)
   const [targetPlatform, setTargetPlatform] = useState<keyof typeof LOUDNESS_TARGETS>('spotify')
   const [showSettings, setShowSettings] = useState(false)
 
@@ -668,7 +681,16 @@ export function AudioComparison() {
   const mediaA = analysisClipA ? getFile(analysisClipA.mediaId) : null
   const mediaB = analysisClipB ? getFile(analysisClipB.mediaId) : null
 
-  const hasAudio = analysisA.buffer !== null || analysisB.buffer !== null
+  const analysisAIsCurrent = analysisA.mediaId === mediaA?.id
+  const analysisBIsCurrent = analysisB.mediaId === mediaB?.id
+  const hasAudio =
+    (analysisAIsCurrent && analysisA.buffer !== null) ||
+    (analysisBIsCurrent && analysisB.buffer !== null)
+  const isAnalyzing = isAnalyzingA || isAnalyzingB
+  const audioErrors = [
+    analysisAIsCurrent && analysisA.error ? `A: ${analysisA.error}` : null,
+    analysisBIsCurrent && analysisB.error ? `B: ${analysisB.error}` : null,
+  ].filter((message): message is string => message !== null)
 
   const mediaTimeA =
     analysisClipA && analysisA.mediaId === analysisClipA.mediaId
@@ -708,10 +730,11 @@ export function AudioComparison() {
           peaks: Array.from(analysis.waveformPeaks),
         }
       } catch (error) {
-        if (!signal.aborted) {
-          console.error('Failed to load embedded video audio:', error)
-        }
-        return createEmptyAudioAnalysisState()
+        if (signal.aborted) return createEmptyAudioAnalysisState()
+
+        const message = error instanceof Error ? error.message : 'Embedded audio analysis failed'
+        console.error('Failed to load embedded video audio:', error)
+        return createAudioErrorState(mediaId, message)
       }
     },
     [],
@@ -726,64 +749,138 @@ export function AudioComparison() {
     sourceRegistryRef.current.stopAll()
   }, [])
 
-  const invalidateAudioPlayback = useCallback(() => {
+  const stopAudioTrack = useCallback((track: AudioTrackKey) => {
+    sourceRegistryRef.current.stop(track)
+  }, [])
+
+  const invalidatePendingAudioPlayback = useCallback(() => {
     playbackRequestGateRef.current.invalidate()
+  }, [])
+
+  const invalidateAudioPlayback = useCallback(() => {
+    invalidatePendingAudioPlayback()
     playingClipIdsRef.current = { a: null, b: null }
     stopAudioSources()
-  }, [stopAudioSources])
+  }, [invalidatePendingAudioPlayback, stopAudioSources])
+
+  const updateAnalysisA = useCallback((next: AudioAnalysisState) => {
+    analysisARef.current = next
+    setAnalysisA(next)
+  }, [])
+
+  const updateAnalysisB = useCallback((next: AudioAnalysisState) => {
+    analysisBRef.current = next
+    setAnalysisB(next)
+  }, [])
 
   useEffect(() => {
     let cancelled = false
     const abortController = new AbortController()
 
-    // Stop obsolete playback immediately. State resets happen after yielding once so
-    // the effect does not synchronously cascade another render.
-    invalidateAudioPlayback()
+    invalidatePendingAudioPlayback()
+    stopAudioTrack('a')
+    playingClipIdsRef.current.a = null
 
-    const loadFiles = async () => {
+    const loadFile = async () => {
       await Promise.resolve()
       if (cancelled) return
 
-      setAnalysisA(createEmptyAudioAnalysisState())
-      setAnalysisB(createEmptyAudioAnalysisState())
-
-      if (!mediaAFile && !mediaBFile) {
-        setIsAnalyzing(false)
+      if (!mediaAId || !mediaAFile) {
+        updateAnalysisA(createEmptyAudioAnalysisState())
+        setIsAnalyzingA(false)
         return
       }
 
-      setIsAnalyzing(true)
-
-      const nextA =
-        mediaAId && mediaAFile
-          ? await loadAudio(mediaAId, mediaAFile, abortController.signal)
-          : createEmptyAudioAnalysisState()
+      setIsAnalyzingA(true)
+      const next = await loadAudio(mediaAId, mediaAFile, abortController.signal)
       if (cancelled || abortController.signal.aborted) return
-      setAnalysisA(nextA)
 
-      const nextB =
-        mediaBId && mediaBFile
-          ? await loadAudio(mediaBId, mediaBFile, abortController.signal)
-          : createEmptyAudioAnalysisState()
-      if (cancelled || abortController.signal.aborted) return
-      setAnalysisB(nextB)
-      setIsAnalyzing(false)
+      updateAnalysisA(next)
+      setIsAnalyzingA(false)
+
+      const playback = usePlaybackStore.getState()
+      const activeTrack = useTimelineStore.getState().tracks.find((track) => track.type === 'a')
+      const activeClip = findActiveClip(activeTrack?.clips ?? [], playback.currentTime)
+      if (playback.isPlaying && activeClip?.mediaId === next.mediaId) {
+        void startAudioPlaybackRef.current(playback.currentTime, 'a')
+      }
     }
 
-    void loadFiles()
+    void loadFile()
 
     return () => {
       cancelled = true
       abortController.abort()
     }
-  }, [invalidateAudioPlayback, loadAudio, mediaAFile, mediaAId, mediaBFile, mediaBId])
+  }, [
+    invalidatePendingAudioPlayback,
+    loadAudio,
+    mediaAFile,
+    mediaAId,
+    stopAudioTrack,
+    updateAnalysisA,
+  ])
+
+  useEffect(() => {
+    let cancelled = false
+    const abortController = new AbortController()
+
+    invalidatePendingAudioPlayback()
+    stopAudioTrack('b')
+    playingClipIdsRef.current.b = null
+
+    const loadFile = async () => {
+      await Promise.resolve()
+      if (cancelled) return
+
+      if (!mediaBId || !mediaBFile) {
+        updateAnalysisB(createEmptyAudioAnalysisState())
+        setIsAnalyzingB(false)
+        return
+      }
+
+      setIsAnalyzingB(true)
+      const next = await loadAudio(mediaBId, mediaBFile, abortController.signal)
+      if (cancelled || abortController.signal.aborted) return
+
+      updateAnalysisB(next)
+      setIsAnalyzingB(false)
+
+      const playback = usePlaybackStore.getState()
+      const activeTrack = useTimelineStore.getState().tracks.find((track) => track.type === 'b')
+      const activeClip = findActiveClip(activeTrack?.clips ?? [], playback.currentTime)
+      if (playback.isPlaying && activeClip?.mediaId === next.mediaId) {
+        void startAudioPlaybackRef.current(playback.currentTime, 'b')
+      }
+    }
+
+    void loadFile()
+
+    return () => {
+      cancelled = true
+      abortController.abort()
+    }
+  }, [
+    invalidatePendingAudioPlayback,
+    loadAudio,
+    mediaBFile,
+    mediaBId,
+    stopAudioTrack,
+    updateAnalysisB,
+  ])
 
   const startAudioPlayback = useCallback(
-    async (time: number) => {
+    async (time: number, scope: AudioRestartScope = 'both') => {
       const requestGeneration = playbackRequestGateRef.current.begin()
-      stopAudioSources()
+      if (scope === 'both') {
+        stopAudioSources()
+      } else {
+        stopAudioTrack(scope)
+      }
 
-      if (!analysisA.buffer && !analysisB.buffer) return
+      const currentAnalysisA = analysisARef.current
+      const currentAnalysisB = analysisBRef.current
+      if (!currentAnalysisA.buffer && !currentAnalysisB.buffer) return
 
       const context = playbackContextRef.current ?? new AudioContext()
       playbackContextRef.current = context
@@ -795,8 +892,6 @@ export function AudioComparison() {
         }
       }
 
-      // resume() may wait for a user gesture. Do not let an obsolete request start
-      // after pause, source replacement, unmount, or a newer start request.
       if (
         !playbackRequestGateRef.current.isCurrent(requestGeneration) ||
         !usePlaybackStore.getState().isPlaying
@@ -806,7 +901,6 @@ export function AudioComparison() {
 
       const clipA = findActiveClip(trackA?.clips ?? [], time)
       const clipB = findActiveClip(trackB?.clips ?? [], time)
-      playingClipIdsRef.current = { a: clipA?.id ?? null, b: clipB?.id ?? null }
 
       const createSourceForClip = (
         state: AudioAnalysisState,
@@ -833,22 +927,35 @@ export function AudioComparison() {
         )
       }
 
-      const sourceA = activeAudio !== 'b' ? createSourceForClip(analysisA, clipA, volumeA) : null
-      const sourceB = activeAudio !== 'a' ? createSourceForClip(analysisB, clipB, volumeB) : null
-      sourceRegistryRef.current.track(sourceA, sourceB)
+      if (scope === 'both' || scope === 'a') {
+        playingClipIdsRef.current.a = clipA?.id ?? null
+        const sourceA =
+          activeAudio !== 'b' ? createSourceForClip(currentAnalysisA, clipA, volumeA) : null
+        sourceRegistryRef.current.replace('a', sourceA)
+      }
+
+      if (scope === 'both' || scope === 'b') {
+        playingClipIdsRef.current.b = clipB?.id ?? null
+        const sourceB =
+          activeAudio !== 'a' ? createSourceForClip(currentAnalysisB, clipB, volumeB) : null
+        sourceRegistryRef.current.replace('b', sourceB)
+      }
     },
     [
       activeAudio,
-      analysisA,
-      analysisB,
       playbackSpeed,
       stopAudioSources,
+      stopAudioTrack,
       trackA,
       trackB,
       volumeA,
       volumeB,
     ],
   )
+
+  useEffect(() => {
+    startAudioPlaybackRef.current = startAudioPlayback
+  }, [startAudioPlayback])
 
   useEffect(() => {
     if (isPlaying) {
@@ -879,8 +986,15 @@ export function AudioComparison() {
       const nextB = findActiveClip(trackB?.clips ?? [], event.detail.time)?.id ?? null
       const playing = playingClipIdsRef.current
 
-      if (nextA !== playing.a || nextB !== playing.b) {
-        void startAudioPlayback(event.detail.time)
+      const changedA = nextA !== playing.a
+      const changedB = nextB !== playing.b
+
+      if (changedA && changedB) {
+        void startAudioPlayback(event.detail.time, 'both')
+      } else if (changedA) {
+        void startAudioPlayback(event.detail.time, 'a')
+      } else if (changedB) {
+        void startAudioPlayback(event.detail.time, 'b')
       }
     }
 
@@ -1031,9 +1145,27 @@ export function AudioComparison() {
         </div>
       )}
 
+      {(isAnalyzing || audioErrors.length > 0) && hasAudio && (
+        <div className="border-b border-border bg-surface px-4 py-2 text-xs text-text-muted">
+          {isAnalyzing && (
+            <span>
+              Analyzing {[
+                isAnalyzingA ? 'A' : null,
+                isAnalyzingB ? 'B' : null,
+              ].filter(Boolean).join(' + ')}…
+            </span>
+          )}
+          {audioErrors.length > 0 && (
+            <span className={cn(isAnalyzing && 'ml-3', 'text-error')} role="alert">
+              {audioErrors.join(' · ')}
+            </span>
+          )}
+        </div>
+      )}
+
       {/* Main content area */}
       <div className="flex-1 overflow-hidden">
-        {isAnalyzing ? (
+        {isAnalyzing && !hasAudio ? (
           <div className="w-full h-full flex items-center justify-center">
             <div className="flex flex-col items-center gap-3">
               <div className="w-10 h-10 border-2 border-accent border-t-transparent rounded-full animate-spin" />
@@ -1042,12 +1174,16 @@ export function AudioComparison() {
           </div>
         ) : !hasAudio ? (
           <div className="w-full h-full flex items-center justify-center">
-            <div className="flex flex-col items-center gap-4">
+            <div className="flex max-w-xl flex-col items-center gap-4 px-6">
               <Disc className="w-16 h-16 text-text-muted/30" />
               <div className="text-center">
-                <p className="text-sm font-medium text-text-secondary">No Embedded Audio</p>
-                <p className="text-xs text-text-muted mt-1">
-                  Neither current video has a decodable audio track
+                <p className="text-sm font-medium text-text-secondary">
+                  {audioErrors.length > 0 ? 'Audio Analysis Unavailable' : 'No Embedded Audio'}
+                </p>
+                <p className={cn('mt-1 text-xs', audioErrors.length > 0 ? 'text-error' : 'text-text-muted')}>
+                  {audioErrors.length > 0
+                    ? audioErrors.join(' · ')
+                    : 'Neither current video has a decodable audio track'}
                 </p>
               </div>
             </div>
