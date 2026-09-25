@@ -2,6 +2,7 @@ import { ALL_FORMATS, BlobSource, CanvasSink, Input } from 'mediabunny'
 import { useEffect } from 'react'
 
 import { ensureProResDecoder } from '../lib/media/prores'
+import { LatestRequestGate } from '../lib/media/requestGate'
 import { calculateMediaTime } from '../lib/media/timeline'
 import { usePlaybackStore } from '../stores/playbackStore'
 import type { MediaFile, TimelineClip } from '../types'
@@ -19,7 +20,8 @@ export function useProResClipSync(
     let input: Input | null = null
     let sink: CanvasSink | null = null
     let rendering = false
-    let queuedTimelineTime: number | null = null
+    let queuedRequest: { timelineTime: number; generation: number } | null = null
+    const requestGate = new LatestRequestGate()
 
     const clearFrame = () => {
       const canvas = canvasRef.current
@@ -40,18 +42,18 @@ export function useProResClipSync(
       rendering = true
 
       try {
-        while (!disposed && queuedTimelineTime !== null) {
-          const timelineTime = queuedTimelineTime
-          queuedTimelineTime = null
+        while (!disposed && queuedRequest !== null) {
+          const request = queuedRequest
+          queuedRequest = null
 
-          const mediaTime = calculateMediaTime(timelineTime, clip)
+          const mediaTime = calculateMediaTime(request.timelineTime, clip)
           if (mediaTime === null) {
             clearFrame()
             continue
           }
 
           const frame = await sink.getCanvas(mediaTime)
-          if (disposed || !frame) continue
+          if (disposed || !frame || !requestGate.isCurrent(request.generation)) continue
 
           const canvas = canvasRef.current
           if (!canvas) continue
@@ -79,17 +81,18 @@ export function useProResClipSync(
         }
       } finally {
         rendering = false
-        if (!disposed && queuedTimelineTime !== null) {
+        if (!disposed && queuedRequest !== null) {
           void renderQueuedFrame()
         }
       }
     }
 
     const requestFrame = (timelineTime: number) => {
+      const generation = requestGate.begin()
       if (!usePlaybackStore.getState().isPlaying) {
         clearFrame()
       }
-      queuedTimelineTime = timelineTime
+      queuedRequest = { timelineTime, generation }
       void renderQueuedFrame()
     }
 
@@ -131,7 +134,8 @@ export function useProResClipSync(
 
     return () => {
       disposed = true
-      queuedTimelineTime = null
+      requestGate.invalidate()
+      queuedRequest = null
       unsubscribe()
       input?.dispose()
     }
