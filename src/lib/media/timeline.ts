@@ -28,3 +28,24 @@ export function calculateMediaTime(timelineTime: number, clip: TimelineClip): nu
 
   return mediaTime
 }
+
+/**
+ * Convert a source-media position back to the timeline position represented by a clip.
+ */
+export function calculateTimelineTime(mediaTime: number, clip: TimelineClip): number | null {
+  if (mediaTime < clip.inPoint || mediaTime > clip.outPoint) {
+    return null
+  }
+
+  const speed = clip.speed || 1
+  if (speed <= 0) return null
+
+  const mediaProgress = clip.reverse ? clip.outPoint - mediaTime : mediaTime - clip.inPoint
+  const timelineTime = clip.startTime + mediaProgress / speed
+
+  if (timelineTime < clip.startTime || timelineTime > clip.endTime) {
+    return null
+  }
+
+  return timelineTime
+}

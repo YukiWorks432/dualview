@@ -43,7 +43,11 @@ import {
   extractPrimaryAudioBuffer,
   PlaybackRequestGate,
 } from '../../lib/media/audio'
-import { calculateMediaTime, findActiveClip } from '../../lib/media/timeline'
+import {
+  calculateMediaTime,
+  calculateTimelineTime,
+  findActiveClip,
+} from '../../lib/media/timeline'
 import { cn, formatTime } from '../../lib/utils'
 import { useMediaStore } from '../../stores/mediaStore'
 import { usePlaybackStore } from '../../stores/playbackStore'
@@ -298,9 +302,9 @@ function WaveformCanvas({
 }: {
   peaks: number[]
   color: string
-  currentTime: number
+  currentTime: number | null
   duration: number
-  onSeek: (time: number) => void
+  onSeek: (mediaTime: number) => void
   label: string
   mediaName?: string
 }) {
@@ -355,19 +359,20 @@ function WaveformCanvas({
     }
 
     const barWidth = width / peaks.length
-    const playheadPos = duration > 0 ? (currentTime / duration) * width : 0
+    const playheadPos =
+      currentTime !== null && duration > 0 ? (currentTime / duration) * width : null
 
     for (let i = 0; i < peaks.length; i++) {
       const x = i * barWidth
       const barHeight = peaks[i] * halfHeight * 0.9
-      const isPast = x < playheadPos
+      const isPast = playheadPos !== null && x < playheadPos
 
       ctx.fillStyle = isPast ? color : `${color}40`
       ctx.fillRect(x, halfHeight - barHeight, Math.max(1, barWidth - 1), barHeight * 2)
     }
 
     // Playhead
-    if (duration > 0) {
+    if (playheadPos !== null) {
       ctx.fillStyle = '#ffffff'
       ctx.fillRect(playheadPos - 1, 0, 2, height)
     }
@@ -655,7 +660,7 @@ export function AudioComparison() {
 
   // Store state
   const { currentTime, isPlaying, playbackSpeed, seek, togglePlay } = usePlaybackStore()
-  const { tracks } = useTimelineStore()
+  const { tracks, duration: timelineDuration } = useTimelineStore()
   const { getFile } = useMediaStore()
 
   const trackA = tracks.find((track) => track.type === 'a')
@@ -669,10 +674,24 @@ export function AudioComparison() {
 
   const hasAudio = analysisA.buffer !== null || analysisB.buffer !== null
 
-  const maxDuration = Math.max(
-    analysisA.analysis?.duration || 0,
-    analysisB.analysis?.duration || 0,
-    1,
+  const mediaTimeA =
+    analysisClipA && analysisA.mediaId === analysisClipA.mediaId
+      ? calculateMediaTime(currentTime, analysisClipA)
+      : null
+  const mediaTimeB =
+    analysisClipB && analysisB.mediaId === analysisClipB.mediaId
+      ? calculateMediaTime(currentTime, analysisClipB)
+      : null
+
+  const seekFromMediaTime = useCallback(
+    (mediaTime: number, clip: typeof analysisClipA) => {
+      if (!clip) return
+      const timelineTime = calculateTimelineTime(mediaTime, clip)
+      if (timelineTime !== null) {
+        seek(timelineTime)
+      }
+    },
+    [seek],
   )
 
   // Extract the primary embedded audio track through Mediabunny so this also works for
@@ -951,7 +970,7 @@ export function AudioComparison() {
             {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
           </button>
           <span className="text-xs font-mono text-text-muted ml-2">
-            {formatTime(currentTime)} / {formatTime(maxDuration)}
+            {formatTime(currentTime)} / {formatTime(timelineDuration)}
           </span>
         </div>
 
@@ -1049,9 +1068,9 @@ export function AudioComparison() {
                 <WaveformCanvas
                   peaks={analysisA.peaks}
                   color="#ff5722"
-                  currentTime={currentTime}
-                  duration={maxDuration}
-                  onSeek={seek}
+                  currentTime={mediaTimeA}
+                  duration={analysisA.analysis?.duration || 0}
+                  onSeek={(mediaTime) => seekFromMediaTime(mediaTime, analysisClipA)}
                   label="A"
                   mediaName={mediaA?.name}
                 />
@@ -1061,9 +1080,9 @@ export function AudioComparison() {
                 <WaveformCanvas
                   peaks={analysisB.peaks}
                   color="#cddc39"
-                  currentTime={currentTime}
-                  duration={maxDuration}
-                  onSeek={seek}
+                  currentTime={mediaTimeB}
+                  duration={analysisB.analysis?.duration || 0}
+                  onSeek={(mediaTime) => seekFromMediaTime(mediaTime, analysisClipB)}
                   label="B"
                   mediaName={mediaB?.name}
                 />
@@ -1079,7 +1098,7 @@ export function AudioComparison() {
                 analysisA={analysisA}
                 analysisB={analysisB}
                 currentTime={currentTime}
-                duration={maxDuration}
+                duration={timelineDuration}
               />
             </div>
 
@@ -1122,9 +1141,9 @@ export function AudioComparison() {
               <WaveformCanvas
                 peaks={analysisA.peaks}
                 color="#ff5722"
-                currentTime={currentTime}
-                duration={maxDuration}
-                onSeek={seek}
+                currentTime={mediaTimeA}
+                duration={analysisA.analysis?.duration || 0}
+                onSeek={(mediaTime) => seekFromMediaTime(mediaTime, analysisClipA)}
                 label="A"
                 mediaName={mediaA?.name}
               />
@@ -1134,9 +1153,9 @@ export function AudioComparison() {
               <WaveformCanvas
                 peaks={analysisB.peaks}
                 color="#cddc39"
-                currentTime={currentTime}
-                duration={maxDuration}
-                onSeek={seek}
+                currentTime={mediaTimeB}
+                duration={analysisB.analysis?.duration || 0}
+                onSeek={(mediaTime) => seekFromMediaTime(mediaTime, analysisClipB)}
                 label="B"
                 mediaName={mediaB?.name}
               />
@@ -1202,7 +1221,7 @@ export function AudioComparison() {
               analysisA={analysisA}
               analysisB={analysisB}
               currentTime={currentTime}
-              duration={maxDuration}
+              duration={timelineDuration}
             />
           </div>
         ) : null}
