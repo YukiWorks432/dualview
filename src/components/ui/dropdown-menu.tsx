@@ -47,7 +47,7 @@ function DropdownMenuItem({
   return (
     <MenuPrimitive.Item
       className={cn(
-        'mx-1 flex cursor-default select-none items-center gap-2 ui-radius-sm px-2 py-1.5 text-sm outline-none data-[highlighted]:bg-surface-hover data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+        'surface-highlighted mx-1 flex cursor-default select-none items-center gap-2 ui-radius-sm px-2 py-1.5 text-sm outline-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
         className,
       )}
       {...props}
