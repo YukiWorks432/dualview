@@ -1,20 +1,12 @@
-import {
-  Children,
-  cloneElement,
-  createContext,
-  isValidElement,
-  useContext,
-  type CSSProperties,
-  type HTMLAttributes,
-  type ReactNode,
-} from 'react'
+import * as React from 'react'
+import type { CSSProperties, HTMLAttributes, ReactNode } from 'react'
 
 import { cn } from '../../lib/utils'
 
 export const SURFACE_MIN_LEVEL = 1
 export const SURFACE_MAX_LEVEL = 6
 
-const SurfaceContext = createContext(SURFACE_MIN_LEVEL)
+const SurfaceContext = React.createContext(SURFACE_MIN_LEVEL)
 
 export function clampSurfaceLevel(level: number): number {
   return Math.max(SURFACE_MIN_LEVEL, Math.min(SURFACE_MAX_LEVEL, level))
@@ -31,9 +23,7 @@ interface SurfaceProviderProps {
 
 export function SurfaceProvider({ value = SURFACE_MIN_LEVEL, children }: SurfaceProviderProps) {
   return (
-    <SurfaceContext.Provider value={clampSurfaceLevel(value)}>
-      {children}
-    </SurfaceContext.Provider>
+    <SurfaceContext.Provider value={clampSurfaceLevel(value)}>{children}</SurfaceContext.Provider>
   )
 }
 
@@ -44,64 +34,69 @@ type SurfaceStyle = CSSProperties & {
   '--surface-control-shadow'?: string
 }
 
-function createSurfaceStyle(
+function surfaceStyle(
   level: number,
   shadowLevel: number | null | undefined,
   style?: CSSProperties,
 ): SurfaceStyle {
   const controlLevel = resolveSurfaceLevel(level, 1)
-  const resolvedShadowLevel = shadowLevel === null ? null : clampSurfaceLevel(shadowLevel ?? level)
+  const resolvedShadowLevel =
+    shadowLevel === null ? null : clampSurfaceLevel(shadowLevel ?? level)
 
   return {
+    ...style,
     '--surface-current': `var(--surface-${level})`,
     '--surface-control': `var(--surface-${controlLevel})`,
     '--surface-shadow-current':
       resolvedShadowLevel === null ? 'none' : `var(--surface-shadow-${resolvedShadowLevel})`,
     '--surface-control-shadow': `var(--surface-shadow-${controlLevel})`,
-    ...style,
   }
 }
 
 type SurfaceChildProps = HTMLAttributes<HTMLElement> & {
   'data-surface-level'?: number
+  className?: string
+  style?: CSSProperties
 }
 
-export interface ElevatedSurfaceProps extends HTMLAttributes<HTMLDivElement> {
+export type ElevatedSurfaceProps = HTMLAttributes<HTMLElement> & {
   asChild?: boolean
+  children?: ReactNode
   offset?: number
   shadowLevel?: number | null
-  children?: ReactNode
 }
 
 export function ElevatedSurface({
   asChild = false,
+  children,
+  className,
   offset = 1,
   shadowLevel,
-  className,
   style,
-  children,
   ...props
 }: ElevatedSurfaceProps) {
-  const substrate = useContext(SurfaceContext)
+  const substrate = React.useContext(SurfaceContext)
   const level = resolveSurfaceLevel(substrate, offset)
-  const surfaceStyle = createSurfaceStyle(level, shadowLevel, style)
+  const classNames = cn('fluid-surface', className)
 
   if (asChild) {
-    const child = Children.only(children)
+    const child = React.Children.only(children)
 
-    if (!isValidElement<SurfaceChildProps>(child)) {
+    if (!React.isValidElement<SurfaceChildProps>(child)) {
       return null
     }
 
+    const childProps = child.props
+
     return (
       <SurfaceContext.Provider value={level}>
-        {cloneElement(child, {
+        {React.cloneElement(child, {
           ...props,
-          ...child.props,
+          ...childProps,
           'data-surface-level': level,
-          className: cn('fluid-surface', child.props.className, className),
-          style: createSurfaceStyle(level, shadowLevel, {
-            ...child.props.style,
+          className: cn(childProps.className, classNames),
+          style: surfaceStyle(level, shadowLevel, {
+            ...childProps.style,
             ...style,
           }),
         })}
@@ -112,10 +107,10 @@ export function ElevatedSurface({
   return (
     <SurfaceContext.Provider value={level}>
       <div
-        {...props}
         data-surface-level={level}
-        className={cn('fluid-surface', className)}
-        style={surfaceStyle}
+        className={classNames}
+        style={surfaceStyle(level, shadowLevel, style)}
+        {...props}
       >
         {children}
       </div>
