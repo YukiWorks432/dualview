@@ -313,9 +313,9 @@ export function MediaLibrary() {
             <button
               key={config.type}
               className={cn(
-                'surface-interactive ui-radius-md flex items-center gap-1 px-2 py-1 text-[10px] font-medium transition-colors',
+                'ui-radius-md flex items-center gap-1 px-2 py-1 text-[10px] font-medium transition-colors',
                 isActive
-                  ? 'bg-accent text-white'
+                  ? 'bg-accent text-white hover:bg-accent-hover'
                   : 'surface-control text-text-muted hover:text-text-primary',
               )}
               onClick={(e) => handleFilterClick(config.type, e.ctrlKey || e.metaKey)}
@@ -352,10 +352,10 @@ export function MediaLibrary() {
             {statusCounts.error > 0 && (
               <button
                 className={cn(
-                  'surface-interactive ui-radius-md flex items-center gap-1 px-2 py-1 text-[10px] font-medium transition-colors',
+                  'ui-radius-md flex items-center gap-1 px-2 py-1 text-[10px] font-medium transition-colors',
                   statusFilter === 'error'
                     ? 'bg-red-500/20 text-red-400'
-                    : 'text-text-muted hover:text-red-400',
+                    : 'surface-interactive text-text-muted hover:text-red-400',
                 )}
                 onClick={() => setStatusFilter(statusFilter === 'error' ? 'all' : 'error')}
                 title="Show failed files"
@@ -367,10 +367,10 @@ export function MediaLibrary() {
             {statusCounts.processing > 0 && (
               <button
                 className={cn(
-                  'surface-interactive ui-radius-md flex items-center gap-1 px-2 py-1 text-[10px] font-medium transition-colors',
+                  'ui-radius-md flex items-center gap-1 px-2 py-1 text-[10px] font-medium transition-colors',
                   statusFilter === 'processing'
                     ? 'bg-blue-500/20 text-blue-400'
-                    : 'text-text-muted hover:text-blue-400',
+                    : 'surface-interactive text-text-muted hover:text-blue-400',
                 )}
                 onClick={() =>
                   setStatusFilter(statusFilter === 'processing' ? 'all' : 'processing')
@@ -384,10 +384,10 @@ export function MediaLibrary() {
             {statusCounts.pending > 0 && (
               <button
                 className={cn(
-                  'surface-interactive ui-radius-md flex items-center gap-1 px-2 py-1 text-[10px] font-medium transition-colors',
+                  'ui-radius-md flex items-center gap-1 px-2 py-1 text-[10px] font-medium transition-colors',
                   statusFilter === 'pending'
                     ? 'bg-amber-500/20 text-amber-400'
-                    : 'text-text-muted hover:text-amber-400',
+                    : 'surface-interactive text-text-muted hover:text-amber-400',
                 )}
                 onClick={() => setStatusFilter(statusFilter === 'pending' ? 'all' : 'pending')}
                 title="Show pending files"
