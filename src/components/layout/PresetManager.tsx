@@ -238,9 +238,7 @@ function PresetItem({
     <div
       className={cn(
         'ui-radius-md flex items-center justify-between p-2 cursor-pointer group',
-        isActive
-          ? 'bg-accent/20 border border-accent/50'
-          : 'surface-interactive',
+        isActive ? 'bg-accent/20 border border-accent/50' : 'surface-interactive',
       )}
       onClick={onApply}
     >
@@ -341,8 +339,10 @@ export function PresetSelector() {
                   key={preset.id}
                   onClick={() => applyPreset(preset)}
                   className={cn(
-                    'surface-interactive w-full text-left px-3 py-2 text-sm flex items-center gap-2',
-                    activePresetId === preset.id && 'bg-accent/20 text-accent',
+                    'w-full text-left px-3 py-2 text-sm flex items-center gap-2',
+                    activePresetId === preset.id
+                      ? 'bg-accent/20 text-accent'
+                      : 'surface-interactive',
                   )}
                 >
                   <Bookmark className="w-3 h-3" />
