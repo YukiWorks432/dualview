@@ -24,6 +24,7 @@ import { ScopesRenderer } from '../../lib/webgl/ScopesRenderer'
 import { useMediaStore } from '../../stores/mediaStore'
 import { useProjectStore } from '../../stores/projectStore'
 import { useTimelineStore } from '../../stores/timelineStore'
+import { ElevatedSurface } from '../ui'
 
 interface ScopeCanvasProps {
   type: 'waveform' | 'vectorscope' | 'parade'
@@ -174,7 +175,8 @@ export function ScopesPanel() {
   ].filter(Boolean).length
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-[#1a1a1a] border-t border-[#333333] z-40">
+    <ElevatedSurface asChild offset={1}>
+      <div className="fixed bottom-0 left-0 right-0 border-t border-border z-40">
       {/* Hidden video/image elements for texture source */}
       {selectedMedia?.type === 'video' && (
         <video
@@ -211,7 +213,7 @@ export function ScopesPanel() {
       )}
 
       {/* Panel header */}
-      <div className="flex items-center justify-between px-4 py-2 border-b border-[#333333]">
+      <div className="flex items-center justify-between px-4 py-2 border-b border-border">
         <div className="flex items-center gap-4">
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
@@ -229,7 +231,7 @@ export function ScopesPanel() {
                 className={`flex items-center gap-1.5 px-2 py-1 rounded text-xs transition-colors ${
                   scopesSettings.showWaveform
                     ? 'bg-[#ff5722] text-white'
-                    : 'bg-[#252525] text-gray-400 hover:text-white'
+                    : 'surface-control text-text-muted hover:text-text-primary'
                 }`}
                 title="Waveform Monitor (SCOPE-001)"
               >
@@ -242,7 +244,7 @@ export function ScopesPanel() {
                 className={`flex items-center gap-1.5 px-2 py-1 rounded text-xs transition-colors ${
                   scopesSettings.showVectorscope
                     ? 'bg-[#ff5722] text-white'
-                    : 'bg-[#252525] text-gray-400 hover:text-white'
+                    : 'surface-control text-text-muted hover:text-text-primary'
                 }`}
                 title="Vectorscope (SCOPE-002)"
               >
@@ -255,7 +257,7 @@ export function ScopesPanel() {
                 className={`flex items-center gap-1.5 px-2 py-1 rounded text-xs transition-colors ${
                   scopesSettings.showParade
                     ? 'bg-[#ff5722] text-white'
-                    : 'bg-[#252525] text-gray-400 hover:text-white'
+                    : 'surface-control text-text-muted hover:text-text-primary'
                 }`}
                 title="RGB Parade (SCOPE-003)"
               >
@@ -273,7 +275,7 @@ export function ScopesPanel() {
               <select
                 value={scopesSettings.scopeSource}
                 onChange={(e) => setScopeSource(e.target.value as 'a' | 'b' | 'comparison')}
-                className="bg-[#252525] border border-[#333333] text-white text-xs px-2 py-1 rounded"
+                className="surface-control ui-radius-md border text-text-primary text-xs px-2 py-1"
               >
                 <option value="a">Source A</option>
                 <option value="b">Source B</option>
@@ -285,7 +287,7 @@ export function ScopesPanel() {
                 className={`p-1.5 rounded transition-colors ${
                   showSettings
                     ? 'bg-[#ff5722] text-white'
-                    : 'bg-[#252525] text-gray-400 hover:text-white'
+                    : 'surface-control text-text-muted hover:text-text-primary'
                 }`}
                 title="Settings"
               >
@@ -297,7 +299,7 @@ export function ScopesPanel() {
           {/* Close button */}
           <button
             onClick={toggleScopes}
-            className="p-1.5 rounded bg-[#252525] text-gray-400 hover:text-red-400 transition-colors"
+            className="surface-interactive ui-radius-md p-1.5 text-text-muted hover:text-red-400 transition-colors"
             title="Close Scopes"
           >
             <X size={14} />
@@ -307,13 +309,13 @@ export function ScopesPanel() {
 
       {/* Settings panel */}
       {!isCollapsed && showSettings && (
-        <div className="px-4 py-2 bg-[#252525] border-b border-[#333333] flex items-center gap-6">
+        <div className="surface-control px-4 py-2 border-b border-border flex items-center gap-6">
           {/* Intensity slider */}
           <div className="flex items-center gap-2">
             <span className="text-xs text-gray-400">Intensity:</span>
             <button
               onClick={() => setScopeIntensity(scopesSettings.scopeIntensity - 0.25)}
-              className="p-1 rounded bg-[#1a1a1a] text-gray-400 hover:text-white"
+              className="surface-interactive ui-radius-sm p-1 text-text-muted hover:text-text-primary"
             >
               <Minus size={12} />
             </button>
@@ -322,7 +324,7 @@ export function ScopesPanel() {
             </span>
             <button
               onClick={() => setScopeIntensity(scopesSettings.scopeIntensity + 0.25)}
-              className="p-1 rounded bg-[#1a1a1a] text-gray-400 hover:text-white"
+              className="surface-interactive ui-radius-sm p-1 text-text-muted hover:text-text-primary"
             >
               <Plus size={12} />
             </button>
@@ -335,7 +337,7 @@ export function ScopesPanel() {
               <select
                 value={scopesSettings.vectorscopeZoom}
                 onChange={(e) => setVectorscopeZoom(Number(e.target.value))}
-                className="bg-[#1a1a1a] border border-[#333333] text-white text-xs px-2 py-1 rounded"
+                className="surface-control ui-radius-md border text-text-primary text-xs px-2 py-1"
               >
                 <option value="1">1x</option>
                 <option value="2">2x</option>
@@ -352,7 +354,7 @@ export function ScopesPanel() {
                 type="checkbox"
                 checked={scopesSettings.showSkinToneLine}
                 onChange={(e) => setScopesSettings({ showSkinToneLine: e.target.checked })}
-                className="rounded border-[#333333]"
+                className="ui-radius-sm border-border"
               />
               Skin Tone Line
             </label>
@@ -490,7 +492,8 @@ export function ScopesPanel() {
           {scopesSettings.scopeSource.toUpperCase()}
         </div>
       )}
-    </div>
+      </div>
+    </ElevatedSurface>
   )
 }
 
@@ -499,8 +502,8 @@ export function ScopesToggle({ onClick, isActive }: { onClick: () => void; isAct
   return (
     <button
       onClick={onClick}
-      className={`p-2 rounded transition-colors ${
-        isActive ? 'bg-[#ff5722] text-white' : 'bg-black/70 text-gray-400 hover:text-white'
+      className={`ui-radius-md p-2 transition-colors ${
+        isActive ? 'bg-accent text-white' : 'surface-control text-text-muted hover:text-text-primary'
       }`}
       title="Video Scopes (Waveform, Vectorscope, Parade)"
     >
