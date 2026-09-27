@@ -6,3 +6,6 @@ strictDepBuilds: true
 
 allowBuilds:
   core-js: false
+  esbuild: true
+  sharp: true
+  workerd: true
