@@ -156,7 +156,7 @@ export function Sidebar({ onCollapse, isMobileOpen, onMobileClose, onOpenProject
         {onCollapse && !isMobileOpen && (
           <button
             onClick={onCollapse}
-            className="px-2 text-text-muted hover:text-text-primary hover:bg-surface-hover transition-all duration-150 group hide-mobile"
+            className="surface-interactive px-2 text-text-muted hover:text-text-primary transition-all duration-150 group hide-mobile"
             title="Collapse Sidebar (B)"
           >
             <ChevronLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
@@ -167,7 +167,7 @@ export function Sidebar({ onCollapse, isMobileOpen, onMobileClose, onOpenProject
       <div className="flex-1 overflow-y-auto p-4">
         {activeTab === 'media' && <MediaPanel />}
         {activeTab === 'settings' && (
-            <SettingsPanel
+          <SettingsPanel
               comparisonMode={comparisonMode}
               blendMode={blendMode}
               setBlendMode={setBlendMode}
@@ -184,8 +184,8 @@ export function Sidebar({ onCollapse, isMobileOpen, onMobileClose, onOpenProject
               webglComparisonSettings={webglComparisonSettings}
               setWebGLComparisonMode={setWebGLComparisonMode}
               setWebGLComparisonSettings={setWebGLComparisonSettings}
-            />
-          )}
+          />
+        )}
       </div>
 
       {/* Project lineage links */}
