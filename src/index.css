@@ -135,6 +135,10 @@
   background-color: color-mix(in srgb, var(--surface-current) 90%, white);
 }
 
+.surface-border-hover:hover {
+  border-color: var(--surface-border-hover);
+}
+
 .surface-hover {
   background-color: color-mix(in srgb, var(--surface-current) 94%, white);
 }
