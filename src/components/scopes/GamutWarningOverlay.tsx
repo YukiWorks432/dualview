@@ -6,6 +6,8 @@
 import { AlertTriangle, X, ChevronDown } from 'lucide-react'
 import { useEffect, useRef, useState, useCallback } from 'react'
 
+import { ElevatedSurface } from '../ui'
+
 import {
   getVisualFrameDimensions,
   isVisualFrameReady,
@@ -304,14 +306,15 @@ export function GamutWarningOverlay({
       <canvas ref={overlayCanvasBRef} className="hidden" />
 
       {/* Control panel */}
-      <div className="absolute top-16 left-4 bg-surface/95 border border-border rounded-lg shadow-xl z-50 w-[220px]">
+      <ElevatedSurface asChild offset={2}>
+        <div className="ui-radius-lg absolute top-16 left-4 border border-transparent z-50 w-[220px]">
         {/* Header */}
         <div className="flex items-center justify-between p-2 border-b border-border">
           <div className="flex items-center gap-2">
             <AlertTriangle className="w-4 h-4 text-red-500" />
             <span className="text-sm font-medium text-text-primary">Gamut Warning</span>
           </div>
-          <button onClick={onClose} className="p-1 hover:bg-surface-hover rounded">
+          <button onClick={onClose} className="surface-interactive ui-radius-sm p-1">
             <X className="w-4 h-4 text-text-muted" />
           </button>
         </div>
@@ -322,7 +325,7 @@ export function GamutWarningOverlay({
           <div className="relative">
             <button
               onClick={() => setShowDropdown(!showDropdown)}
-              className="w-full flex items-center justify-between px-2 py-1.5 bg-surface-alt border border-border rounded text-sm text-text-primary hover:bg-surface-hover"
+              className="surface-control ui-radius-md w-full flex items-center justify-between px-2 py-1.5 border text-sm text-text-primary"
             >
               <span>{currentGamut.label}</span>
               <ChevronDown
@@ -330,7 +333,8 @@ export function GamutWarningOverlay({
               />
             </button>
             {showDropdown && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-surface border border-border rounded shadow-lg z-10">
+              <ElevatedSurface asChild offset={1}>
+                <div className="ui-radius-md absolute top-full left-0 right-0 mt-1 border border-transparent z-10">
                 {Object.values(COLOR_SPACES).map((space) => (
                   <button
                     key={space.name}
@@ -345,7 +349,8 @@ export function GamutWarningOverlay({
                     {space.label}
                   </button>
                 ))}
-              </div>
+                </div>
+              </ElevatedSurface>
             )}
           </div>
         </div>
@@ -421,7 +426,8 @@ export function GamutWarningOverlay({
         <div className="px-2 pb-2 text-[9px] text-text-muted">
           Press <kbd className="kbd text-[8px]">G</kbd> to toggle
         </div>
-      </div>
+        </div>
+      </ElevatedSurface>
 
       {/* Overlay canvases on top of video */}
       {/* These would be positioned over the actual video/comparison view */}
