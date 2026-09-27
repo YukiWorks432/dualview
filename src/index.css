@@ -2,12 +2,6 @@
 
 @theme {
   --color-background: #1e1e1e;
-  --color-surface: var(--surface-current);
-  --color-surface-alt: var(--surface-control);
-  --color-surface-hover: color-mix(in srgb, var(--surface-current) 94%, white);
-  --color-surface-active: color-mix(in srgb, var(--surface-current) 90%, white);
-  --color-border: var(--surface-control-border);
-  --color-border-hover: var(--surface-border-hover);
   --color-text-primary: #f2f2f2;
   --color-text-secondary: #b8b8b8;
   --color-text-muted: #909090;
@@ -25,6 +19,15 @@
   --radius-sm: 4px;
   --radius-md: 6px;
   --radius-lg: 8px;
+}
+
+@theme inline {
+  --color-surface: var(--surface-current);
+  --color-surface-alt: var(--surface-control);
+  --color-surface-hover: color-mix(in srgb, var(--surface-current) 94%, white);
+  --color-surface-active: color-mix(in srgb, var(--surface-current) 90%, white);
+  --color-border: var(--surface-control-border);
+  --color-border-hover: var(--surface-border-hover);
 }
 
 :root {
@@ -64,111 +67,115 @@
   box-sizing: border-box;
 }
 
-.ui-radius-sm {
+@utility ui-radius-sm {
   border-radius: var(--ui-radius-sm) !important;
 }
 
-.ui-radius-md {
+@utility ui-radius-md {
   border-radius: var(--ui-radius-md) !important;
 }
 
-.ui-radius-lg {
+@utility ui-radius-lg {
   border-radius: var(--ui-radius-lg) !important;
 }
 
-.ui-radius-top-lg {
+@utility ui-radius-top-lg {
   border-radius: var(--ui-radius-lg) var(--ui-radius-lg) 0 0 !important;
 }
 
-.surface-wash {
+@utility surface-wash {
   background-color: var(--surface-1) !important;
 }
 
-.fluid-surface {
+@utility fluid-surface {
   background-color: var(--surface-current);
   box-shadow: var(--surface-shadow-current);
 }
 
-.surface-control {
+@utility surface-control {
   border-color: var(--surface-control-border);
   background-color: var(--surface-control);
   box-shadow: var(--surface-control-shadow);
+
+  &:hover {
+    border-color: var(--surface-border-hover);
+    background-color: color-mix(in srgb, var(--surface-control) 94%, white);
+  }
+
+  &:active {
+    background-color: color-mix(in srgb, var(--surface-control) 90%, white);
+  }
 }
 
-.surface-control:hover {
-  border-color: var(--surface-border-hover);
-  background-color: color-mix(in srgb, var(--surface-control) 94%, white);
-}
-
-.surface-control:active {
-  background-color: color-mix(in srgb, var(--surface-control) 90%, white);
-}
-
-.surface-outline {
+@utility surface-outline {
   border-color: var(--surface-control-border);
   background-color: transparent;
   box-shadow: none;
+
+  &:hover {
+    border-color: var(--surface-border-hover);
+    background-color: color-mix(in srgb, var(--surface-current) 94%, white);
+  }
+
+  &:active {
+    background-color: color-mix(in srgb, var(--surface-current) 90%, white);
+  }
 }
 
-.surface-outline:hover {
-  border-color: var(--surface-border-hover);
-  background-color: color-mix(in srgb, var(--surface-current) 94%, white);
-}
-
-.surface-outline:active {
-  background-color: color-mix(in srgb, var(--surface-current) 90%, white);
-}
-
-.surface-interactive {
+@utility surface-interactive {
   transition:
     background-color 150ms ease-out,
     border-color 150ms ease-out,
     box-shadow 150ms ease-out;
+
+  &:hover {
+    background-color: color-mix(in srgb, var(--surface-current) 94%, white);
+  }
+
+  &:active {
+    background-color: color-mix(in srgb, var(--surface-current) 90%, white);
+  }
 }
 
-.surface-interactive:hover {
-  background-color: color-mix(in srgb, var(--surface-current) 94%, white);
+@utility surface-border-hover {
+  &:hover {
+    border-color: var(--surface-border-hover);
+  }
 }
 
-.surface-interactive:active {
-  background-color: color-mix(in srgb, var(--surface-current) 90%, white);
-}
-
-.surface-border-hover:hover {
+@utility surface-selected-border {
   border-color: var(--surface-border-hover);
 }
 
-.surface-selected-border {
-  border-color: var(--surface-border-hover);
-}
-
-.surface-hover {
+@utility surface-hover {
   background-color: color-mix(in srgb, var(--surface-current) 94%, white);
 }
 
-.surface-active {
+@utility surface-active {
   background-color: color-mix(in srgb, var(--surface-current) 90%, white);
 }
 
-.surface-subtle {
+@utility surface-subtle {
   background-color: rgba(255, 255, 255, 0.06);
 }
 
-.surface-highlighted[data-highlighted] {
-  background-color: color-mix(in srgb, var(--surface-current) 94%, white);
+@utility surface-highlighted {
+  &[data-highlighted] {
+    background-color: color-mix(in srgb, var(--surface-current) 94%, white);
+  }
 }
 
-.surface-slider {
+@utility surface-slider {
   background-color: var(--surface-control);
   box-shadow: inset 0 0 0 1px var(--surface-control-border);
-}
 
-.surface-slider::-webkit-slider-thumb {
-  border-color: var(--surface-current);
-}
+  &::-webkit-slider-thumb {
+    border-color: var(--surface-current);
+  }
 
-.surface-slider::-moz-range-thumb {
-  border-color: var(--surface-current);
+  &::-moz-range-thumb {
+    border-color: var(--surface-current);
+  }
 }
 
 html,
