@@ -120,59 +120,59 @@ export function AspectRatioSelector({
             {/* Dropdown */}
             <ElevatedSurface asChild offset={1}>
               <div className="ui-radius-lg absolute top-full left-0 mt-1 z-50 border border-transparent min-w-[200px] py-1">
-              {presetKeys
-                .filter((p) => p !== 'custom')
-                .map((preset) => {
-                  const config = ASPECT_RATIO_PRESETS[preset]
-                  const isActive = aspectRatioSettings.preset === preset
+                {presetKeys
+                  .filter((p) => p !== 'custom')
+                  .map((preset) => {
+                    const config = ASPECT_RATIO_PRESETS[preset]
+                    const isActive = aspectRatioSettings.preset === preset
 
-                  return (
-                    <button
-                      key={preset}
-                      className={cn(
-                        'surface-interactive w-full flex items-center gap-2 px-3 py-2 text-xs text-left transition-colors',
-                        isActive && 'bg-accent/10 text-accent',
-                      )}
-                      onClick={() => handlePresetSelect(preset)}
-                    >
-                      {PRESET_ICONS[preset]}
-                      <span className="flex-1">{preset}</span>
-                      <span className="text-text-muted">{config.description}</span>
-                    </button>
-                  )
-                })}
-
-              {showCustomInput && (
-                <>
-                  <div className="border-t border-border my-1" />
-                  <div className="px-3 py-2">
-                    <div className="text-[10px] text-text-muted mb-2">Custom</div>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="number"
-                        value={customWidth}
-                        onChange={(e) => setCustomWidth(Number(e.target.value))}
-                        className="surface-control ui-radius-md w-16 border px-2 py-1 text-xs focus:border-accent focus:outline-none"
-                        min={1}
-                      />
-                      <span className="text-text-muted text-xs">×</span>
-                      <input
-                        type="number"
-                        value={customHeight}
-                        onChange={(e) => setCustomHeight(Number(e.target.value))}
-                        className="surface-control ui-radius-md w-16 border px-2 py-1 text-xs focus:border-accent focus:outline-none"
-                        min={1}
-                      />
+                    return (
                       <button
-                        className="ui-radius-md bg-accent px-2 py-1 text-xs text-white hover:bg-accent/90"
-                        onClick={handleCustomApply}
+                        key={preset}
+                        className={cn(
+                          'surface-interactive w-full flex items-center gap-2 px-3 py-2 text-xs text-left transition-colors',
+                          isActive && 'bg-accent/10 text-accent',
+                        )}
+                        onClick={() => handlePresetSelect(preset)}
                       >
-                        Apply
+                        {PRESET_ICONS[preset]}
+                        <span className="flex-1">{preset}</span>
+                        <span className="text-text-muted">{config.description}</span>
                       </button>
+                    )
+                  })}
+
+                {showCustomInput && (
+                  <>
+                    <div className="border-t border-border my-1" />
+                    <div className="px-3 py-2">
+                      <div className="text-[10px] text-text-muted mb-2">Custom</div>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="number"
+                          value={customWidth}
+                          onChange={(e) => setCustomWidth(Number(e.target.value))}
+                          className="surface-control ui-radius-md w-16 border px-2 py-1 text-xs focus:border-accent focus:outline-none"
+                          min={1}
+                        />
+                        <span className="text-text-muted text-xs">×</span>
+                        <input
+                          type="number"
+                          value={customHeight}
+                          onChange={(e) => setCustomHeight(Number(e.target.value))}
+                          className="surface-control ui-radius-md w-16 border px-2 py-1 text-xs focus:border-accent focus:outline-none"
+                          min={1}
+                        />
+                        <button
+                          className="ui-radius-md bg-accent px-2 py-1 text-xs text-white hover:bg-accent/90"
+                          onClick={handleCustomApply}
+                        >
+                          Apply
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                </>
-              )}
+                  </>
+                )}
               </div>
             </ElevatedSurface>
           </>
