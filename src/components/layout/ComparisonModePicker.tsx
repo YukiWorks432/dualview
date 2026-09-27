@@ -77,8 +77,8 @@ export function ComparisonModePicker() {
                     onClick={() => setComparisonMode(mode)}
                     className={`flex min-h-24 flex-col items-center justify-center gap-2 ui-radius-md border p-4 text-center outline-none focus-visible:ring-2 focus-visible:ring-accent ${
                       comparisonMode === mode
-                        ? 'border-border-hover bg-surface-active text-text-primary'
-                        : 'border-border bg-surface hover:border-border-hover hover:bg-surface-hover'
+                        ? 'surface-active border-border-hover text-text-primary'
+                        : 'surface-control text-text-primary'
                     }`}
                   />
                 }
@@ -112,7 +112,7 @@ export function ComparisonModePicker() {
                   onClick={() => setComparisonMode(mode)}
                   className={`relative h-7 gap-1 px-2 text-xs ${
                     comparisonMode === mode
-                      ? 'border-border-hover bg-surface-active text-text-primary'
+                      ? 'surface-active border-border-hover text-text-primary'
                       : 'border-transparent'
                   }`}
                   aria-selected={comparisonMode === mode}
@@ -153,7 +153,7 @@ export function ComparisonModePicker() {
                 size="sm"
                 className={`h-7 gap-1 px-2 text-xs ${
                   activeSecondaryMode
-                    ? 'border-border-hover bg-surface-active text-text-primary'
+                    ? 'surface-active border-border-hover text-text-primary'
                     : 'border-transparent'
                 }`}
                 aria-label="More comparison modes"
@@ -189,14 +189,14 @@ export function ComparisonModePicker() {
                     key={mode}
                     onClick={() => setComparisonMode(mode)}
                     className={
-                      comparisonMode === mode ? 'bg-surface-active text-text-primary' : undefined
+                      comparisonMode === mode ? 'surface-active text-text-primary' : undefined
                     }
                   >
                     <span
                       className={`flex h-8 w-8 items-center justify-center ui-radius-sm ${
                         comparisonMode === mode
-                          ? 'bg-surface-hover text-accent'
-                          : 'bg-surface-alt text-text-secondary'
+                          ? 'surface-active text-accent'
+                          : 'surface-control text-text-secondary'
                       }`}
                     >
                       <Icon className="h-4 w-4" aria-hidden="true" />
