@@ -43,6 +43,7 @@ import { useMediaStore } from '../../stores/mediaStore'
 import { usePlaybackStore } from '../../stores/playbackStore'
 import { useTimelineStore } from '../../stores/timelineStore'
 import type { MediaType } from '../../types'
+import { ElevatedSurface } from '../ui'
 import { MEDIA_DRAG_TYPE, type MediaDragData } from '../media/MediaLibrary'
 import { Button } from '../ui'
 import { ClipContextMenu } from './ClipContextMenu'
@@ -918,10 +919,11 @@ export function Timeline() {
 
               {/* Track settings dropdown */}
               {openTrackSettings === track.id && (
-                <div
-                  data-track-settings
-                  className="absolute left-full top-0 ml-1 z-30 bg-surface border border-border p-2 shadow-lg min-w-[140px]"
-                >
+                <ElevatedSurface asChild offset={1}>
+                  <div
+                    data-track-settings
+                    className="ui-radius-md absolute left-full top-0 ml-1 z-30 border border-transparent p-2 min-w-[140px]"
+                  >
                   <div className="text-xs font-medium text-text-secondary mb-2">
                     Accepted Media Types
                   </div>
@@ -974,7 +976,8 @@ export function Timeline() {
                       </button>
                     </>
                   )}
-                </div>
+                  </div>
+                </ElevatedSurface>
               )}
             </div>
           ))}
@@ -999,10 +1002,11 @@ export function Timeline() {
 
             {/* Add track dropdown menu */}
             {showAddTrackMenu && (
-              <div
-                data-add-track-menu
-                className="absolute left-full top-0 ml-1 z-30 bg-surface border border-border shadow-lg min-w-[140px]"
-              >
+              <ElevatedSurface asChild offset={1}>
+                <div
+                  data-add-track-menu
+                  className="ui-radius-md absolute left-full top-0 ml-1 z-30 border border-transparent min-w-[140px]"
+                >
                 <button
                   onClick={() => {
                     pushState()
@@ -1036,7 +1040,8 @@ export function Timeline() {
                   <Type className="w-4 h-4 text-purple-400" />
                   <span>Text Track</span>
                 </button>
-              </div>
+                </div>
+              </ElevatedSurface>
             )}
           </div>
         </div>
