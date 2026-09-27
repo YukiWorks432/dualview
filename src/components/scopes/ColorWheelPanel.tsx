@@ -6,6 +6,8 @@
 import { X, Palette, Eye, EyeOff } from 'lucide-react'
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 
+import { ElevatedSurface } from '../ui'
+
 import {
   getVisualFrameDimensions,
   isVisualFrameReady,
@@ -423,7 +425,8 @@ export function ColorWheelPanel({
   if (!isVisible) return null
 
   return (
-    <div className="absolute bottom-24 right-[420px] bg-surface/95 border border-border rounded-lg shadow-xl z-50 w-[300px]">
+    <ElevatedSurface asChild offset={2}>
+      <div className="ui-radius-lg absolute bottom-24 right-[420px] border border-transparent z-50 w-[300px]">
       {/* Hidden sampling canvases */}
       <canvas ref={sampleCanvasARef} className="hidden" />
       <canvas ref={sampleCanvasBRef} className="hidden" />
@@ -516,6 +519,7 @@ export function ColorWheelPanel({
         <span>Center = Gray</span>
         <span>Edge = Saturated</span>
       </div>
-    </div>
+      </div>
+    </ElevatedSurface>
   )
 }
