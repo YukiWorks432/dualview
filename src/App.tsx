@@ -345,75 +345,75 @@ export default function App() {
         onDrop={handleDrop}
         onDragOver={handleDragOver}
       >
-      <Header
-        onExport={() => setIsExportOpen(true)}
-        onShowShortcuts={shortcutsHelp.open}
-        onToggleSidebar={() => setIsMobileSidebarOpen(true)}
-        onOpenProjects={() => setIsProjectSelectorOpen(true)}
-      />
+        <Header
+          onExport={() => setIsExportOpen(true)}
+          onShowShortcuts={shortcutsHelp.open}
+          onToggleSidebar={() => setIsMobileSidebarOpen(true)}
+          onOpenProjects={() => setIsProjectSelectorOpen(true)}
+        />
 
-      <div className="flex-1 flex overflow-hidden">
-        {/* Mobile sidebar drawer (only renders when open) */}
-        {isMobileSidebarOpen && (
-          <Sidebar
-            isMobileOpen={true}
-            onMobileClose={() => setIsMobileSidebarOpen(false)}
-            onOpenProjects={() => setIsProjectSelectorOpen(true)}
-          />
+        <div className="flex-1 flex overflow-hidden">
+          {/* Mobile sidebar drawer (only renders when open) */}
+          {isMobileSidebarOpen && (
+            <Sidebar
+              isMobileOpen={true}
+              onMobileClose={() => setIsMobileSidebarOpen(false)}
+              onOpenProjects={() => setIsProjectSelectorOpen(true)}
+            />
+          )}
+
+          {/* Desktop sidebar */}
+          {isSidebarVisible ? (
+            <Sidebar
+              onCollapse={() => setIsSidebarVisible(false)}
+              onOpenProjects={() => setIsProjectSelectorOpen(true)}
+            />
+          ) : (
+            /* Collapsed sidebar - click to expand (desktop only) */
+            <div
+              onClick={() => setIsSidebarVisible(true)}
+              className="surface-control w-8 border-r border-border cursor-pointer flex items-center justify-center group transition-colors hide-mobile"
+              title="Open Sidebar (B)"
+            >
+              <span className="text-text-muted group-hover:text-text-primary text-lg">→</span>
+            </div>
+          )}
+
+          <main className="flex-1 flex flex-col overflow-hidden relative">
+            <PreviewCanvas
+              ref={previewRef}
+              canvasRef={canvasRef}
+              isTimelineVisible={isTimelineVisible}
+            />
+            {isTimelineVisible && <Timeline />}
+
+            {/* Timeline toggle button */}
+            <button
+              onClick={() => setIsTimelineVisible((v) => !v)}
+              className="surface-control ui-radius-md absolute bottom-2 right-2 z-50 border px-2 py-1 text-xs text-text-secondary hide-mobile"
+              title="Toggle Timeline (T)"
+            >
+              {isTimelineVisible ? 'Hide Timeline' : 'Show Timeline'}
+            </button>
+          </main>
+        </div>
+
+        {/* SCOPE-001, SCOPE-002, SCOPE-003: Video Scopes Panel */}
+        <ScopesPanel />
+
+        {isExportOpen && (
+          <Suspense fallback={null}>
+            <ExportDialog
+              isOpen
+              onClose={() => setIsExportOpen(false)}
+              canvasRef={canvasRef}
+              captureFrame={(options) => previewRef.current?.captureFrame(options) ?? null}
+            />
+          </Suspense>
         )}
+        <KeyboardShortcutsHelp isOpen={shortcutsHelp.isOpen} onClose={shortcutsHelp.close} />
 
-        {/* Desktop sidebar */}
-        {isSidebarVisible ? (
-          <Sidebar
-            onCollapse={() => setIsSidebarVisible(false)}
-            onOpenProjects={() => setIsProjectSelectorOpen(true)}
-          />
-        ) : (
-          /* Collapsed sidebar - click to expand (desktop only) */
-          <div
-            onClick={() => setIsSidebarVisible(true)}
-            className="surface-control w-8 border-r border-border cursor-pointer flex items-center justify-center group transition-colors hide-mobile"
-            title="Open Sidebar (B)"
-          >
-            <span className="text-text-muted group-hover:text-text-primary text-lg">→</span>
-          </div>
-        )}
-
-        <main className="flex-1 flex flex-col overflow-hidden relative">
-          <PreviewCanvas
-            ref={previewRef}
-            canvasRef={canvasRef}
-            isTimelineVisible={isTimelineVisible}
-          />
-          {isTimelineVisible && <Timeline />}
-
-          {/* Timeline toggle button */}
-          <button
-            onClick={() => setIsTimelineVisible((v) => !v)}
-            className="surface-control ui-radius-md absolute bottom-2 right-2 z-50 border px-2 py-1 text-xs text-text-secondary hide-mobile"
-            title="Toggle Timeline (T)"
-          >
-            {isTimelineVisible ? 'Hide Timeline' : 'Show Timeline'}
-          </button>
-        </main>
-      </div>
-
-      {/* SCOPE-001, SCOPE-002, SCOPE-003: Video Scopes Panel */}
-      <ScopesPanel />
-
-      {isExportOpen && (
-        <Suspense fallback={null}>
-          <ExportDialog
-            isOpen
-            onClose={() => setIsExportOpen(false)}
-            canvasRef={canvasRef}
-            captureFrame={(options) => previewRef.current?.captureFrame(options) ?? null}
-          />
-        </Suspense>
-      )}
-      <KeyboardShortcutsHelp isOpen={shortcutsHelp.isOpen} onClose={shortcutsHelp.close} />
-
-      {/* PERSIST-003: Project selector modal */}
+        {/* PERSIST-003: Project selector modal */}
         <ProjectSelector
           isOpen={isProjectSelectorOpen}
           onClose={() => setIsProjectSelectorOpen(false)}
