@@ -217,7 +217,7 @@ export function ScopesPanel() {
         <div className="flex items-center gap-4">
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="flex items-center gap-2 text-white hover:text-[#cddc39] transition-colors"
+            className="flex items-center gap-2 text-text-primary hover:text-secondary transition-colors"
           >
             {isCollapsed ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
             <span className="font-semibold text-sm">Video Scopes</span>
