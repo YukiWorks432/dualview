@@ -237,8 +237,10 @@ function PresetItem({
   return (
     <div
       className={cn(
-        'surface-interactive ui-radius-md flex items-center justify-between p-2 cursor-pointer group',
-        isActive ? 'bg-accent/20 border border-accent/50' : '',
+        'ui-radius-md flex items-center justify-between p-2 cursor-pointer group',
+        isActive
+          ? 'bg-accent/20 border border-accent/50'
+          : 'surface-interactive',
       )}
       onClick={onApply}
     >
