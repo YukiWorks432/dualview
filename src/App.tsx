@@ -6,6 +6,7 @@ import { PreviewCanvas, type PreviewCanvasHandle } from './components/preview/Pr
 import { ProjectSelector } from './components/project'
 import { ScopesPanel } from './components/scopes'
 import { Timeline } from './components/timeline/Timeline'
+import { SurfaceProvider } from './components/ui'
 import { KeyboardShortcutsHelp } from './components/ui/KeyboardShortcutsHelp'
 import { getComparisonModeByKeyboardCode } from './config/comparisonModes'
 import { useKeyboardShortcutsHelp } from './hooks/useKeyboardShortcutsHelp'
@@ -338,11 +339,12 @@ export default function App() {
   }
 
   return (
-    <div
-      className="h-screen flex flex-col bg-background overflow-hidden"
-      onDrop={handleDrop}
-      onDragOver={handleDragOver}
-    >
+    <SurfaceProvider value={1}>
+      <div
+        className="surface-wash h-screen flex flex-col overflow-hidden"
+        onDrop={handleDrop}
+        onDragOver={handleDragOver}
+      >
       <Header
         onExport={() => setIsExportOpen(true)}
         onShowShortcuts={shortcutsHelp.open}
@@ -370,7 +372,7 @@ export default function App() {
           /* Collapsed sidebar - click to expand (desktop only) */
           <div
             onClick={() => setIsSidebarVisible(true)}
-            className="w-8 bg-surface hover:bg-surface-hover border-r border-border cursor-pointer flex items-center justify-center group transition-colors hide-mobile"
+            className="surface-control w-8 border-r border-border cursor-pointer flex items-center justify-center group transition-colors hide-mobile"
             title="Open Sidebar (B)"
           >
             <span className="text-text-muted group-hover:text-text-primary text-lg">→</span>
@@ -388,7 +390,7 @@ export default function App() {
           {/* Timeline toggle button */}
           <button
             onClick={() => setIsTimelineVisible((v) => !v)}
-            className="absolute bottom-2 right-2 z-50 bg-surface hover:bg-surface-hover border border-border px-2 py-1 text-xs text-text-secondary hide-mobile"
+            className="surface-control ui-radius-md absolute bottom-2 right-2 z-50 border px-2 py-1 text-xs text-text-secondary hide-mobile"
             title="Toggle Timeline (T)"
           >
             {isTimelineVisible ? 'Hide Timeline' : 'Show Timeline'}
@@ -412,10 +414,11 @@ export default function App() {
       <KeyboardShortcutsHelp isOpen={shortcutsHelp.isOpen} onClose={shortcutsHelp.close} />
 
       {/* PERSIST-003: Project selector modal */}
-      <ProjectSelector
-        isOpen={isProjectSelectorOpen}
-        onClose={() => setIsProjectSelectorOpen(false)}
-      />
-    </div>
+        <ProjectSelector
+          isOpen={isProjectSelectorOpen}
+          onClose={() => setIsProjectSelectorOpen(false)}
+        />
+      </div>
+    </SurfaceProvider>
   )
 }
