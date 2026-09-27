@@ -83,7 +83,7 @@ export function Header({ onExport, onShowShortcuts, onToggleSidebar }: HeaderPro
         <Button
           variant="ghost"
           size="sm"
-          className={`group h-7 gap-1 px-2 text-xs ${isPlaying ? 'surface-active text-text-primary' : ''}`}
+          className={`group h-7 gap-1 px-2 text-xs ${isPlaying ? 'surface-active text-text-primary hover:surface-active' : ''}`}
           onClick={togglePlay}
           title="Toggle playback (Space)"
         >
