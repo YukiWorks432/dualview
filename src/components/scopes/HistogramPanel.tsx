@@ -6,6 +6,8 @@
 import { X, BarChart3, Layers, Scale } from 'lucide-react'
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 
+import { ElevatedSurface } from '../ui'
+
 import {
   getVisualFrameDimensions,
   isVisualFrameReady,
@@ -477,7 +479,8 @@ export function HistogramPanel({
   if (!isVisible) return null
 
   return (
-    <div className="absolute bottom-24 right-4 bg-surface/95 border border-border rounded-lg shadow-xl z-50 w-[400px]">
+    <ElevatedSurface asChild offset={2}>
+      <div className="ui-radius-lg absolute bottom-24 right-4 border border-transparent z-50 w-[400px]">
       {/* Hidden sampling canvases */}
       <canvas ref={sampleCanvasARef} className="hidden" />
       <canvas ref={sampleCanvasBRef} className="hidden" />
@@ -598,6 +601,7 @@ export function HistogramPanel({
             : 'Luminance'}
         {useLogScale && ' (Log)'}
       </div>
-    </div>
+      </div>
+    </ElevatedSurface>
   )
 }
