@@ -83,7 +83,7 @@ function StatusIndicator({
             className="surface-interactive ui-radius-sm p-0.5"
             title="Retry"
           >
-            <RotateCcw className="w-3 h-3 text-zinc-400 hover:text-white" />
+            <RotateCcw className="w-3 h-3 text-text-muted hover:text-text-primary" />
           </button>
         )}
       </div>
