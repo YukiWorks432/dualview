@@ -22,13 +22,7 @@ import { useTimelineStore } from '../../stores/timelineStore'
 import type { BlendMode, SplitLayout, ExportSettings, WebGLComparisonMode } from '../../types'
 import { MediaLibrary } from '../media/MediaLibrary'
 import { MediaUpload } from '../media/MediaUpload'
-import {
-  AspectRatioSelector,
-  Button,
-  ElevatedSurface,
-  Select,
-  Slider,
-} from '../ui'
+import { AspectRatioSelector, Button, ElevatedSurface, Select, Slider } from '../ui'
 
 type Tab = 'media' | 'settings'
 
@@ -168,22 +162,22 @@ export function Sidebar({ onCollapse, isMobileOpen, onMobileClose, onOpenProject
         {activeTab === 'media' && <MediaPanel />}
         {activeTab === 'settings' && (
           <SettingsPanel
-              comparisonMode={comparisonMode}
-              blendMode={blendMode}
-              setBlendMode={setBlendMode}
-              splitLayout={splitLayout}
-              setSplitLayout={setSplitLayout}
-              sliderPosition={sliderPosition}
-              setSliderPosition={setSliderPosition}
-              sliderOrientation={sliderOrientation}
-              setSliderOrientation={setSliderOrientation}
-              hideSlider={hideSlider}
-              toggleHideSlider={toggleHideSlider}
-              exportSettings={exportSettings}
-              setExportSettings={setExportSettings}
-              webglComparisonSettings={webglComparisonSettings}
-              setWebGLComparisonMode={setWebGLComparisonMode}
-              setWebGLComparisonSettings={setWebGLComparisonSettings}
+            comparisonMode={comparisonMode}
+            blendMode={blendMode}
+            setBlendMode={setBlendMode}
+            splitLayout={splitLayout}
+            setSplitLayout={setSplitLayout}
+            sliderPosition={sliderPosition}
+            setSliderPosition={setSliderPosition}
+            sliderOrientation={sliderOrientation}
+            setSliderOrientation={setSliderOrientation}
+            hideSlider={hideSlider}
+            toggleHideSlider={toggleHideSlider}
+            exportSettings={exportSettings}
+            setExportSettings={setExportSettings}
+            webglComparisonSettings={webglComparisonSettings}
+            setWebGLComparisonMode={setWebGLComparisonMode}
+            setWebGLComparisonSettings={setWebGLComparisonSettings}
           />
         )}
       </div>
