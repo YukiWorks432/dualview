@@ -21,7 +21,7 @@ keywords:
   - WebGL
 license: MIT
 repository-code: 'https://github.com/YukiWorks432/dualview'
-url: 'https://dualview.hanayuki.xyz'
+url: 'https://dualview.yukiworks432.workers.dev'
 references:
   - type: software
     title: 'DualView (original project)'

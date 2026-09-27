@@ -5,8 +5,8 @@
 <h1 align="center">DualView</h1>
 
 <p align="center">
-  <a href="https://dualview.hanayuki.xyz">
-    <img src="https://img.shields.io/badge/App-dualview.hanayuki.xyz-ff5722?style=for-the-badge" alt="Open DualView">
+  <a href="https://dualview.yukiworks432.workers.dev">
+    <img src="https://img.shields.io/badge/App-dualview.yukiworks432.workers.dev-ff5722?style=for-the-badge" alt="Open DualView">
   </a>
   <a href="https://github.com/YukiWorks432/dualview">
     <img src="https://img.shields.io/badge/GitHub-YukiWorks432-181717?style=for-the-badge&logo=github" alt="YukiWorks432 on GitHub">
@@ -75,12 +75,12 @@
 > continuing that work with modernization, maintenance, and ongoing development while preserving
 > attribution to the original project.
 
-| Role                 | Links                                                                                                                            |
-| -------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| **Original project** | [gokayfem/dualview](https://github.com/gokayfem/dualview) · [dualview.ai](https://dualview.ai)                                   |
-| **Original creator** | [Gökay Aydoğan](https://github.com/gokayfem) · [@gokayfem](https://x.com/gokayfem)                                               |
-| **Maintained fork**  | [dualview.hanayuki.xyz](https://dualview.hanayuki.xyz) · [YukiWorks432/dualview](https://github.com/YukiWorks432/dualview)       |
-| **Fork maintainer**  | [YukiWorks432](https://github.com/YukiWorks432) · [@YuK1_Works](https://x.com/YuK1_Works) · [hanayuki.xyz](https://hanayuki.xyz) |
+| Role                 | Links                                                                                                                                              |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Original project** | [gokayfem/dualview](https://github.com/gokayfem/dualview) · [dualview.ai](https://dualview.ai)                                                     |
+| **Original creator** | [Gökay Aydoğan](https://github.com/gokayfem) · [@gokayfem](https://x.com/gokayfem)                                                                 |
+| **Maintained fork**  | [dualview.yukiworks432.workers.dev](https://dualview.yukiworks432.workers.dev) · [YukiWorks432/dualview](https://github.com/YukiWorks432/dualview) |
+| **Fork maintainer**  | [YukiWorks432](https://github.com/YukiWorks432) · [@YuK1_Works](https://x.com/YuK1_Works) · [hanayuki.xyz](https://hanayuki.xyz)                   |
 
 ---
 
@@ -581,8 +581,9 @@ pnpm preview
 ### Deployment
 
 The maintained web app is deployed as Cloudflare Workers Static Assets at
-[dualview.hanayuki.xyz](https://dualview.hanayuki.xyz). There is no application Worker or backend
-API in the deployment path; Wrangler uploads the Vite `dist/` output directly.
+[dualview.yukiworks432.workers.dev](https://dualview.yukiworks432.workers.dev). There is no
+application Worker or backend API in the deployment path; Wrangler uploads the Vite `dist/` output
+directly.
 
 The production bundle does not include `ffmpeg.wasm`. Video export uses browser-native WebCodecs
 and MediaRecorder paths plus gif.js, so the former `ffmpeg-core.wasm` asset-size constraint does
@@ -595,8 +596,10 @@ pnpm deploy
 
 Wrangler is installed as a project dev dependency so local and Cloudflare builds use the locked CLI version.
 
-`wrangler.jsonc` owns the production Custom Domain and disables the `workers.dev` route. Missing
-paths use the static `404.html` page instead of falling back to the application shell.
+`wrangler.jsonc` enables the production `workers.dev` route and leaves Custom Domain assignment
+to the Cloudflare dashboard. This keeps optional custom domains reversible without a repository
+change. Missing paths use the static `404.html` page instead of falling back to the application
+shell.
 
 ---
 
@@ -716,7 +719,7 @@ If your work depends on this maintained fork, GitHub's **Cite this repository** 
   title   = {DualView},
   version = {1.0.0},
   year    = {2026},
-  url     = {https://dualview.hanayuki.xyz},
+  url     = {https://dualview.yukiworks432.workers.dev},
   note    = {Maintained fork of https://github.com/gokayfem/dualview}
 }
 ```

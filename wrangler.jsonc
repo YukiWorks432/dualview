@@ -1,15 +1,9 @@
 {
   "name": "dualview",
   "compatibility_date": "2026-09-23",
-  "workers_dev": false,
+  "workers_dev": true,
   "preview_urls": true,
   "previews": {},
-  "routes": [
-    {
-      "pattern": "dualview.hanayuki.xyz",
-      "custom_domain": true,
-    },
-  ],
   "assets": {
     "directory": "./dist",
     "not_found_handling": "404-page",
