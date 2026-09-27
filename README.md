@@ -590,8 +590,10 @@ not apply to the deployed `dist/`.
 
 ```bash
 pnpm build
-pnpm dlx wrangler@4 deploy
+pnpm deploy
 ```
+
+Wrangler is installed as a project dev dependency so local and Cloudflare builds use the locked CLI version.
 
 `wrangler.jsonc` owns the production Custom Domain and disables the `workers.dev` route. Missing
 paths use the static `404.html` page instead of falling back to the application shell.
