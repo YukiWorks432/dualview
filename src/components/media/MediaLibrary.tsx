@@ -80,7 +80,7 @@ function StatusIndicator({
               e.stopPropagation()
               onRetry()
             }}
-            className="p-0.5 hover:bg-zinc-700 rounded"
+            className="surface-interactive ui-radius-sm p-0.5"
             title="Retry"
           >
             <RotateCcw className="w-3 h-3 text-zinc-400 hover:text-white" />
@@ -313,7 +313,7 @@ export function MediaLibrary() {
             <button
               key={config.type}
               className={cn(
-                'ui-radius-md flex items-center gap-1 px-2 py-1 text-[10px] font-medium transition-colors',
+                'surface-interactive ui-radius-md flex items-center gap-1 px-2 py-1 text-[10px] font-medium transition-colors',
                 isActive
                   ? 'bg-accent text-white'
                   : 'surface-control text-text-muted hover:text-text-primary',
@@ -325,7 +325,7 @@ export function MediaLibrary() {
             >
               {config.icon}
               <span>{config.label}</span>
-              <span className={cn('ui-radius-sm px-1', isActive ? 'bg-white/20' : 'bg-background')}>
+              <span className={cn('ui-radius-sm px-1', isActive ? 'bg-white/20' : 'surface-subtle')}>
                 {count}
               </span>
             </button>
@@ -350,10 +350,10 @@ export function MediaLibrary() {
             {statusCounts.error > 0 && (
               <button
                 className={cn(
-                  'ui-radius-md flex items-center gap-1 px-2 py-1 text-[10px] font-medium transition-colors',
+                  'surface-interactive ui-radius-md flex items-center gap-1 px-2 py-1 text-[10px] font-medium transition-colors',
                   statusFilter === 'error'
                     ? 'bg-red-500/20 text-red-400'
-                    : 'text-text-muted hover:bg-surface-hover hover:text-red-400',
+                    : 'text-text-muted hover:text-red-400',
                 )}
                 onClick={() => setStatusFilter(statusFilter === 'error' ? 'all' : 'error')}
                 title="Show failed files"
@@ -365,10 +365,10 @@ export function MediaLibrary() {
             {statusCounts.processing > 0 && (
               <button
                 className={cn(
-                  'ui-radius-md flex items-center gap-1 px-2 py-1 text-[10px] font-medium transition-colors',
+                  'surface-interactive ui-radius-md flex items-center gap-1 px-2 py-1 text-[10px] font-medium transition-colors',
                   statusFilter === 'processing'
                     ? 'bg-blue-500/20 text-blue-400'
-                    : 'text-text-muted hover:bg-surface-hover hover:text-blue-400',
+                    : 'text-text-muted hover:text-blue-400',
                 )}
                 onClick={() =>
                   setStatusFilter(statusFilter === 'processing' ? 'all' : 'processing')
@@ -382,10 +382,10 @@ export function MediaLibrary() {
             {statusCounts.pending > 0 && (
               <button
                 className={cn(
-                  'ui-radius-md flex items-center gap-1 px-2 py-1 text-[10px] font-medium transition-colors',
+                  'surface-interactive ui-radius-md flex items-center gap-1 px-2 py-1 text-[10px] font-medium transition-colors',
                   statusFilter === 'pending'
                     ? 'bg-amber-500/20 text-amber-400'
-                    : 'text-text-muted hover:bg-surface-hover hover:text-amber-400',
+                    : 'text-text-muted hover:text-amber-400',
                 )}
                 onClick={() => setStatusFilter(statusFilter === 'pending' ? 'all' : 'pending')}
                 title="Show pending files"
@@ -471,7 +471,7 @@ export function MediaLibrary() {
             className={cn(
               'surface-interactive ui-radius-lg group relative overflow-hidden border transition-colors',
               canDrag ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer',
-              isSelected ? 'border-accent' : 'border-transparent hover:border-border-hover',
+              isSelected ? 'border-accent' : 'surface-border-hover border-transparent',
             )}
             onClick={() => (isSelected ? deselectFile(file.id) : selectFile(file.id))}
           >
