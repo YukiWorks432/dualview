@@ -198,9 +198,9 @@ export function AspectRatioSelector({
               <button
                 key={preset}
                 className={cn(
-                  'surface-interactive ui-radius-md flex items-center gap-1 px-2 py-1 text-[10px] font-medium transition-colors',
+                  'ui-radius-md flex items-center gap-1 px-2 py-1 text-[10px] font-medium transition-colors',
                   isActive
-                    ? 'bg-accent text-white'
+                    ? 'bg-accent text-white hover:bg-accent-hover'
                     : 'surface-control text-text-muted hover:text-text-primary',
                 )}
                 onClick={() => handlePresetSelect(preset)}
