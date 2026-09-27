@@ -230,7 +230,7 @@ export function ScopesPanel() {
                 onClick={toggleWaveform}
                 className={`flex items-center gap-1.5 px-2 py-1 rounded text-xs transition-colors ${
                   scopesSettings.showWaveform
-                    ? 'bg-[#ff5722] text-white'
+                    ? 'bg-accent text-white'
                     : 'surface-control text-text-muted hover:text-text-primary'
                 }`}
                 title="Waveform Monitor (SCOPE-001)"
@@ -243,7 +243,7 @@ export function ScopesPanel() {
                 onClick={toggleVectorscope}
                 className={`flex items-center gap-1.5 px-2 py-1 rounded text-xs transition-colors ${
                   scopesSettings.showVectorscope
-                    ? 'bg-[#ff5722] text-white'
+                    ? 'bg-accent text-white'
                     : 'surface-control text-text-muted hover:text-text-primary'
                 }`}
                 title="Vectorscope (SCOPE-002)"
@@ -256,7 +256,7 @@ export function ScopesPanel() {
                 onClick={toggleParade}
                 className={`flex items-center gap-1.5 px-2 py-1 rounded text-xs transition-colors ${
                   scopesSettings.showParade
-                    ? 'bg-[#ff5722] text-white'
+                    ? 'bg-accent text-white'
                     : 'surface-control text-text-muted hover:text-text-primary'
                 }`}
                 title="RGB Parade (SCOPE-003)"
@@ -286,7 +286,7 @@ export function ScopesPanel() {
                 onClick={() => setShowSettings(!showSettings)}
                 className={`p-1.5 rounded transition-colors ${
                   showSettings
-                    ? 'bg-[#ff5722] text-white'
+                    ? 'bg-accent text-white'
                     : 'surface-control text-text-muted hover:text-text-primary'
                 }`}
                 title="Settings"
