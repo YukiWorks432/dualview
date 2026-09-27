@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { cn } from '../../lib/utils'
 import { usePresetStore, type ComparisonPreset } from '../../stores/presetStore'
 import { useProjectStore } from '../../stores/projectStore'
-import { Button } from '../ui'
+import { Button, ElevatedSurface } from '../ui'
 
 interface PresetManagerProps {
   isOpen: boolean
@@ -91,13 +91,14 @@ export function PresetManager({ isOpen, onClose }: PresetManagerProps) {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-surface border border-border p-6 w-full max-w-md max-h-[80vh] overflow-hidden flex flex-col">
+      <ElevatedSurface asChild offset={3}>
+        <div className="ui-radius-lg border border-transparent p-6 w-full max-w-md max-h-[80vh] overflow-hidden flex flex-col">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-text-primary flex items-center gap-2">
             <Bookmark className="w-5 h-5" />
             Comparison Presets
           </h2>
-          <button onClick={onClose} className="p-1 hover:bg-surface-hover rounded">
+          <button onClick={onClose} className="surface-interactive ui-radius-sm p-1">
             <X className="w-5 h-5 text-text-muted" />
           </button>
         </div>
@@ -111,7 +112,7 @@ export function PresetManager({ isOpen, onClose }: PresetManagerProps) {
                 value={newPresetName}
                 onChange={(e) => setNewPresetName(e.target.value)}
                 placeholder="Preset name..."
-                className="flex-1 px-3 py-2 bg-background border border-border rounded text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-accent"
+                className="surface-control ui-radius-md flex-1 border px-3 py-2 text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-accent"
                 autoFocus
                 onKeyDown={(e) => e.key === 'Enter' && handleCreatePreset()}
               />
@@ -181,7 +182,8 @@ export function PresetManager({ isOpen, onClose }: PresetManagerProps) {
             </div>
           </div>
         </div>
-      </div>
+        </div>
+      </ElevatedSurface>
     </div>
   )
 }
@@ -213,19 +215,19 @@ function PresetItem({
 }) {
   if (isEditing) {
     return (
-      <div className="flex items-center gap-2 p-2 bg-surface-hover rounded">
+      <div className="surface-control ui-radius-md flex items-center gap-2 p-2">
         <input
           type="text"
           value={editName}
           onChange={(e) => onEditNameChange(e.target.value)}
-          className="flex-1 px-2 py-1 bg-background border border-border rounded text-sm text-text-primary"
+          className="surface-control ui-radius-md flex-1 border px-2 py-1 text-sm text-text-primary"
           autoFocus
           onKeyDown={(e) => e.key === 'Enter' && onSaveEdit()}
         />
-        <button onClick={onSaveEdit} className="p-1 hover:bg-surface rounded">
+        <button onClick={onSaveEdit} className="surface-interactive ui-radius-sm p-1">
           <Check className="w-4 h-4 text-green-400" />
         </button>
-        <button onClick={onCancelEdit} className="p-1 hover:bg-surface rounded">
+        <button onClick={onCancelEdit} className="surface-interactive ui-radius-sm p-1">
           <X className="w-4 h-4 text-text-muted" />
         </button>
       </div>
@@ -235,8 +237,8 @@ function PresetItem({
   return (
     <div
       className={cn(
-        'flex items-center justify-between p-2 rounded cursor-pointer group',
-        isActive ? 'bg-accent/20 border border-accent/50' : 'hover:bg-surface-hover',
+        'surface-interactive ui-radius-md flex items-center justify-between p-2 cursor-pointer group',
+        isActive ? 'bg-accent/20 border border-accent/50' : '',
       )}
       onClick={onApply}
     >
@@ -259,7 +261,7 @@ function PresetItem({
               e.stopPropagation()
               onStartEdit()
             }}
-            className="p-1 hover:bg-surface rounded"
+            className="surface-interactive ui-radius-sm p-1"
             title="Rename"
           >
             <Edit2 className="w-3 h-3 text-text-muted" />
@@ -269,7 +271,7 @@ function PresetItem({
               e.stopPropagation()
               onDelete()
             }}
-            className="p-1 hover:bg-surface rounded"
+            className="surface-interactive ui-radius-sm p-1"
             title="Delete"
           >
             <Trash2 className="w-3 h-3 text-error" />
@@ -320,7 +322,7 @@ export function PresetSelector() {
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1 px-2 py-1 text-xs text-text-secondary hover:text-text-primary hover:bg-surface-hover rounded"
+        className="surface-interactive ui-radius-md flex items-center gap-1 px-2 py-1 text-xs text-text-secondary hover:text-text-primary"
       >
         <Bookmark className="w-3 h-3" />
         {activePreset?.name || 'Presets'}
@@ -330,13 +332,14 @@ export function PresetSelector() {
       {isOpen && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-          <div className="absolute top-full right-0 mt-1 w-48 bg-surface border border-border rounded shadow-lg z-50">
+          <ElevatedSurface asChild offset={1}>
+            <div className="ui-radius-md absolute top-full right-0 mt-1 w-48 border border-transparent z-50">
             {presets.map((preset) => (
               <button
                 key={preset.id}
                 onClick={() => applyPreset(preset)}
                 className={cn(
-                  'w-full text-left px-3 py-2 text-sm hover:bg-surface-hover flex items-center gap-2',
+                  'surface-interactive w-full text-left px-3 py-2 text-sm flex items-center gap-2',
                   activePresetId === preset.id && 'bg-accent/20 text-accent',
                 )}
               >
@@ -344,7 +347,8 @@ export function PresetSelector() {
                 {preset.name}
               </button>
             ))}
-          </div>
+            </div>
+          </ElevatedSurface>
         </>
       )}
     </div>
