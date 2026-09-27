@@ -6,13 +6,12 @@
 import { X, Palette, Eye, EyeOff } from 'lucide-react'
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 
-import { ElevatedSurface } from '../ui'
-
 import {
   getVisualFrameDimensions,
   isVisualFrameReady,
   type VideoFrameElement,
 } from '../../lib/media/frameSource'
+import { ElevatedSurface } from '../ui'
 
 interface ColorWheelPanelProps {
   videoARef: React.RefObject<VideoFrameElement | null>
@@ -427,98 +426,98 @@ export function ColorWheelPanel({
   return (
     <ElevatedSurface asChild offset={2}>
       <div className="ui-radius-lg absolute bottom-24 right-[420px] border border-transparent z-50 w-[300px]">
-      {/* Hidden sampling canvases */}
-      <canvas ref={sampleCanvasARef} className="hidden" />
-      <canvas ref={sampleCanvasBRef} className="hidden" />
+        {/* Hidden sampling canvases */}
+        <canvas ref={sampleCanvasARef} className="hidden" />
+        <canvas ref={sampleCanvasBRef} className="hidden" />
 
-      {/* Header */}
-      <div className="flex items-center justify-between p-2 border-b border-border">
-        <div className="flex items-center gap-2">
-          <Palette className="w-4 h-4 text-accent" />
-          <span className="text-sm font-medium text-text-primary">Color Wheel</span>
-        </div>
-        <div className="flex items-center gap-1">
-          {/* View mode toggle */}
-          <button
-            onClick={() => setViewMode(viewMode === 'a' ? 'b' : viewMode === 'b' ? 'both' : 'a')}
-            className="px-2 py-1 rounded text-xs bg-surface-hover text-text-muted hover:text-text-primary"
-          >
-            {viewMode === 'a' ? 'A' : viewMode === 'b' ? 'B' : 'A+B'}
-          </button>
-          {/* Highlight toggle */}
-          <button
-            onClick={() => {
-              if (showHighlight && onHighlightColor) {
-                onHighlightColor(null, null)
-              }
-              setShowHighlight(!showHighlight)
-            }}
-            className={`p-1.5 rounded ${showHighlight ? 'bg-accent text-white' : 'bg-surface-hover text-text-muted'}`}
-            title="Highlight selected color in image"
-          >
-            {showHighlight ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
-          </button>
-          <button onClick={onClose} className="p-1 hover:bg-surface-hover rounded">
-            <X className="w-4 h-4 text-text-muted" />
-          </button>
-        </div>
-      </div>
-
-      {/* Color wheel canvas */}
-      <div className="p-2">
-        <canvas
-          ref={canvasRef}
-          width={280}
-          height={280}
-          className="cursor-crosshair"
-          onMouseMove={handleMouseMove}
-          onMouseLeave={handleMouseLeave}
-          onClick={handleClick}
-        />
-      </div>
-
-      {/* Hovered color info */}
-      {hoveredColor && (
-        <div className="px-3 py-1 border-t border-border text-xs">
+        {/* Header */}
+        <div className="flex items-center justify-between p-2 border-b border-border">
           <div className="flex items-center gap-2">
-            <div
-              className="w-4 h-4 rounded"
-              style={{ backgroundColor: `hsl(${hoveredColor.hue}, ${hoveredColor.sat}%, 50%)` }}
-            />
-            <span className="text-text-muted">
-              H: {hoveredColor.hue} S: {hoveredColor.sat}%
-            </span>
-            <span className="text-text-muted ml-auto text-[10px]">Click to highlight</span>
+            <Palette className="w-4 h-4 text-accent" />
+            <span className="text-sm font-medium text-text-primary">Color Wheel</span>
+          </div>
+          <div className="flex items-center gap-1">
+            {/* View mode toggle */}
+            <button
+              onClick={() => setViewMode(viewMode === 'a' ? 'b' : viewMode === 'b' ? 'both' : 'a')}
+              className="px-2 py-1 rounded text-xs bg-surface-hover text-text-muted hover:text-text-primary"
+            >
+              {viewMode === 'a' ? 'A' : viewMode === 'b' ? 'B' : 'A+B'}
+            </button>
+            {/* Highlight toggle */}
+            <button
+              onClick={() => {
+                if (showHighlight && onHighlightColor) {
+                  onHighlightColor(null, null)
+                }
+                setShowHighlight(!showHighlight)
+              }}
+              className={`p-1.5 rounded ${showHighlight ? 'bg-accent text-white' : 'bg-surface-hover text-text-muted'}`}
+              title="Highlight selected color in image"
+            >
+              {showHighlight ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+            </button>
+            <button onClick={onClose} className="p-1 hover:bg-surface-hover rounded">
+              <X className="w-4 h-4 text-text-muted" />
+            </button>
           </div>
         </div>
-      )}
 
-      {/* Dominant colors */}
-      {dominantColors.length > 0 && (
-        <div className="px-3 py-2 border-t border-border">
-          <div className="text-[10px] text-text-muted mb-1">Dominant Colors</div>
-          <div className="flex gap-1 flex-wrap">
-            {dominantColors.map((color, i) => (
+        {/* Color wheel canvas */}
+        <div className="p-2">
+          <canvas
+            ref={canvasRef}
+            width={280}
+            height={280}
+            className="cursor-crosshair"
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseLeave}
+            onClick={handleClick}
+          />
+        </div>
+
+        {/* Hovered color info */}
+        {hoveredColor && (
+          <div className="px-3 py-1 border-t border-border text-xs">
+            <div className="flex items-center gap-2">
               <div
-                key={i}
-                className="w-6 h-6 rounded relative group cursor-pointer"
-                style={{ backgroundColor: `hsl(${color.hue}, ${color.sat}%, 50%)` }}
-                title={`H:${color.hue} S:${color.sat}% (${color.source})`}
-              >
-                <span className="absolute -top-1 -right-1 text-[8px] font-bold text-white bg-black/50 rounded px-0.5">
-                  {color.source}
-                </span>
-              </div>
-            ))}
+                className="w-4 h-4 rounded"
+                style={{ backgroundColor: `hsl(${hoveredColor.hue}, ${hoveredColor.sat}%, 50%)` }}
+              />
+              <span className="text-text-muted">
+                H: {hoveredColor.hue} S: {hoveredColor.sat}%
+              </span>
+              <span className="text-text-muted ml-auto text-[10px]">Click to highlight</span>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Legend */}
-      <div className="px-3 pb-2 text-[9px] text-text-muted flex justify-between">
-        <span>Center = Gray</span>
-        <span>Edge = Saturated</span>
-      </div>
+        {/* Dominant colors */}
+        {dominantColors.length > 0 && (
+          <div className="px-3 py-2 border-t border-border">
+            <div className="text-[10px] text-text-muted mb-1">Dominant Colors</div>
+            <div className="flex gap-1 flex-wrap">
+              {dominantColors.map((color, i) => (
+                <div
+                  key={i}
+                  className="w-6 h-6 rounded relative group cursor-pointer"
+                  style={{ backgroundColor: `hsl(${color.hue}, ${color.sat}%, 50%)` }}
+                  title={`H:${color.hue} S:${color.sat}% (${color.source})`}
+                >
+                  <span className="absolute -top-1 -right-1 text-[8px] font-bold text-white bg-black/50 rounded px-0.5">
+                    {color.source}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Legend */}
+        <div className="px-3 pb-2 text-[9px] text-text-muted flex justify-between">
+          <span>Center = Gray</span>
+          <span>Edge = Saturated</span>
+        </div>
       </div>
     </ElevatedSurface>
   )
