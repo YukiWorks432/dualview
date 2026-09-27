@@ -581,8 +581,9 @@ pnpm preview
 ### Deployment
 
 The maintained web app is deployed as Cloudflare Workers Static Assets at
-[dualview.yukiworks432.workers.dev](https://dualview.yukiworks432.workers.dev). There is no application Worker or backend
-API in the deployment path; Wrangler uploads the Vite `dist/` output directly.
+[dualview.yukiworks432.workers.dev](https://dualview.yukiworks432.workers.dev). There is no
+application Worker or backend API in the deployment path; Wrangler uploads the Vite `dist/` output
+directly.
 
 The production bundle does not include `ffmpeg.wasm`. Video export uses browser-native WebCodecs
 and MediaRecorder paths plus gif.js, so the former `ffmpeg-core.wasm` asset-size constraint does
