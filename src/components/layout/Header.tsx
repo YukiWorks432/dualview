@@ -18,7 +18,7 @@ export function Header({ onExport, onShowShortcuts, onToggleSidebar }: HeaderPro
   const { undo, redo, canUndo, canRedo } = useHistoryStore()
 
   return (
-    <header className="flex h-12 items-center justify-between border-b border-border bg-surface px-2 min-[769px]:h-10 md:px-3">
+    <header className="surface-wash flex h-12 items-center justify-between border-b border-border px-2 min-[769px]:h-10 md:px-3">
       <div className="flex items-center gap-1.5 md:gap-2">
         <Button
           variant="ghost"
@@ -83,7 +83,7 @@ export function Header({ onExport, onShowShortcuts, onToggleSidebar }: HeaderPro
         <Button
           variant="ghost"
           size="sm"
-          className={`group h-7 gap-1 px-2 text-xs ${isPlaying ? 'bg-surface-active text-text-primary' : ''}`}
+          className={`group h-7 gap-1 px-2 text-xs ${isPlaying ? 'surface-active text-text-primary' : ''}`}
           onClick={togglePlay}
           title="Toggle playback (Space)"
         >
