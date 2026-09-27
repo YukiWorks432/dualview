@@ -154,215 +154,215 @@ export function ClipContextMenu({ x, y, clipId, trackId, onClose }: ClipContextM
         className="ui-radius-md fixed z-50 min-w-[200px] border border-transparent py-1"
         style={{ left: x, top: y }}
       >
-      {/* Copy/Paste Section */}
-      <MenuButton
-        icon={Copy}
-        label="Copy"
-        shortcut="⌘C"
-        onClick={() => handleAction(() => copyClip(clipId))}
-      />
-      <MenuButton
-        icon={Clipboard}
-        label="Paste"
-        shortcut="⌘V"
-        disabled={!clipboardClipId || isLocked}
-        onClick={() =>
-          handleAction(() => {
-            if (clipboardClipId) {
+        {/* Copy/Paste Section */}
+        <MenuButton
+          icon={Copy}
+          label="Copy"
+          shortcut="⌘C"
+          onClick={() => handleAction(() => copyClip(clipId))}
+        />
+        <MenuButton
+          icon={Clipboard}
+          label="Paste"
+          shortcut="⌘V"
+          disabled={!clipboardClipId || isLocked}
+          onClick={() =>
+            handleAction(() => {
+              if (clipboardClipId) {
+                pushState()
+                pasteClip(trackId, currentTime)
+              }
+            })
+          }
+        />
+        <MenuButton
+          icon={CopyPlus}
+          label="Duplicate"
+          shortcut="⌘D"
+          disabled={isLocked}
+          onClick={() =>
+            handleAction(() => {
               pushState()
-              pasteClip(trackId, currentTime)
+              duplicateClip(clipId)
+            })
+          }
+        />
+
+        <Separator />
+
+        {/* Split Section */}
+        <MenuButton
+          icon={Scissors}
+          label="Split at Playhead"
+          shortcut="S"
+          disabled={isLocked}
+          onClick={() =>
+            handleAction(() => {
+              pushState()
+              splitClip(clipId, currentTime)
+            })
+          }
+        />
+        <MenuButton
+          icon={ArrowLeftToLine}
+          label="Keep Left of Playhead"
+          shortcut="Q"
+          disabled={isLocked}
+          onClick={() =>
+            handleAction(() => {
+              pushState()
+              splitAndKeepLeft(clipId, currentTime)
+            })
+          }
+        />
+        <MenuButton
+          icon={ArrowRightToLine}
+          label="Keep Right of Playhead"
+          shortcut="W"
+          disabled={isLocked}
+          onClick={() =>
+            handleAction(() => {
+              pushState()
+              splitAndKeepRight(clipId, currentTime)
+            })
+          }
+        />
+
+        <Separator />
+
+        {/* Replace Media - Smart Context Menu */}
+        {compatibleMedia.length > 0 && (
+          <div
+            className="relative"
+            onMouseEnter={() => setShowReplaceSubmenu(true)}
+            onMouseLeave={() => setShowReplaceSubmenu(false)}
+          >
+            <button
+              className={`w-full px-3 py-2 flex items-center gap-2 text-sm text-text-primary hover:bg-surface-hover ${isLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
+              disabled={isLocked}
+            >
+              <Replace className="w-4 h-4" />
+              <span className="flex-1 text-left">Replace Media</span>
+              <ChevronRight className="w-3 h-3 text-text-muted" />
+            </button>
+
+            {/* Replace Media Submenu */}
+            {showReplaceSubmenu && !isLocked && (
+              <ElevatedSurface asChild offset={1}>
+                <div className="ui-radius-md absolute left-full top-0 ml-1 min-w-[180px] max-h-[200px] overflow-y-auto border border-transparent py-1">
+                  {compatibleMedia.map((media) => (
+                    <button
+                      key={media.id}
+                      className="w-full px-3 py-1.5 flex items-center gap-2 text-sm text-text-primary hover:bg-surface-hover"
+                      onClick={() => {
+                        pushState()
+                        replaceClipMedia(clipId, media.id, media.duration)
+                        onClose()
+                      }}
+                    >
+                      {media.thumbnail ? (
+                        <img src={media.thumbnail} alt="" className="w-6 h-6 object-cover" />
+                      ) : (
+                        <div className="w-6 h-6 bg-surface-hover flex items-center justify-center text-xs">
+                          {media.type[0].toUpperCase()}
+                        </div>
+                      )}
+                      <span className="flex-1 text-left truncate">{media.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </ElevatedSurface>
+            )}
+          </div>
+        )}
+
+        {/* Separate Audio - Only for video clips */}
+        {isVideoClip && (
+          <MenuButton
+            icon={AudioLines}
+            label="Separate Audio"
+            disabled={isLocked}
+            onClick={() =>
+              handleAction(() => {
+                pushState()
+                separateAudio(clipId)
+              })
             }
-          })
-        }
-      />
-      <MenuButton
-        icon={CopyPlus}
-        label="Duplicate"
-        shortcut="⌘D"
-        disabled={isLocked}
-        onClick={() =>
-          handleAction(() => {
-            pushState()
-            duplicateClip(clipId)
-          })
-        }
-      />
+          />
+        )}
 
-      <Separator />
+        <Separator />
 
-      {/* Split Section */}
-      <MenuButton
-        icon={Scissors}
-        label="Split at Playhead"
-        shortcut="S"
-        disabled={isLocked}
-        onClick={() =>
-          handleAction(() => {
-            pushState()
-            splitClip(clipId, currentTime)
-          })
-        }
-      />
-      <MenuButton
-        icon={ArrowLeftToLine}
-        label="Keep Left of Playhead"
-        shortcut="Q"
-        disabled={isLocked}
-        onClick={() =>
-          handleAction(() => {
-            pushState()
-            splitAndKeepLeft(clipId, currentTime)
-          })
-        }
-      />
-      <MenuButton
-        icon={ArrowRightToLine}
-        label="Keep Right of Playhead"
-        shortcut="W"
-        disabled={isLocked}
-        onClick={() =>
-          handleAction(() => {
-            pushState()
-            splitAndKeepRight(clipId, currentTime)
-          })
-        }
-      />
-
-      <Separator />
-
-      {/* Replace Media - Smart Context Menu */}
-      {compatibleMedia.length > 0 && (
+        {/* Speed Control - FUNCTIONAL */}
         <div
           className="relative"
-          onMouseEnter={() => setShowReplaceSubmenu(true)}
-          onMouseLeave={() => setShowReplaceSubmenu(false)}
+          onMouseEnter={() => setShowSpeedSubmenu(true)}
+          onMouseLeave={() => setShowSpeedSubmenu(false)}
         >
           <button
             className={`w-full px-3 py-2 flex items-center gap-2 text-sm text-text-primary hover:bg-surface-hover ${isLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
             disabled={isLocked}
           >
-            <Replace className="w-4 h-4" />
-            <span className="flex-1 text-left">Replace Media</span>
+            <Gauge className="w-4 h-4" />
+            <span className="flex-1 text-left">Speed</span>
+            <span className="text-xs text-accent font-mono">{currentSpeed}x</span>
             <ChevronRight className="w-3 h-3 text-text-muted" />
           </button>
 
-          {/* Replace Media Submenu */}
-          {showReplaceSubmenu && !isLocked && (
+          {/* Speed Submenu */}
+          {showSpeedSubmenu && !isLocked && (
             <ElevatedSurface asChild offset={1}>
-              <div className="ui-radius-md absolute left-full top-0 ml-1 min-w-[180px] max-h-[200px] overflow-y-auto border border-transparent py-1">
-              {compatibleMedia.map((media) => (
-                <button
-                  key={media.id}
-                  className="w-full px-3 py-1.5 flex items-center gap-2 text-sm text-text-primary hover:bg-surface-hover"
-                  onClick={() => {
-                    pushState()
-                    replaceClipMedia(clipId, media.id, media.duration)
-                    onClose()
-                  }}
-                >
-                  {media.thumbnail ? (
-                    <img src={media.thumbnail} alt="" className="w-6 h-6 object-cover" />
-                  ) : (
-                    <div className="w-6 h-6 bg-surface-hover flex items-center justify-center text-xs">
-                      {media.type[0].toUpperCase()}
-                    </div>
-                  )}
-                  <span className="flex-1 text-left truncate">{media.name}</span>
-                </button>
-              ))}
+              <div className="ui-radius-md absolute left-full top-0 ml-1 min-w-[140px] border border-transparent py-1">
+                {speedOptions.map((opt) => (
+                  <button
+                    key={opt.value}
+                    className={`w-full px-3 py-1.5 flex items-center justify-between text-sm hover:bg-surface-hover ${
+                      currentSpeed === opt.value ? 'text-accent bg-accent/10' : 'text-text-primary'
+                    }`}
+                    onClick={() => setSpeed(opt.value)}
+                  >
+                    <span>{opt.label}</span>
+                    {currentSpeed === opt.value && <span className="w-1.5 h-1.5 bg-accent" />}
+                  </button>
+                ))}
               </div>
             </ElevatedSurface>
           )}
         </div>
-      )}
 
-      {/* Separate Audio - Only for video clips */}
-      {isVideoClip && (
+        {/* Reverse */}
         <MenuButton
-          icon={AudioLines}
-          label="Separate Audio"
+          icon={FlipHorizontal}
+          label="Reverse"
           disabled={isLocked}
+          active={clip?.reverse}
+          onClick={toggleReverse}
+        />
+
+        {/* Reset */}
+        <MenuButton
+          icon={RotateCcw}
+          label="Reset to Original"
+          disabled={isLocked || (currentSpeed === 1 && !clip?.reverse)}
+          onClick={resetClip}
+        />
+
+        <Separator />
+
+        {/* Delete */}
+        <MenuButton
+          icon={Trash2}
+          label="Delete"
+          shortcut="⌫"
+          disabled={isLocked}
+          danger
           onClick={() =>
             handleAction(() => {
               pushState()
-              separateAudio(clipId)
+              removeClip(clipId)
             })
           }
         />
-      )}
-
-      <Separator />
-
-      {/* Speed Control - FUNCTIONAL */}
-      <div
-        className="relative"
-        onMouseEnter={() => setShowSpeedSubmenu(true)}
-        onMouseLeave={() => setShowSpeedSubmenu(false)}
-      >
-        <button
-          className={`w-full px-3 py-2 flex items-center gap-2 text-sm text-text-primary hover:bg-surface-hover ${isLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
-          disabled={isLocked}
-        >
-          <Gauge className="w-4 h-4" />
-          <span className="flex-1 text-left">Speed</span>
-          <span className="text-xs text-accent font-mono">{currentSpeed}x</span>
-          <ChevronRight className="w-3 h-3 text-text-muted" />
-        </button>
-
-        {/* Speed Submenu */}
-        {showSpeedSubmenu && !isLocked && (
-          <ElevatedSurface asChild offset={1}>
-            <div className="ui-radius-md absolute left-full top-0 ml-1 min-w-[140px] border border-transparent py-1">
-            {speedOptions.map((opt) => (
-              <button
-                key={opt.value}
-                className={`w-full px-3 py-1.5 flex items-center justify-between text-sm hover:bg-surface-hover ${
-                  currentSpeed === opt.value ? 'text-accent bg-accent/10' : 'text-text-primary'
-                }`}
-                onClick={() => setSpeed(opt.value)}
-              >
-                <span>{opt.label}</span>
-                {currentSpeed === opt.value && <span className="w-1.5 h-1.5 bg-accent" />}
-              </button>
-            ))}
-            </div>
-          </ElevatedSurface>
-        )}
-      </div>
-
-      {/* Reverse */}
-      <MenuButton
-        icon={FlipHorizontal}
-        label="Reverse"
-        disabled={isLocked}
-        active={clip?.reverse}
-        onClick={toggleReverse}
-      />
-
-      {/* Reset */}
-      <MenuButton
-        icon={RotateCcw}
-        label="Reset to Original"
-        disabled={isLocked || (currentSpeed === 1 && !clip?.reverse)}
-        onClick={resetClip}
-      />
-
-      <Separator />
-
-      {/* Delete */}
-      <MenuButton
-        icon={Trash2}
-        label="Delete"
-        shortcut="⌫"
-        disabled={isLocked}
-        danger
-        onClick={() =>
-          handleAction(() => {
-            pushState()
-            removeClip(clipId)
-          })
-        }
-      />
       </div>
     </ElevatedSurface>
   )
