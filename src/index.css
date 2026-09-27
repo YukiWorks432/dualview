@@ -139,6 +139,10 @@
   border-color: var(--surface-border-hover);
 }
 
+.surface-selected-border {
+  border-color: var(--surface-border-hover);
+}
+
 .surface-hover {
   background-color: color-mix(in srgb, var(--surface-current) 94%, white);
 }
