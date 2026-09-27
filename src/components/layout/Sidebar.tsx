@@ -28,7 +28,6 @@ import {
   ElevatedSurface,
   Select,
   Slider,
-  SurfaceProvider,
 } from '../ui'
 
 type Tab = 'media' | 'settings'
@@ -81,7 +80,7 @@ export function Sidebar({ onCollapse, isMobileOpen, onMobileClose, onOpenProject
     `}
     >
       {/* Project controls - at top of sidebar */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-border shrink-0 bg-surface-alt/50">
+      <div className="surface-control flex items-center justify-between px-3 py-2 border-b border-border shrink-0">
         <div className="flex items-center gap-1">
           <Button
             variant="ghost"
@@ -115,7 +114,7 @@ export function Sidebar({ onCollapse, isMobileOpen, onMobileClose, onOpenProject
         {isMobileOpen && onMobileClose && (
           <button
             onClick={onMobileClose}
-            className="px-3 py-3 text-text-muted hover:text-text-primary hover:bg-surface-hover transition-all"
+            className="surface-interactive px-3 py-3 text-text-muted hover:text-text-primary transition-all"
             title="Close Sidebar"
           >
             <X className="w-5 h-5" />
@@ -166,9 +165,8 @@ export function Sidebar({ onCollapse, isMobileOpen, onMobileClose, onOpenProject
       </div>
 
       <div className="flex-1 overflow-y-auto p-4">
-        <SurfaceProvider value={1}>
-          {activeTab === 'media' && <MediaPanel />}
-          {activeTab === 'settings' && (
+        {activeTab === 'media' && <MediaPanel />}
+        {activeTab === 'settings' && (
             <SettingsPanel
               comparisonMode={comparisonMode}
               blendMode={blendMode}
@@ -188,11 +186,10 @@ export function Sidebar({ onCollapse, isMobileOpen, onMobileClose, onOpenProject
               setWebGLComparisonSettings={setWebGLComparisonSettings}
             />
           )}
-        </SurfaceProvider>
       </div>
 
       {/* Project lineage links */}
-      <div className="shrink-0 p-3 border-t border-border/50 bg-background/50 safe-area-bottom text-[10px]">
+      <div className="surface-control shrink-0 p-3 border-t border-border/50 safe-area-bottom text-[10px]">
         <div className="space-y-2">
           <div>
             <div className="text-text-muted mb-1">Maintained fork</div>
@@ -417,7 +414,7 @@ function SettingsPanel({
   return (
     <div className="space-y-4">
       {/* Current mode indicator - helps with context */}
-      <div className="ui-radius-lg border border-accent/20 bg-accent/10 p-3">
+      <ElevatedSurface offset={1} className="ui-radius-lg border border-accent/30 p-3">
         <div className="text-[10px] uppercase tracking-wider text-accent font-medium mb-1">
           Current Mode
         </div>
@@ -427,7 +424,7 @@ function SettingsPanel({
         <p className="text-[10px] text-text-muted mt-1">
           {modeHints[comparisonMode] || 'Configure settings below'}
         </p>
-      </div>
+      </ElevatedSurface>
 
       {/* WebGL Difference settings - show at top when in webgl-compare mode */}
       {comparisonMode === 'webgl-compare' && (
@@ -724,7 +721,7 @@ function SettingsPanel({
           {/* SCOPE-007: Zone System info */}
           {(webglComparisonSettings.mode === 'exposure-zone-system' ||
             webglComparisonSettings.mode === 'exposure-zone-compare') && (
-            <div className="ui-radius-md space-y-1 bg-background/50 p-2 text-[10px] text-text-muted">
+            <div className="surface-control ui-radius-md space-y-1 border p-2 text-[10px] text-text-muted">
               <p className="font-medium text-text-secondary">Ansel Adams Zone System:</p>
               <div className="grid grid-cols-2 gap-x-2">
                 <span style={{ color: '#000' }}>Zone 0: Pure black</span>
@@ -765,8 +762,8 @@ function SettingsPanel({
             onClick={toggleHideSlider}
             className={`ui-radius-md flex w-full items-center justify-between border p-3 transition-colors ${
               hideSlider
-                ? 'border-accent bg-accent/10 text-accent'
-                : 'border-border hover:border-border-hover'
+                ? 'surface-active border-accent text-accent'
+                : 'surface-outline text-text-primary'
             }`}
           >
             <span className="text-sm font-medium">
