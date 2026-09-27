@@ -6,6 +6,7 @@ import { cn } from '../../lib/utils'
 import { useMediaStore } from '../../stores/mediaStore'
 import { useTimelineStore } from '../../stores/timelineStore'
 import type { MediaFile } from '../../types'
+import { ElevatedSurface } from '../ui'
 
 interface ExtendedMetadata {
   name: string
@@ -255,8 +256,8 @@ export function MetadataComparison() {
         className={cn(
           'flex items-center gap-2 px-3 py-1.5 transition-colors text-sm border',
           isExpanded
-            ? 'bg-surface-alt border-accent/50'
-            : 'bg-background hover:bg-surface-alt border-border',
+            ? 'surface-active border-accent/50'
+            : 'surface-control',
         )}
       >
         <FileSearch className="w-4 h-4 text-text-muted" />
@@ -272,9 +273,10 @@ export function MetadataComparison() {
       </button>
 
       {isExpanded && (
-        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 bg-surface border border-border shadow-2xl z-50 w-[480px] max-h-[70vh] overflow-hidden flex flex-col">
+        <ElevatedSurface asChild offset={1}>
+          <div className="ui-radius-lg absolute top-full left-1/2 -translate-x-1/2 mt-2 border border-transparent z-50 w-[480px] max-h-[70vh] overflow-hidden flex flex-col">
           {/* Header */}
-          <div className="p-3 border-b border-border bg-surface-alt">
+          <div className="surface-control p-3 border-b border-border">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-semibold text-text-primary flex items-center gap-2">
                 <FileSearch className="w-4 h-4" />
@@ -282,7 +284,7 @@ export function MetadataComparison() {
               </h3>
               <button
                 onClick={() => setIsExpanded(false)}
-                className="p-1 hover:bg-surface rounded transition-colors"
+                className="surface-interactive ui-radius-sm p-1 transition-colors"
               >
                 <ChevronDown className="w-4 h-4 rotate-180" />
               </button>
@@ -381,7 +383,7 @@ export function MetadataComparison() {
           </div>
 
           {/* Footer */}
-          <div className="p-2 border-t border-border bg-surface-alt flex items-center justify-between text-[10px] text-text-muted">
+          <div className="surface-control p-2 border-t border-border flex items-center justify-between text-[10px] text-text-muted">
             <div className="flex items-center gap-3">
               <span className="flex items-center gap-1">
                 <Equal className="w-3 h-3 text-green-500" /> Same
@@ -394,7 +396,8 @@ export function MetadataComparison() {
               <span className="text-amber-500 font-medium">{diffCount} differences found</span>
             )}
           </div>
-        </div>
+          </div>
+        </ElevatedSurface>
       )}
     </div>
   )
