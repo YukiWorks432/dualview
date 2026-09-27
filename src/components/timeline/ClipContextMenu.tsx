@@ -25,6 +25,7 @@ import { useHistoryStore } from '../../stores/historyStore'
 import { useMediaStore } from '../../stores/mediaStore'
 import { usePlaybackStore } from '../../stores/playbackStore'
 import { useTimelineStore } from '../../stores/timelineStore'
+import { ElevatedSurface } from '../ui'
 
 interface ClipContextMenuProps {
   x: number
@@ -147,11 +148,12 @@ export function ClipContextMenu({ x, y, clipId, trackId, onClose }: ClipContextM
   ]
 
   return (
-    <div
-      ref={menuRef}
-      className="fixed z-50 min-w-[200px] bg-surface border border-border shadow-xl py-1"
-      style={{ left: x, top: y }}
-    >
+    <ElevatedSurface asChild offset={2}>
+      <div
+        ref={menuRef}
+        className="ui-radius-md fixed z-50 min-w-[200px] border border-transparent py-1"
+        style={{ left: x, top: y }}
+      >
       {/* Copy/Paste Section */}
       <MenuButton
         icon={Copy}
@@ -246,7 +248,8 @@ export function ClipContextMenu({ x, y, clipId, trackId, onClose }: ClipContextM
 
           {/* Replace Media Submenu */}
           {showReplaceSubmenu && !isLocked && (
-            <div className="absolute left-full top-0 ml-1 min-w-[180px] max-h-[200px] overflow-y-auto bg-surface border border-border shadow-xl py-1">
+            <ElevatedSurface asChild offset={1}>
+              <div className="ui-radius-md absolute left-full top-0 ml-1 min-w-[180px] max-h-[200px] overflow-y-auto border border-transparent py-1">
               {compatibleMedia.map((media) => (
                 <button
                   key={media.id}
@@ -267,7 +270,8 @@ export function ClipContextMenu({ x, y, clipId, trackId, onClose }: ClipContextM
                   <span className="flex-1 text-left truncate">{media.name}</span>
                 </button>
               ))}
-            </div>
+              </div>
+            </ElevatedSurface>
           )}
         </div>
       )}
@@ -307,7 +311,8 @@ export function ClipContextMenu({ x, y, clipId, trackId, onClose }: ClipContextM
 
         {/* Speed Submenu */}
         {showSpeedSubmenu && !isLocked && (
-          <div className="absolute left-full top-0 ml-1 min-w-[140px] bg-surface border border-border shadow-xl py-1">
+          <ElevatedSurface asChild offset={1}>
+            <div className="ui-radius-md absolute left-full top-0 ml-1 min-w-[140px] border border-transparent py-1">
             {speedOptions.map((opt) => (
               <button
                 key={opt.value}
@@ -320,7 +325,8 @@ export function ClipContextMenu({ x, y, clipId, trackId, onClose }: ClipContextM
                 {currentSpeed === opt.value && <span className="w-1.5 h-1.5 bg-accent" />}
               </button>
             ))}
-          </div>
+            </div>
+          </ElevatedSurface>
         )}
       </div>
 
@@ -357,7 +363,8 @@ export function ClipContextMenu({ x, y, clipId, trackId, onClose }: ClipContextM
           })
         }
       />
-    </div>
+      </div>
+    </ElevatedSurface>
   )
 }
 
