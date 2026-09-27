@@ -2,7 +2,7 @@
   "name": "dualview",
   "version": "1.0.0",
   "description": "Open source image and video A/B comparison tool for delivery review, with embedded video audio QA",
-  "homepage": "https://dualview.hanayuki.xyz",
+  "homepage": "https://dualview.yukiworks432.workers.dev",
   "bugs": {
     "url": "https://github.com/YukiWorks432/dualview/issues"
   },
