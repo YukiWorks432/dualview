@@ -166,6 +166,7 @@ export function URLImport({ isOpen, onClose }: URLImportProps) {
             </Button>
           </div>
         </div>
+        </div>
       </ElevatedSurface>
     </div>
   )
