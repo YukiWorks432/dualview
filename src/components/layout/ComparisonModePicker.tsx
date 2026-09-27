@@ -77,7 +77,7 @@ export function ComparisonModePicker() {
                     onClick={() => setComparisonMode(mode)}
                     className={`flex min-h-24 flex-col items-center justify-center gap-2 ui-radius-md border p-4 text-center outline-none focus-visible:ring-2 focus-visible:ring-accent ${
                       comparisonMode === mode
-                        ? 'surface-active border-border-hover text-text-primary'
+                        ? 'surface-active surface-selected-border text-text-primary'
                         : 'surface-control text-text-primary'
                     }`}
                   />
@@ -112,7 +112,7 @@ export function ComparisonModePicker() {
                   onClick={() => setComparisonMode(mode)}
                   className={`relative h-7 gap-1 px-2 text-xs ${
                     comparisonMode === mode
-                      ? 'surface-active border-border-hover text-text-primary'
+                      ? 'surface-active surface-selected-border text-text-primary'
                       : 'border-transparent'
                   }`}
                   aria-selected={comparisonMode === mode}
@@ -153,7 +153,7 @@ export function ComparisonModePicker() {
                 size="sm"
                 className={`h-7 gap-1 px-2 text-xs ${
                   activeSecondaryMode
-                    ? 'surface-active border-border-hover text-text-primary'
+                    ? 'surface-active surface-selected-border text-text-primary'
                     : 'border-transparent'
                 }`}
                 aria-label="More comparison modes"
