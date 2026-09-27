@@ -189,7 +189,9 @@ export function ComparisonModePicker() {
                     key={mode}
                     onClick={() => setComparisonMode(mode)}
                     className={
-                      comparisonMode === mode ? 'surface-active text-text-primary hover:surface-active' : undefined
+                      comparisonMode === mode
+                        ? 'surface-active text-text-primary hover:surface-active'
+                        : undefined
                     }
                   >
                     <span
