@@ -130,8 +130,10 @@ export function AspectRatioSelector({
                       <button
                         key={preset}
                         className={cn(
-                          'surface-interactive w-full flex items-center gap-2 px-3 py-2 text-xs text-left transition-colors',
-                          isActive && 'bg-accent/10 text-accent',
+                          'w-full flex items-center gap-2 px-3 py-2 text-xs text-left transition-colors',
+                          isActive
+                            ? 'bg-accent/10 text-accent hover:bg-accent/20'
+                            : 'surface-interactive',
                         )}
                         onClick={() => handlePresetSelect(preset)}
                       >
@@ -235,9 +237,9 @@ export function AspectRatioSelector({
             />
             <button
               className={cn(
-                'surface-interactive ui-radius-md px-2 py-1 text-xs transition-colors',
+                'ui-radius-md px-2 py-1 text-xs transition-colors',
                 aspectRatioSettings.preset === 'custom'
-                  ? 'bg-accent/20 text-accent'
+                  ? 'bg-accent/20 text-accent hover:bg-accent/30'
                   : 'surface-control text-text-muted hover:text-text-primary',
               )}
               onClick={handleCustomApply}
@@ -272,9 +274,9 @@ export function AspectRatioSelector({
                 <button
                   key={preset}
                   className={cn(
-                    'surface-interactive ui-radius-md flex items-center gap-1 px-2 py-1 text-[10px] font-medium transition-colors',
+                    'ui-radius-md flex items-center gap-1 px-2 py-1 text-[10px] font-medium transition-colors',
                     isActive
-                      ? 'bg-accent text-white'
+                      ? 'bg-accent text-white hover:bg-accent-hover'
                       : 'surface-control text-text-muted hover:text-text-primary',
                   )}
                   onClick={() => handleResolutionSelect(preset)}
@@ -309,9 +311,9 @@ export function AspectRatioSelector({
             />
             <button
               className={cn(
-                'surface-interactive ui-radius-md px-2 py-1 text-xs transition-colors',
+                'ui-radius-md px-2 py-1 text-xs transition-colors',
                 aspectRatioSettings.resolutionPreset === 'custom'
-                  ? 'bg-accent/20 text-accent'
+                  ? 'bg-accent/20 text-accent hover:bg-accent/30'
                   : 'surface-control text-text-muted hover:text-text-primary',
               )}
               onClick={handleCustomResolutionApply}
