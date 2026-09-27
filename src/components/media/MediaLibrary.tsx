@@ -325,7 +325,9 @@ export function MediaLibrary() {
             >
               {config.icon}
               <span>{config.label}</span>
-              <span className={cn('ui-radius-sm px-1', isActive ? 'bg-white/20' : 'surface-subtle')}>
+              <span
+                className={cn('ui-radius-sm px-1', isActive ? 'bg-white/20' : 'surface-subtle')}
+              >
                 {count}
               </span>
             </button>
