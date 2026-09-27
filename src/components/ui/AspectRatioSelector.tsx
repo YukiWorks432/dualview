@@ -16,6 +16,7 @@ import {
   RESOLUTION_PRESETS,
 } from '../../stores/projectStore'
 import type { AspectRatioPreset, ResolutionPreset } from '../../types'
+import { ElevatedSurface } from './surface'
 
 // Icons for each aspect ratio
 const PRESET_ICONS: Record<AspectRatioPreset, React.ReactNode> = {
@@ -102,9 +103,7 @@ export function AspectRatioSelector({
       <div className={cn('relative', className)}>
         <button
           className={cn(
-            'flex items-center gap-1.5 px-2 py-1.5 rounded text-xs',
-            'bg-surface-alt border border-transparent hover:border-border-hover',
-            'transition-colors',
+            'surface-control ui-radius-md flex items-center gap-1.5 border px-2 py-1.5 text-xs transition-colors',
           )}
           onClick={() => setIsOpen(!isOpen)}
         >
@@ -119,62 +118,65 @@ export function AspectRatioSelector({
             <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
 
             {/* Dropdown */}
-            <div className="absolute top-full left-0 mt-1 z-50 bg-surface border border-border rounded-lg shadow-xl min-w-[200px] py-1">
-              {presetKeys
-                .filter((p) => p !== 'custom')
-                .map((preset) => {
-                  const config = ASPECT_RATIO_PRESETS[preset]
-                  const isActive = aspectRatioSettings.preset === preset
+            <ElevatedSurface asChild offset={1}>
+              <div className="ui-radius-lg absolute top-full left-0 mt-1 z-50 border border-transparent min-w-[200px] py-1">
+                {presetKeys
+                  .filter((p) => p !== 'custom')
+                  .map((preset) => {
+                    const config = ASPECT_RATIO_PRESETS[preset]
+                    const isActive = aspectRatioSettings.preset === preset
 
-                  return (
-                    <button
-                      key={preset}
-                      className={cn(
-                        'w-full flex items-center gap-2 px-3 py-2 text-xs text-left',
-                        'hover:bg-surface-hover transition-colors',
-                        isActive && 'bg-accent/10 text-accent',
-                      )}
-                      onClick={() => handlePresetSelect(preset)}
-                    >
-                      {PRESET_ICONS[preset]}
-                      <span className="flex-1">{preset}</span>
-                      <span className="text-text-muted">{config.description}</span>
-                    </button>
-                  )
-                })}
-
-              {showCustomInput && (
-                <>
-                  <div className="border-t border-border my-1" />
-                  <div className="px-3 py-2">
-                    <div className="text-[10px] text-text-muted mb-2">Custom</div>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="number"
-                        value={customWidth}
-                        onChange={(e) => setCustomWidth(Number(e.target.value))}
-                        className="w-16 px-2 py-1 text-xs bg-background border border-border rounded focus:border-accent focus:outline-none"
-                        min={1}
-                      />
-                      <span className="text-text-muted text-xs">×</span>
-                      <input
-                        type="number"
-                        value={customHeight}
-                        onChange={(e) => setCustomHeight(Number(e.target.value))}
-                        className="w-16 px-2 py-1 text-xs bg-background border border-border rounded focus:border-accent focus:outline-none"
-                        min={1}
-                      />
+                    return (
                       <button
-                        className="px-2 py-1 text-xs bg-accent text-white rounded hover:bg-accent/90"
-                        onClick={handleCustomApply}
+                        key={preset}
+                        className={cn(
+                          'w-full flex items-center gap-2 px-3 py-2 text-xs text-left transition-colors',
+                          isActive
+                            ? 'bg-accent/10 text-accent hover:bg-accent/20'
+                            : 'surface-interactive',
+                        )}
+                        onClick={() => handlePresetSelect(preset)}
                       >
-                        Apply
+                        {PRESET_ICONS[preset]}
+                        <span className="flex-1">{preset}</span>
+                        <span className="text-text-muted">{config.description}</span>
                       </button>
+                    )
+                  })}
+
+                {showCustomInput && (
+                  <>
+                    <div className="border-t border-border my-1" />
+                    <div className="px-3 py-2">
+                      <div className="text-[10px] text-text-muted mb-2">Custom</div>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="number"
+                          value={customWidth}
+                          onChange={(e) => setCustomWidth(Number(e.target.value))}
+                          className="surface-control ui-radius-md w-16 border px-2 py-1 text-xs focus:border-accent focus:outline-none"
+                          min={1}
+                        />
+                        <span className="text-text-muted text-xs">×</span>
+                        <input
+                          type="number"
+                          value={customHeight}
+                          onChange={(e) => setCustomHeight(Number(e.target.value))}
+                          className="surface-control ui-radius-md w-16 border px-2 py-1 text-xs focus:border-accent focus:outline-none"
+                          min={1}
+                        />
+                        <button
+                          className="ui-radius-md bg-accent px-2 py-1 text-xs text-white hover:bg-accent/90"
+                          onClick={handleCustomApply}
+                        >
+                          Apply
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                </>
-              )}
-            </div>
+                  </>
+                )}
+              </div>
+            </ElevatedSurface>
           </>
         )}
       </div>
@@ -198,10 +200,10 @@ export function AspectRatioSelector({
               <button
                 key={preset}
                 className={cn(
-                  'flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium transition-colors',
+                  'ui-radius-md flex items-center gap-1 px-2 py-1 text-[10px] font-medium transition-colors',
                   isActive
-                    ? 'bg-accent text-white'
-                    : 'bg-surface-alt text-text-muted hover:bg-surface-hover hover:text-text-primary',
+                    ? 'bg-accent text-white hover:bg-accent-hover'
+                    : 'surface-control text-text-muted hover:text-text-primary',
                 )}
                 onClick={() => handlePresetSelect(preset)}
                 title={config.description}
@@ -222,7 +224,7 @@ export function AspectRatioSelector({
               type="number"
               value={customWidth}
               onChange={(e) => setCustomWidth(Number(e.target.value))}
-              className="w-16 px-2 py-1 text-xs bg-surface-alt border border-transparent rounded focus:border-accent focus:outline-none"
+              className="surface-control ui-radius-md w-16 border px-2 py-1 text-xs focus:border-accent focus:outline-none"
               min={1}
             />
             <span className="text-text-muted text-xs">×</span>
@@ -230,15 +232,15 @@ export function AspectRatioSelector({
               type="number"
               value={customHeight}
               onChange={(e) => setCustomHeight(Number(e.target.value))}
-              className="w-16 px-2 py-1 text-xs bg-surface-alt border border-transparent rounded focus:border-accent focus:outline-none"
+              className="surface-control ui-radius-md w-16 border px-2 py-1 text-xs focus:border-accent focus:outline-none"
               min={1}
             />
             <button
               className={cn(
-                'px-2 py-1 text-xs rounded transition-colors',
+                'ui-radius-md px-2 py-1 text-xs transition-colors',
                 aspectRatioSettings.preset === 'custom'
-                  ? 'bg-accent/20 text-accent'
-                  : 'bg-surface-alt text-text-muted hover:text-text-primary',
+                  ? 'bg-accent/20 text-accent hover:bg-accent/30'
+                  : 'surface-control text-text-muted hover:text-text-primary',
               )}
               onClick={handleCustomApply}
             >
@@ -272,10 +274,10 @@ export function AspectRatioSelector({
                 <button
                   key={preset}
                   className={cn(
-                    'flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium transition-colors',
+                    'ui-radius-md flex items-center gap-1 px-2 py-1 text-[10px] font-medium transition-colors',
                     isActive
-                      ? 'bg-accent text-white'
-                      : 'bg-surface-alt text-text-muted hover:bg-surface-hover hover:text-text-primary',
+                      ? 'bg-accent text-white hover:bg-accent-hover'
+                      : 'surface-control text-text-muted hover:text-text-primary',
                   )}
                   onClick={() => handleResolutionSelect(preset)}
                   title={`${config.description} (~${memoryMB.toFixed(0)}MB)`}
@@ -294,7 +296,7 @@ export function AspectRatioSelector({
               type="number"
               value={customResWidth}
               onChange={(e) => setCustomResWidth(Number(e.target.value))}
-              className="w-16 px-2 py-1 text-xs bg-surface-alt border border-transparent rounded focus:border-accent focus:outline-none"
+              className="surface-control ui-radius-md w-16 border px-2 py-1 text-xs focus:border-accent focus:outline-none"
               min={1}
               placeholder="Width"
             />
@@ -303,16 +305,16 @@ export function AspectRatioSelector({
               type="number"
               value={customResHeight}
               onChange={(e) => setCustomResHeight(Number(e.target.value))}
-              className="w-16 px-2 py-1 text-xs bg-surface-alt border border-transparent rounded focus:border-accent focus:outline-none"
+              className="surface-control ui-radius-md w-16 border px-2 py-1 text-xs focus:border-accent focus:outline-none"
               min={1}
               placeholder="Height"
             />
             <button
               className={cn(
-                'px-2 py-1 text-xs rounded transition-colors',
+                'ui-radius-md px-2 py-1 text-xs transition-colors',
                 aspectRatioSettings.resolutionPreset === 'custom'
-                  ? 'bg-accent/20 text-accent'
-                  : 'bg-surface-alt text-text-muted hover:text-text-primary',
+                  ? 'bg-accent/20 text-accent hover:bg-accent/30'
+                  : 'surface-control text-text-muted hover:text-text-primary',
               )}
               onClick={handleCustomResolutionApply}
             >
@@ -338,9 +340,9 @@ export function AspectRatioSelector({
       {/* Preview */}
       <div className="pt-2 border-t border-border">
         <div className="text-[10px] text-text-muted mb-1">Preview</div>
-        <div className="flex justify-center p-2 bg-background rounded">
+        <div className="surface-control ui-radius-md flex justify-center p-2">
           <div
-            className="bg-accent/20 border border-accent/50 rounded flex flex-col items-center justify-center text-[10px] text-accent gap-0.5"
+            className="ui-radius-md bg-accent/20 border border-accent/50 flex flex-col items-center justify-center text-[10px] text-accent gap-0.5"
             style={{
               width: currentPreset.ratio > 1 ? 80 : 80 * currentPreset.ratio,
               height: currentPreset.ratio > 1 ? 80 / currentPreset.ratio : 80,

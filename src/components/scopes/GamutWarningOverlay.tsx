@@ -12,6 +12,7 @@ import {
   type VideoFrameElement,
   type VisualFrameElement,
 } from '../../lib/media/frameSource'
+import { ElevatedSurface } from '../ui'
 
 interface GamutWarningOverlayProps {
   videoARef: React.RefObject<VideoFrameElement | null>
@@ -304,124 +305,130 @@ export function GamutWarningOverlay({
       <canvas ref={overlayCanvasBRef} className="hidden" />
 
       {/* Control panel */}
-      <div className="absolute top-16 left-4 bg-surface/95 border border-border rounded-lg shadow-xl z-50 w-[220px]">
-        {/* Header */}
-        <div className="flex items-center justify-between p-2 border-b border-border">
-          <div className="flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4 text-red-500" />
-            <span className="text-sm font-medium text-text-primary">Gamut Warning</span>
-          </div>
-          <button onClick={onClose} className="p-1 hover:bg-surface-hover rounded">
-            <X className="w-4 h-4 text-text-muted" />
-          </button>
-        </div>
-
-        {/* Gamut selector */}
-        <div className="p-2 border-b border-border">
-          <label className="text-xs text-text-muted block mb-1">Target Gamut</label>
-          <div className="relative">
-            <button
-              onClick={() => setShowDropdown(!showDropdown)}
-              className="w-full flex items-center justify-between px-2 py-1.5 bg-surface-alt border border-border rounded text-sm text-text-primary hover:bg-surface-hover"
-            >
-              <span>{currentGamut.label}</span>
-              <ChevronDown
-                className={`w-4 h-4 transition-transform ${showDropdown ? 'rotate-180' : ''}`}
-              />
+      <ElevatedSurface asChild offset={2}>
+        <div className="ui-radius-lg absolute top-16 left-4 border border-transparent z-50 w-[220px]">
+          {/* Header */}
+          <div className="flex items-center justify-between p-2 border-b border-border">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-red-500" />
+              <span className="text-sm font-medium text-text-primary">Gamut Warning</span>
+            </div>
+            <button onClick={onClose} className="surface-interactive ui-radius-sm p-1">
+              <X className="w-4 h-4 text-text-muted" />
             </button>
-            {showDropdown && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-surface border border-border rounded shadow-lg z-10">
-                {Object.values(COLOR_SPACES).map((space) => (
-                  <button
-                    key={space.name}
-                    onClick={() => {
-                      setTargetGamut(space.name)
-                      setShowDropdown(false)
-                    }}
-                    className={`w-full px-3 py-2 text-left text-sm hover:bg-surface-hover ${
-                      targetGamut === space.name ? 'bg-accent/20 text-accent' : 'text-text-primary'
-                    }`}
-                  >
-                    {space.label}
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
-        </div>
 
-        {/* Opacity slider */}
-        <div className="p-2 border-b border-border">
-          <label className="text-xs text-text-muted block mb-1">
-            Overlay Opacity: {Math.round(overlayOpacity * 100)}%
-          </label>
-          <input
-            type="range"
-            min={0.1}
-            max={1}
-            step={0.1}
-            value={overlayOpacity}
-            onChange={(e) => setOverlayOpacity(Number(e.target.value))}
-            className="w-full"
-          />
-        </div>
-
-        {/* Statistics */}
-        <div className="p-2 text-xs">
-          <div className="space-y-2">
-            {/* Source A stats */}
-            <div className="flex items-center justify-between">
-              <span className="text-orange-400 font-medium">Source A:</span>
-              {statsA ? (
-                <span className={statsA.percentage > 1 ? 'text-red-400' : 'text-green-400'}>
-                  {statsA.percentage.toFixed(2)}% out of gamut
-                </span>
-              ) : (
-                <span className="text-text-muted">No data</span>
+          {/* Gamut selector */}
+          <div className="p-2 border-b border-border">
+            <label className="text-xs text-text-muted block mb-1">Target Gamut</label>
+            <div className="relative">
+              <button
+                onClick={() => setShowDropdown(!showDropdown)}
+                className="surface-control ui-radius-md w-full flex items-center justify-between px-2 py-1.5 border text-sm text-text-primary"
+              >
+                <span>{currentGamut.label}</span>
+                <ChevronDown
+                  className={`w-4 h-4 transition-transform ${showDropdown ? 'rotate-180' : ''}`}
+                />
+              </button>
+              {showDropdown && (
+                <ElevatedSurface asChild offset={1}>
+                  <div className="ui-radius-md absolute top-full left-0 right-0 mt-1 border border-transparent z-10">
+                    {Object.values(COLOR_SPACES).map((space) => (
+                      <button
+                        key={space.name}
+                        onClick={() => {
+                          setTargetGamut(space.name)
+                          setShowDropdown(false)
+                        }}
+                        className={`w-full px-3 py-2 text-left text-sm hover:bg-surface-hover ${
+                          targetGamut === space.name
+                            ? 'bg-accent/20 text-accent'
+                            : 'text-text-primary'
+                        }`}
+                      >
+                        {space.label}
+                      </button>
+                    ))}
+                  </div>
+                </ElevatedSurface>
               )}
             </div>
-            {statsA && (
-              <div className="w-full bg-surface-alt rounded h-2 overflow-hidden">
-                <div
-                  className="h-full bg-red-500 transition-all"
-                  style={{ width: `${Math.min(statsA.percentage, 100)}%` }}
-                />
-              </div>
-            )}
+          </div>
 
-            {/* Source B stats */}
-            <div className="flex items-center justify-between mt-3">
-              <span className="text-lime-400 font-medium">Source B:</span>
-              {statsB ? (
-                <span className={statsB.percentage > 1 ? 'text-red-400' : 'text-green-400'}>
-                  {statsB.percentage.toFixed(2)}% out of gamut
-                </span>
-              ) : (
-                <span className="text-text-muted">No data</span>
+          {/* Opacity slider */}
+          <div className="p-2 border-b border-border">
+            <label className="text-xs text-text-muted block mb-1">
+              Overlay Opacity: {Math.round(overlayOpacity * 100)}%
+            </label>
+            <input
+              type="range"
+              min={0.1}
+              max={1}
+              step={0.1}
+              value={overlayOpacity}
+              onChange={(e) => setOverlayOpacity(Number(e.target.value))}
+              className="w-full"
+            />
+          </div>
+
+          {/* Statistics */}
+          <div className="p-2 text-xs">
+            <div className="space-y-2">
+              {/* Source A stats */}
+              <div className="flex items-center justify-between">
+                <span className="text-orange-400 font-medium">Source A:</span>
+                {statsA ? (
+                  <span className={statsA.percentage > 1 ? 'text-red-400' : 'text-green-400'}>
+                    {statsA.percentage.toFixed(2)}% out of gamut
+                  </span>
+                ) : (
+                  <span className="text-text-muted">No data</span>
+                )}
+              </div>
+              {statsA && (
+                <div className="w-full bg-surface-alt rounded h-2 overflow-hidden">
+                  <div
+                    className="h-full bg-red-500 transition-all"
+                    style={{ width: `${Math.min(statsA.percentage, 100)}%` }}
+                  />
+                </div>
+              )}
+
+              {/* Source B stats */}
+              <div className="flex items-center justify-between mt-3">
+                <span className="text-lime-400 font-medium">Source B:</span>
+                {statsB ? (
+                  <span className={statsB.percentage > 1 ? 'text-red-400' : 'text-green-400'}>
+                    {statsB.percentage.toFixed(2)}% out of gamut
+                  </span>
+                ) : (
+                  <span className="text-text-muted">No data</span>
+                )}
+              </div>
+              {statsB && (
+                <div className="w-full bg-surface-alt rounded h-2 overflow-hidden">
+                  <div
+                    className="h-full bg-red-500 transition-all"
+                    style={{ width: `${Math.min(statsB.percentage, 100)}%` }}
+                  />
+                </div>
               )}
             </div>
-            {statsB && (
-              <div className="w-full bg-surface-alt rounded h-2 overflow-hidden">
-                <div
-                  className="h-full bg-red-500 transition-all"
-                  style={{ width: `${Math.min(statsB.percentage, 100)}%` }}
-                />
-              </div>
-            )}
+
+            {/* Info */}
+            <div className="mt-3 pt-2 border-t border-border text-[10px] text-text-muted">
+              Red overlay shows colors outside {currentGamut.label} gamut. Useful for broadcast and
+              print compliance.
+            </div>
           </div>
 
-          {/* Info */}
-          <div className="mt-3 pt-2 border-t border-border text-[10px] text-text-muted">
-            Red overlay shows colors outside {currentGamut.label} gamut. Useful for broadcast and
-            print compliance.
+          {/* Keyboard shortcut hint */}
+          <div className="px-2 pb-2 text-[9px] text-text-muted">
+            Press <kbd className="kbd text-[8px]">G</kbd> to toggle
           </div>
         </div>
-
-        {/* Keyboard shortcut hint */}
-        <div className="px-2 pb-2 text-[9px] text-text-muted">
-          Press <kbd className="kbd text-[8px]">G</kbd> to toggle
-        </div>
-      </div>
+      </ElevatedSurface>
 
       {/* Overlay canvases on top of video */}
       {/* These would be positioned over the actual video/comparison view */}

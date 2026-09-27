@@ -11,6 +11,7 @@ import {
   isVisualFrameReady,
   type VideoFrameElement,
 } from '../../lib/media/frameSource'
+import { ElevatedSurface } from '../ui'
 
 interface HistogramPanelProps {
   videoARef: React.RefObject<VideoFrameElement | null>
@@ -477,127 +478,129 @@ export function HistogramPanel({
   if (!isVisible) return null
 
   return (
-    <div className="absolute bottom-24 right-4 bg-surface/95 border border-border rounded-lg shadow-xl z-50 w-[400px]">
-      {/* Hidden sampling canvases */}
-      <canvas ref={sampleCanvasARef} className="hidden" />
-      <canvas ref={sampleCanvasBRef} className="hidden" />
+    <ElevatedSurface asChild offset={2}>
+      <div className="ui-radius-lg absolute bottom-24 right-4 border border-transparent z-50 w-[400px]">
+        {/* Hidden sampling canvases */}
+        <canvas ref={sampleCanvasARef} className="hidden" />
+        <canvas ref={sampleCanvasBRef} className="hidden" />
 
-      {/* Header */}
-      <div className="flex items-center justify-between p-2 border-b border-border">
-        <div className="flex items-center gap-2">
-          <BarChart3 className="w-4 h-4 text-accent" />
-          <span className="text-sm font-medium text-text-primary">Histogram</span>
-        </div>
-        <div className="flex items-center gap-1">
-          {/* Display mode toggle */}
-          <button
-            onClick={() =>
-              setDisplayMode(
-                displayMode === 'rgb-overlay'
-                  ? 'rgb-separate'
-                  : displayMode === 'rgb-separate'
-                    ? 'luminance'
-                    : 'rgb-overlay',
-              )
-            }
-            className="p-1.5 rounded text-xs bg-surface-hover text-text-muted hover:text-text-primary"
-            title="Toggle display mode"
-          >
-            <Layers className="w-3.5 h-3.5" />
-          </button>
-          {/* Log scale toggle */}
-          <button
-            onClick={() => setUseLogScale(!useLogScale)}
-            className={`p-1.5 rounded text-xs ${useLogScale ? 'bg-accent text-white' : 'bg-surface-hover text-text-muted hover:text-text-primary'}`}
-            title="Toggle logarithmic scale"
-          >
-            <Scale className="w-3.5 h-3.5" />
-          </button>
-          {/* Side by side toggle */}
-          <button
-            onClick={() => setShowSideBySide(!showSideBySide)}
-            className={`px-2 py-1 rounded text-xs ${showSideBySide ? 'bg-accent text-white' : 'bg-surface-hover text-text-muted'}`}
-          >
-            {showSideBySide ? 'A|B' : 'Overlay'}
-          </button>
-          <button onClick={onClose} className="p-1 hover:bg-surface-hover rounded">
-            <X className="w-4 h-4 text-text-muted" />
-          </button>
-        </div>
-      </div>
-
-      {/* Histogram canvas */}
-      <canvas ref={canvasRef} width={380} height={160} className="w-full" />
-
-      {/* Statistics */}
-      {stats && (
-        <div className="p-2 border-t border-border text-[10px] grid grid-cols-2 gap-2">
-          {/* Source A stats */}
-          <div className="space-y-0.5">
-            <div className="text-orange-400 font-medium">Source A</div>
-            {stats.a ? (
-              <>
-                <div className="flex justify-between">
-                  <span className="text-text-muted">Mean:</span>
-                  <span className="text-text-primary">{stats.a.mean}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-text-muted">Median:</span>
-                  <span className="text-text-primary">{stats.a.median}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-text-muted">Clipped:</span>
-                  <span
-                    className={`${Number(stats.a.shadows) > 1 || Number(stats.a.highlights) > 1 ? 'text-red-400' : 'text-text-primary'}`}
-                  >
-                    S:{stats.a.shadows}% H:{stats.a.highlights}%
-                  </span>
-                </div>
-              </>
-            ) : (
-              <span className="text-text-muted">No data</span>
-            )}
+        {/* Header */}
+        <div className="flex items-center justify-between p-2 border-b border-border">
+          <div className="flex items-center gap-2">
+            <BarChart3 className="w-4 h-4 text-accent" />
+            <span className="text-sm font-medium text-text-primary">Histogram</span>
           </div>
-
-          {/* Source B stats */}
-          <div className="space-y-0.5">
-            <div className="text-lime-400 font-medium">Source B</div>
-            {stats.b ? (
-              <>
-                <div className="flex justify-between">
-                  <span className="text-text-muted">Mean:</span>
-                  <span className="text-text-primary">{stats.b.mean}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-text-muted">Median:</span>
-                  <span className="text-text-primary">{stats.b.median}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-text-muted">Clipped:</span>
-                  <span
-                    className={`${Number(stats.b.shadows) > 1 || Number(stats.b.highlights) > 1 ? 'text-red-400' : 'text-text-primary'}`}
-                  >
-                    S:{stats.b.shadows}% H:{stats.b.highlights}%
-                  </span>
-                </div>
-              </>
-            ) : (
-              <span className="text-text-muted">No data</span>
-            )}
+          <div className="flex items-center gap-1">
+            {/* Display mode toggle */}
+            <button
+              onClick={() =>
+                setDisplayMode(
+                  displayMode === 'rgb-overlay'
+                    ? 'rgb-separate'
+                    : displayMode === 'rgb-separate'
+                      ? 'luminance'
+                      : 'rgb-overlay',
+                )
+              }
+              className="p-1.5 rounded text-xs bg-surface-hover text-text-muted hover:text-text-primary"
+              title="Toggle display mode"
+            >
+              <Layers className="w-3.5 h-3.5" />
+            </button>
+            {/* Log scale toggle */}
+            <button
+              onClick={() => setUseLogScale(!useLogScale)}
+              className={`p-1.5 rounded text-xs ${useLogScale ? 'bg-accent text-white' : 'bg-surface-hover text-text-muted hover:text-text-primary'}`}
+              title="Toggle logarithmic scale"
+            >
+              <Scale className="w-3.5 h-3.5" />
+            </button>
+            {/* Side by side toggle */}
+            <button
+              onClick={() => setShowSideBySide(!showSideBySide)}
+              className={`px-2 py-1 rounded text-xs ${showSideBySide ? 'bg-accent text-white' : 'bg-surface-hover text-text-muted'}`}
+            >
+              {showSideBySide ? 'A|B' : 'Overlay'}
+            </button>
+            <button onClick={onClose} className="p-1 hover:bg-surface-hover rounded">
+              <X className="w-4 h-4 text-text-muted" />
+            </button>
           </div>
         </div>
-      )}
 
-      {/* Mode indicator */}
-      <div className="px-2 pb-2 text-[9px] text-text-muted">
-        Mode:{' '}
-        {displayMode === 'rgb-overlay'
-          ? 'RGB Overlay'
-          : displayMode === 'rgb-separate'
-            ? 'RGB Separate'
-            : 'Luminance'}
-        {useLogScale && ' (Log)'}
+        {/* Histogram canvas */}
+        <canvas ref={canvasRef} width={380} height={160} className="w-full" />
+
+        {/* Statistics */}
+        {stats && (
+          <div className="p-2 border-t border-border text-[10px] grid grid-cols-2 gap-2">
+            {/* Source A stats */}
+            <div className="space-y-0.5">
+              <div className="text-orange-400 font-medium">Source A</div>
+              {stats.a ? (
+                <>
+                  <div className="flex justify-between">
+                    <span className="text-text-muted">Mean:</span>
+                    <span className="text-text-primary">{stats.a.mean}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-text-muted">Median:</span>
+                    <span className="text-text-primary">{stats.a.median}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-text-muted">Clipped:</span>
+                    <span
+                      className={`${Number(stats.a.shadows) > 1 || Number(stats.a.highlights) > 1 ? 'text-red-400' : 'text-text-primary'}`}
+                    >
+                      S:{stats.a.shadows}% H:{stats.a.highlights}%
+                    </span>
+                  </div>
+                </>
+              ) : (
+                <span className="text-text-muted">No data</span>
+              )}
+            </div>
+
+            {/* Source B stats */}
+            <div className="space-y-0.5">
+              <div className="text-lime-400 font-medium">Source B</div>
+              {stats.b ? (
+                <>
+                  <div className="flex justify-between">
+                    <span className="text-text-muted">Mean:</span>
+                    <span className="text-text-primary">{stats.b.mean}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-text-muted">Median:</span>
+                    <span className="text-text-primary">{stats.b.median}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-text-muted">Clipped:</span>
+                    <span
+                      className={`${Number(stats.b.shadows) > 1 || Number(stats.b.highlights) > 1 ? 'text-red-400' : 'text-text-primary'}`}
+                    >
+                      S:{stats.b.shadows}% H:{stats.b.highlights}%
+                    </span>
+                  </div>
+                </>
+              ) : (
+                <span className="text-text-muted">No data</span>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Mode indicator */}
+        <div className="px-2 pb-2 text-[9px] text-text-muted">
+          Mode:{' '}
+          {displayMode === 'rgb-overlay'
+            ? 'RGB Overlay'
+            : displayMode === 'rgb-separate'
+              ? 'RGB Separate'
+              : 'Luminance'}
+          {useLogScale && ' (Log)'}
+        </div>
       </div>
-    </div>
+    </ElevatedSurface>
   )
 }

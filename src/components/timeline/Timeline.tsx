@@ -44,6 +44,7 @@ import { usePlaybackStore } from '../../stores/playbackStore'
 import { useTimelineStore } from '../../stores/timelineStore'
 import type { MediaType } from '../../types'
 import { MEDIA_DRAG_TYPE, type MediaDragData } from '../media/MediaLibrary'
+import { ElevatedSurface } from '../ui'
 import { Button } from '../ui'
 import { ClipContextMenu } from './ClipContextMenu'
 import { TimelineClip } from './TimelineClip'
@@ -918,63 +919,65 @@ export function Timeline() {
 
               {/* Track settings dropdown */}
               {openTrackSettings === track.id && (
-                <div
-                  data-track-settings
-                  className="absolute left-full top-0 ml-1 z-30 bg-surface border border-border p-2 shadow-lg min-w-[140px]"
-                >
-                  <div className="text-xs font-medium text-text-secondary mb-2">
-                    Accepted Media Types
-                  </div>
-                  {(['video', 'image'] as MediaType[]).map((type) => {
-                    const isActive = track.acceptedTypes.includes(type)
-                    const Icon = type === 'video' ? Video : Image
-                    return (
-                      <label
-                        key={type}
-                        className="flex items-center gap-2 py-1 cursor-pointer hover:bg-surface-hover px-1"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={isActive}
-                          onChange={() => {
-                            const newTypes = isActive
-                              ? track.acceptedTypes.filter((t) => t !== type)
-                              : [...track.acceptedTypes, type]
-                            if (newTypes.length > 0) {
-                              setTrackAcceptedTypes(track.id, newTypes)
-                            }
+                <ElevatedSurface asChild offset={1}>
+                  <div
+                    data-track-settings
+                    className="ui-radius-md absolute left-full top-0 ml-1 z-30 border border-transparent p-2 min-w-[140px]"
+                  >
+                    <div className="text-xs font-medium text-text-secondary mb-2">
+                      Accepted Media Types
+                    </div>
+                    {(['video', 'image'] as MediaType[]).map((type) => {
+                      const isActive = track.acceptedTypes.includes(type)
+                      const Icon = type === 'video' ? Video : Image
+                      return (
+                        <label
+                          key={type}
+                          className="flex items-center gap-2 py-1 cursor-pointer hover:bg-surface-hover px-1"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isActive}
+                            onChange={() => {
+                              const newTypes = isActive
+                                ? track.acceptedTypes.filter((t) => t !== type)
+                                : [...track.acceptedTypes, type]
+                              if (newTypes.length > 0) {
+                                setTrackAcceptedTypes(track.id, newTypes)
+                              }
+                            }}
+                            className="w-3 h-3 accent-accent"
+                          />
+                          <Icon
+                            className={cn(
+                              'w-3 h-3',
+                              type === 'video' && 'text-accent',
+                              type === 'image' && 'text-secondary',
+                            )}
+                          />
+                          <span className="text-xs text-text-primary capitalize">{type}</span>
+                        </label>
+                      )
+                    })}
+                    {/* Delete track option (only for non-essential tracks) */}
+                    {!['a', 'b'].includes(track.type) && (
+                      <>
+                        <div className="h-px bg-border my-2" />
+                        <button
+                          onClick={() => {
+                            pushState()
+                            removeTrack(track.id)
+                            setOpenTrackSettings(null)
                           }}
-                          className="w-3 h-3 accent-accent"
-                        />
-                        <Icon
-                          className={cn(
-                            'w-3 h-3',
-                            type === 'video' && 'text-accent',
-                            type === 'image' && 'text-secondary',
-                          )}
-                        />
-                        <span className="text-xs text-text-primary capitalize">{type}</span>
-                      </label>
-                    )
-                  })}
-                  {/* Delete track option (only for non-essential tracks) */}
-                  {!['a', 'b'].includes(track.type) && (
-                    <>
-                      <div className="h-px bg-border my-2" />
-                      <button
-                        onClick={() => {
-                          pushState()
-                          removeTrack(track.id)
-                          setOpenTrackSettings(null)
-                        }}
-                        className="flex items-center gap-2 w-full py-1 px-1 text-error hover:bg-error/10"
-                      >
-                        <Trash2 className="w-3 h-3" />
-                        <span className="text-xs">Delete Track</span>
-                      </button>
-                    </>
-                  )}
-                </div>
+                          className="flex items-center gap-2 w-full py-1 px-1 text-error hover:bg-error/10"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                          <span className="text-xs">Delete Track</span>
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </ElevatedSurface>
               )}
             </div>
           ))}
@@ -999,44 +1002,46 @@ export function Timeline() {
 
             {/* Add track dropdown menu */}
             {showAddTrackMenu && (
-              <div
-                data-add-track-menu
-                className="absolute left-full top-0 ml-1 z-30 bg-surface border border-border shadow-lg min-w-[140px]"
-              >
-                <button
-                  onClick={() => {
-                    pushState()
-                    addTrack('media')
-                    setShowAddTrackMenu(false)
-                  }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-text-primary hover:bg-surface-hover"
+              <ElevatedSurface asChild offset={1}>
+                <div
+                  data-add-track-menu
+                  className="ui-radius-md absolute left-full top-0 ml-1 z-30 border border-transparent min-w-[140px]"
                 >
-                  <Video className="w-4 h-4 text-green-400" />
-                  <span>Media Track</span>
-                </button>
-                <button
-                  onClick={() => {
-                    pushState()
-                    addTrack('audio')
-                    setShowAddTrackMenu(false)
-                  }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-text-primary hover:bg-surface-hover"
-                >
-                  <Music className="w-4 h-4 text-blue-400" />
-                  <span>Audio Track</span>
-                </button>
-                <button
-                  onClick={() => {
-                    pushState()
-                    addTrack('text')
-                    setShowAddTrackMenu(false)
-                  }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-text-primary hover:bg-surface-hover"
-                >
-                  <Type className="w-4 h-4 text-purple-400" />
-                  <span>Text Track</span>
-                </button>
-              </div>
+                  <button
+                    onClick={() => {
+                      pushState()
+                      addTrack('media')
+                      setShowAddTrackMenu(false)
+                    }}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-text-primary hover:bg-surface-hover"
+                  >
+                    <Video className="w-4 h-4 text-green-400" />
+                    <span>Media Track</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      pushState()
+                      addTrack('audio')
+                      setShowAddTrackMenu(false)
+                    }}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-text-primary hover:bg-surface-hover"
+                  >
+                    <Music className="w-4 h-4 text-blue-400" />
+                    <span>Audio Track</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      pushState()
+                      addTrack('text')
+                      setShowAddTrackMenu(false)
+                    }}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-text-primary hover:bg-surface-hover"
+                  >
+                    <Type className="w-4 h-4 text-purple-400" />
+                    <span>Text Track</span>
+                  </button>
+                </div>
+              </ElevatedSurface>
             )}
           </div>
         </div>

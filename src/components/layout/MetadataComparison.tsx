@@ -6,6 +6,7 @@ import { cn } from '../../lib/utils'
 import { useMediaStore } from '../../stores/mediaStore'
 import { useTimelineStore } from '../../stores/timelineStore'
 import type { MediaFile } from '../../types'
+import { ElevatedSurface } from '../ui'
 
 interface ExtendedMetadata {
   name: string
@@ -254,9 +255,7 @@ export function MetadataComparison() {
         onClick={() => setIsExpanded(!isExpanded)}
         className={cn(
           'flex items-center gap-2 px-3 py-1.5 transition-colors text-sm border',
-          isExpanded
-            ? 'bg-surface-alt border-accent/50'
-            : 'bg-background hover:bg-surface-alt border-border',
+          isExpanded ? 'surface-active border-accent/50' : 'surface-control',
         )}
       >
         <FileSearch className="w-4 h-4 text-text-muted" />
@@ -272,129 +271,131 @@ export function MetadataComparison() {
       </button>
 
       {isExpanded && (
-        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 bg-surface border border-border shadow-2xl z-50 w-[480px] max-h-[70vh] overflow-hidden flex flex-col">
-          {/* Header */}
-          <div className="p-3 border-b border-border bg-surface-alt">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-text-primary flex items-center gap-2">
-                <FileSearch className="w-4 h-4" />
-                File Metadata Comparison
-              </h3>
-              <button
-                onClick={() => setIsExpanded(false)}
-                className="p-1 hover:bg-surface rounded transition-colors"
-              >
-                <ChevronDown className="w-4 h-4 rotate-180" />
-              </button>
-            </div>
-
-            {/* Column headers */}
-            <div className="grid grid-cols-[100px_1fr_24px_1fr] gap-2 mt-3 text-[10px] uppercase tracking-wider text-text-muted font-medium">
-              <span>Property</span>
-              <span className="text-accent">Media A</span>
-              <span></span>
-              <span className="text-secondary">Media B</span>
-            </div>
-          </div>
-
-          {/* Content */}
-          <div className="flex-1 overflow-y-auto p-3">
-            {isLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+        <ElevatedSurface asChild offset={1}>
+          <div className="ui-radius-lg absolute top-full left-1/2 -translate-x-1/2 mt-2 border border-transparent z-50 w-[480px] max-h-[70vh] overflow-hidden flex flex-col">
+            {/* Header */}
+            <div className="surface-control p-3 border-b border-border">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-text-primary flex items-center gap-2">
+                  <FileSearch className="w-4 h-4" />
+                  File Metadata Comparison
+                </h3>
+                <button
+                  onClick={() => setIsExpanded(false)}
+                  className="surface-interactive ui-radius-sm p-1 transition-colors"
+                >
+                  <ChevronDown className="w-4 h-4 rotate-180" />
+                </button>
               </div>
-            ) : (
-              <div className="space-y-1">
-                {/* Common metadata */}
-                <ComparisonRow
-                  label="File Name"
-                  valueA={metadataA?.name}
-                  valueB={metadataB?.name}
-                />
-                <ComparisonRow
-                  label="Format"
-                  valueA={metadataA?.format}
-                  valueB={metadataB?.format}
-                />
-                <ComparisonRow
-                  label="File Size"
-                  valueA={metadataA?.size}
-                  valueB={metadataB?.size}
-                />
-                <ComparisonRow
-                  label="Modified"
-                  valueA={metadataA?.lastModified}
-                  valueB={metadataB?.lastModified}
-                />
 
-                {/* Video/Image metadata */}
-                {(primaryType === 'video' || primaryType === 'image') && (
-                  <>
-                    <div className="h-2" />
-                    <ComparisonRow
-                      label="Resolution"
-                      valueA={metadataA?.resolution}
-                      valueB={metadataB?.resolution}
-                    />
-                    <ComparisonRow
-                      label="Aspect Ratio"
-                      valueA={metadataA?.aspectRatio}
-                      valueB={metadataB?.aspectRatio}
-                    />
-                  </>
-                )}
-
-                {/* Video/Audio metadata */}
-                {primaryType === 'video' && (
-                  <>
-                    <div className="h-2" />
-                    <ComparisonRow
-                      label="Duration"
-                      valueA={metadataA?.duration}
-                      valueB={metadataB?.duration}
-                    />
-                    <ComparisonRow
-                      label="Bitrate"
-                      valueA={metadataA?.bitrate}
-                      valueB={metadataB?.bitrate}
-                    />
-                  </>
-                )}
-
-                {/* Audio specific */}
-                {primaryType === 'video' && (
-                  <>
-                    <ComparisonRow
-                      label="Sample Rate"
-                      valueA={metadataA?.sampleRate}
-                      valueB={metadataB?.sampleRate}
-                    />
-                    <ComparisonRow
-                      label="Channels"
-                      valueA={metadataA?.channels}
-                      valueB={metadataB?.channels}
-                    />
-                  </>
-                )}
+              {/* Column headers */}
+              <div className="grid grid-cols-[100px_1fr_24px_1fr] gap-2 mt-3 text-[10px] uppercase tracking-wider text-text-muted font-medium">
+                <span>Property</span>
+                <span className="text-accent">Media A</span>
+                <span></span>
+                <span className="text-secondary">Media B</span>
               </div>
-            )}
-          </div>
-
-          {/* Footer */}
-          <div className="p-2 border-t border-border bg-surface-alt flex items-center justify-between text-[10px] text-text-muted">
-            <div className="flex items-center gap-3">
-              <span className="flex items-center gap-1">
-                <Equal className="w-3 h-3 text-green-500" /> Same
-              </span>
-              <span className="flex items-center gap-1">
-                <ArrowUpDown className="w-3 h-3 text-amber-500" /> Different
-              </span>
             </div>
-            {diffCount > 0 && (
-              <span className="text-amber-500 font-medium">{diffCount} differences found</span>
-            )}
+
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto p-3">
+              {isLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  {/* Common metadata */}
+                  <ComparisonRow
+                    label="File Name"
+                    valueA={metadataA?.name}
+                    valueB={metadataB?.name}
+                  />
+                  <ComparisonRow
+                    label="Format"
+                    valueA={metadataA?.format}
+                    valueB={metadataB?.format}
+                  />
+                  <ComparisonRow
+                    label="File Size"
+                    valueA={metadataA?.size}
+                    valueB={metadataB?.size}
+                  />
+                  <ComparisonRow
+                    label="Modified"
+                    valueA={metadataA?.lastModified}
+                    valueB={metadataB?.lastModified}
+                  />
+
+                  {/* Video/Image metadata */}
+                  {(primaryType === 'video' || primaryType === 'image') && (
+                    <>
+                      <div className="h-2" />
+                      <ComparisonRow
+                        label="Resolution"
+                        valueA={metadataA?.resolution}
+                        valueB={metadataB?.resolution}
+                      />
+                      <ComparisonRow
+                        label="Aspect Ratio"
+                        valueA={metadataA?.aspectRatio}
+                        valueB={metadataB?.aspectRatio}
+                      />
+                    </>
+                  )}
+
+                  {/* Video/Audio metadata */}
+                  {primaryType === 'video' && (
+                    <>
+                      <div className="h-2" />
+                      <ComparisonRow
+                        label="Duration"
+                        valueA={metadataA?.duration}
+                        valueB={metadataB?.duration}
+                      />
+                      <ComparisonRow
+                        label="Bitrate"
+                        valueA={metadataA?.bitrate}
+                        valueB={metadataB?.bitrate}
+                      />
+                    </>
+                  )}
+
+                  {/* Audio specific */}
+                  {primaryType === 'video' && (
+                    <>
+                      <ComparisonRow
+                        label="Sample Rate"
+                        valueA={metadataA?.sampleRate}
+                        valueB={metadataB?.sampleRate}
+                      />
+                      <ComparisonRow
+                        label="Channels"
+                        valueA={metadataA?.channels}
+                        valueB={metadataB?.channels}
+                      />
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="surface-control p-2 border-t border-border flex items-center justify-between text-[10px] text-text-muted">
+              <div className="flex items-center gap-3">
+                <span className="flex items-center gap-1">
+                  <Equal className="w-3 h-3 text-green-500" /> Same
+                </span>
+                <span className="flex items-center gap-1">
+                  <ArrowUpDown className="w-3 h-3 text-amber-500" /> Different
+                </span>
+              </div>
+              {diffCount > 0 && (
+                <span className="text-amber-500 font-medium">{diffCount} differences found</span>
+              )}
+            </div>
           </div>
-        </div>
+        </ElevatedSurface>
       )}
     </div>
   )

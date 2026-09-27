@@ -22,7 +22,7 @@ import { useTimelineStore } from '../../stores/timelineStore'
 import type { BlendMode, SplitLayout, ExportSettings, WebGLComparisonMode } from '../../types'
 import { MediaLibrary } from '../media/MediaLibrary'
 import { MediaUpload } from '../media/MediaUpload'
-import { Select, Slider, AspectRatioSelector, Button } from '../ui'
+import { AspectRatioSelector, Button, ElevatedSurface, Select, Slider } from '../ui'
 
 type Tab = 'media' | 'settings'
 
@@ -69,12 +69,12 @@ export function Sidebar({ onCollapse, isMobileOpen, onMobileClose, onOpenProject
   const sidebarContent = (
     <aside
       className={`
-      bg-surface border-r border-border flex flex-col
+      surface-wash border-r border-border flex flex-col
       ${isMobileOpen ? 'mobile-drawer animate-slide-in-left' : 'w-72 hide-mobile'}
     `}
     >
       {/* Project controls - at top of sidebar */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-border shrink-0 bg-surface-alt/50">
+      <div className="surface-control flex items-center justify-between px-3 py-2 border-b border-border shrink-0">
         <div className="flex items-center gap-1">
           <Button
             variant="ghost"
@@ -108,7 +108,7 @@ export function Sidebar({ onCollapse, isMobileOpen, onMobileClose, onOpenProject
         {isMobileOpen && onMobileClose && (
           <button
             onClick={onMobileClose}
-            className="px-3 py-3 text-text-muted hover:text-text-primary hover:bg-surface-hover transition-all"
+            className="surface-interactive px-3 py-3 text-text-muted hover:text-text-primary transition-all"
             title="Close Sidebar"
           >
             <X className="w-5 h-5" />
@@ -150,7 +150,7 @@ export function Sidebar({ onCollapse, isMobileOpen, onMobileClose, onOpenProject
         {onCollapse && !isMobileOpen && (
           <button
             onClick={onCollapse}
-            className="px-2 text-text-muted hover:text-text-primary hover:bg-surface-hover transition-all duration-150 group hide-mobile"
+            className="surface-interactive px-2 text-text-muted hover:text-text-primary transition-all duration-150 group hide-mobile"
             title="Collapse Sidebar (B)"
           >
             <ChevronLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
@@ -183,7 +183,7 @@ export function Sidebar({ onCollapse, isMobileOpen, onMobileClose, onOpenProject
       </div>
 
       {/* Project lineage links */}
-      <div className="shrink-0 p-3 border-t border-border/50 bg-background/50 safe-area-bottom text-[10px]">
+      <div className="surface-control shrink-0 p-3 border-t border-border/50 safe-area-bottom text-[10px]">
         <div className="space-y-2">
           <div>
             <div className="text-text-muted mb-1">Maintained fork</div>
@@ -276,9 +276,10 @@ function MediaPanel() {
   return (
     <div className="space-y-4">
       {/* Comparison readiness indicator - Zeigarnik Effect + Goal-Gradient Effect */}
-      <div
-        className={`p-3 border transition-all duration-300 ${
-          isReady ? 'bg-accent/10 border-accent/30' : 'bg-surface-alt border-border'
+      <ElevatedSurface
+        offset={1}
+        className={`ui-radius-lg border p-3 transition-[border-color,box-shadow] duration-200 ${
+          isReady ? 'border-accent/60' : 'border-border'
         }`}
       >
         <div className="flex items-center justify-between mb-2">
@@ -292,12 +293,12 @@ function MediaPanel() {
         {/* Progress bar with animation */}
         <div className="flex gap-1 mb-2">
           <div
-            className={`flex-1 h-1.5 transition-all duration-300 ${
+            className={`ui-radius-sm flex-1 h-1.5 transition-all duration-300 ${
               hasMediaA ? 'bg-accent' : 'bg-border animate-pulse-subtle'
             }`}
           />
           <div
-            className={`flex-1 h-1.5 transition-all duration-300 ${
+            className={`ui-radius-sm flex-1 h-1.5 transition-all duration-300 ${
               hasMediaB ? 'bg-secondary' : 'bg-border animate-pulse-subtle'
             }`}
           />
@@ -320,7 +321,7 @@ function MediaPanel() {
             💡 Drag files or paste URLs to add media
           </p>
         )}
-      </div>
+      </ElevatedSurface>
 
       <MediaUpload />
 
@@ -407,7 +408,7 @@ function SettingsPanel({
   return (
     <div className="space-y-4">
       {/* Current mode indicator - helps with context */}
-      <div className="p-3 bg-accent/10 border border-accent/20">
+      <ElevatedSurface offset={1} className="ui-radius-lg border border-accent/30 p-3">
         <div className="text-[10px] uppercase tracking-wider text-accent font-medium mb-1">
           Current Mode
         </div>
@@ -417,11 +418,14 @@ function SettingsPanel({
         <p className="text-[10px] text-text-muted mt-1">
           {modeHints[comparisonMode] || 'Configure settings below'}
         </p>
-      </div>
+      </ElevatedSurface>
 
       {/* WebGL Difference settings - show at top when in webgl-compare mode */}
       {comparisonMode === 'webgl-compare' && (
-        <div className="p-4 bg-surface-alt border border-border space-y-4 animate-slide-down">
+        <ElevatedSurface
+          offset={1}
+          className="ui-radius-lg space-y-4 border border-border p-4 animate-slide-down"
+        >
           <h3 className="text-sm font-semibold text-text-primary flex items-center gap-2">
             <Microscope className="w-4 h-4 text-accent" />
             Difference
@@ -711,7 +715,7 @@ function SettingsPanel({
           {/* SCOPE-007: Zone System info */}
           {(webglComparisonSettings.mode === 'exposure-zone-system' ||
             webglComparisonSettings.mode === 'exposure-zone-compare') && (
-            <div className="text-[10px] text-text-muted space-y-1 p-2 bg-background/50 rounded">
+            <div className="surface-control ui-radius-md space-y-1 border p-2 text-[10px] text-text-muted">
               <p className="font-medium text-text-secondary">Ansel Adams Zone System:</p>
               <div className="grid grid-cols-2 gap-x-2">
                 <span style={{ color: '#000' }}>Zone 0: Pure black</span>
@@ -728,17 +732,20 @@ function SettingsPanel({
               </div>
             </div>
           )}
-        </div>
+        </ElevatedSurface>
       )}
 
       {/* ASPECT-001: Aspect Ratio Presets */}
-      <div className="p-4 bg-surface-alt border border-border">
+      <ElevatedSurface offset={1} className="ui-radius-lg border border-border p-4">
         <AspectRatioSelector showCustomInput={true} />
-      </div>
+      </ElevatedSurface>
 
       {/* Mode-specific settings - Law of Common Region */}
       {comparisonMode === 'slider' && (
-        <div className="p-4 bg-surface-alt border border-border space-y-4 animate-slide-down">
+        <ElevatedSurface
+          offset={1}
+          className="ui-radius-lg space-y-4 border border-border p-4 animate-slide-down"
+        >
           <h3 className="text-sm font-semibold text-text-primary flex items-center gap-2">
             <Sliders className="w-4 h-4 text-accent" />
             Slider Settings
@@ -747,10 +754,10 @@ function SettingsPanel({
           {/* Hide/Show Slider toggle */}
           <button
             onClick={toggleHideSlider}
-            className={`w-full flex items-center justify-between p-3 border transition-colors ${
+            className={`ui-radius-md flex w-full items-center justify-between border p-3 transition-colors ${
               hideSlider
-                ? 'border-accent bg-accent/10 text-accent'
-                : 'border-border hover:border-border-hover'
+                ? 'surface-active border-accent text-accent'
+                : 'surface-outline text-text-primary'
             }`}
           >
             <span className="text-sm font-medium">
@@ -782,11 +789,14 @@ function SettingsPanel({
           <p className="text-[10px] text-text-muted">
             Press <kbd className="kbd">H</kbd> to toggle slider visibility
           </p>
-        </div>
+        </ElevatedSurface>
       )}
 
       {comparisonMode === 'blend' && (
-        <div className="p-4 bg-surface-alt border border-border space-y-4 animate-slide-down">
+        <ElevatedSurface
+          offset={1}
+          className="ui-radius-lg space-y-4 border border-border p-4 animate-slide-down"
+        >
           <h3 className="text-sm font-semibold text-text-primary flex items-center gap-2">
             <ChevronRight className="w-4 h-4 text-accent" />
             Blend Settings
@@ -802,11 +812,14 @@ function SettingsPanel({
               { value: 'screen', label: 'Screen (lighter result)' },
             ]}
           />
-        </div>
+        </ElevatedSurface>
       )}
 
       {comparisonMode === 'split' && (
-        <div className="p-4 bg-surface-alt border border-border space-y-4 animate-slide-down">
+        <ElevatedSurface
+          offset={1}
+          className="ui-radius-lg space-y-4 border border-border p-4 animate-slide-down"
+        >
           <h3 className="text-sm font-semibold text-text-primary flex items-center gap-2">
             <ChevronRight className="w-4 h-4 text-accent" />
             Split Layout
@@ -821,11 +834,11 @@ function SettingsPanel({
               { value: '2x2', label: 'Grid (4 corners)' },
             ]}
           />
-        </div>
+        </ElevatedSurface>
       )}
 
       {/* Export settings card - always visible */}
-      <div className="p-4 bg-surface-alt border border-border space-y-4">
+      <ElevatedSurface offset={1} className="ui-radius-lg space-y-4 border border-border p-4">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-semibold text-text-primary">Quick Export</h3>
           <kbd className="kbd">E</kbd>
@@ -871,10 +884,10 @@ function SettingsPanel({
             { value: '4k', label: '4K (Ultra HD)' },
           ]}
         />
-      </div>
+      </ElevatedSurface>
 
       {/* Keyboard shortcuts hint */}
-      <div className="p-3 border border-dashed border-border text-center">
+      <div className="ui-radius-lg border border-dashed border-border p-3 text-center">
         <p className="text-[10px] text-text-muted">
           Press <kbd className="kbd">?</kbd> for all keyboard shortcuts
         </p>

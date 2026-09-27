@@ -25,3 +25,5 @@ export { Slider, type SliderProps } from './slider'
 export { Select, type SelectProps } from './select'
 export { Tooltip, TooltipContent, TooltipProvider, TooltipRoot, TooltipTrigger } from './tooltip'
 export { AspectRatioSelector } from './AspectRatioSelector'
+
+export { ElevatedSurface, SurfaceProvider } from './surface'
