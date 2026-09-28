@@ -421,8 +421,8 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
       <div className="ui-radius-md border border-border/60 px-2.5 py-2 text-[10px] leading-relaxed text-text-muted">
         <p>
           <strong className="font-semibold text-text-secondary">Files are not uploaded.</strong>{' '}
-          Comparison, analysis, and export run locally in your browser. Media and projects are
-          saved automatically in this browser.
+          Comparison, analysis, and export run locally in your browser. Media and projects are saved
+          automatically in this browser.
         </p>
         <a
           href="/privacy/#local-processing"
