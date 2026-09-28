@@ -361,7 +361,10 @@ export function GridTileComparison() {
       <canvas ref={canvasRef} className="w-full h-full" />
 
       {/* Controls */}
-      <ElevatedSurface offset={1} className="absolute top-4 right-4 ui-radius-lg flex flex-col gap-2 border border-transparent p-1">
+      <ElevatedSurface
+        offset={1}
+        className="absolute top-4 right-4 ui-radius-lg flex flex-col gap-2 border border-transparent p-1"
+      >
         {/* Animation toggle */}
         <button
           onClick={toggleGridTileAnimation}

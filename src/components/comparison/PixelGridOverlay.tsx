@@ -386,7 +386,10 @@ export function PixelGridOverlay() {
       </div>
 
       {/* Controls */}
-      <ElevatedSurface offset={1} className="absolute top-4 right-4 ui-radius-lg flex flex-col gap-2 border border-transparent p-1">
+      <ElevatedSurface
+        offset={1}
+        className="absolute top-4 right-4 ui-radius-lg flex flex-col gap-2 border border-transparent p-1"
+      >
         {/* Toggle grid */}
         <button
           onClick={togglePixelGrid}

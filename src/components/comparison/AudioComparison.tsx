@@ -1069,7 +1069,10 @@ export function AudioComparison() {
 
         {/* Transport controls */}
         <div className="flex items-center gap-2">
-          <button onClick={() => seek(0)} className="surface-control ui-radius-sm border p-1.5 text-text-muted hover:text-text-primary">
+          <button
+            onClick={() => seek(0)}
+            className="surface-control ui-radius-sm border p-1.5 text-text-muted hover:text-text-primary"
+          >
             <SkipBack className="w-4 h-4" />
           </button>
           <button
@@ -1090,7 +1093,10 @@ export function AudioComparison() {
 
         {/* Output selector & settings */}
         <div className="flex items-center gap-3">
-          <ElevatedSurface offset={1} className="ui-radius-md flex items-center gap-0.5 border border-transparent p-0.5">
+          <ElevatedSurface
+            offset={1}
+            className="ui-radius-md flex items-center gap-0.5 border border-transparent p-0.5"
+          >
             {(['a', 'both', 'b'] as const).map((mode) => (
               <button
                 key={mode}

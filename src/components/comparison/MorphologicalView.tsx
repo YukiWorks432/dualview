@@ -541,7 +541,10 @@ export function MorphologicalView() {
       </div>
 
       {/* Controls panel */}
-      <ElevatedSurface offset={1} className="absolute right-4 top-4 ui-radius-lg flex flex-col gap-3 border border-transparent p-1">
+      <ElevatedSurface
+        offset={1}
+        className="absolute right-4 top-4 ui-radius-lg flex flex-col gap-3 border border-transparent p-1"
+      >
         {/* Show original toggle */}
         <button
           onClick={() =>
@@ -572,7 +575,10 @@ export function MorphologicalView() {
       </div>
 
       {/* Settings panel */}
-      <ElevatedSurface offset={1} className="absolute bottom-4 left-4 ui-radius-lg flex items-center gap-4 border border-transparent px-3 py-2">
+      <ElevatedSurface
+        offset={1}
+        className="absolute bottom-4 left-4 ui-radius-lg flex items-center gap-4 border border-transparent px-3 py-2"
+      >
         {/* Element size */}
         <div>
           <label className="text-xs text-gray-400 block mb-1">Size</label>

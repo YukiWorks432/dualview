@@ -68,9 +68,7 @@ export function StitchExportPanel({
               aria-pressed={trackId === track.id}
               onClick={() => onTrackChange(track.id)}
               className={`surface-control-elevation ui-radius-md border p-3 text-left transition-colors ${
-                trackId === track.id
-                  ? 'border-accent bg-accent/10'
-                  : 'surface-control'
+                trackId === track.id ? 'border-accent bg-accent/10' : 'surface-control'
               }`}
             >
               <div className="mb-1 flex items-center gap-2">
