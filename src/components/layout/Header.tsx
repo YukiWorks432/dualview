@@ -1,4 +1,14 @@
-import { Download, Keyboard, Menu, Pause, Play, Redo2, Undo2 } from 'lucide-react'
+import {
+  Download,
+  ExternalLink,
+  Keyboard,
+  Menu,
+  Pause,
+  Play,
+  Redo2,
+  ShieldCheck,
+  Undo2,
+} from 'lucide-react'
 
 import { useHistoryStore } from '../../stores/historyStore'
 import { useTimelineStore } from '../../stores/timelineStore'
@@ -67,6 +77,19 @@ export function Header({ onExport, onShowShortcuts, onToggleSidebar }: HeaderPro
       </div>
 
       <div className="flex items-center gap-0.5">
+        <a
+          href="/privacy/"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Privacy information (opens in a new tab)"
+          title="Privacy information (opens in a new tab)"
+          className="surface-control ui-radius-md inline-flex h-7 items-center gap-1 border px-2 text-xs text-text-secondary transition-colors hover:text-text-primary"
+        >
+          <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
+          <span className="hidden lg:inline">Privacy</span>
+          <ExternalLink className="h-2.5 w-2.5" aria-hidden="true" />
+        </a>
+
         <Button
           variant="secondary"
           size="icon"
