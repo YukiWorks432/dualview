@@ -300,116 +300,116 @@ function ProjectCard({
     <ElevatedSurface asChild offset={1}>
       <article
         className={`relative overflow-hidden ui-radius-lg border transition-colors ${
-        isActive ? 'border-accent bg-accent/10' : 'border-border'
-      } ${isSelected ? 'selected-ring' : ''} hover:border-border-hover`}
-    >
-      <button
-        type="button"
-        onClick={onSelect}
-        onDoubleClick={onLoad}
-        aria-pressed={isSelected}
-        aria-label={`Select project ${project.name}`}
-        className="block w-full text-left outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent"
+          isActive ? 'border-accent bg-accent/10' : 'border-border'
+        } ${isSelected ? 'selected-ring' : ''} hover:border-border-hover`}
       >
-        <div className="aspect-video bg-surface flex items-center justify-center">
-          {project.thumbnail ? (
-            <img src={project.thumbnail} alt="" className="h-full w-full object-cover" />
-          ) : (
-            <FileImage className="h-12 w-12 text-text-muted" aria-hidden="true" />
-          )}
-        </div>
-
-        <div className="p-3">
-          <h3 className="truncate font-medium text-text-primary">{project.name}</h3>
-          {project.description && (
-            <p className="mt-1 line-clamp-2 text-xs text-text-secondary">{project.description}</p>
-          )}
-          <div className="mt-2 flex items-center gap-2 text-xs text-text-muted">
-            <Calendar className="h-3 w-3" aria-hidden="true" />
-            <span>{formatDate(project.updatedAt)}</span>
-          </div>
-          {project.tags.length > 0 && (
-            <div className="mt-2 flex flex-wrap items-center gap-1">
-              <Tag className="h-3 w-3 text-text-muted" aria-hidden="true" />
-              {project.tags.slice(0, 3).map((tag) => (
-                <span
-                  key={tag}
-                  className="ui-radius-sm border border-border bg-surface px-1.5 py-0.5 text-xs text-text-secondary"
-                >
-                  {tag}
-                </span>
-              ))}
-              {project.tags.length > 3 && (
-                <span className="text-xs text-text-muted">+{project.tags.length - 3}</span>
-              )}
-            </div>
-          )}
-        </div>
-      </button>
-
-      {isSelected && !showDeleteConfirm && (
-        <div className="flex items-center gap-1 border-t border-border bg-surface/95 p-2">
-          <Button size="sm" onClick={onLoad} className="h-7 flex-1">
-            Open
-          </Button>
-          <Button
-            variant="secondary"
-            size="icon"
-            onClick={() => {
-              void onDuplicate()
-            }}
-            className="h-7 w-7"
-            aria-label={`Duplicate ${project.name}`}
-          >
-            <Copy className="h-3.5 w-3.5" aria-hidden="true" />
-          </Button>
-          <Button
-            variant="secondary"
-            size="icon"
-            onClick={onExport}
-            disabled={isExporting}
-            className="h-7 w-7"
-            aria-label={`Export ${project.name}`}
-          >
-            {isExporting ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+        <button
+          type="button"
+          onClick={onSelect}
+          onDoubleClick={onLoad}
+          aria-pressed={isSelected}
+          aria-label={`Select project ${project.name}`}
+          className="block w-full text-left outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent"
+        >
+          <div className="aspect-video bg-surface flex items-center justify-center">
+            {project.thumbnail ? (
+              <img src={project.thumbnail} alt="" className="h-full w-full object-cover" />
             ) : (
-              <Download className="h-3.5 w-3.5" aria-hidden="true" />
+              <FileImage className="h-12 w-12 text-text-muted" aria-hidden="true" />
             )}
-          </Button>
-          <Button
-            variant="destructive"
-            size="icon"
-            onClick={onDelete}
-            className="h-7 w-7"
-            aria-label={`Delete ${project.name}`}
-          >
-            <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
-          </Button>
-        </div>
-      )}
+          </div>
 
-      {showDeleteConfirm && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/95 p-4">
-          <p className="mb-3 text-center text-sm text-text-primary">
-            Delete <strong>{project.name}</strong>?
-          </p>
-          <div className="flex gap-2">
-            <Button variant="secondary" size="sm" onClick={onCancelDelete}>
-              Cancel
+          <div className="p-3">
+            <h3 className="truncate font-medium text-text-primary">{project.name}</h3>
+            {project.description && (
+              <p className="mt-1 line-clamp-2 text-xs text-text-secondary">{project.description}</p>
+            )}
+            <div className="mt-2 flex items-center gap-2 text-xs text-text-muted">
+              <Calendar className="h-3 w-3" aria-hidden="true" />
+              <span>{formatDate(project.updatedAt)}</span>
+            </div>
+            {project.tags.length > 0 && (
+              <div className="mt-2 flex flex-wrap items-center gap-1">
+                <Tag className="h-3 w-3 text-text-muted" aria-hidden="true" />
+                {project.tags.slice(0, 3).map((tag) => (
+                  <span
+                    key={tag}
+                    className="ui-radius-sm border border-border bg-surface px-1.5 py-0.5 text-xs text-text-secondary"
+                  >
+                    {tag}
+                  </span>
+                ))}
+                {project.tags.length > 3 && (
+                  <span className="text-xs text-text-muted">+{project.tags.length - 3}</span>
+                )}
+              </div>
+            )}
+          </div>
+        </button>
+
+        {isSelected && !showDeleteConfirm && (
+          <div className="flex items-center gap-1 border-t border-border bg-surface/95 p-2">
+            <Button size="sm" onClick={onLoad} className="h-7 flex-1">
+              Open
             </Button>
-            <Button variant="destructive" size="sm" onClick={onConfirmDelete}>
-              Delete
+            <Button
+              variant="secondary"
+              size="icon"
+              onClick={() => {
+                void onDuplicate()
+              }}
+              className="h-7 w-7"
+              aria-label={`Duplicate ${project.name}`}
+            >
+              <Copy className="h-3.5 w-3.5" aria-hidden="true" />
+            </Button>
+            <Button
+              variant="secondary"
+              size="icon"
+              onClick={onExport}
+              disabled={isExporting}
+              className="h-7 w-7"
+              aria-label={`Export ${project.name}`}
+            >
+              {isExporting ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+              ) : (
+                <Download className="h-3.5 w-3.5" aria-hidden="true" />
+              )}
+            </Button>
+            <Button
+              variant="destructive"
+              size="icon"
+              onClick={onDelete}
+              className="h-7 w-7"
+              aria-label={`Delete ${project.name}`}
+            >
+              <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
             </Button>
           </div>
-        </div>
-      )}
+        )}
 
-      {isActive && (
-        <div className="absolute right-2 top-2 ui-radius-sm bg-accent px-2 py-0.5 text-xs text-white">
-          Current
-        </div>
-      )}
+        {showDeleteConfirm && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/95 p-4">
+            <p className="mb-3 text-center text-sm text-text-primary">
+              Delete <strong>{project.name}</strong>?
+            </p>
+            <div className="flex gap-2">
+              <Button variant="secondary" size="sm" onClick={onCancelDelete}>
+                Cancel
+              </Button>
+              <Button variant="destructive" size="sm" onClick={onConfirmDelete}>
+                Delete
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {isActive && (
+          <div className="absolute right-2 top-2 ui-radius-sm bg-accent px-2 py-0.5 text-xs text-white">
+            Current
+          </div>
+        )}
       </article>
     </ElevatedSurface>
   )

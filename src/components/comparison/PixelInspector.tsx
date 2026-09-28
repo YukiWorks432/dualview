@@ -80,7 +80,9 @@ export function PixelInspector() {
 
           {diff && (
             <div className="pt-2 border-t border-white/10 flex items-center gap-3">
-              <div className="ui-radius-sm px-2 py-0.5 text-xs font-bold bg-gray-600 text-white">Delta</div>
+              <div className="ui-radius-sm px-2 py-0.5 text-xs font-bold bg-gray-600 text-white">
+                Delta
+              </div>
               <div className="text-[10px] font-mono text-text-primary">
                 R: {diff.r} G: {diff.g} B: {diff.b}
               </div>

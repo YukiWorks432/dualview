@@ -351,7 +351,9 @@ export function TemporalDiffGraph({ videoARef, videoBRef, isVisible }: TemporalD
       <div className="flex items-center justify-between px-4 py-2 border-b border-border">
         <div className="flex items-center gap-2">
           <BarChart2 size={16} className="text-accent" />
-          <span className="text-sm text-text-secondary font-medium">Temporal Difference Analysis</span>
+          <span className="text-sm text-text-secondary font-medium">
+            Temporal Difference Analysis
+          </span>
         </div>
         <div className="flex items-center gap-2">
           {data.length > 0 && (

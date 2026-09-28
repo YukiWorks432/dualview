@@ -328,7 +328,10 @@ export function VideoExportPanel({
       )}
 
       {isExporting && (
-        <div className="ui-radius-lg space-y-3 border border-border bg-surface-alt p-4" role="status">
+        <div
+          className="ui-radius-lg space-y-3 border border-border bg-surface-alt p-4"
+          role="status"
+        >
           <div className="flex items-center justify-between text-xs">
             <span className="ui-radius-sm bg-accent px-2 py-1 text-white">1. Preparing</span>
             <div className="mx-2 h-px flex-1 bg-border" />

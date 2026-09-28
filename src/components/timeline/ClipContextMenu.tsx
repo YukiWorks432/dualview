@@ -322,7 +322,9 @@ export function ClipContextMenu({ x, y, clipId, trackId, onClose }: ClipContextM
                     onClick={() => setSpeed(opt.value)}
                   >
                     <span>{opt.label}</span>
-                    {currentSpeed === opt.value && <span className="w-1.5 h-1.5 rounded-full bg-accent" />}
+                    {currentSpeed === opt.value && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-accent" />
+                    )}
                   </button>
                 ))}
               </div>

@@ -186,7 +186,10 @@ export function StitchExportPanel({
       </fieldset>
 
       {(progress.status === 'preparing' || progress.status === 'encoding') && (
-        <div className="ui-radius-lg space-y-3 border border-border bg-surface-alt p-4" role="status">
+        <div
+          className="ui-radius-lg space-y-3 border border-border bg-surface-alt p-4"
+          role="status"
+        >
           <div className="flex items-center justify-between text-sm">
             <span className="text-text-secondary">{progress.message}</span>
             <span className="font-medium text-accent">{progress.progress}%</span>

@@ -154,7 +154,10 @@ export function WebGLPresetsPanel({ isOpen, onClose }: WebGLPresetsPanelProps) {
   if (!isOpen) return null
 
   return (
-    <ElevatedSurface offset={2} className="absolute top-12 right-4 z-50 flex max-h-[80vh] w-80 flex-col ui-radius-lg border border-transparent">
+    <ElevatedSurface
+      offset={2}
+      className="absolute top-12 right-4 z-50 flex max-h-[80vh] w-80 flex-col ui-radius-lg border border-transparent"
+    >
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-border">
         <div className="flex items-center gap-2">
@@ -282,7 +285,9 @@ export function WebGLPresetsPanel({ isOpen, onClose }: WebGLPresetsPanelProps) {
                       <div className="flex-1 min-w-0">
                         <div className="text-sm text-text-primary truncate">{preset.name}</div>
                         {preset.description && (
-                          <div className="text-xs text-text-muted truncate">{preset.description}</div>
+                          <div className="text-xs text-text-muted truncate">
+                            {preset.description}
+                          </div>
                         )}
                       </div>
                       {!preset.isBuiltin && (

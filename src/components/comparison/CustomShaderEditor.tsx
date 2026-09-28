@@ -267,16 +267,24 @@ export function CustomShaderEditor({ isOpen, onClose, onApplyShader }: CustomSha
 
   return (
     <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-      <ElevatedSurface offset={3} className="ui-radius-lg w-full max-w-5xl max-h-[90vh] flex flex-col border border-transparent">
+      <ElevatedSurface
+        offset={3}
+        className="ui-radius-lg w-full max-w-5xl max-h-[90vh] flex flex-col border border-transparent"
+      >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border">
           <div className="flex items-center gap-3">
             <Code size={20} className="text-accent" />
-            <h2 className="text-lg font-semibold text-text-primary">Custom Shader Editor (WEBGL-014)</h2>
+            <h2 className="text-lg font-semibold text-text-primary">
+              Custom Shader Editor (WEBGL-014)
+            </h2>
             <span className="text-sm text-text-muted">•</span>
             <span className="text-sm text-text-secondary">{currentShaderName}</span>
           </div>
-          <button onClick={onClose} className="surface-interactive ui-radius-sm p-2 text-text-secondary hover:text-text-primary">
+          <button
+            onClick={onClose}
+            className="surface-interactive ui-radius-sm p-2 text-text-secondary hover:text-text-primary"
+          >
             <X size={20} />
           </button>
         </div>

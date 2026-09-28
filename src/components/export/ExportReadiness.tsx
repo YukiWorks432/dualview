@@ -25,7 +25,10 @@ export function ExportReadiness({ hasMediaA, hasMediaB }: ExportReadinessProps) 
         role="status"
       >
         <div className={`flex items-center gap-1 ${hasMediaA ? 'text-accent' : 'text-text-muted'}`}>
-          <span className={`h-2 w-2 rounded-full ${hasMediaA ? 'bg-accent' : 'bg-border'}`} aria-hidden="true" />
+          <span
+            className={`h-2 w-2 rounded-full ${hasMediaA ? 'bg-accent' : 'bg-border'}`}
+            aria-hidden="true"
+          />
           <span>Media A</span>
         </div>
         <div

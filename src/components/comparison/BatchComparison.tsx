@@ -288,14 +288,22 @@ export function BatchComparison({ isOpen, onClose }: BatchComparisonProps) {
 
   return (
     <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-      <ElevatedSurface offset={3} className="ui-radius-lg w-full max-w-6xl max-h-[90vh] flex flex-col border border-transparent">
+      <ElevatedSurface
+        offset={3}
+        className="ui-radius-lg w-full max-w-6xl max-h-[90vh] flex flex-col border border-transparent"
+      >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border">
           <div className="flex items-center gap-3">
             <Grid3X3 size={20} className="text-accent" />
-            <h2 className="text-lg font-semibold text-text-primary">Batch Comparison (WEBGL-013)</h2>
+            <h2 className="text-lg font-semibold text-text-primary">
+              Batch Comparison (WEBGL-013)
+            </h2>
           </div>
-          <button onClick={onClose} className="surface-interactive ui-radius-sm p-2 text-text-secondary hover:text-text-primary">
+          <button
+            onClick={onClose}
+            className="surface-interactive ui-radius-sm p-2 text-text-secondary hover:text-text-primary"
+          >
             <X size={20} />
           </button>
         </div>
@@ -390,11 +398,15 @@ export function BatchComparison({ isOpen, onClose }: BatchComparisonProps) {
             {/* Summary Stats */}
             {summaryStats && (
               <div className="px-6 py-3 border-b border-border bg-surface-alt">
-                <div className="text-xs text-text-secondary uppercase tracking-wide mb-2">Summary</div>
+                <div className="text-xs text-text-secondary uppercase tracking-wide mb-2">
+                  Summary
+                </div>
                 <div className="grid grid-cols-5 gap-4 text-sm">
                   <div>
                     <div className="text-text-muted">Avg SSIM</div>
-                    <div className="text-text-primary font-mono">{summaryStats.avgSSIM.toFixed(4)}</div>
+                    <div className="text-text-primary font-mono">
+                      {summaryStats.avgSSIM.toFixed(4)}
+                    </div>
                   </div>
                   <div>
                     <div className="text-text-muted">Min SSIM</div>
@@ -408,7 +420,9 @@ export function BatchComparison({ isOpen, onClose }: BatchComparisonProps) {
                   </div>
                   <div>
                     <div className="text-text-muted">Avg Delta E</div>
-                    <div className="text-text-primary font-mono">{summaryStats.avgDeltaE.toFixed(2)}</div>
+                    <div className="text-text-primary font-mono">
+                      {summaryStats.avgDeltaE.toFixed(2)}
+                    </div>
                   </div>
                   <div>
                     <div className="text-text-muted">Avg Diff %</div>
@@ -488,11 +502,19 @@ export function BatchComparison({ isOpen, onClose }: BatchComparisonProps) {
                 <table className="w-full text-sm">
                   <thead className="bg-surface-alt sticky top-0">
                     <tr>
-                      <th className="text-left px-4 py-2 text-text-secondary font-medium">File A</th>
-                      <th className="text-left px-4 py-2 text-text-secondary font-medium">File B</th>
+                      <th className="text-left px-4 py-2 text-text-secondary font-medium">
+                        File A
+                      </th>
+                      <th className="text-left px-4 py-2 text-text-secondary font-medium">
+                        File B
+                      </th>
                       <th className="text-right px-4 py-2 text-text-secondary font-medium">SSIM</th>
-                      <th className="text-right px-4 py-2 text-text-secondary font-medium">Delta E</th>
-                      <th className="text-right px-4 py-2 text-text-secondary font-medium">Diff %</th>
+                      <th className="text-right px-4 py-2 text-text-secondary font-medium">
+                        Delta E
+                      </th>
+                      <th className="text-right px-4 py-2 text-text-secondary font-medium">
+                        Diff %
+                      </th>
                       <th className="text-right px-4 py-2 text-text-secondary font-medium">Peak</th>
                       <th className="text-right px-4 py-2 text-text-secondary font-medium">Mean</th>
                     </tr>
