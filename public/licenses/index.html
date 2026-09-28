@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ライセンスと第三者ソフトウェア | DualView</title>
+    <meta
+      name="description"
+      content="DualView 本体とブラウザーへ配布する第三者ソフトウェアのライセンス通知・対応ソースを案内します。"
+    />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="stylesheet" href="/site-info.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="site-header__inner">
+        <a class="brand" href="/">DualView</a>
+        <nav class="site-nav" aria-label="Site information">
+          <a href="/privacy/">Privacy</a>
+          <a href="/terms/">Terms</a>
+          <a href="/about/">About</a>
+          <a href="/licenses/" aria-current="page">Licenses</a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <div class="hero">
+        <p class="eyebrow">Licenses &amp; corresponding source</p>
+        <h1>ライセンスと第三者ソフトウェア</h1>
+        <p>
+          DualView 本体のライセンス、バンドルされた依存関係の通知、
+          静的コピーや動的読み込みを含む追加配布物の通知を分けて掲載します。
+        </p>
+      </div>
+
+      <section class="language-block" lang="ja">
+        <span class="language-label">日本語</span>
+
+        <section class="card notice">
+          <h2>DualView 本体</h2>
+          <p>
+            DualView 本体の正本はリポジトリ直下の <code>LICENSE</code> です。
+            <strong>Copyright (c) 2025 DualView Contributors</strong> を含む MIT License
+            を維持しており、この maintained fork の運営者名だけへ置き換えていません。
+          </p>
+          <div class="link-list">
+            <a href="/licenses/dualview-license.txt">配布物に含まれる MIT License</a>
+            <a
+              href="https://github.com/YukiWorks432/dualview/blob/main/LICENSE"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              リポジトリの LICENSE ↗
+            </a>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>バンドルされた第三者依存関係</h2>
+          <p>
+            production build では Vite の <code>build.license</code> を使い、
+            実際にバンドルされた依存関係について名称・バージョン・著作権表示・ライセンス情報を
+            <code>licenses/third-party.md</code> として生成します。手作業の一覧を正本として重複管理しません。
+          </p>
+          <div class="link-list">
+            <a href="/licenses/third-party.md">生成された third-party.md</a>
+          </div>
+          <p class="meta">
+            このファイルは production build の成果物として生成されるため、開発サーバー上では存在しない場合があります。
+          </p>
+        </section>
+
+        <section class="card">
+          <h2>静的コピー・動的読み込み・WASM</h2>
+          <p>
+            Vite の通常バンドルだけでは拾い切れない配布物は追加通知にまとめています。
+            現在は、静的コピーされる <code>gif.worker.js</code> と、
+            ProRes デコードで利用する <code>@mediabunny/prores</code> 1.59.0
+            の対応ソースを明示しています。
+          </p>
+          <div class="link-list">
+            <a href="/licenses/additional-notices.md">Additional distributed notices</a>
+            <a
+              href="https://github.com/Vanilagy/mediabunny/tree/v1.59.0/packages/prores"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              @mediabunny/prores 1.59.0 source ↗
+            </a>
+            <a href="https://www.mozilla.org/MPL/2.0/" target="_blank" rel="noopener noreferrer">
+              MPL 2.0 ↗
+            </a>
+          </div>
+          <p>
+            MPL-2.0 の対象コンポーネントはその条件に従いますが、DualView 本体全体のライセンスを
+            MPL へ変更するものではありません。
+          </p>
+        </section>
+      </section>
+
+      <section class="language-block" lang="en">
+        <span class="language-label">English</span>
+
+        <section class="card notice">
+          <h2>DualView application</h2>
+          <p>
+            The repository-root <code>LICENSE</code> is the canonical license for DualView. It
+            retains the MIT License notice, including
+            <strong>Copyright (c) 2025 DualView Contributors</strong>, rather than replacing it
+            with the maintained-fork operator's name.
+          </p>
+        </section>
+
+        <section class="card">
+          <h2>Bundled third-party dependencies</h2>
+          <p>
+            Production builds use Vite <code>build.license</code> to generate
+            <code>licenses/third-party.md</code> from dependencies actually included in the bundle.
+            This avoids maintaining a second hand-written dependency list as the source of truth.
+          </p>
+        </section>
+
+        <section class="card">
+          <h2>Copied assets, dynamic loading, and WASM</h2>
+          <p>
+            Additional notices cover distributed files that are not fully represented by the normal
+            bundle notice. They currently include the copied <code>gif.worker.js</code> file and
+            the fixed corresponding source for <code>@mediabunny/prores</code> 1.59.0. Components
+            covered by MPL-2.0 remain under MPL-2.0; this does not relicense the overall DualView
+            application away from MIT.
+          </p>
+        </section>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <a href="/">Open DualView</a> ·
+      <a href="https://github.com/YukiWorks432/dualview" target="_blank" rel="noopener noreferrer">Source ↗</a>
+    </footer>
+  </body>
+</html>
