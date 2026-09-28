@@ -125,7 +125,7 @@ export function MagnifierLoupe({
     return (
       <button
         onClick={onToggle}
-        className="surface-control-elevation ui-radius-md absolute top-2 left-2 z-10 border border-border bg-surface/80 p-2 hover:bg-surface"
+        className="surface-control ui-radius-md absolute top-2 left-2 z-10 border p-2"
         title="Enable Magnifier (G)"
       >
         <Search className="w-4 h-4 text-text-secondary" />

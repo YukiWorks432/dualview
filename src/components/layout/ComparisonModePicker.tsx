@@ -115,7 +115,7 @@ export function ComparisonModePicker() {
                     className={`relative h-7 gap-1 px-2 text-xs ${
                       comparisonMode === mode
                         ? 'surface-active surface-selected-border text-text-primary hover:surface-active'
-                        : 'border-transparent'
+                        : ''
                     }`}
                     aria-selected={comparisonMode === mode}
                     aria-label={`${label} comparison mode`}
@@ -156,7 +156,7 @@ export function ComparisonModePicker() {
                   className={`h-7 gap-1 px-2 text-xs ${
                     activeSecondaryMode
                       ? 'surface-active surface-selected-border text-text-primary hover:surface-active'
-                      : 'border-transparent'
+                      : ''
                   }`}
                   aria-label="More comparison modes"
                 />

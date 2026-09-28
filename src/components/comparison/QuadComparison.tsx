@@ -142,7 +142,7 @@ function Quadrant({
       {/* Expand/Collapse button */}
       <button
         onClick={isExpanded ? onCollapse : onExpand}
-        className="surface-control-elevation ui-radius-md absolute top-2 right-2 bg-black/60 p-1.5 transition-colors hover:bg-black/80"
+        className="surface-control ui-radius-md absolute top-2 right-2 border p-1.5 text-white transition-colors"
         title={isExpanded ? 'Collapse' : 'Expand to full view'}
       >
         {isExpanded ? (

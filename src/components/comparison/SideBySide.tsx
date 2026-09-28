@@ -197,7 +197,7 @@ export function SideBySide() {
         {mediaA && !dropZoneA.isDragOver && (
           <button
             onClick={() => dropZoneA.openFileDialog()}
-            className="surface-control-elevation absolute top-2 left-2 z-20 ui-radius-lg bg-black/60 p-2 transition-colors group hover:bg-accent/80"
+            className="surface-control ui-radius-lg absolute top-2 left-2 z-20 border p-2 text-white transition-colors group hover:bg-accent/80"
             title="Replace Media A"
           >
             <Upload className="w-4 h-4 text-white group-hover:scale-110 transition-transform" />
@@ -273,7 +273,7 @@ export function SideBySide() {
         {mediaB && !dropZoneB.isDragOver && (
           <button
             onClick={() => dropZoneB.openFileDialog()}
-            className="surface-control-elevation absolute top-2 right-2 z-20 ui-radius-lg bg-black/60 p-2 transition-colors group hover:bg-secondary/80"
+            className="surface-control ui-radius-lg absolute top-2 right-2 z-20 border p-2 text-white transition-colors group hover:bg-secondary/80"
             title="Replace Media B"
           >
             <Upload className="w-4 h-4 text-white group-hover:scale-110 transition-transform" />

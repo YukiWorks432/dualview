@@ -12,7 +12,7 @@ export function MetricsOverlay() {
     return (
       <button
         onClick={toggleMetrics}
-        className="surface-control-elevation absolute top-4 right-4 z-10 ui-radius-sm bg-black/60 px-2 py-1 text-xs text-white flex items-center gap-1 transition-colors hover:bg-black/80"
+        className="surface-control absolute top-4 right-4 z-10 ui-radius-sm flex items-center gap-1 border px-2 py-1 text-xs text-white transition-colors"
         title="Show quality metrics (M)"
       >
         <Activity className="w-3 h-3" />

@@ -555,7 +555,7 @@ export function SliderComparison() {
               e.stopPropagation()
               dropZoneA.openFileDialog()
             }}
-            className="surface-control-elevation absolute top-4 left-4 z-20 ui-radius-lg bg-black/60 p-2 transition-colors group hover:bg-accent/80"
+            className="surface-control ui-radius-lg absolute top-4 left-4 z-20 border p-2 text-white transition-colors group hover:bg-accent/80"
             title="Replace Media A"
           >
             <Upload className="w-5 h-5 text-white group-hover:scale-110 transition-transform" />
@@ -567,7 +567,7 @@ export function SliderComparison() {
               e.stopPropagation()
               dropZoneB.openFileDialog()
             }}
-            className="surface-control-elevation absolute top-4 right-4 z-20 ui-radius-lg bg-black/60 p-2 transition-colors group hover:bg-secondary/80"
+            className="surface-control ui-radius-lg absolute top-4 right-4 z-20 border p-2 text-white transition-colors group hover:bg-secondary/80"
             title="Replace Media B"
           >
             <Upload className="w-5 h-5 text-white group-hover:scale-110 transition-transform" />
