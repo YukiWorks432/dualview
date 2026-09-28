@@ -62,8 +62,8 @@ describe('project persistence ordering', () => {
     let finishWrite: (() => void) | undefined
     dbMocks.saveProjectWithMedia.mockImplementationOnce(
       () =>
-        new Promise<void>((resolve) => {
-          finishWrite = resolve
+        new Promise<undefined>((resolve) => {
+          finishWrite = () => resolve(undefined)
         }),
     )
 
@@ -82,8 +82,8 @@ describe('project persistence ordering', () => {
     let finishWrite: (() => void) | undefined
     dbMocks.saveProjectWithMedia.mockImplementationOnce(
       () =>
-        new Promise<void>((resolve) => {
-          finishWrite = resolve
+        new Promise<undefined>((resolve) => {
+          finishWrite = () => resolve(undefined)
         }),
     )
 
@@ -114,11 +114,11 @@ describe('project persistence ordering', () => {
 
     dbMocks.saveProjectWithMedia.mockImplementationOnce(
       () =>
-        new Promise<void>((resolve) => {
+        new Promise<undefined>((resolve) => {
           events.push('save-start')
           finishWrite = () => {
             events.push('save-finish')
-            resolve()
+            resolve(undefined)
           }
         }),
     )
