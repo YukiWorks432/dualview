@@ -363,6 +363,7 @@ export const usePersistenceStore = create<PersistenceStore>((set, get) => ({
       return
     }
 
+    get().cancelAutoSave()
     set({ isLoading: true, error: null })
 
     try {
@@ -784,7 +785,7 @@ function base64ToBlob(base64: string, mimeType: string): Blob {
 // Timeline changes
 useTimelineStore.subscribe((state, prevState) => {
   const persistence = usePersistenceStore.getState()
-  if (!persistence.currentProjectId) return
+  if (!persistence.currentProjectId || persistence.isLoading) return
 
   // Check for meaningful changes
   if (
@@ -799,7 +800,7 @@ useTimelineStore.subscribe((state, prevState) => {
 // Project settings changes
 useProjectStore.subscribe((state, prevState) => {
   const persistence = usePersistenceStore.getState()
-  if (!persistence.currentProjectId) return
+  if (!persistence.currentProjectId || persistence.isLoading) return
 
   // Check for meaningful changes (excluding transient state)
   if (
@@ -816,7 +817,7 @@ useProjectStore.subscribe((state, prevState) => {
 // Media library changes
 useMediaStore.subscribe((state, prevState) => {
   const persistence = usePersistenceStore.getState()
-  if (!persistence.currentProjectId) return
+  if (!persistence.currentProjectId || persistence.isLoading) return
 
   if (state.files.length !== prevState.files.length) {
     persistence._markUnsaved()
