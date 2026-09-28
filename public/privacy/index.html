@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>プライバシーとデータの取り扱い | DualView</title>
+    <meta
+      name="description"
+      content="DualView maintained fork におけるローカル処理、ブラウザー内保存、外部通信、問い合わせ時のデータ取り扱いについて説明します。"
+    />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="stylesheet" href="/site-info.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="site-header__inner">
+        <a class="brand" href="/">DualView</a>
+        <nav class="site-nav" aria-label="Site information">
+          <a href="/privacy/" aria-current="page">Privacy</a>
+          <a href="/terms/">Terms</a>
+          <a href="/about/">About</a>
+          <a href="/licenses/">Licenses</a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <div class="hero">
+        <p class="eyebrow">Privacy &amp; data handling</p>
+        <h1>プライバシーとデータの取り扱い</h1>
+        <p>
+          このページは、YukiWorks432 が提供する DualView maintained fork
+          の公開サイトで、素材・プロジェクト・通信情報をどのように扱うかを説明するものです。
+        </p>
+        <p class="meta">施行日・最終更新日: 2026年9月29日</p>
+      </div>
+
+      <section class="language-block" lang="ja">
+        <span class="language-label">日本語</span>
+
+        <section class="card notice" id="local-processing">
+          <h2>素材の処理</h2>
+          <p>
+            ローカルファイルとして選択、ドラッグ＆ドロップ、画像貼り付け、または画面キャプチャで取り込んだ
+            画像・動画・動画内音声は、この端末のブラウザー内で比較、解析、書き出し処理を行います。
+            ファイル名、サムネイル、比較結果、解析結果も通常の素材処理の一部としてブラウザー内で扱います。
+          </p>
+          <p>
+            DualView には、これらのローカル素材を運営者が閲覧するためのアップロード機能はありません。
+            素材を処理するために、その権利を YukiWorks432 へ譲渡したり、包括的な利用許諾を与えたりする必要もありません。
+          </p>
+          <p>
+            画面キャプチャは、利用者の操作とブラウザーの許可に基づいて素材を取り込む機能です。
+            キャプチャした素材をサーバーへ送信する機能ではありません。
+          </p>
+        </section>
+
+        <section class="card" id="local-storage">
+          <h2>ブラウザー内の保存と削除</h2>
+          <p>
+            DualView は IndexedDB を使い、プロジェクト設定、素材のメタデータ、サムネイル、
+            素材本体をこのブラウザープロファイル内に保存します。素材、タイムライン、設定の変更は自動保存され、
+            手動の保存操作も利用できます。タブを閉じるだけでは保存済みデータは削除されません。
+          </p>
+          <p>
+            共有端末では、同じブラウザープロファイルを使う別の利用者が保存済みプロジェクトを開ける可能性があります。
+            保存容量の不足、プライベートブラウジング、ブラウザーによるデータ消去、利用者によるサイトデータ削除などにより、
+            保存や復元ができない場合があります。DualView は保存データのバックアップを保証しません。
+          </p>
+          <p>
+            プロジェクト単位の削除は Projects 画面から行えます。サイトに保存されたデータ全体を消したい場合は、
+            ブラウザーのサイトデータ削除機能を利用してください。これらの操作は、元のローカルファイル、
+            すでにダウンロードした書き出しファイル、別のブラウザーや別プロファイルのデータまで削除するものではありません。
+          </p>
+          <p>
+            <code>.dualview</code> プロジェクトファイルには素材本体が Base64 データとして含まれます。
+            設定だけのファイルではなく、暗号化形式でもありません。第三者へ送付・公開する前に、
+            含まれる素材を確認してください。
+          </p>
+        </section>
+
+        <section class="card" id="external-communication">
+          <h2>サイト配信と外部通信</h2>
+          <p>
+            素材のローカル処理と、ウェブサイトを利用するために必要な通信は別のものです。
+            現在の公開サイトでは、主に次の通信が発生します。
+          </p>
+          <table>
+            <thead>
+              <tr>
+                <th>通信</th>
+                <th>送信先</th>
+                <th>情報・目的・発生タイミング</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>サイト・追加プログラムの読み込み</td>
+                <td>DualView の配信基盤である Cloudflare</td>
+                <td>
+                  IPアドレス、要求URL、ブラウザーが通常送る通信情報など。サイト配信、通信処理、
+                  セキュリティのため、ページや必要なプログラムを取得するときに発生します。
+                </td>
+              </tr>
+              <tr>
+                <td>URLからの取り込み</td>
+                <td>利用者が指定した取得先と、そのリダイレクト先</td>
+                <td>
+                  IPアドレス、要求URLなど。利用者が Import を実行して指定素材を取得するときに発生します。
+                  取得後の比較・解析は端末内で行います。
+                </td>
+              </tr>
+              <tr>
+                <td>外部リンク</td>
+                <td>利用者が開いたリンク先</td>
+                <td>
+                  リンクを開いた後の通信や情報の取り扱いには、リンク先サイトの説明や
+                  プライバシーポリシーが適用されます。
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <p>
+            URL取り込みは、ブラウザーから取得先へ直接接続します。認証情報を付けない
+            <code>credentials: 'omit'</code> と、参照元を送らない
+            <code>referrerPolicy: 'no-referrer'</code> を使用していますが、
+            接続先から完全に匿名になることを保証するものではありません。
+            取得先がリダイレクトした場合は、そのリダイレクト先にも通信します。
+            選択済みの別のローカル素材を取得先へ送る処理はありません。
+          </p>
+          <p>
+            Cloudflare の配信・セキュリティ機能では、アクセス時の通信情報や Cookie
+            が取り扱われる場合があります。このページは「アクセスログが存在しない」「Cookie を一切使わない」
+            「すべての処理が日本国内だけで完結する」とは保証しません。
+          </p>
+          <div class="link-list">
+            <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener noreferrer">
+              Cloudflare Privacy Policy ↗
+            </a>
+            <a
+              href="https://developers.cloudflare.com/fundamentals/reference/policies-compliances/cloudflare-cookies/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Cloudflare Cookies ↗
+            </a>
+          </div>
+        </section>
+
+        <section class="card" id="contact">
+          <h2>問い合わせ・開示等の請求</h2>
+          <p>
+            通常の不具合報告や再現手順は
+            <a href="https://github.com/YukiWorks432/dualview/issues" target="_blank" rel="noopener noreferrer">
+              YukiWorks432/dualview の GitHub Issues ↗
+            </a>
+            を利用できます。GitHub Issues は公開されるため、機密素材、個人情報、非公開URLなどを添付しないでください。
+          </p>
+          <p>
+            個人情報を含む相談、開示・訂正・利用停止等の請求、苦情、安全管理措置に関する問い合わせは、
+            <a href="https://hanayuki.xyz/contact/" target="_blank" rel="noopener noreferrer">
+              hanayuki.xyz の問い合わせ窓口 ↗
+            </a>
+            へ連絡してください。問い合わせ時に任意で送られた連絡先や内容は、
+            問い合わせ対応、障害調査、法令に基づく請求への対応に利用します。
+            これは DualView 上での通常の素材処理とは別の取り扱いです。
+          </p>
+          <p>
+            公開上の運営名は <strong>YukiWorks432</strong> です。氏名、住所その他の情報について
+            法令上の提供が必要な場合は、本人からの求めに応じて遅滞なく回答する運用とします。
+            請求内容に応じて本人確認その他の必要な手続を案内します。
+          </p>
+          <p>
+            個人情報の通知・周知、開示等の手続に関する一般的な考え方は、
+            <a
+              href="https://www.ppc.go.jp/personalinfo/legal/guidelines_tsusoku/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              個人情報保護委員会「個人情報の保護に関する法律についてのガイドライン（通則編）」↗
+            </a>
+            を参照しています。
+          </p>
+        </section>
+
+        <section class="card">
+          <h2>適用範囲と更新</h2>
+          <p>
+            この説明は YukiWorks432 が提供する DualView maintained fork の公開サイトを対象とします。
+            原プロジェクトのサイトや、第三者が公開する別のフォークに同じ取り扱いを保証するものではありません。
+          </p>
+          <p>
+            データの取り扱いに重要な変更がある場合は、このページの最終更新日を更新し、
+            必要に応じてリポジトリなどでも案内します。将来、アカウント同期、解析、広告、自動エラー送信、
+            有料機能などを導入する場合は、その変更に合わせて説明を更新します。
+          </p>
+        </section>
+      </section>
+
+      <section class="language-block" lang="en">
+        <span class="language-label">English</span>
+
+        <section class="card notice">
+          <h2>Media processing</h2>
+          <p>
+            Images, videos, embedded video audio, file names, thumbnails, comparison results, and
+            analysis results imported through the file picker, drag and drop, image paste, or screen
+            capture are processed in the browser on this device. DualView does not provide an upload
+            path that lets the operator inspect those local media files, and using the tool does not
+            require transferring ownership of the media or granting the operator a broad license.
+          </p>
+          <p>
+            Screen capture occurs only after your action and the browser's permission flow. It is an
+            import source, not a server upload feature.
+          </p>
+        </section>
+
+        <section class="card">
+          <h2>Storage and deletion in your browser</h2>
+          <p>
+            DualView stores project settings, media metadata, thumbnails, and media blobs in
+            IndexedDB in the current browser profile. Media, timeline, and setting changes are saved
+            automatically, and manual save is also available. Closing the tab alone does not remove
+            saved data.
+          </p>
+          <p>
+            Someone using the same browser profile on a shared device may be able to open saved
+            projects. Storage limits, private browsing, browser eviction, or clearing site data can
+            prevent saving or recovery. DualView does not guarantee a backup.
+          </p>
+          <p>
+            Delete individual projects from the Projects screen, or use your browser's site-data
+            controls to remove the site's stored data. These actions do not delete your original
+            local files, files you already downloaded, or data held by another browser or profile.
+          </p>
+          <p>
+            A <code>.dualview</code> project file contains the media itself as Base64 data. It is
+            not a settings-only file and is not encrypted. Check its contents before sharing or
+            publishing it.
+          </p>
+        </section>
+
+        <section class="card">
+          <h2>Site delivery and external communication</h2>
+          <p>
+            Local media processing is separate from the network traffic required to use a website.
+            Loading the site and additional program files contacts Cloudflare, the delivery
+            provider, and normal web requests can disclose information such as your IP address,
+            requested URL, and browser-supplied network metadata for delivery, processing, and
+            security.
+          </p>
+          <p>
+            URL import is user initiated and connects your browser directly to the destination you
+            enter and any redirect destination. Those sites can receive your IP address and the
+            requested URL. DualView uses <code>credentials: 'omit'</code> and
+            <code>referrerPolicy: 'no-referrer'</code>, but this does not make the request fully
+            anonymous. Other local media you selected is not sent to the URL-import destination.
+          </p>
+          <p>
+            Following an external link is governed by the destination site's own privacy
+            information. Cloudflare may process network information or cookies as part of delivery
+            and security, so this page does not claim that there are no logs or cookies, that all
+            processing occurs only in Japan, or that a particular retention period applies.
+          </p>
+        </section>
+
+        <section class="card">
+          <h2>Contact and data-rights requests</h2>
+          <p>
+            Use the public GitHub Issues repository for ordinary bug reports, but do not attach
+            confidential media or personal information there. For requests or complaints that
+            include personal information, including applicable access, correction, or suspension
+            requests, use the contact page at hanayuki.xyz. Contact details and messages you choose
+            to send are used for responding to inquiries, investigating reported problems, and
+            handling legally required requests. This is separate from normal media processing in
+            DualView.
+          </p>
+          <p>
+            The public operator name is <strong>YukiWorks432</strong>. Where the law requires
+            disclosure of a legal name, address, or similar information, it will be provided
+            without undue delay upon an applicable request. Identity verification or other
+            procedures may be requested where appropriate.
+          </p>
+        </section>
+
+        <section class="card">
+          <h2>Scope and updates</h2>
+          <p>
+            This notice applies to the public DualView maintained fork provided by YukiWorks432. It
+            does not make promises for the upstream site or other third-party forks. Material
+            changes to data handling will update the date on this page and, where appropriate, be
+            announced through the repository or related project channels.
+          </p>
+          <p class="meta">Effective and last updated: September 29, 2026</p>
+        </section>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <a href="/">Open DualView</a> ·
+      <a href="https://github.com/YukiWorks432/dualview" target="_blank" rel="noopener noreferrer">Source ↗</a>
+    </footer>
+  </body>
+</html>
