@@ -10,6 +10,7 @@ import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import { isVideoFrameReady, type VideoFrameElement } from '../../lib/media/frameSource'
 import { usePlaybackStore } from '../../stores/playbackStore'
 import { useTimelineStore } from '../../stores/timelineStore'
+import { ElevatedSurface } from '../ui'
 
 interface DifferenceDataPoint {
   time: number
@@ -345,22 +346,22 @@ export function TemporalDiffGraph({ videoARef, videoBRef, isVisible }: TemporalD
   if (!isVisible) return null
 
   return (
-    <div className="bg-[#1a1a1a] border-t border-gray-700">
+    <ElevatedSurface offset={1} shadowLevel={null} className="border-t border-border">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2 border-b border-gray-700">
+      <div className="flex items-center justify-between px-4 py-2 border-b border-border">
         <div className="flex items-center gap-2">
-          <BarChart2 size={16} className="text-[#ff5722]" />
-          <span className="text-sm text-gray-300 font-medium">Temporal Difference Analysis</span>
+          <BarChart2 size={16} className="text-accent" />
+          <span className="text-sm text-text-secondary font-medium">Temporal Difference Analysis</span>
         </div>
         <div className="flex items-center gap-2">
           {data.length > 0 && (
-            <span className="text-xs text-gray-500">
+            <span className="text-xs text-text-muted">
               {peaks.length} peak{peaks.length !== 1 ? 's' : ''} detected
             </span>
           )}
           <button
             onClick={togglePlay}
-            className="p-1 rounded bg-black/50 text-gray-400 hover:text-white transition-colors"
+            className="surface-control ui-radius-sm p-1 text-text-secondary hover:text-text-primary transition-colors"
             title={isPlaying ? 'Pause' : 'Play'}
           >
             {isPlaying ? <Pause size={14} /> : <Play size={14} />}
@@ -368,10 +369,10 @@ export function TemporalDiffGraph({ videoARef, videoBRef, isVisible }: TemporalD
           <button
             onClick={analyzeVideo}
             disabled={isAnalyzing}
-            className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+            className={`ui-radius-sm px-3 py-1 text-xs font-medium transition-colors ${
               isAnalyzing
-                ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                : 'bg-[#ff5722] text-white hover:bg-[#e64a19]'
+                ? 'bg-surface-alt text-text-secondary cursor-not-allowed'
+                : 'bg-accent text-text-primary hover:bg-accent-hover'
             }`}
           >
             {isAnalyzing ? (
@@ -399,8 +400,8 @@ export function TemporalDiffGraph({ videoARef, videoBRef, isVisible }: TemporalD
 
       {/* Peak list */}
       {peaks.length > 0 && (
-        <div className="flex items-center gap-2 px-4 py-2 border-t border-gray-700 overflow-x-auto">
-          <span className="text-xs text-gray-500 whitespace-nowrap">Jump to peak:</span>
+        <div className="flex items-center gap-2 px-4 py-2 border-t border-border overflow-x-auto">
+          <span className="text-xs text-text-muted whitespace-nowrap">Jump to peak:</span>
           {peaks.map((peakIndex, i) => {
             const point = data[peakIndex]
             const minutes = Math.floor(point.time / 60)
@@ -417,6 +418,6 @@ export function TemporalDiffGraph({ videoARef, videoBRef, isVisible }: TemporalD
           })}
         </div>
       )}
-    </div>
+    </ElevatedSurface>
   )
 }

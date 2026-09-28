@@ -341,7 +341,7 @@ export function GamutWarningOverlay({
                           setTargetGamut(space.name)
                           setShowDropdown(false)
                         }}
-                        className={`w-full px-3 py-2 text-left text-sm hover:bg-surface-hover ${
+                        className={`w-full ui-radius-sm px-3 py-2 text-left text-sm hover:bg-surface-hover ${
                           targetGamut === space.name
                             ? 'bg-accent/20 text-accent'
                             : 'text-text-primary'

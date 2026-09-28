@@ -18,6 +18,7 @@ import {
 import { useState, useCallback, useRef } from 'react'
 
 import { useMediaStore } from '../../stores/mediaStore'
+import { ElevatedSurface } from '../ui'
 
 interface BatchResult {
   idA: string
@@ -287,33 +288,33 @@ export function BatchComparison({ isOpen, onClose }: BatchComparisonProps) {
 
   return (
     <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-      <div className="bg-[#1a1a1a] rounded-lg w-full max-w-6xl max-h-[90vh] flex flex-col">
+      <ElevatedSurface offset={3} className="ui-radius-lg w-full max-w-6xl max-h-[90vh] flex flex-col border border-transparent">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border">
           <div className="flex items-center gap-3">
-            <Grid3X3 size={20} className="text-[#ff5722]" />
-            <h2 className="text-lg font-semibold text-white">Batch Comparison (WEBGL-013)</h2>
+            <Grid3X3 size={20} className="text-accent" />
+            <h2 className="text-lg font-semibold text-text-primary">Batch Comparison (WEBGL-013)</h2>
           </div>
-          <button onClick={onClose} className="p-2 text-gray-400 hover:text-white">
+          <button onClick={onClose} className="surface-interactive ui-radius-sm p-2 text-text-secondary hover:text-text-primary">
             <X size={20} />
           </button>
         </div>
 
         <div className="flex-1 flex overflow-hidden">
           {/* Left Panel: File Selection */}
-          <div className="w-64 border-r border-gray-700 flex flex-col">
-            <div className="p-4 border-b border-gray-700">
-              <div className="text-sm text-gray-400 mb-2">Select Images to Compare</div>
+          <div className="w-64 border-r border-border flex flex-col">
+            <div className="p-4 border-b border-border">
+              <div className="text-sm text-text-secondary mb-2">Select Images to Compare</div>
               <div className="flex gap-2">
                 <button
                   onClick={selectAll}
-                  className="flex-1 px-2 py-1 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600"
+                  className="flex-1 px-2 py-1 text-xs bg-surface-alt text-text-secondary ui-radius-md hover:bg-surface-hover"
                 >
                   Select All
                 </button>
                 <button
                   onClick={clearSelection}
-                  className="flex-1 px-2 py-1 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600"
+                  className="flex-1 px-2 py-1 text-xs bg-surface-alt text-text-secondary ui-radius-md hover:bg-surface-hover"
                 >
                   Clear
                 </button>
@@ -322,7 +323,7 @@ export function BatchComparison({ isOpen, onClose }: BatchComparisonProps) {
 
             <div className="flex-1 overflow-y-auto p-2">
               {imageFiles.length === 0 ? (
-                <div className="text-center text-gray-500 py-8">
+                <div className="text-center text-text-muted py-8">
                   <Upload size={32} className="mx-auto mb-2 opacity-50" />
                   <p className="text-sm">No images in library</p>
                 </div>
@@ -332,10 +333,10 @@ export function BatchComparison({ isOpen, onClose }: BatchComparisonProps) {
                     <button
                       key={file.id}
                       onClick={() => toggleFile(file.id)}
-                      className={`w-full flex items-center gap-2 px-2 py-1.5 rounded text-sm text-left ${
+                      className={`w-full flex items-center gap-2 px-2 py-1.5 ui-radius-md text-sm text-left ${
                         selectedFiles.includes(file.id)
-                          ? 'bg-[#ff5722]/20 text-white border border-[#ff5722]'
-                          : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                          ? 'bg-accent/20 text-text-primary border border-[#ff5722]'
+                          : 'bg-surface text-text-secondary hover:bg-surface-alt'
                       }`}
                     >
                       {file.thumbnail && (
@@ -348,21 +349,21 @@ export function BatchComparison({ isOpen, onClose }: BatchComparisonProps) {
               )}
             </div>
 
-            <div className="p-4 border-t border-gray-700">
-              <div className="text-sm text-gray-400 mb-2">
+            <div className="p-4 border-t border-border">
+              <div className="text-sm text-text-secondary mb-2">
                 {selectedFiles.length} files selected
               </div>
               {isProcessing ? (
                 <div className="space-y-2">
-                  <div className="h-2 bg-gray-700 rounded overflow-hidden">
+                  <div className="h-2 bg-surface-alt ui-radius-md overflow-hidden">
                     <div
-                      className="h-full bg-[#ff5722] transition-all"
+                      className="h-full bg-accent transition-all"
                       style={{ width: `${progress}%` }}
                     />
                   </div>
                   <button
                     onClick={stopProcessing}
-                    className="w-full px-4 py-2 bg-red-600 text-white rounded flex items-center justify-center gap-2"
+                    className="w-full px-4 py-2 bg-red-600 text-text-primary ui-radius-md flex items-center justify-center gap-2"
                   >
                     <Pause size={16} />
                     Stop
@@ -372,7 +373,7 @@ export function BatchComparison({ isOpen, onClose }: BatchComparisonProps) {
                 <button
                   onClick={runBatchComparison}
                   disabled={selectedFiles.length < 2}
-                  className="w-full px-4 py-2 bg-[#ff5722] text-white rounded flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full px-4 py-2 bg-accent text-text-primary ui-radius-md flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Play size={16} />
                   Compare ({Math.floor(
@@ -388,30 +389,30 @@ export function BatchComparison({ isOpen, onClose }: BatchComparisonProps) {
           <div className="flex-1 flex flex-col overflow-hidden">
             {/* Summary Stats */}
             {summaryStats && (
-              <div className="px-6 py-3 border-b border-gray-700 bg-[#252525]">
-                <div className="text-xs text-gray-400 uppercase tracking-wide mb-2">Summary</div>
+              <div className="px-6 py-3 border-b border-border bg-surface-alt">
+                <div className="text-xs text-text-secondary uppercase tracking-wide mb-2">Summary</div>
                 <div className="grid grid-cols-5 gap-4 text-sm">
                   <div>
-                    <div className="text-gray-500">Avg SSIM</div>
-                    <div className="text-white font-mono">{summaryStats.avgSSIM.toFixed(4)}</div>
+                    <div className="text-text-muted">Avg SSIM</div>
+                    <div className="text-text-primary font-mono">{summaryStats.avgSSIM.toFixed(4)}</div>
                   </div>
                   <div>
-                    <div className="text-gray-500">Min SSIM</div>
+                    <div className="text-text-muted">Min SSIM</div>
                     <div className="text-red-400 font-mono">{summaryStats.minSSIM.toFixed(4)}</div>
                   </div>
                   <div>
-                    <div className="text-gray-500">Max SSIM</div>
+                    <div className="text-text-muted">Max SSIM</div>
                     <div className="text-green-400 font-mono">
                       {summaryStats.maxSSIM.toFixed(4)}
                     </div>
                   </div>
                   <div>
-                    <div className="text-gray-500">Avg Delta E</div>
-                    <div className="text-white font-mono">{summaryStats.avgDeltaE.toFixed(2)}</div>
+                    <div className="text-text-muted">Avg Delta E</div>
+                    <div className="text-text-primary font-mono">{summaryStats.avgDeltaE.toFixed(2)}</div>
                   </div>
                   <div>
-                    <div className="text-gray-500">Avg Diff %</div>
-                    <div className="text-white font-mono">
+                    <div className="text-text-muted">Avg Diff %</div>
+                    <div className="text-text-primary font-mono">
                       {summaryStats.avgDiffPercent.toFixed(1)}%
                     </div>
                   </div>
@@ -420,13 +421,13 @@ export function BatchComparison({ isOpen, onClose }: BatchComparisonProps) {
             )}
 
             {/* Toolbar */}
-            <div className="px-6 py-3 border-b border-gray-700 flex items-center gap-4">
+            <div className="px-6 py-3 border-b border-border flex items-center gap-4">
               <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-400">Sort by:</span>
+                <span className="text-sm text-text-secondary">Sort by:</span>
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-                  className="bg-gray-800 border border-gray-600 rounded px-2 py-1 text-sm text-white"
+                  className="bg-surface border border-border ui-radius-md px-2 py-1 text-sm text-text-primary"
                 >
                   <option value="ssim">SSIM</option>
                   <option value="deltaE">Delta E</option>
@@ -434,20 +435,20 @@ export function BatchComparison({ isOpen, onClose }: BatchComparisonProps) {
                 </select>
                 <button
                   onClick={() => setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'))}
-                  className="p-1 text-gray-400 hover:text-white"
+                  className="surface-interactive ui-radius-sm p-1 text-text-secondary hover:text-text-primary"
                 >
                   {sortOrder === 'asc' ? <SortAsc size={16} /> : <SortDesc size={16} />}
                 </button>
               </div>
 
               <div className="flex items-center gap-2">
-                <Filter size={16} className="text-gray-400" />
-                <label className="flex items-center gap-2 text-sm text-gray-400">
+                <Filter size={16} className="text-text-secondary" />
+                <label className="flex items-center gap-2 text-sm text-text-secondary">
                   <input
                     type="checkbox"
                     checked={showOnlyDifferent}
                     onChange={(e) => setShowOnlyDifferent(e.target.checked)}
-                    className="rounded"
+                    className="ui-radius-sm"
                   />
                   Only different
                 </label>
@@ -459,7 +460,7 @@ export function BatchComparison({ isOpen, onClose }: BatchComparisonProps) {
                 <button
                   onClick={exportJSON}
                   disabled={results.length === 0}
-                  className="flex items-center gap-1 px-3 py-1.5 bg-gray-700 text-gray-300 rounded text-sm hover:bg-gray-600 disabled:opacity-50"
+                  className="flex items-center gap-1 px-3 py-1.5 bg-surface-alt text-text-secondary ui-radius-md text-sm hover:bg-surface-hover disabled:opacity-50"
                 >
                   <FileJson size={14} />
                   JSON
@@ -467,7 +468,7 @@ export function BatchComparison({ isOpen, onClose }: BatchComparisonProps) {
                 <button
                   onClick={exportCSV}
                   disabled={results.length === 0}
-                  className="flex items-center gap-1 px-3 py-1.5 bg-gray-700 text-gray-300 rounded text-sm hover:bg-gray-600 disabled:opacity-50"
+                  className="flex items-center gap-1 px-3 py-1.5 bg-surface-alt text-text-secondary ui-radius-md text-sm hover:bg-surface-hover disabled:opacity-50"
                 >
                   <FileSpreadsheet size={14} />
                   CSV
@@ -478,34 +479,34 @@ export function BatchComparison({ isOpen, onClose }: BatchComparisonProps) {
             {/* Results Table */}
             <div className="flex-1 overflow-auto">
               {filteredResults.length === 0 ? (
-                <div className="flex items-center justify-center h-full text-gray-500">
+                <div className="flex items-center justify-center h-full text-text-muted">
                   {results.length === 0
                     ? 'Select files and run comparison'
                     : 'No results match current filters'}
                 </div>
               ) : (
                 <table className="w-full text-sm">
-                  <thead className="bg-[#252525] sticky top-0">
+                  <thead className="bg-surface-alt sticky top-0">
                     <tr>
-                      <th className="text-left px-4 py-2 text-gray-400 font-medium">File A</th>
-                      <th className="text-left px-4 py-2 text-gray-400 font-medium">File B</th>
-                      <th className="text-right px-4 py-2 text-gray-400 font-medium">SSIM</th>
-                      <th className="text-right px-4 py-2 text-gray-400 font-medium">Delta E</th>
-                      <th className="text-right px-4 py-2 text-gray-400 font-medium">Diff %</th>
-                      <th className="text-right px-4 py-2 text-gray-400 font-medium">Peak</th>
-                      <th className="text-right px-4 py-2 text-gray-400 font-medium">Mean</th>
+                      <th className="text-left px-4 py-2 text-text-secondary font-medium">File A</th>
+                      <th className="text-left px-4 py-2 text-text-secondary font-medium">File B</th>
+                      <th className="text-right px-4 py-2 text-text-secondary font-medium">SSIM</th>
+                      <th className="text-right px-4 py-2 text-text-secondary font-medium">Delta E</th>
+                      <th className="text-right px-4 py-2 text-text-secondary font-medium">Diff %</th>
+                      <th className="text-right px-4 py-2 text-text-secondary font-medium">Peak</th>
+                      <th className="text-right px-4 py-2 text-text-secondary font-medium">Mean</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredResults.map((result, idx) => (
                       <tr
                         key={`${result.idA}-${result.idB}`}
-                        className={idx % 2 === 0 ? 'bg-[#1a1a1a]' : 'bg-[#222]'}
+                        className={idx % 2 === 0 ? 'bg-surface' : 'bg-surface-hover'}
                       >
-                        <td className="px-4 py-2 text-white truncate max-w-[150px]">
+                        <td className="px-4 py-2 text-text-primary truncate max-w-[150px]">
                           {result.nameA}
                         </td>
-                        <td className="px-4 py-2 text-white truncate max-w-[150px]">
+                        <td className="px-4 py-2 text-text-primary truncate max-w-[150px]">
                           {result.nameB}
                         </td>
                         <td
@@ -541,10 +542,10 @@ export function BatchComparison({ isOpen, onClose }: BatchComparisonProps) {
                         >
                           {result.diffPixelPercent.toFixed(1)}%
                         </td>
-                        <td className="px-4 py-2 text-right font-mono text-gray-300">
+                        <td className="px-4 py-2 text-right font-mono text-text-secondary">
                           {result.peakDifference.toFixed(0)}
                         </td>
-                        <td className="px-4 py-2 text-right font-mono text-gray-300">
+                        <td className="px-4 py-2 text-right font-mono text-text-secondary">
                           {result.meanDifference.toFixed(1)}
                         </td>
                       </tr>
@@ -555,12 +556,12 @@ export function BatchComparison({ isOpen, onClose }: BatchComparisonProps) {
             </div>
 
             {/* Footer */}
-            <div className="px-6 py-2 border-t border-gray-700 text-xs text-gray-500">
+            <div className="px-6 py-2 border-t border-border text-xs text-text-muted">
               Showing {filteredResults.length} of {results.length} results
             </div>
           </div>
         </div>
-      </div>
+      </ElevatedSurface>
 
       {/* Hidden canvas for processing */}
       <canvas ref={canvasRef} className="hidden" width={640} height={480} />
@@ -573,7 +574,7 @@ export function BatchComparisonToggle({ onClick }: { onClick: () => void }) {
   return (
     <button
       onClick={onClick}
-      className="p-2 rounded bg-black/70 text-gray-400 hover:text-white transition-colors"
+      className="p-2 ui-radius-md bg-black/70 text-text-secondary hover:text-text-primary transition-colors"
       title="Batch Comparison (WEBGL-013)"
     >
       <Grid3X3 size={16} />

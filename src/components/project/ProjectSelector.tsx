@@ -23,6 +23,7 @@ import { usePersistenceStore, type ProjectMetadata } from '../../stores/persiste
 import { Button } from '../ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '../ui/dialog'
 import { Input } from '../ui/input'
+import { ElevatedSurface } from '../ui/surface'
 
 interface ProjectSelectorProps {
   isOpen: boolean
@@ -246,7 +247,7 @@ export function ProjectSelector({ isOpen, onClose }: ProjectSelectorProps) {
               Storage: {formatBytes(storageUsage.used)} / {formatBytes(storageUsage.quota)}
             </span>
             <div
-              className="h-1.5 w-24 overflow-hidden bg-border"
+              className="h-1.5 w-24 overflow-hidden ui-radius-sm bg-border"
               role="progressbar"
               aria-label="Project storage used"
               aria-valuemin={0}
@@ -296,8 +297,9 @@ function ProjectCard({
   onExport,
 }: ProjectCardProps) {
   return (
-    <article
-      className={`relative overflow-hidden border bg-surface-alt transition-colors ${
+    <ElevatedSurface asChild offset={1}>
+      <article
+        className={`relative overflow-hidden ui-radius-lg border transition-colors ${
         isActive ? 'border-accent bg-accent/10' : 'border-border'
       } ${isSelected ? 'selected-ring' : ''} hover:border-border-hover`}
     >
@@ -332,7 +334,7 @@ function ProjectCard({
               {project.tags.slice(0, 3).map((tag) => (
                 <span
                   key={tag}
-                  className="border border-border bg-surface px-1.5 py-0.5 text-xs text-text-secondary"
+                  className="ui-radius-sm border border-border bg-surface px-1.5 py-0.5 text-xs text-text-secondary"
                 >
                   {tag}
                 </span>
@@ -404,10 +406,11 @@ function ProjectCard({
       )}
 
       {isActive && (
-        <div className="absolute right-2 top-2 bg-accent px-2 py-0.5 text-xs text-white">
+        <div className="absolute right-2 top-2 ui-radius-sm bg-accent px-2 py-0.5 text-xs text-white">
           Current
         </div>
       )}
-    </article>
+      </article>
+    </ElevatedSurface>
   )
 }

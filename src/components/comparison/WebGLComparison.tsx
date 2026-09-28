@@ -859,7 +859,7 @@ export function WebGLComparison() {
 
   if (!isSupported) {
     return (
-      <div className="w-full h-full flex items-center justify-center bg-[#1a1a1a]">
+      <div className="w-full h-full flex items-center justify-center bg-surface">
         <div className="text-center p-8">
           <div className="text-4xl mb-4">⚠️</div>
           <h3 className="text-xl font-bold text-white mb-2">WebGL Not Supported</h3>
@@ -877,7 +877,7 @@ export function WebGLComparison() {
 
   if (!mediaA && !mediaB) {
     return (
-      <div className="w-full h-full flex items-center justify-center bg-[#1a1a1a] p-4">
+      <div className="w-full h-full flex items-center justify-center bg-surface p-4">
         <div className="text-center max-w-2xl w-full">
           {/* Hidden file input */}
           <input
@@ -896,9 +896,9 @@ export function WebGLComparison() {
           {/* Upload sections for Track A and Track B */}
           <div className="grid grid-cols-2 gap-4">
             {/* Track A Upload */}
-            <div className="p-3 bg-[#252525] border border-orange-500/30">
+            <div className="ui-radius-lg bg-surface-alt p-3 border border-orange-500/30">
               <div className="flex items-center gap-2 mb-3">
-                <div className="w-6 h-6 bg-orange-500/20 flex items-center justify-center">
+                <div className="w-6 h-6 ui-radius-sm bg-orange-500/20 flex items-center justify-center">
                   <span className="text-orange-400 font-bold text-xs">A</span>
                 </div>
                 <span className="text-sm font-medium text-orange-400">Media A</span>
@@ -906,14 +906,14 @@ export function WebGLComparison() {
               <div className="grid grid-cols-2 gap-1.5">
                 <button
                   onClick={() => triggerUpload('a')}
-                  className="flex flex-col items-center gap-1 p-3 border border-blue-500/30 bg-blue-500/10 hover:bg-blue-500/20 transition-all"
+                  className="flex flex-col items-center gap-1 ui-radius-md p-3 border border-blue-500/30 bg-blue-500/10 hover:bg-blue-500/20 transition-all"
                 >
                   <Image className="w-5 h-5 text-blue-400" />
                   <span className="text-[10px] font-medium text-blue-400">Image</span>
                 </button>
                 <button
                   onClick={() => triggerUpload('a')}
-                  className="flex flex-col items-center gap-1 p-3 border border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 transition-all"
+                  className="flex flex-col items-center gap-1 ui-radius-md p-3 border border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 transition-all"
                 >
                   <Video className="w-5 h-5 text-purple-400" />
                   <span className="text-[10px] font-medium text-purple-400">Video</span>
@@ -922,9 +922,9 @@ export function WebGLComparison() {
             </div>
 
             {/* Track B Upload */}
-            <div className="p-3 bg-[#252525] border border-lime-400/30">
+            <div className="ui-radius-lg bg-surface-alt p-3 border border-lime-400/30">
               <div className="flex items-center gap-2 mb-3">
-                <div className="w-6 h-6 bg-lime-400/20 flex items-center justify-center">
+                <div className="w-6 h-6 ui-radius-sm bg-lime-400/20 flex items-center justify-center">
                   <span className="text-lime-400 font-bold text-xs">B</span>
                 </div>
                 <span className="text-sm font-medium text-lime-400">Media B</span>
@@ -932,14 +932,14 @@ export function WebGLComparison() {
               <div className="grid grid-cols-2 gap-1.5">
                 <button
                   onClick={() => triggerUpload('b')}
-                  className="flex flex-col items-center gap-1 p-3 border border-blue-500/30 bg-blue-500/10 hover:bg-blue-500/20 transition-all"
+                  className="flex flex-col items-center gap-1 ui-radius-md p-3 border border-blue-500/30 bg-blue-500/10 hover:bg-blue-500/20 transition-all"
                 >
                   <Image className="w-5 h-5 text-blue-400" />
                   <span className="text-[10px] font-medium text-blue-400">Image</span>
                 </button>
                 <button
                   onClick={() => triggerUpload('b')}
-                  className="flex flex-col items-center gap-1 p-3 border border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 transition-all"
+                  className="flex flex-col items-center gap-1 ui-radius-md p-3 border border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 transition-all"
                 >
                   <Video className="w-5 h-5 text-purple-400" />
                   <span className="text-[10px] font-medium text-purple-400">Video</span>
