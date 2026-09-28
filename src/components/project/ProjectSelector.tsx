@@ -198,10 +198,10 @@ export function ProjectSelector({ isOpen, onClose }: ProjectSelectorProps) {
 
         <div className="border-b border-border px-6 py-3 text-xs leading-relaxed text-text-muted">
           <p>
-            Projects and media are stored in this browser and remain after you close the tab.
-            People using the same browser profile on a shared device may be able to open saved
-            projects. Deleting a project removes its DualView browser storage; it does not delete
-            your original files or files you already downloaded.
+            Projects and media are stored in this browser and remain after you close the tab. People
+            using the same browser profile on a shared device may be able to open saved projects.
+            Deleting a project removes its DualView browser storage; it does not delete your
+            original files or files you already downloaded.
           </p>
           <p className="mt-2">
             <strong className="font-semibold text-text-secondary">
