@@ -35,6 +35,7 @@ import { useProjectStore } from '../../stores/projectStore'
 import { useTimelineStore } from '../../stores/timelineStore'
 import type { MorphOperation, MorphElementSize, MorphElementShape } from '../../types'
 import { VideoSurface } from '../media/VideoSurface'
+import { ElevatedSurface } from '../ui'
 
 // Generate structuring element kernel
 function generateKernel(size: MorphElementSize, shape: MorphElementShape): number[][] {
@@ -516,7 +517,7 @@ export function MorphologicalView() {
             <div key={idx} className="flex items-center">
               <button
                 onClick={() => removeMorphOperation(idx)}
-                className="px-2 py-1 bg-surface rounded text-xs text-white hover:bg-red-600 transition-colors group"
+                className="surface-control ui-radius-sm border px-2 py-1 text-xs text-text-primary hover:bg-error/20 transition-colors group"
                 title="Click to remove"
               >
                 {op}
@@ -531,7 +532,7 @@ export function MorphologicalView() {
         {morphologicalSettings.operations.length > 0 && (
           <button
             onClick={clearMorphOperations}
-            className="ml-2 p-1 text-gray-400 hover:text-red-400"
+            className="surface-control ui-radius-sm border ml-2 p-1 text-text-secondary hover:text-error"
             title="Clear all"
           >
             <Trash2 size={14} />
@@ -540,20 +541,20 @@ export function MorphologicalView() {
       </div>
 
       {/* Controls panel */}
-      <div className="absolute right-4 top-4 flex flex-col gap-3">
+      <ElevatedSurface offset={1} className="absolute right-4 top-4 ui-radius-lg flex flex-col gap-3 border border-transparent p-1">
         {/* Show original toggle */}
         <button
           onClick={() =>
             setMorphologicalSettings({ showOriginal: !morphologicalSettings.showOriginal })
           }
-          className={`p-2 rounded transition-colors ${morphologicalSettings.showOriginal ? 'bg-accent text-white' : 'bg-black/70 text-gray-400 hover:text-white'}`}
+          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${morphologicalSettings.showOriginal ? 'border-accent bg-accent text-white' : 'surface-control text-text-secondary hover:text-text-primary'}`}
           title={
             morphologicalSettings.showOriginal ? 'Hide original' : 'Show original side-by-side'
           }
         >
           {morphologicalSettings.showOriginal ? <Eye size={16} /> : <EyeOff size={16} />}
         </button>
-      </div>
+      </ElevatedSurface>
 
       {/* Operation buttons */}
       <div className="absolute bottom-20 left-4 right-4 flex justify-center gap-2">
@@ -561,7 +562,7 @@ export function MorphologicalView() {
           <button
             key={op.id}
             onClick={() => addMorphOperation(op.id)}
-            className="px-3 py-2 bg-black/70 hover:bg-accent/50 rounded text-sm text-white flex items-center gap-2 transition-colors"
+            className="surface-control ui-radius-md flex items-center gap-2 border px-3 py-2 text-sm text-text-primary transition-colors hover:text-accent"
             title={op.description}
           >
             {op.icon}
@@ -571,7 +572,7 @@ export function MorphologicalView() {
       </div>
 
       {/* Settings panel */}
-      <div className="absolute bottom-4 left-4 bg-black/70 px-3 py-2 rounded flex items-center gap-4">
+      <ElevatedSurface offset={1} className="absolute bottom-4 left-4 ui-radius-lg flex items-center gap-4 border border-transparent px-3 py-2">
         {/* Element size */}
         <div>
           <label className="text-xs text-gray-400 block mb-1">Size</label>
@@ -580,7 +581,7 @@ export function MorphologicalView() {
               <button
                 key={size}
                 onClick={() => setMorphologicalSettings({ elementSize: size })}
-                className={`px-2 py-1 rounded text-xs transition-colors ${morphologicalSettings.elementSize === size ? 'bg-accent text-white' : 'bg-surface text-gray-400 hover:text-white'}`}
+                className={`surface-control-elevation ui-radius-sm border px-2 py-1 text-xs transition-colors ${morphologicalSettings.elementSize === size ? 'border-accent bg-accent text-white' : 'surface-control text-text-secondary hover:text-text-primary'}`}
               >
                 {size}x{size}
               </button>
@@ -596,7 +597,7 @@ export function MorphologicalView() {
               <button
                 key={shape.id}
                 onClick={() => setMorphologicalSettings({ elementShape: shape.id })}
-                className={`p-1.5 rounded transition-colors ${morphologicalSettings.elementShape === shape.id ? 'bg-accent text-white' : 'bg-surface text-gray-400 hover:text-white'}`}
+                className={`surface-control-elevation ui-radius-sm border p-1.5 transition-colors ${morphologicalSettings.elementShape === shape.id ? 'border-accent bg-accent text-white' : 'surface-control text-text-secondary hover:text-text-primary'}`}
                 title={shape.label}
               >
                 {shape.icon}
@@ -604,7 +605,7 @@ export function MorphologicalView() {
             ))}
           </div>
         </div>
-      </div>
+      </ElevatedSurface>
 
       {/* Kernel visualization */}
       <div className="absolute bottom-4 right-4 bg-black/70 px-3 py-2 rounded">

@@ -18,6 +18,7 @@ import { usePlaybackStore } from '../../stores/playbackStore'
 import { useProjectStore } from '../../stores/projectStore'
 import { useTimelineStore } from '../../stores/timelineStore'
 import { VideoSurface } from '../media/VideoSurface'
+import { ElevatedSurface } from '../ui'
 
 export function GridTileComparison() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -360,11 +361,11 @@ export function GridTileComparison() {
       <canvas ref={canvasRef} className="w-full h-full" />
 
       {/* Controls */}
-      <div className="absolute top-4 right-4 flex flex-col gap-2">
+      <ElevatedSurface offset={1} className="absolute top-4 right-4 ui-radius-lg flex flex-col gap-2 border border-transparent p-1">
         {/* Animation toggle */}
         <button
           onClick={toggleGridTileAnimation}
-          className={`p-2 rounded transition-colors ${gridTileSettings.animated ? 'bg-accent text-white' : 'bg-black/70 text-gray-400 hover:text-white'}`}
+          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${gridTileSettings.animated ? 'border-accent bg-accent text-white' : 'surface-control text-text-secondary hover:text-text-primary'}`}
           title={gridTileSettings.animated ? 'Stop animation' : 'Start animation'}
         >
           {gridTileSettings.animated ? <Pause size={16} /> : <Play size={16} />}
@@ -373,7 +374,7 @@ export function GridTileComparison() {
         {/* Reset offset */}
         <button
           onClick={resetOffset}
-          className="p-2 rounded bg-black/70 text-gray-400 hover:text-white transition-colors"
+          className="surface-control ui-radius-md border p-2 text-text-secondary hover:text-text-primary transition-colors"
           title="Reset offset"
         >
           <RotateCcw size={16} />
@@ -382,12 +383,12 @@ export function GridTileComparison() {
         {/* Hexagonal toggle */}
         <button
           onClick={() => setGridTileSettings({ hexagonal: !gridTileSettings.hexagonal })}
-          className={`p-2 rounded transition-colors ${gridTileSettings.hexagonal ? 'bg-accent text-white' : 'bg-black/70 text-gray-400 hover:text-white'}`}
+          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${gridTileSettings.hexagonal ? 'border-accent bg-accent text-white' : 'surface-control text-text-secondary hover:text-text-primary'}`}
           title={gridTileSettings.hexagonal ? 'Standard grid' : 'Hexagonal grid'}
         >
           <Grid size={16} />
         </button>
-      </div>
+      </ElevatedSurface>
 
       {/* Mode indicator */}
       <div className="absolute top-4 left-4 bg-black/70 px-3 py-1.5 rounded text-sm">

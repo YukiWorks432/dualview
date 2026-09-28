@@ -23,6 +23,7 @@ import { usePlaybackStore } from '../../stores/playbackStore'
 import { useProjectStore } from '../../stores/projectStore'
 import { useTimelineStore } from '../../stores/timelineStore'
 import { VideoSurface } from '../media/VideoSurface'
+import { ElevatedSurface } from '../ui'
 
 export function RadialLoupeComparison() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -366,14 +367,14 @@ export function RadialLoupeComparison() {
       <canvas ref={canvasRef} className="w-full h-full" />
 
       {/* Controls */}
-      <div className="absolute top-4 right-4 flex flex-col gap-2">
+      <ElevatedSurface offset={1} className="absolute top-4 right-4 ui-radius-lg flex flex-col gap-2 border border-transparent p-1">
         {/* Lock button */}
         <button
           onClick={(e) => {
             e.stopPropagation()
             toggleRadialLoupeLock()
           }}
-          className={`p-2 rounded transition-colors ${radialLoupeSettings.locked ? 'bg-accent text-white' : 'bg-black/70 text-gray-400 hover:text-white'}`}
+          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${radialLoupeSettings.locked ? 'border-accent bg-accent text-white' : 'surface-control text-text-secondary hover:text-text-primary'}`}
           title={radialLoupeSettings.locked ? 'Unlock position' : 'Lock position'}
         >
           {radialLoupeSettings.locked ? <Lock size={16} /> : <Unlock size={16} />}
@@ -385,7 +386,7 @@ export function RadialLoupeComparison() {
             e.stopPropagation()
             setRadialLoupeSettings({ showRectangular: !radialLoupeSettings.showRectangular })
           }}
-          className={`p-2 rounded transition-colors ${radialLoupeSettings.showRectangular ? 'bg-accent text-white' : 'bg-black/70 text-gray-400 hover:text-white'}`}
+          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${radialLoupeSettings.showRectangular ? 'border-accent bg-accent text-white' : 'surface-control text-text-secondary hover:text-text-primary'}`}
           title={
             radialLoupeSettings.showRectangular ? 'Switch to circular' : 'Switch to rectangular'
           }
@@ -399,7 +400,7 @@ export function RadialLoupeComparison() {
             e.stopPropagation()
             setRadialLoupeSettings({ splitMode: !radialLoupeSettings.splitMode })
           }}
-          className={`p-2 rounded transition-colors ${radialLoupeSettings.splitMode ? 'bg-accent text-white' : 'bg-black/70 text-gray-400 hover:text-white'}`}
+          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${radialLoupeSettings.splitMode ? 'border-accent bg-accent text-white' : 'surface-control text-text-secondary hover:text-text-primary'}`}
           title={radialLoupeSettings.splitMode ? 'Normal mode' : 'Split mode (A|B)'}
         >
           <SplitSquareVertical size={16} />
@@ -415,7 +416,7 @@ export function RadialLoupeComparison() {
               magnification: Math.min(16, radialLoupeSettings.magnification + 1),
             })
           }}
-          className="p-2 rounded bg-black/70 text-gray-400 hover:text-white transition-colors"
+          className="surface-control ui-radius-md border p-2 text-text-secondary hover:text-text-primary transition-colors"
           title="Increase magnification"
         >
           <ZoomIn size={16} />
@@ -427,12 +428,12 @@ export function RadialLoupeComparison() {
               magnification: Math.max(2, radialLoupeSettings.magnification - 1),
             })
           }}
-          className="p-2 rounded bg-black/70 text-gray-400 hover:text-white transition-colors"
+          className="surface-control ui-radius-md border p-2 text-text-secondary hover:text-text-primary transition-colors"
           title="Decrease magnification"
         >
           <ZoomOut size={16} />
         </button>
-      </div>
+      </ElevatedSurface>
 
       {/* Mode indicator */}
       <div className="absolute top-4 left-4 bg-black/70 px-3 py-1.5 rounded text-sm">
