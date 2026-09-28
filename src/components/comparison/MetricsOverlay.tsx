@@ -53,7 +53,10 @@ export function MetricsOverlay() {
           <Activity className="w-3 h-3" />
           Quality Metrics
         </span>
-        <button onClick={toggleMetrics} className="text-text-muted hover:text-white text-xs">
+        <button
+          onClick={toggleMetrics}
+          className="surface-control ui-radius-sm border px-1.5 py-0.5 text-xs text-text-muted hover:text-white"
+        >
           ×
         </button>
       </div>

@@ -621,7 +621,7 @@ export function Timeline() {
               </Button>
               {/* Primary action - Von Restorff Effect */}
               <Button
-                variant={isPlaying ? 'secondary' : 'secondary'}
+                variant="secondary"
                 size="icon"
                 onClick={togglePlay}
                 title="Play/Pause (Space)"
@@ -712,7 +712,7 @@ export function Timeline() {
           <div className="flex items-center gap-1">
             {/* FILMSTRIP-002: Toggle filmstrip view */}
             <Button
-              variant={showFilmstrip ? 'secondary' : 'secondary'}
+              variant="secondary"
               size="icon"
               onClick={() => setShowFilmstrip(!showFilmstrip)}
               title={showFilmstrip ? 'Hide filmstrip' : 'Show filmstrip'}
@@ -723,7 +723,7 @@ export function Timeline() {
 
             {/* Advanced tools toggle - Cognitive Load reduction (hidden on mobile) */}
             <Button
-              variant={showAdvancedTools ? 'secondary' : 'secondary'}
+              variant="secondary"
               size="sm"
               onClick={() => setShowAdvancedTools(!showAdvancedTools)}
               title="Toggle advanced tools"
@@ -739,7 +739,7 @@ export function Timeline() {
                 {/* Loop controls */}
                 <div className="flex items-center gap-0.5 ui-radius-md bg-surface p-0.5 ml-1">
                   <Button
-                    variant={loopRegion ? 'secondary' : 'secondary'}
+                    variant="secondary"
                     size="icon"
                     onClick={() => (loopRegion ? clearLoop() : setLoopIn())}
                     title={loopRegion ? 'Clear loop (Esc)' : 'Set loop in (I/O)'}
@@ -820,7 +820,7 @@ export function Timeline() {
                     )}
                   </Button>
                   <Button
-                    variant={snapEnabled ? 'secondary' : 'secondary'}
+                    variant="secondary"
                     size="icon"
                     onClick={toggleSnap}
                     title="Snap to edges (N)"
@@ -829,7 +829,7 @@ export function Timeline() {
                     <Magnet className="w-3.5 h-3.5" />
                   </Button>
                   <Button
-                    variant={rippleEnabled ? 'secondary' : 'secondary'}
+                    variant="secondary"
                     size="icon"
                     onClick={toggleRipple}
                     title="Ripple edit (R)"

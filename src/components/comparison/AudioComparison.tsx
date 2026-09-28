@@ -1105,10 +1105,10 @@ export function AudioComparison() {
                   'surface-control-elevation ui-radius-sm border px-3 py-1 text-xs font-medium transition-all',
                   activeAudio === mode
                     ? mode === 'a'
-                      ? 'bg-accent text-white'
+                      ? 'border-accent bg-accent text-white'
                       : mode === 'b'
-                        ? 'bg-secondary text-black'
-                        : 'bg-text-primary text-background'
+                        ? 'border-secondary bg-secondary text-black'
+                        : 'border-text-primary bg-text-primary text-background'
                     : 'surface-control text-text-muted hover:text-text-primary',
                 )}
               >
