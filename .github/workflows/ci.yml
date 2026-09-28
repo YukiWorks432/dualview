@@ -36,22 +36,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Check formatting
-        run: |
-          pnpm format
-          for file in \
-            public/about/index.html \
-            public/licenses/index.html \
-            public/privacy/index.html \
-            public/site-info.css \
-            public/terms/index.html \
-            src/components/media/MediaUpload.tsx \
-            src/components/project/ProjectSelector.tsx; do
-            echo "FORMAT_FILE_BEGIN:$file"
-            base64 -w0 "$file"
-            echo
-            echo "FORMAT_FILE_END:$file"
-          done
-          exit 1
+        run: pnpm format:check
 
       - name: Lint
         run: pnpm lint
