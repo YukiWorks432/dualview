@@ -9,6 +9,7 @@ import {
   X,
   Microscope,
   Save,
+  ExternalLink,
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 
@@ -101,8 +102,16 @@ export function Sidebar({ onCollapse, isMobileOpen, onMobileClose, onOpenProject
             <span className="hidden sm:inline">Save</span>
           </Button>
         </div>
-        {saveStatus === 'saved' && <span className="text-[10px] text-text-muted">Saved</span>}
-        {saveStatus === 'saving' && <span className="text-[10px] text-accent">Saving...</span>}
+        {saveStatus === 'saved' && (
+          <span className="text-[10px] text-text-muted">Saved locally</span>
+        )}
+        {saveStatus === 'saving' && (
+          <span className="text-[10px] text-accent">Saving locally...</span>
+        )}
+        {saveStatus === 'unsaved' && (
+          <span className="text-[10px] text-text-muted">Unsaved changes</span>
+        )}
+        {saveStatus === 'error' && <span className="text-[10px] text-error">Save failed</span>}
       </ElevatedSurface>
 
       {/* Tab navigation - Jakob's Law: Familiar tab pattern */}
@@ -189,6 +198,29 @@ export function Sidebar({ onCollapse, isMobileOpen, onMobileClose, onOpenProject
       <div className="surface-control shrink-0 p-3 border-t border-border/50 safe-area-bottom text-[10px]">
         <div className="space-y-2">
           <div>
+            <div className="text-text-muted mb-1">Site information</div>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              {[
+                ['Privacy', '/privacy/'],
+                ['Terms', '/terms/'],
+                ['About', '/about/'],
+                ['Licenses', '/licenses/'],
+              ].map(([label, href]) => (
+                <a
+                  key={href}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`${label} (opens in a new tab)`}
+                  className="inline-flex items-center gap-0.5 text-text-secondary transition-colors hover:text-text-primary"
+                >
+                  {label}
+                  <ExternalLink className="h-2.5 w-2.5" aria-hidden="true" />
+                </a>
+              ))}
+            </div>
+          </div>
+          <div className="pt-2 border-t border-border/30">
             <div className="text-text-muted mb-1">Maintained fork</div>
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
               <a
