@@ -173,6 +173,15 @@ function getMediaManifest(files = useMediaStore.getState().files): MediaManifest
 
 let persistenceWriteQueue = Promise.resolve()
 const deletingProjectIds = new Set<string>()
+const projectWriteEpochs = new Map<string, number>()
+
+function getProjectWriteEpoch(projectId: string): number {
+  return projectWriteEpochs.get(projectId) ?? 0
+}
+
+function invalidateProjectWrites(projectId: string): void {
+  projectWriteEpochs.set(projectId, getProjectWriteEpoch(projectId) + 1)
+}
 
 function enqueuePersistenceWrite<T>(operation: () => Promise<T>): Promise<T> {
   const result = persistenceWriteQueue.then(operation, operation)
@@ -289,6 +298,7 @@ export const usePersistenceStore = create<PersistenceStore>((set, get) => ({
 
     state.cancelAutoSave()
 
+    const projectWriteEpoch = getProjectWriteEpoch(projectId)
     const changeRevision = state._changeRevision
     const metadata = { ...state.projectMetadata }
     const timelineState = serializeTimelineState()
@@ -323,7 +333,12 @@ export const usePersistenceStore = create<PersistenceStore>((set, get) => ({
       }
 
       const persisted = await enqueuePersistenceWrite(async () => {
-        if (deletingProjectIds.has(projectId)) return false
+        if (
+          deletingProjectIds.has(projectId) ||
+          getProjectWriteEpoch(projectId) !== projectWriteEpoch
+        ) {
+          return false
+        }
         await saveProjectWithMedia(projectRecord, mediaBlobs)
         return true
       })
@@ -505,6 +520,7 @@ export const usePersistenceStore = create<PersistenceStore>((set, get) => ({
     }
 
     deletingProjectIds.add(projectId)
+    invalidateProjectWrites(projectId)
 
     try {
       await enqueuePersistenceWrite(() => deleteProjectFromDB(projectId))
@@ -525,7 +541,10 @@ export const usePersistenceStore = create<PersistenceStore>((set, get) => ({
       await get().updateStorageUsage()
     } catch (error) {
       console.error('Failed to delete project:', error)
-      set({ error: 'Failed to delete project' })
+      set({
+        error: 'Failed to delete project',
+        ...(get().currentProjectId === projectId ? { saveStatus: 'unsaved' as const } : {}),
+      })
     } finally {
       deletingProjectIds.delete(projectId)
     }
