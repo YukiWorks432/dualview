@@ -108,6 +108,28 @@ describe('project persistence ordering', () => {
     expect(usePersistenceStore.getState().error).toBe('Failed to save project')
   })
 
+  it('invalidates a save that has not entered the write queue before deletion', async () => {
+    let finishThumbnail: (() => void) | undefined
+    usePersistenceStore.setState({
+      _captureProjectThumbnail: () =>
+        new Promise<string | null>((resolve) => {
+          finishThumbnail = () => resolve(null)
+        }),
+    })
+
+    const savePromise = usePersistenceStore.getState().saveCurrentProject()
+    expect(usePersistenceStore.getState().saveStatus).toBe('saving')
+
+    await usePersistenceStore.getState().deleteProject('project-a')
+    expect(dbMocks.deleteProject).toHaveBeenCalledTimes(1)
+
+    finishThumbnail?.()
+    await savePromise
+
+    expect(dbMocks.saveProjectWithMedia).not.toHaveBeenCalled()
+    expect(usePersistenceStore.getState().currentProjectId).toBeNull()
+  })
+
   it('waits for an in-flight save before deleting the active project', async () => {
     const events: string[] = []
     let finishWrite: (() => void) | undefined
