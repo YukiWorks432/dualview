@@ -121,7 +121,7 @@ function Quadrant({
           >
             <button
               onClick={() => dropZone.openFileDialog()}
-              className="p-3 rounded-lg border-2 border-dashed border-current hover:bg-accent/10 transition-colors"
+              className="surface-control surface-control-elevation ui-radius-lg border-2 border-dashed border-current p-3 transition-colors hover:bg-accent/10"
             >
               <Upload className={cn('w-6 h-6', dropZone.isDragOver && 'animate-bounce')} />
             </button>
@@ -142,7 +142,7 @@ function Quadrant({
       {/* Expand/Collapse button */}
       <button
         onClick={isExpanded ? onCollapse : onExpand}
-        className="absolute top-2 right-2 p-1.5 bg-black/60 hover:bg-black/80 rounded transition-colors"
+        className="surface-control-elevation ui-radius-md absolute top-2 right-2 bg-black/60 p-1.5 transition-colors hover:bg-black/80"
         title={isExpanded ? 'Collapse' : 'Expand to full view'}
       >
         {isExpanded ? (

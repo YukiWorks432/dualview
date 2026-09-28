@@ -348,7 +348,7 @@ export function WebGLSplitView({ isVisible, onToggle }: WebGLSplitViewProps) {
       {/* Close button */}
       <button
         onClick={onToggle}
-        className="absolute top-2 right-2 p-2 bg-black/70 rounded text-gray-400 hover:text-white transition-colors z-10"
+        className="surface-control-elevation surface-control ui-radius-md absolute top-2 right-2 z-10 border p-2 text-text-secondary transition-colors hover:text-text-primary"
         title="Exit Split View"
       >
         <Minimize2 size={16} />
@@ -362,7 +362,7 @@ export function SplitViewToggle({ onClick, isActive }: { onClick: () => void; is
   return (
     <button
       onClick={onClick}
-      className={`p-2 rounded transition-colors ${isActive ? 'bg-[#ff5722] text-white' : 'bg-black/70 text-gray-400 hover:text-white'}`}
+      className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${isActive ? 'border-accent bg-accent text-white' : 'surface-control text-text-secondary hover:text-text-primary'}`}
       title="Split View: A | Analysis | B (WEBGL-011)"
     >
       <Maximize2 size={16} />

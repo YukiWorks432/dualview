@@ -167,21 +167,21 @@ export function WebGLPresetsPanel({ isOpen, onClose }: WebGLPresetsPanelProps) {
         <div className="flex items-center gap-1">
           <button
             onClick={() => setShowSaveDialog(true)}
-            className="p-1.5 ui-radius-sm bg-accent text-text-primary hover:bg-accent-hover transition-colors"
+            className="surface-control-elevation ui-radius-sm border border-accent bg-accent p-1.5 text-text-primary transition-colors hover:bg-accent-hover"
             title="Save Current Settings"
           >
             <Save size={14} />
           </button>
           <button
             onClick={handleExport}
-            className="p-1.5 ui-radius-sm bg-surface-alt text-text-secondary hover:bg-surface-hover transition-colors"
+            className="surface-control ui-radius-sm border p-1.5 text-text-secondary transition-colors hover:text-text-primary"
             title="Export Presets"
           >
             <Download size={14} />
           </button>
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="p-1.5 ui-radius-sm bg-surface-alt text-text-secondary hover:bg-surface-hover transition-colors"
+            className="surface-control ui-radius-sm border p-1.5 text-text-secondary transition-colors hover:text-text-primary"
             title="Import Presets"
           >
             <Upload size={14} />
@@ -235,13 +235,13 @@ export function WebGLPresetsPanel({ isOpen, onClose }: WebGLPresetsPanelProps) {
             <button
               onClick={handleSavePreset}
               disabled={!newPresetName.trim()}
-              className="flex-1 bg-accent text-text-primary py-1.5 ui-radius-sm text-sm hover:bg-accent-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="surface-control-elevation ui-radius-sm flex-1 border border-accent bg-accent py-1.5 text-sm text-text-primary transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-50"
             >
               Save Preset
             </button>
             <button
               onClick={() => setShowSaveDialog(false)}
-              className="px-4 py-1.5 bg-surface-alt text-text-secondary ui-radius-sm text-sm hover:bg-surface-hover transition-colors"
+              className="surface-control ui-radius-sm border px-4 py-1.5 text-sm text-text-secondary transition-colors hover:text-text-primary"
             >
               Cancel
             </button>
@@ -323,7 +323,7 @@ export function PresetsToggle({ onClick, isActive }: { onClick: () => void; isAc
   return (
     <button
       onClick={onClick}
-      className={`p-2 ui-radius-sm transition-colors ${isActive ? 'bg-accent text-text-primary' : 'bg-black/70 text-text-secondary hover:text-text-primary'}`}
+      className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${isActive ? 'border-accent bg-accent text-text-primary' : 'surface-control text-text-secondary hover:text-text-primary'}`}
       title="Comparison Presets (WEBGL-015)"
     >
       <Bookmark size={16} />

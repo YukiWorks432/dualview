@@ -51,6 +51,7 @@ import { useTimelineStore } from '../../stores/timelineStore'
 import type { ROIRect } from '../../types'
 import { VideoSurface } from '../media/VideoSurface'
 import { HistogramPanel, ColorWheelPanel, GamutWarningOverlay } from '../scopes'
+import { ElevatedSurface } from '../ui'
 import { BatchComparison, BatchComparisonToggle } from './BatchComparison'
 import { CustomShaderEditor, ShaderEditorToggle } from './CustomShaderEditor'
 import { TemporalDiffGraph } from './TemporalDiffGraph'
@@ -906,14 +907,14 @@ export function WebGLComparison() {
               <div className="grid grid-cols-2 gap-1.5">
                 <button
                   onClick={() => triggerUpload('a')}
-                  className="flex flex-col items-center gap-1 ui-radius-md p-3 border border-blue-500/30 bg-blue-500/10 hover:bg-blue-500/20 transition-all"
+                  className="surface-control-elevation ui-radius-md flex flex-col items-center gap-1 border border-blue-500/30 bg-blue-500/10 p-3 transition-all hover:bg-blue-500/20"
                 >
                   <Image className="w-5 h-5 text-blue-400" />
                   <span className="text-[10px] font-medium text-blue-400">Image</span>
                 </button>
                 <button
                   onClick={() => triggerUpload('a')}
-                  className="flex flex-col items-center gap-1 ui-radius-md p-3 border border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 transition-all"
+                  className="surface-control-elevation ui-radius-md flex flex-col items-center gap-1 border border-purple-500/30 bg-purple-500/10 p-3 transition-all hover:bg-purple-500/20"
                 >
                   <Video className="w-5 h-5 text-purple-400" />
                   <span className="text-[10px] font-medium text-purple-400">Video</span>
@@ -932,14 +933,14 @@ export function WebGLComparison() {
               <div className="grid grid-cols-2 gap-1.5">
                 <button
                   onClick={() => triggerUpload('b')}
-                  className="flex flex-col items-center gap-1 ui-radius-md p-3 border border-blue-500/30 bg-blue-500/10 hover:bg-blue-500/20 transition-all"
+                  className="surface-control-elevation ui-radius-md flex flex-col items-center gap-1 border border-blue-500/30 bg-blue-500/10 p-3 transition-all hover:bg-blue-500/20"
                 >
                   <Image className="w-5 h-5 text-blue-400" />
                   <span className="text-[10px] font-medium text-blue-400">Image</span>
                 </button>
                 <button
                   onClick={() => triggerUpload('b')}
-                  className="flex flex-col items-center gap-1 ui-radius-md p-3 border border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 transition-all"
+                  className="surface-control-elevation ui-radius-md flex flex-col items-center gap-1 border border-purple-500/30 bg-purple-500/10 p-3 transition-all hover:bg-purple-500/20"
                 >
                   <Video className="w-5 h-5 text-purple-400" />
                   <span className="text-[10px] font-medium text-purple-400">Video</span>
@@ -1265,14 +1266,15 @@ export function WebGLComparison() {
       )}
 
       {/* Control buttons */}
-      <div
-        className="absolute top-4 right-4 flex gap-1"
+      <ElevatedSurface
+        offset={1}
+        className="absolute top-4 right-4 ui-radius-lg flex gap-1 border border-transparent p-1"
         style={{ right: webglComparisonSettings.showMetricsOverlay ? '220px' : '16px' }}
       >
         {/* WEBGL-001: Toggle Metrics */}
         <button
           onClick={toggleWebGLMetricsOverlay}
-          className={`p-2 rounded transition-colors ${webglComparisonSettings.showMetricsOverlay ? 'bg-[#ff5722] text-white' : 'bg-black/70 text-gray-400 hover:text-white'}`}
+          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${webglComparisonSettings.showMetricsOverlay ? 'border-accent bg-accent text-white' : 'surface-control text-text-secondary hover:text-text-primary'}`}
           title="Toggle Metrics Overlay (WEBGL-001)"
         >
           <BarChart3 size={16} />
@@ -1281,7 +1283,7 @@ export function WebGLComparison() {
         {/* WEBGL-002: Toggle Scale Bar */}
         <button
           onClick={toggleWebGLScaleBar}
-          className={`p-2 rounded transition-colors ${webglComparisonSettings.showScaleBar ? 'bg-[#ff5722] text-white' : 'bg-black/70 text-gray-400 hover:text-white'}`}
+          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${webglComparisonSettings.showScaleBar ? 'border-accent bg-accent text-white' : 'surface-control text-text-secondary hover:text-text-primary'}`}
           title="Toggle Scale Bar (WEBGL-002)"
         >
           <Ruler size={16} />
@@ -1290,7 +1292,7 @@ export function WebGLComparison() {
         {/* WEBGL-003: Toggle Cursor Inspector */}
         <button
           onClick={toggleWebGLCursorInspector}
-          className={`p-2 rounded transition-colors ${webglComparisonSettings.showCursorInspector ? 'bg-[#ff5722] text-white' : 'bg-black/70 text-gray-400 hover:text-white'}`}
+          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${webglComparisonSettings.showCursorInspector ? 'border-accent bg-accent text-white' : 'surface-control text-text-secondary hover:text-text-primary'}`}
           title="Toggle Cursor Inspector (WEBGL-003)"
         >
           <Crosshair size={16} />
@@ -1299,7 +1301,7 @@ export function WebGLComparison() {
         {/* WEBGL-004: ROI Selection */}
         <button
           onClick={toggleROIControls}
-          className={`p-2 rounded transition-colors ${webglComparisonSettings.showROIControls ? 'bg-[#ff5722] text-white' : 'bg-black/70 text-gray-400 hover:text-white'}`}
+          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${webglComparisonSettings.showROIControls ? 'border-accent bg-accent text-white' : 'surface-control text-text-secondary hover:text-text-primary'}`}
           title="Draw ROI Selection (WEBGL-004)"
         >
           <Scan size={16} />
@@ -1307,7 +1309,7 @@ export function WebGLComparison() {
         {webglComparisonSettings.roi && (
           <button
             onClick={clearROI}
-            className="p-2 rounded bg-black/70 text-red-400 hover:text-red-300 transition-colors"
+            className="surface-control ui-radius-md border p-2 text-error hover:text-red-300 transition-colors"
             title="Clear ROI Selection"
           >
             <X size={16} />
@@ -1317,7 +1319,7 @@ export function WebGLComparison() {
         {/* WEBGL-008: Flip A/B */}
         <button
           onClick={toggleWebGLFlipAB}
-          className={`p-2 rounded transition-colors ${webglComparisonSettings.flipAB ? 'bg-[#ff5722] text-white' : 'bg-black/70 text-gray-400 hover:text-white'}`}
+          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${webglComparisonSettings.flipAB ? 'border-accent bg-accent text-white' : 'surface-control text-text-secondary hover:text-text-primary'}`}
           title="Flip A/B Sources (F)"
         >
           <FlipHorizontal size={16} />
@@ -1326,14 +1328,14 @@ export function WebGLComparison() {
         {/* WEBGL-007: Zoom controls */}
         <button
           onClick={() => setWebGLZoom(webglComparisonSettings.webglZoom + 1)}
-          className="p-2 rounded bg-black/70 text-gray-400 hover:text-white transition-colors"
+          className="surface-control ui-radius-md border p-2 text-text-secondary hover:text-text-primary transition-colors"
           title="Zoom In"
         >
           <ZoomIn size={16} />
         </button>
         <button
           onClick={() => setWebGLZoom(webglComparisonSettings.webglZoom - 1)}
-          className="p-2 rounded bg-black/70 text-gray-400 hover:text-white transition-colors"
+          className="surface-control ui-radius-md border p-2 text-text-secondary hover:text-text-primary transition-colors"
           disabled={webglComparisonSettings.webglZoom <= 1}
           title="Zoom Out"
         >
@@ -1341,7 +1343,7 @@ export function WebGLComparison() {
         </button>
         <button
           onClick={resetWebGLZoom}
-          className="p-2 rounded bg-black/70 text-gray-400 hover:text-white transition-colors"
+          className="surface-control ui-radius-md border p-2 text-text-secondary hover:text-text-primary transition-colors"
           title="Reset Zoom"
         >
           <RotateCcw size={16} />
@@ -1353,14 +1355,14 @@ export function WebGLComparison() {
         {/* WEBGL-005: Screenshot Export */}
         <button
           onClick={() => exportScreenshot(false)}
-          className="p-2 rounded bg-black/70 text-gray-400 hover:text-white transition-colors"
+          className="surface-control ui-radius-md border p-2 text-text-secondary hover:text-text-primary transition-colors"
           title="Save Screenshot (PNG)"
         >
           <Camera size={16} />
         </button>
         <button
           onClick={() => exportScreenshot(true)}
-          className="p-2 rounded bg-black/70 text-gray-400 hover:text-white transition-colors"
+          className="surface-control ui-radius-md border p-2 text-text-secondary hover:text-text-primary transition-colors"
           title="Copy to Clipboard"
         >
           <Copy size={16} />
@@ -1369,7 +1371,7 @@ export function WebGLComparison() {
         {/* WEBGL-010: PDF Analysis Report */}
         <button
           onClick={exportPDFReport}
-          className="p-2 rounded bg-black/70 text-gray-400 hover:text-white transition-colors"
+          className="surface-control ui-radius-md border p-2 text-text-secondary hover:text-text-primary transition-colors"
           title="Export PDF Analysis Report (WEBGL-010)"
         >
           <FileText size={16} />
@@ -1399,7 +1401,7 @@ export function WebGLComparison() {
             <div className="w-px h-6 bg-border mx-1" />
             <button
               onClick={() => setShowTemporalGraph(!showTemporalGraph)}
-              className={`p-2 rounded transition-colors ${showTemporalGraph ? 'bg-[#ff5722] text-white' : 'bg-black/70 text-gray-400 hover:text-white'}`}
+              className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${showTemporalGraph ? 'border-accent bg-accent text-white' : 'surface-control text-text-secondary hover:text-text-primary'}`}
               title="Temporal Difference Graph (WEBGL-009)"
             >
               <LineChart size={16} />
@@ -1413,7 +1415,7 @@ export function WebGLComparison() {
         {/* SCOPE-008: Histogram Panel Toggle */}
         <button
           onClick={() => setShowHistogramPanel(!showHistogramPanel)}
-          className={`p-2 rounded transition-colors ${showHistogramPanel ? 'bg-[#ff5722] text-white' : 'bg-black/70 text-gray-400 hover:text-white'}`}
+          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${showHistogramPanel ? 'border-accent bg-accent text-white' : 'surface-control text-text-secondary hover:text-text-primary'}`}
           title="Histogram Panel (SCOPE-008)"
         >
           <Activity size={16} />
@@ -1422,7 +1424,7 @@ export function WebGLComparison() {
         {/* SCOPE-009: Color Wheel Panel Toggle */}
         <button
           onClick={() => setShowColorWheelPanel(!showColorWheelPanel)}
-          className={`p-2 rounded transition-colors ${showColorWheelPanel ? 'bg-[#ff5722] text-white' : 'bg-black/70 text-gray-400 hover:text-white'}`}
+          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${showColorWheelPanel ? 'border-accent bg-accent text-white' : 'surface-control text-text-secondary hover:text-text-primary'}`}
           title="Color Wheel Distribution (SCOPE-009)"
         >
           <Palette size={16} />
@@ -1431,12 +1433,12 @@ export function WebGLComparison() {
         {/* SCOPE-010: Gamut Warning Toggle */}
         <button
           onClick={() => setShowGamutWarning(!showGamutWarning)}
-          className={`p-2 rounded transition-colors ${showGamutWarning ? 'bg-[#ff5722] text-white' : 'bg-black/70 text-gray-400 hover:text-white'}`}
+          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${showGamutWarning ? 'border-accent bg-accent text-white' : 'surface-control text-text-secondary hover:text-text-primary'}`}
           title="Gamut Warning Overlay (SCOPE-010, G)"
         >
           <AlertTriangle size={16} />
         </button>
-      </div>
+      </ElevatedSurface>
 
       {/* Settings indicator */}
       <div className="absolute bottom-4 left-4 bg-black/70 px-3 py-1.5 rounded text-xs text-gray-400">

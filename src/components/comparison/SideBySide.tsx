@@ -179,7 +179,7 @@ export function SideBySide() {
             >
               <button
                 onClick={() => dropZoneA.openFileDialog()}
-                className="p-4 rounded-lg border-2 border-dashed border-current hover:bg-accent/10 transition-colors"
+                className="surface-control surface-control-elevation ui-radius-lg border-2 border-dashed border-current p-4 transition-colors hover:bg-accent/10"
               >
                 <Upload className={cn('w-8 h-8', dropZoneA.isDragOver && 'animate-bounce')} />
               </button>
@@ -197,7 +197,7 @@ export function SideBySide() {
         {mediaA && !dropZoneA.isDragOver && (
           <button
             onClick={() => dropZoneA.openFileDialog()}
-            className="absolute top-2 left-2 z-20 p-2 bg-black/60 hover:bg-accent/80 rounded-lg transition-colors group"
+            className="surface-control-elevation absolute top-2 left-2 z-20 ui-radius-lg bg-black/60 p-2 transition-colors group hover:bg-accent/80"
             title="Replace Media A"
           >
             <Upload className="w-4 h-4 text-white group-hover:scale-110 transition-transform" />
@@ -255,7 +255,7 @@ export function SideBySide() {
             >
               <button
                 onClick={() => dropZoneB.openFileDialog()}
-                className="p-4 rounded-lg border-2 border-dashed border-current hover:bg-secondary/10 transition-colors"
+                className="surface-control surface-control-elevation ui-radius-lg border-2 border-dashed border-current p-4 transition-colors hover:bg-secondary/10"
               >
                 <Upload className={cn('w-8 h-8', dropZoneB.isDragOver && 'animate-bounce')} />
               </button>
@@ -273,7 +273,7 @@ export function SideBySide() {
         {mediaB && !dropZoneB.isDragOver && (
           <button
             onClick={() => dropZoneB.openFileDialog()}
-            className="absolute top-2 right-2 z-20 p-2 bg-black/60 hover:bg-secondary/80 rounded-lg transition-colors group"
+            className="surface-control-elevation absolute top-2 right-2 z-20 ui-radius-lg bg-black/60 p-2 transition-colors group hover:bg-secondary/80"
             title="Replace Media B"
           >
             <Upload className="w-4 h-4 text-white group-hover:scale-110 transition-transform" />

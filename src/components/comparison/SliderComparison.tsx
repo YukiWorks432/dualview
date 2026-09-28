@@ -433,7 +433,7 @@ export function SliderComparison() {
                     dropZoneA.openFileDialog()
                   }}
                   className={cn(
-                    'ui-radius-lg p-4 border border-dashed transition-all duration-200 group',
+                    'surface-control surface-control-elevation ui-radius-lg border border-dashed p-4 transition-all duration-200 group',
                     dropZoneA.isDragOver
                       ? 'border-accent bg-accent/10'
                       : 'border-text-muted/20 hover:border-accent/50',
@@ -512,7 +512,7 @@ export function SliderComparison() {
                     dropZoneB.openFileDialog()
                   }}
                   className={cn(
-                    'ui-radius-lg p-4 border border-dashed transition-all duration-200 group',
+                    'surface-control surface-control-elevation ui-radius-lg border border-dashed p-4 transition-all duration-200 group',
                     dropZoneB.isDragOver
                       ? 'border-secondary bg-secondary/10'
                       : 'border-text-muted/20 hover:border-secondary/50',
@@ -555,7 +555,7 @@ export function SliderComparison() {
               e.stopPropagation()
               dropZoneA.openFileDialog()
             }}
-            className="absolute top-4 left-4 z-20 p-2 bg-black/60 hover:bg-accent/80 rounded-lg transition-colors group"
+            className="surface-control-elevation absolute top-4 left-4 z-20 ui-radius-lg bg-black/60 p-2 transition-colors group hover:bg-accent/80"
             title="Replace Media A"
           >
             <Upload className="w-5 h-5 text-white group-hover:scale-110 transition-transform" />
@@ -567,7 +567,7 @@ export function SliderComparison() {
               e.stopPropagation()
               dropZoneB.openFileDialog()
             }}
-            className="absolute top-4 right-4 z-20 p-2 bg-black/60 hover:bg-secondary/80 rounded-lg transition-colors group"
+            className="surface-control-elevation absolute top-4 right-4 z-20 ui-radius-lg bg-black/60 p-2 transition-colors group hover:bg-secondary/80"
             title="Replace Media B"
           >
             <Upload className="w-5 h-5 text-white group-hover:scale-110 transition-transform" />
