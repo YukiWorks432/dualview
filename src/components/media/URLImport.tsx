@@ -1,4 +1,4 @@
-import { Link, X, Loader2, AlertCircle, CheckCircle } from 'lucide-react'
+import { Link, X, Loader2, AlertCircle, CheckCircle, ExternalLink } from 'lucide-react'
 import { useState } from 'react'
 
 import { getFileNameFromUrl, isSupportedMediaFile } from '../../lib/media/fileTypes'
@@ -134,6 +134,21 @@ export function URLImport({ isOpen, onClose }: URLImportProps) {
                 Direct HTTP(S) media URLs only. The source must allow cross-origin browser access
                 (CORS).
               </p>
+              <div className="ui-radius-md mt-3 border border-border/60 p-3 text-xs leading-relaxed text-text-muted">
+                Importing from a URL connects your browser directly to the site you enter. That
+                destination, and any redirect destination, can receive your IP address and the
+                requested URL. The imported media is compared and analyzed locally on this device.
+                <a
+                  href="/privacy/#external-communication"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="URL import privacy details (opens in a new tab)"
+                  className="mt-2 inline-flex items-center gap-1 text-accent hover:underline"
+                >
+                  Communication details
+                  <ExternalLink className="h-3 w-3" aria-hidden="true" />
+                </a>
+              </div>
             </div>
 
             {error && (
