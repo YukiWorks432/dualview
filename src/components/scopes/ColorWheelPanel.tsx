@@ -457,7 +457,7 @@ export function ColorWheelPanel({
             >
               {showHighlight ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
             </button>
-            <button onClick={onClose} className="p-1 hover:bg-surface-hover rounded">
+            <button onClick={onClose} className="surface-control ui-radius-sm border p-1">
               <X className="w-4 h-4 text-text-muted" />
             </button>
           </div>

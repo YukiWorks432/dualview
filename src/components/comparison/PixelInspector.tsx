@@ -62,10 +62,10 @@ export function PixelInspector() {
       <button
         onClick={togglePixelInspector}
         className={cn(
-          'absolute top-4 right-4 z-20 px-2 py-1 text-xs transition-colors',
+          'surface-control-elevation ui-radius-sm absolute top-4 right-4 z-20 border px-2 py-1 text-xs transition-colors',
           pixelInspectorEnabled
-            ? 'bg-accent text-white'
-            : 'bg-black/60 text-text-muted hover:text-text-primary',
+            ? 'border-accent bg-accent text-white'
+            : 'surface-control text-text-muted hover:text-text-primary',
         )}
         title="Toggle Pixel Inspector (Click on image to inspect)"
       >

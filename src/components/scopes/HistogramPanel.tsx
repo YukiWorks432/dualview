@@ -522,7 +522,7 @@ export function HistogramPanel({
             >
               {showSideBySide ? 'A|B' : 'Overlay'}
             </button>
-            <button onClick={onClose} className="p-1 hover:bg-surface-hover rounded">
+            <button onClick={onClose} className="surface-control ui-radius-sm border p-1">
               <X className="w-4 h-4 text-text-muted" />
             </button>
           </div>

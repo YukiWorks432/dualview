@@ -210,7 +210,7 @@ export function ProjectSelector({ isOpen, onClose }: ProjectSelectorProps) {
                 {searchQuery ? 'No projects match your search' : 'No projects yet'}
               </p>
               {!searchQuery && (
-                <Button variant="ghost" size="sm" onClick={handleNewProject} className="mt-4">
+                <Button variant="secondary" size="sm" onClick={handleNewProject} className="mt-4">
                   Create your first project
                 </Button>
               )}

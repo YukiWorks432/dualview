@@ -594,13 +594,14 @@ export function Timeline() {
   return (
     <div className="h-40 md:h-64 bg-surface border-t border-border flex flex-col">
       {/* Transport controls - Miller's Law: Grouped into logical chunks */}
-      <div className="h-10 px-2 md:px-4 flex items-center justify-between border-b border-border bg-surface-hover">
+      <ElevatedSurface asChild offset={1}>
+        <div className="h-10 px-2 md:px-4 flex items-center justify-between border-b border-border">
         {/* Left: Playback controls - Law of Proximity */}
         <div className="flex items-center gap-1">
           {/* Core transport - most used actions grouped together */}
           <div className="flex items-center ui-radius-md bg-surface p-0.5 gap-0.5">
             <Button
-              variant="ghost"
+              variant="secondary"
               size="icon"
               onClick={() => seek(0)}
               title="Go to start (Home)"
@@ -609,7 +610,7 @@ export function Timeline() {
               <SkipBack className="w-3.5 h-3.5" />
             </Button>
             <Button
-              variant="ghost"
+              variant="secondary"
               size="icon"
               onClick={() => stepFrame(-1)}
               disabled={isPlaying}
@@ -620,7 +621,7 @@ export function Timeline() {
             </Button>
             {/* Primary action - Von Restorff Effect */}
             <Button
-              variant={isPlaying ? 'secondary' : 'ghost'}
+              variant={isPlaying ? 'secondary' : 'secondary'}
               size="icon"
               onClick={togglePlay}
               title="Play/Pause (Space)"
@@ -629,7 +630,7 @@ export function Timeline() {
               {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
             </Button>
             <Button
-              variant="ghost"
+              variant="secondary"
               size="icon"
               onClick={() => stepFrame(1)}
               disabled={isPlaying}
@@ -639,7 +640,7 @@ export function Timeline() {
               <ChevronRight className="w-3.5 h-3.5" />
             </Button>
             <Button
-              variant="ghost"
+              variant="secondary"
               size="icon"
               onClick={() => seek(duration)}
               title="Go to end (End)"
@@ -679,10 +680,10 @@ export function Timeline() {
                 key={speed}
                 onClick={() => setPlaybackSpeed(speed)}
                 className={cn(
-                  'px-2.5 py-1 text-xs font-medium transition-all duration-150',
+                  'surface-control-elevation ui-radius-sm border px-2.5 py-1 text-xs font-medium transition-all duration-150',
                   playbackSpeed === speed && shuttleSpeed === 0
-                    ? 'bg-accent text-white'
-                    : 'text-text-muted hover:text-text-primary hover:bg-surface-hover',
+                    ? 'border-accent bg-accent text-white'
+                    : 'surface-control text-text-muted hover:text-text-primary',
                 )}
               >
                 {speed === 1 ? '1×' : `${speed}×`}
@@ -711,7 +712,7 @@ export function Timeline() {
         <div className="flex items-center gap-1">
           {/* FILMSTRIP-002: Toggle filmstrip view */}
           <Button
-            variant={showFilmstrip ? 'secondary' : 'ghost'}
+            variant={showFilmstrip ? 'secondary' : 'secondary'}
             size="icon"
             onClick={() => setShowFilmstrip(!showFilmstrip)}
             title={showFilmstrip ? 'Hide filmstrip' : 'Show filmstrip'}
@@ -722,7 +723,7 @@ export function Timeline() {
 
           {/* Advanced tools toggle - Cognitive Load reduction (hidden on mobile) */}
           <Button
-            variant={showAdvancedTools ? 'secondary' : 'ghost'}
+            variant={showAdvancedTools ? 'secondary' : 'secondary'}
             size="sm"
             onClick={() => setShowAdvancedTools(!showAdvancedTools)}
             title="Toggle advanced tools"
@@ -738,7 +739,7 @@ export function Timeline() {
               {/* Loop controls */}
               <div className="flex items-center gap-0.5 ui-radius-md bg-surface p-0.5 ml-1">
                 <Button
-                  variant={loopRegion ? 'secondary' : 'ghost'}
+                  variant={loopRegion ? 'secondary' : 'secondary'}
                   size="icon"
                   onClick={() => (loopRegion ? clearLoop() : setLoopIn())}
                   title={loopRegion ? 'Clear loop (Esc)' : 'Set loop in (I/O)'}
@@ -761,7 +762,7 @@ export function Timeline() {
                 )}
               >
                 <Button
-                  variant="ghost"
+                  variant="secondary"
                   size="icon"
                   onClick={() => {
                     if (selectedClipId) {
@@ -779,7 +780,7 @@ export function Timeline() {
                   <Scissors className="w-3.5 h-3.5" />
                 </Button>
                 <Button
-                  variant="ghost"
+                  variant="secondary"
                   size="icon"
                   onClick={() => {
                     if (selectedClipId) {
@@ -801,7 +802,7 @@ export function Timeline() {
               {/* Toggle tools */}
               <div className="flex items-center gap-0.5">
                 <Button
-                  variant="ghost"
+                  variant="secondary"
                   size="icon"
                   onClick={() => addMarker()}
                   title="Add marker (M)"
@@ -815,7 +816,7 @@ export function Timeline() {
                   )}
                 </Button>
                 <Button
-                  variant={snapEnabled ? 'secondary' : 'ghost'}
+                  variant={snapEnabled ? 'secondary' : 'secondary'}
                   size="icon"
                   onClick={toggleSnap}
                   title="Snap to edges (N)"
@@ -824,7 +825,7 @@ export function Timeline() {
                   <Magnet className="w-3.5 h-3.5" />
                 </Button>
                 <Button
-                  variant={rippleEnabled ? 'secondary' : 'ghost'}
+                  variant={rippleEnabled ? 'secondary' : 'secondary'}
                   size="icon"
                   onClick={toggleRipple}
                   title="Ripple edit (R)"
@@ -838,18 +839,19 @@ export function Timeline() {
 
           {/* Zoom controls - always visible */}
           <div className="flex items-center gap-0.5 ui-radius-md bg-surface p-0.5 ml-1 md:ml-2">
-            <Button variant="ghost" size="icon" onClick={zoomOut} className="h-7 w-7">
+            <Button variant="secondary" size="icon" onClick={zoomOut} className="h-7 w-7">
               <ZoomOut className="w-3.5 h-3.5" />
             </Button>
             <span className="hidden sm:inline text-[10px] text-text-secondary w-10 text-center font-mono">
               {Math.round(zoom * 100)}%
             </span>
-            <Button variant="ghost" size="icon" onClick={zoomIn} className="h-7 w-7">
+            <Button variant="secondary" size="icon" onClick={zoomIn} className="h-7 w-7">
               <ZoomIn className="w-3.5 h-3.5" />
             </Button>
           </div>
         </div>
-      </div>
+        </div>
+      </ElevatedSurface>
 
       {/* Timeline area */}
       <div className="flex-1 flex overflow-hidden">
@@ -872,7 +874,7 @@ export function Timeline() {
                       setOpenTrackSettings(openTrackSettings === track.id ? null : track.id)
                     }
                     className={cn(
-                      'ui-radius-sm p-1 hover:bg-surface',
+                      'surface-control ui-radius-sm border p-1',
                       openTrackSettings === track.id && 'bg-surface',
                     )}
                     title="Track Settings"
@@ -881,7 +883,7 @@ export function Timeline() {
                   </button>
                   <button
                     onClick={() => toggleTrackMute(track.id)}
-                    className="ui-radius-sm p-1 hover:bg-surface"
+                    className="surface-control ui-radius-sm border p-1"
                     title={track.muted ? 'Unmute' : 'Mute'}
                   >
                     {track.muted ? (
@@ -892,7 +894,7 @@ export function Timeline() {
                   </button>
                   <button
                     onClick={() => toggleTrackLock(track.id)}
-                    className="ui-radius-sm p-1 hover:bg-surface"
+                    className="surface-control ui-radius-sm border p-1"
                     title={track.locked ? 'Unlock' : 'Lock'}
                   >
                     {track.locked ? (
@@ -989,10 +991,10 @@ export function Timeline() {
             <button
               onClick={() => setShowAddTrackMenu(!showAddTrackMenu)}
               className={cn(
-                'flex items-center gap-1.5 px-2 py-1 text-xs font-medium transition-colors',
+                'surface-control-elevation ui-radius-md flex items-center gap-1.5 border px-2 py-1 text-xs font-medium transition-colors',
                 showAddTrackMenu
-                  ? 'bg-accent text-white'
-                  : 'text-text-muted hover:text-text-primary hover:bg-surface-hover',
+                  ? 'border-accent bg-accent text-white'
+                  : 'surface-control text-text-muted hover:text-text-primary',
               )}
               title="Add new track"
             >
