@@ -49,6 +49,7 @@ import { cn, formatTime } from '../../lib/utils'
 import { useMediaStore } from '../../stores/mediaStore'
 import { usePlaybackStore } from '../../stores/playbackStore'
 import { useTimelineStore } from '../../stores/timelineStore'
+import { ElevatedSurface } from '../ui'
 
 type AudioViewMode = 'spectrogram' | 'spectrum' | 'goniometer' | 'loudness' | 'waveform' | 'all'
 type ActiveAudio = 'both' | 'a' | 'b'
@@ -1054,10 +1055,10 @@ export function AudioComparison() {
               key={mode}
               onClick={() => setViewMode(mode as AudioViewMode)}
               className={cn(
-                'ui-radius-md px-3 py-1.5 text-xs flex items-center gap-1.5 transition-colors',
+                'surface-control-elevation ui-radius-md flex items-center gap-1.5 border px-3 py-1.5 text-xs transition-colors',
                 viewMode === mode
-                  ? 'bg-accent text-white'
-                  : 'text-text-muted hover:text-text-primary hover:bg-surface-hover',
+                  ? 'border-accent bg-accent text-white'
+                  : 'surface-control text-text-muted hover:text-text-primary',
               )}
             >
               <Icon className="w-3.5 h-3.5" />
@@ -1068,16 +1069,16 @@ export function AudioComparison() {
 
         {/* Transport controls */}
         <div className="flex items-center gap-2">
-          <button onClick={() => seek(0)} className="p-1.5 text-text-muted hover:text-text-primary">
+          <button onClick={() => seek(0)} className="surface-control ui-radius-sm border p-1.5 text-text-muted hover:text-text-primary">
             <SkipBack className="w-4 h-4" />
           </button>
           <button
             onClick={togglePlay}
             className={cn(
-              'w-8 h-8 ui-radius-md flex items-center justify-center',
+              'surface-control-elevation w-8 h-8 ui-radius-md flex items-center justify-center border',
               isPlaying
-                ? 'bg-accent text-white'
-                : 'bg-surface-hover text-text-primary hover:bg-accent hover:text-white',
+                ? 'border-accent bg-accent text-white'
+                : 'surface-control text-text-primary hover:text-text-primary',
             )}
           >
             {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
@@ -1089,31 +1090,31 @@ export function AudioComparison() {
 
         {/* Output selector & settings */}
         <div className="flex items-center gap-3">
-          <div className="flex items-center overflow-hidden ui-radius-md bg-background border border-border">
+          <ElevatedSurface offset={1} className="ui-radius-md flex items-center gap-0.5 border border-transparent p-0.5">
             {(['a', 'both', 'b'] as const).map((mode) => (
               <button
                 key={mode}
                 onClick={() => setActiveAudio(mode)}
                 className={cn(
-                  'px-3 py-1 text-xs font-medium transition-all',
+                  'surface-control-elevation ui-radius-sm border px-3 py-1 text-xs font-medium transition-all',
                   activeAudio === mode
                     ? mode === 'a'
                       ? 'bg-accent text-white'
                       : mode === 'b'
                         ? 'bg-secondary text-black'
                         : 'bg-text-primary text-background'
-                    : 'text-text-muted hover:text-text-primary',
+                    : 'surface-control text-text-muted hover:text-text-primary',
                 )}
               >
                 {mode === 'both' ? 'A+B' : mode.toUpperCase()}
               </button>
             ))}
-          </div>
+          </ElevatedSurface>
 
           <button
             onClick={() => setShowSettings(!showSettings)}
             className={cn(
-              'surface-interactive ui-radius-sm p-1.5 transition-colors',
+              'surface-control ui-radius-sm border p-1.5 transition-colors',
               showSettings ? 'text-accent' : 'text-text-muted hover:text-text-primary',
             )}
           >

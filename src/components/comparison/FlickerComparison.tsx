@@ -173,17 +173,17 @@ export function FlickerComparison() {
           <button
             onClick={() => setAutoFlicker((prev) => !prev)}
             className={cn(
-              'px-2 py-1 text-xs transition-colors',
+              'surface-control-elevation ui-radius-sm border px-2 py-1 text-xs transition-colors',
               autoFlicker
-                ? 'bg-accent text-white'
-                : 'bg-surface text-text-primary hover:bg-surface-hover',
+                ? 'border-accent bg-accent text-white'
+                : 'surface-control text-text-primary',
             )}
           >
             {autoFlicker ? 'Auto' : 'Manual'}
           </button>
           <button
             onClick={toggle}
-            className="ui-radius-sm px-2 py-1 text-xs bg-surface text-text-primary hover:bg-surface-hover"
+            className="surface-control ui-radius-sm border px-2 py-1 text-xs text-text-primary"
             title="Toggle (F or Tab)"
           >
             Toggle
@@ -198,10 +198,10 @@ export function FlickerComparison() {
                 key={speed}
                 onClick={() => setFlickerSpeed(speed)}
                 className={cn(
-                  'px-1.5 py-0.5 text-[10px] transition-colors',
+                  'surface-control-elevation ui-radius-sm border px-1.5 py-0.5 text-[10px] transition-colors',
                   flickerSpeed === speed
-                    ? 'bg-accent text-white'
-                    : 'bg-surface/50 text-text-muted hover:text-text-primary',
+                    ? 'border-accent bg-accent text-white'
+                    : 'surface-control text-text-muted hover:text-text-primary',
                 )}
               >
                 {speed}ms

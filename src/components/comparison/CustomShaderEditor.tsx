@@ -295,7 +295,7 @@ export function CustomShaderEditor({ isOpen, onClose, onApplyShader }: CustomSha
             <div className="p-3 border-b border-border">
               <button
                 onClick={newShader}
-                className="w-full px-3 py-1.5 bg-surface-alt text-text-secondary ui-radius-md text-sm hover:bg-surface-hover flex items-center justify-center gap-2"
+                className="surface-control w-full ui-radius-md flex items-center justify-center gap-2 border px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary"
               >
                 <RefreshCw size={14} />
                 New Shader
@@ -342,14 +342,14 @@ export function CustomShaderEditor({ isOpen, onClose, onApplyShader }: CustomSha
             <div className="px-4 py-2 border-b border-border flex items-center gap-2">
               <button
                 onClick={compileShader}
-                className="flex items-center gap-1 px-3 py-1.5 bg-surface-alt text-text-secondary ui-radius-md text-sm hover:bg-surface-hover"
+                className="surface-control ui-radius-md flex items-center gap-1 border px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary"
               >
                 <Play size={14} />
                 Compile
               </button>
               <button
                 onClick={applyShader}
-                className="flex items-center gap-1 px-3 py-1.5 bg-accent text-text-primary ui-radius-md text-sm hover:bg-accent-hover"
+                className="surface-control-elevation ui-radius-md flex items-center gap-1 border border-accent bg-accent px-3 py-1.5 text-sm text-text-primary hover:bg-accent-hover"
               >
                 <Play size={14} />
                 Apply
@@ -359,26 +359,26 @@ export function CustomShaderEditor({ isOpen, onClose, onApplyShader }: CustomSha
 
               <button
                 onClick={() => setShowSaveDialog(true)}
-                className="flex items-center gap-1 px-3 py-1.5 bg-surface-alt text-text-secondary ui-radius-md text-sm hover:bg-surface-hover"
+                className="surface-control ui-radius-md flex items-center gap-1 border px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary"
               >
                 <Save size={14} />
                 Save
               </button>
               <button
                 onClick={exportShader}
-                className="flex items-center gap-1 px-3 py-1.5 bg-surface-alt text-text-secondary ui-radius-md text-sm hover:bg-surface-hover"
+                className="surface-control ui-radius-md flex items-center gap-1 border px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary"
               >
                 <Download size={14} />
                 Export
               </button>
-              <label className="flex items-center gap-1 px-3 py-1.5 bg-surface-alt text-text-secondary ui-radius-md text-sm hover:bg-surface-hover cursor-pointer">
+              <label className="surface-control ui-radius-md flex cursor-pointer items-center gap-1 border px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary">
                 <Upload size={14} />
                 Import
                 <input type="file" accept=".json" onChange={importShader} className="hidden" />
               </label>
               <button
                 onClick={copyToClipboard}
-                className="flex items-center gap-1 px-3 py-1.5 bg-surface-alt text-text-secondary ui-radius-md text-sm hover:bg-surface-hover"
+                className="surface-control ui-radius-md flex items-center gap-1 border px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary"
               >
                 <Copy size={14} />
               </button>
@@ -463,13 +463,13 @@ export function CustomShaderEditor({ isOpen, onClose, onApplyShader }: CustomSha
                 <button
                   onClick={saveShader}
                   disabled={!currentShaderName.trim()}
-                  className="flex-1 px-4 py-2 bg-accent text-text-primary ui-radius-md text-sm hover:bg-accent-hover disabled:opacity-50"
+                  className="surface-control-elevation ui-radius-md flex-1 border border-accent bg-accent px-4 py-2 text-sm text-text-primary hover:bg-accent-hover disabled:opacity-50"
                 >
                   Save
                 </button>
                 <button
                   onClick={() => setShowSaveDialog(false)}
-                  className="px-4 py-2 bg-surface-alt text-text-secondary ui-radius-md text-sm hover:bg-surface-hover"
+                  className="surface-control ui-radius-md border px-4 py-2 text-sm text-text-secondary hover:text-text-primary"
                 >
                   Cancel
                 </button>
@@ -487,7 +487,7 @@ export function ShaderEditorToggle({ onClick }: { onClick: () => void }) {
   return (
     <button
       onClick={onClick}
-      className="p-2 ui-radius-md bg-black/70 text-text-secondary hover:text-text-primary transition-colors"
+      className="surface-control ui-radius-md border p-2 text-text-secondary hover:text-text-primary transition-colors"
       title="Custom Shader Editor (WEBGL-014)"
     >
       <Code size={16} />

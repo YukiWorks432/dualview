@@ -226,10 +226,10 @@ export function DifferenceHeatmap() {
               key={m}
               onClick={() => setMode(m)}
               className={cn(
-                'px-2 py-1 text-[10px] capitalize transition-colors',
+                'surface-control-elevation ui-radius-sm border px-2 py-1 text-[10px] capitalize transition-colors',
                 mode === m
-                  ? 'bg-accent text-white'
-                  : 'bg-surface text-text-muted hover:text-text-primary',
+                  ? 'border-accent bg-accent text-white'
+                  : 'surface-control text-text-muted hover:text-text-primary',
               )}
             >
               {m}

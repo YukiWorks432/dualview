@@ -316,13 +316,13 @@ export function BatchComparison({ isOpen, onClose }: BatchComparisonProps) {
               <div className="flex gap-2">
                 <button
                   onClick={selectAll}
-                  className="flex-1 px-2 py-1 text-xs bg-surface-alt text-text-secondary ui-radius-md hover:bg-surface-hover"
+                  className="surface-control flex-1 ui-radius-md border px-2 py-1 text-xs text-text-secondary hover:text-text-primary"
                 >
                   Select All
                 </button>
                 <button
                   onClick={clearSelection}
-                  className="flex-1 px-2 py-1 text-xs bg-surface-alt text-text-secondary ui-radius-md hover:bg-surface-hover"
+                  className="surface-control flex-1 ui-radius-md border px-2 py-1 text-xs text-text-secondary hover:text-text-primary"
                 >
                   Clear
                 </button>
@@ -341,10 +341,10 @@ export function BatchComparison({ isOpen, onClose }: BatchComparisonProps) {
                     <button
                       key={file.id}
                       onClick={() => toggleFile(file.id)}
-                      className={`w-full flex items-center gap-2 px-2 py-1.5 ui-radius-md text-sm text-left ${
+                      className={`surface-control-elevation w-full ui-radius-md flex items-center gap-2 border px-2 py-1.5 text-sm text-left ${
                         selectedFiles.includes(file.id)
-                          ? 'bg-accent/20 text-text-primary border border-[#ff5722]'
-                          : 'bg-surface text-text-secondary hover:bg-surface-alt'
+                          ? 'border-accent bg-accent/20 text-text-primary'
+                          : 'surface-control text-text-secondary'
                       }`}
                     >
                       {file.thumbnail && (
@@ -449,7 +449,7 @@ export function BatchComparison({ isOpen, onClose }: BatchComparisonProps) {
                 </select>
                 <button
                   onClick={() => setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'))}
-                  className="surface-interactive ui-radius-sm p-1 text-text-secondary hover:text-text-primary"
+                  className="surface-control ui-radius-sm border p-1 text-text-secondary hover:text-text-primary"
                 >
                   {sortOrder === 'asc' ? <SortAsc size={16} /> : <SortDesc size={16} />}
                 </button>
@@ -474,7 +474,7 @@ export function BatchComparison({ isOpen, onClose }: BatchComparisonProps) {
                 <button
                   onClick={exportJSON}
                   disabled={results.length === 0}
-                  className="flex items-center gap-1 px-3 py-1.5 bg-surface-alt text-text-secondary ui-radius-md text-sm hover:bg-surface-hover disabled:opacity-50"
+                  className="surface-control flex items-center gap-1 ui-radius-md border px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary disabled:opacity-50"
                 >
                   <FileJson size={14} />
                   JSON
@@ -482,7 +482,7 @@ export function BatchComparison({ isOpen, onClose }: BatchComparisonProps) {
                 <button
                   onClick={exportCSV}
                   disabled={results.length === 0}
-                  className="flex items-center gap-1 px-3 py-1.5 bg-surface-alt text-text-secondary ui-radius-md text-sm hover:bg-surface-hover disabled:opacity-50"
+                  className="surface-control flex items-center gap-1 ui-radius-md border px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary disabled:opacity-50"
                 >
                   <FileSpreadsheet size={14} />
                   CSV
@@ -596,7 +596,7 @@ export function BatchComparisonToggle({ onClick }: { onClick: () => void }) {
   return (
     <button
       onClick={onClick}
-      className="p-2 ui-radius-md bg-black/70 text-text-secondary hover:text-text-primary transition-colors"
+      className="surface-control ui-radius-md border p-2 text-text-secondary hover:text-text-primary transition-colors"
       title="Batch Comparison (WEBGL-013)"
     >
       <Grid3X3 size={16} />
