@@ -594,262 +594,268 @@ export function Timeline() {
   return (
     <div className="h-40 md:h-64 bg-surface border-t border-border flex flex-col">
       {/* Transport controls - Miller's Law: Grouped into logical chunks */}
-      <div className="h-10 px-2 md:px-4 flex items-center justify-between border-b border-border bg-surface-hover">
-        {/* Left: Playback controls - Law of Proximity */}
-        <div className="flex items-center gap-1">
-          {/* Core transport - most used actions grouped together */}
-          <div className="flex items-center bg-surface p-0.5 gap-0.5">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => seek(0)}
-              title="Go to start (Home)"
-              className="h-7 w-7"
-            >
-              <SkipBack className="w-3.5 h-3.5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => stepFrame(-1)}
-              disabled={isPlaying}
-              title="Previous frame (←)"
-              className="h-7 w-7"
-            >
-              <ChevronLeft className="w-3.5 h-3.5" />
-            </Button>
-            {/* Primary action - Von Restorff Effect */}
-            <Button
-              variant={isPlaying ? 'secondary' : 'ghost'}
-              size="icon"
-              onClick={togglePlay}
-              title="Play/Pause (Space)"
-              className={`h-8 w-8 ${isPlaying ? 'bg-accent/20 text-accent' : ''}`}
-            >
-              {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => stepFrame(1)}
-              disabled={isPlaying}
-              title="Next frame (→)"
-              className="h-7 w-7"
-            >
-              <ChevronRight className="w-3.5 h-3.5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => seek(duration)}
-              title="Go to end (End)"
-              className="h-7 w-7"
-            >
-              <SkipForward className="w-3.5 h-3.5" />
-            </Button>
-          </div>
-
-          {/* Time display - Goal-Gradient Effect: Show progress */}
-          <div className="ml-2 md:ml-3 flex items-center gap-2">
-            <div className="text-xs md:text-sm font-mono text-text-primary tabular-nums">
-              {formatTime(currentTime)}
-            </div>
-            {/* Visual progress indicator - hidden on small screens */}
-            <div className="hidden sm:block w-16 h-1 bg-surface relative overflow-hidden">
-              <div
-                className="absolute inset-y-0 left-0 bg-accent transition-all duration-75"
-                style={{ width: `${(currentTime / duration) * 100}%` }}
-              />
-            </div>
-            <div className="hidden sm:block text-sm font-mono text-text-muted tabular-nums">
-              {formatTime(duration)}
-            </div>
-            <span className="hidden md:inline text-[10px] text-text-muted px-1.5 py-0.5 bg-surface font-mono">
-              F:{getCurrentFrame()}
-            </span>
-          </div>
-        </div>
-
-        {/* Center: Speed control - Hick's Law: Limited options (hidden on mobile) */}
-        <div className="hidden md:flex items-center gap-3">
-          {/* Speed selector with visual feedback */}
-          <div className="flex items-center gap-0.5 bg-surface p-0.5">
-            {[0.5, 1, 2].map((speed) => (
-              <button
-                key={speed}
-                onClick={() => setPlaybackSpeed(speed)}
-                className={cn(
-                  'px-2.5 py-1 text-xs font-medium transition-all duration-150',
-                  playbackSpeed === speed && shuttleSpeed === 0
-                    ? 'bg-accent text-white'
-                    : 'text-text-muted hover:text-text-primary hover:bg-surface-hover',
-                )}
+      <ElevatedSurface asChild offset={1}>
+        <div className="h-10 px-2 md:px-4 flex items-center justify-between border-b border-border">
+          {/* Left: Playback controls - Law of Proximity */}
+          <div className="flex items-center gap-1">
+            {/* Core transport - most used actions grouped together */}
+            <div className="flex items-center ui-radius-md bg-surface p-0.5 gap-0.5">
+              <Button
+                variant="secondary"
+                size="icon"
+                onClick={() => seek(0)}
+                title="Go to start (Home)"
+                className="h-7 w-7"
               >
-                {speed === 1 ? '1×' : `${speed}×`}
-              </button>
-            ))}
-          </div>
-          {/* Shuttle speed indicator - clear visual feedback */}
-          {shuttleSpeed !== 0 && (
-            <div
-              className={cn(
-                'px-2.5 py-1 text-xs font-mono font-medium animate-pulse-subtle',
-                shuttleSpeed > 0 ? 'bg-green-600/90 text-white' : 'bg-orange-600/90 text-white',
-              )}
-            >
-              {shuttleSpeed > 0 ? '▶▶' : '◀◀'} {Math.abs(shuttleSpeed)}×
+                <SkipBack className="w-3.5 h-3.5" />
+              </Button>
+              <Button
+                variant="secondary"
+                size="icon"
+                onClick={() => stepFrame(-1)}
+                disabled={isPlaying}
+                title="Previous frame (←)"
+                className="h-7 w-7"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+              </Button>
+              {/* Primary action - Von Restorff Effect */}
+              <Button
+                variant="secondary"
+                size="icon"
+                onClick={togglePlay}
+                title="Play/Pause (Space)"
+                className={`h-8 w-8 ${isPlaying ? 'bg-accent/20 text-accent' : ''}`}
+              >
+                {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+              </Button>
+              <Button
+                variant="secondary"
+                size="icon"
+                onClick={() => stepFrame(1)}
+                disabled={isPlaying}
+                title="Next frame (→)"
+                className="h-7 w-7"
+              >
+                <ChevronRight className="w-3.5 h-3.5" />
+              </Button>
+              <Button
+                variant="secondary"
+                size="icon"
+                onClick={() => seek(duration)}
+                title="Go to end (End)"
+                className="h-7 w-7"
+              >
+                <SkipForward className="w-3.5 h-3.5" />
+              </Button>
             </div>
-          )}
-          <div className="hidden lg:flex items-center gap-1">
-            <kbd className="kbd">J</kbd>
-            <kbd className="kbd">K</kbd>
-            <kbd className="kbd">L</kbd>
-          </div>
-        </div>
 
-        {/* Right: Tools and zoom - Simplified by default */}
-        <div className="flex items-center gap-1">
-          {/* FILMSTRIP-002: Toggle filmstrip view */}
-          <Button
-            variant={showFilmstrip ? 'secondary' : 'ghost'}
-            size="icon"
-            onClick={() => setShowFilmstrip(!showFilmstrip)}
-            title={showFilmstrip ? 'Hide filmstrip' : 'Show filmstrip'}
-            className={`hidden md:flex h-7 w-7 ${showFilmstrip ? 'bg-accent/10 text-accent' : ''}`}
-          >
-            <Video className="w-3.5 h-3.5" />
-          </Button>
-
-          {/* Advanced tools toggle - Cognitive Load reduction (hidden on mobile) */}
-          <Button
-            variant={showAdvancedTools ? 'secondary' : 'ghost'}
-            size="sm"
-            onClick={() => setShowAdvancedTools(!showAdvancedTools)}
-            title="Toggle advanced tools"
-            className={`hidden md:flex h-7 px-2 text-[10px] gap-1 ${showAdvancedTools ? 'bg-accent/10 text-accent' : ''}`}
-          >
-            <Settings className="w-3 h-3" />
-            <span className="hidden sm:inline">{showAdvancedTools ? 'Less' : 'More'}</span>
-          </Button>
-
-          {/* Advanced tools - hidden by default for simplicity */}
-          {showAdvancedTools && (
-            <>
-              {/* Loop controls */}
-              <div className="flex items-center gap-0.5 bg-surface p-0.5 ml-1">
-                <Button
-                  variant={loopRegion ? 'secondary' : 'ghost'}
-                  size="icon"
-                  onClick={() => (loopRegion ? clearLoop() : setLoopIn())}
-                  title={loopRegion ? 'Clear loop (Esc)' : 'Set loop in (I/O)'}
-                  className={`h-7 w-7 ${loopRegion ? 'bg-accent/20 text-accent' : ''}`}
-                >
-                  <Repeat className="w-3.5 h-3.5" />
-                </Button>
-                {loopRegion && (
-                  <span className="text-[10px] text-accent font-mono px-1">
-                    {formatTime(loopRegion.inPoint)}→{formatTime(loopRegion.outPoint)}
-                  </span>
-                )}
+            {/* Time display - Goal-Gradient Effect: Show progress */}
+            <div className="ml-2 md:ml-3 flex items-center gap-2">
+              <div className="text-xs md:text-sm font-mono text-text-primary tabular-nums">
+                {formatTime(currentTime)}
               </div>
+              {/* Visual progress indicator - hidden on small screens */}
+              <div className="hidden sm:block w-16 h-1 ui-radius-sm bg-surface relative overflow-hidden">
+                <div
+                  className="absolute inset-y-0 left-0 bg-accent transition-all duration-75"
+                  style={{ width: `${(currentTime / duration) * 100}%` }}
+                />
+              </div>
+              <div className="hidden sm:block text-sm font-mono text-text-muted tabular-nums">
+                {formatTime(duration)}
+              </div>
+              <span className="hidden md:inline ui-radius-sm text-[10px] text-text-muted px-1.5 py-0.5 bg-surface font-mono">
+                F:{getCurrentFrame()}
+              </span>
+            </div>
+          </div>
 
-              {/* Clip editing tools */}
+          {/* Center: Speed control - Hick's Law: Limited options (hidden on mobile) */}
+          <div className="hidden md:flex items-center gap-3">
+            {/* Speed selector with visual feedback */}
+            <div className="flex items-center gap-0.5 ui-radius-md bg-surface p-0.5">
+              {[0.5, 1, 2].map((speed) => (
+                <button
+                  key={speed}
+                  onClick={() => setPlaybackSpeed(speed)}
+                  className={cn(
+                    'surface-control-elevation ui-radius-sm border px-2.5 py-1 text-xs font-medium transition-all duration-150',
+                    playbackSpeed === speed && shuttleSpeed === 0
+                      ? 'border-accent bg-accent text-white'
+                      : 'surface-control text-text-muted hover:text-text-primary',
+                  )}
+                >
+                  {speed === 1 ? '1×' : `${speed}×`}
+                </button>
+              ))}
+            </div>
+            {/* Shuttle speed indicator - clear visual feedback */}
+            {shuttleSpeed !== 0 && (
               <div
                 className={cn(
-                  'flex items-center gap-0.5 bg-surface p-0.5 transition-opacity',
-                  !selectedClipId && 'opacity-40',
+                  'px-2.5 py-1 text-xs font-mono font-medium animate-pulse-subtle',
+                  shuttleSpeed > 0 ? 'bg-green-600/90 text-white' : 'bg-orange-600/90 text-white',
                 )}
               >
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => {
-                    if (selectedClipId) {
-                      const track = tracks.find((t) => t.clips.some((c) => c.id === selectedClipId))
-                      if (track && !track.locked) {
-                        pushState()
-                        splitClip(selectedClipId, currentTime)
-                      }
-                    }
-                  }}
-                  disabled={!selectedClipId}
-                  title="Split at playhead (S)"
-                  className="h-7 w-7"
-                >
-                  <Scissors className="w-3.5 h-3.5" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => {
-                    if (selectedClipId) {
-                      const track = tracks.find((t) => t.clips.some((c) => c.id === selectedClipId))
-                      if (track && !track.locked) {
-                        pushState()
-                        duplicateClip(selectedClipId)
-                      }
-                    }
-                  }}
-                  disabled={!selectedClipId}
-                  title="Duplicate (⌘D)"
-                  className="h-7 w-7"
-                >
-                  <Copy className="w-3.5 h-3.5" />
-                </Button>
+                {shuttleSpeed > 0 ? '▶▶' : '◀◀'} {Math.abs(shuttleSpeed)}×
               </div>
+            )}
+            <div className="hidden lg:flex items-center gap-1">
+              <kbd className="kbd">J</kbd>
+              <kbd className="kbd">K</kbd>
+              <kbd className="kbd">L</kbd>
+            </div>
+          </div>
 
-              {/* Toggle tools */}
-              <div className="flex items-center gap-0.5">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => addMarker()}
-                  title="Add marker (M)"
-                  className="h-7 w-7 relative"
-                >
-                  <Flag className="w-3.5 h-3.5" />
-                  {markers.length > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-secondary text-[8px] text-black font-bold flex items-center justify-center">
-                      {markers.length}
+          {/* Right: Tools and zoom - Simplified by default */}
+          <div className="flex items-center gap-1">
+            {/* FILMSTRIP-002: Toggle filmstrip view */}
+            <Button
+              variant="secondary"
+              size="icon"
+              onClick={() => setShowFilmstrip(!showFilmstrip)}
+              title={showFilmstrip ? 'Hide filmstrip' : 'Show filmstrip'}
+              className={`hidden md:flex h-7 w-7 ${showFilmstrip ? 'bg-accent/10 text-accent' : ''}`}
+            >
+              <Video className="w-3.5 h-3.5" />
+            </Button>
+
+            {/* Advanced tools toggle - Cognitive Load reduction (hidden on mobile) */}
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setShowAdvancedTools(!showAdvancedTools)}
+              title="Toggle advanced tools"
+              className={`hidden md:flex h-7 px-2 text-[10px] gap-1 ${showAdvancedTools ? 'bg-accent/10 text-accent' : ''}`}
+            >
+              <Settings className="w-3 h-3" />
+              <span className="hidden sm:inline">{showAdvancedTools ? 'Less' : 'More'}</span>
+            </Button>
+
+            {/* Advanced tools - hidden by default for simplicity */}
+            {showAdvancedTools && (
+              <>
+                {/* Loop controls */}
+                <div className="flex items-center gap-0.5 ui-radius-md bg-surface p-0.5 ml-1">
+                  <Button
+                    variant="secondary"
+                    size="icon"
+                    onClick={() => (loopRegion ? clearLoop() : setLoopIn())}
+                    title={loopRegion ? 'Clear loop (Esc)' : 'Set loop in (I/O)'}
+                    className={`h-7 w-7 ${loopRegion ? 'bg-accent/20 text-accent' : ''}`}
+                  >
+                    <Repeat className="w-3.5 h-3.5" />
+                  </Button>
+                  {loopRegion && (
+                    <span className="text-[10px] text-accent font-mono px-1">
+                      {formatTime(loopRegion.inPoint)}→{formatTime(loopRegion.outPoint)}
                     </span>
                   )}
-                </Button>
-                <Button
-                  variant={snapEnabled ? 'secondary' : 'ghost'}
-                  size="icon"
-                  onClick={toggleSnap}
-                  title="Snap to edges (N)"
-                  className={`h-7 w-7 ${snapEnabled ? 'bg-accent/20 text-accent' : ''}`}
-                >
-                  <Magnet className="w-3.5 h-3.5" />
-                </Button>
-                <Button
-                  variant={rippleEnabled ? 'secondary' : 'ghost'}
-                  size="icon"
-                  onClick={toggleRipple}
-                  title="Ripple edit (R)"
-                  className={`h-7 w-7 ${rippleEnabled ? 'bg-accent/20 text-accent' : ''}`}
-                >
-                  <ArrowRightLeft className="w-3.5 h-3.5" />
-                </Button>
-              </div>
-            </>
-          )}
+                </div>
 
-          {/* Zoom controls - always visible */}
-          <div className="flex items-center gap-0.5 bg-surface p-0.5 ml-1 md:ml-2">
-            <Button variant="ghost" size="icon" onClick={zoomOut} className="h-7 w-7">
-              <ZoomOut className="w-3.5 h-3.5" />
-            </Button>
-            <span className="hidden sm:inline text-[10px] text-text-secondary w-10 text-center font-mono">
-              {Math.round(zoom * 100)}%
-            </span>
-            <Button variant="ghost" size="icon" onClick={zoomIn} className="h-7 w-7">
-              <ZoomIn className="w-3.5 h-3.5" />
-            </Button>
+                {/* Clip editing tools */}
+                <div
+                  className={cn(
+                    'flex items-center gap-0.5 ui-radius-md bg-surface p-0.5 transition-opacity',
+                    !selectedClipId && 'opacity-40',
+                  )}
+                >
+                  <Button
+                    variant="secondary"
+                    size="icon"
+                    onClick={() => {
+                      if (selectedClipId) {
+                        const track = tracks.find((t) =>
+                          t.clips.some((c) => c.id === selectedClipId),
+                        )
+                        if (track && !track.locked) {
+                          pushState()
+                          splitClip(selectedClipId, currentTime)
+                        }
+                      }
+                    }}
+                    disabled={!selectedClipId}
+                    title="Split at playhead (S)"
+                    className="h-7 w-7"
+                  >
+                    <Scissors className="w-3.5 h-3.5" />
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="icon"
+                    onClick={() => {
+                      if (selectedClipId) {
+                        const track = tracks.find((t) =>
+                          t.clips.some((c) => c.id === selectedClipId),
+                        )
+                        if (track && !track.locked) {
+                          pushState()
+                          duplicateClip(selectedClipId)
+                        }
+                      }
+                    }}
+                    disabled={!selectedClipId}
+                    title="Duplicate (⌘D)"
+                    className="h-7 w-7"
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
+
+                {/* Toggle tools */}
+                <div className="flex items-center gap-0.5">
+                  <Button
+                    variant="secondary"
+                    size="icon"
+                    onClick={() => addMarker()}
+                    title="Add marker (M)"
+                    className="h-7 w-7 relative"
+                  >
+                    <Flag className="w-3.5 h-3.5" />
+                    {markers.length > 0 && (
+                      <span className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-secondary text-[8px] text-black font-bold flex items-center justify-center">
+                        {markers.length}
+                      </span>
+                    )}
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="icon"
+                    onClick={toggleSnap}
+                    title="Snap to edges (N)"
+                    className={`h-7 w-7 ${snapEnabled ? 'bg-accent/20 text-accent' : ''}`}
+                  >
+                    <Magnet className="w-3.5 h-3.5" />
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="icon"
+                    onClick={toggleRipple}
+                    title="Ripple edit (R)"
+                    className={`h-7 w-7 ${rippleEnabled ? 'bg-accent/20 text-accent' : ''}`}
+                  >
+                    <ArrowRightLeft className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
+              </>
+            )}
+
+            {/* Zoom controls - always visible */}
+            <div className="flex items-center gap-0.5 ui-radius-md bg-surface p-0.5 ml-1 md:ml-2">
+              <Button variant="secondary" size="icon" onClick={zoomOut} className="h-7 w-7">
+                <ZoomOut className="w-3.5 h-3.5" />
+              </Button>
+              <span className="hidden sm:inline text-[10px] text-text-secondary w-10 text-center font-mono">
+                {Math.round(zoom * 100)}%
+              </span>
+              <Button variant="secondary" size="icon" onClick={zoomIn} className="h-7 w-7">
+                <ZoomIn className="w-3.5 h-3.5" />
+              </Button>
+            </div>
           </div>
         </div>
-      </div>
+      </ElevatedSurface>
 
       {/* Timeline area */}
       <div className="flex-1 flex overflow-hidden">
@@ -872,7 +878,7 @@ export function Timeline() {
                       setOpenTrackSettings(openTrackSettings === track.id ? null : track.id)
                     }
                     className={cn(
-                      'p-1 hover:bg-surface',
+                      'surface-control ui-radius-sm inline-flex h-7 w-7 items-center justify-center border p-0',
                       openTrackSettings === track.id && 'bg-surface',
                     )}
                     title="Track Settings"
@@ -881,7 +887,7 @@ export function Timeline() {
                   </button>
                   <button
                     onClick={() => toggleTrackMute(track.id)}
-                    className="p-1 hover:bg-surface"
+                    className="surface-control ui-radius-sm inline-flex h-7 w-7 items-center justify-center border p-0"
                     title={track.muted ? 'Unmute' : 'Mute'}
                   >
                     {track.muted ? (
@@ -892,7 +898,7 @@ export function Timeline() {
                   </button>
                   <button
                     onClick={() => toggleTrackLock(track.id)}
-                    className="p-1 hover:bg-surface"
+                    className="surface-control ui-radius-sm inline-flex h-7 w-7 items-center justify-center border p-0"
                     title={track.locked ? 'Unlock' : 'Lock'}
                   >
                     {track.locked ? (
@@ -933,7 +939,7 @@ export function Timeline() {
                       return (
                         <label
                           key={type}
-                          className="flex items-center gap-2 py-1 cursor-pointer hover:bg-surface-hover px-1"
+                          className="flex items-center gap-2 ui-radius-sm py-1 cursor-pointer hover:bg-surface-hover px-1"
                         >
                           <input
                             type="checkbox"
@@ -969,7 +975,7 @@ export function Timeline() {
                             removeTrack(track.id)
                             setOpenTrackSettings(null)
                           }}
-                          className="flex items-center gap-2 w-full py-1 px-1 text-error hover:bg-error/10"
+                          className="flex items-center gap-2 w-full ui-radius-sm py-1 px-1 text-error hover:bg-error/10"
                         >
                           <Trash2 className="w-3 h-3" />
                           <span className="text-xs">Delete Track</span>
@@ -989,10 +995,10 @@ export function Timeline() {
             <button
               onClick={() => setShowAddTrackMenu(!showAddTrackMenu)}
               className={cn(
-                'flex items-center gap-1.5 px-2 py-1 text-xs font-medium transition-colors',
+                'surface-control-elevation ui-radius-md flex items-center gap-1.5 border px-2 py-1 text-xs font-medium transition-colors',
                 showAddTrackMenu
-                  ? 'bg-accent text-white'
-                  : 'text-text-muted hover:text-text-primary hover:bg-surface-hover',
+                  ? 'border-accent bg-accent text-white'
+                  : 'surface-control text-text-muted hover:text-text-primary',
               )}
               title="Add new track"
             >
@@ -1013,7 +1019,7 @@ export function Timeline() {
                       addTrack('media')
                       setShowAddTrackMenu(false)
                     }}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-text-primary hover:bg-surface-hover"
+                    className="w-full flex items-center gap-2 ui-radius-sm px-3 py-2 text-sm text-text-primary hover:bg-surface-hover"
                   >
                     <Video className="w-4 h-4 text-green-400" />
                     <span>Media Track</span>
@@ -1024,7 +1030,7 @@ export function Timeline() {
                       addTrack('audio')
                       setShowAddTrackMenu(false)
                     }}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-text-primary hover:bg-surface-hover"
+                    className="w-full flex items-center gap-2 ui-radius-sm px-3 py-2 text-sm text-text-primary hover:bg-surface-hover"
                   >
                     <Music className="w-4 h-4 text-blue-400" />
                     <span>Audio Track</span>
@@ -1035,7 +1041,7 @@ export function Timeline() {
                       addTrack('text')
                       setShowAddTrackMenu(false)
                     }}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-text-primary hover:bg-surface-hover"
+                    className="w-full flex items-center gap-2 ui-radius-sm px-3 py-2 text-sm text-text-primary hover:bg-surface-hover"
                   >
                     <Type className="w-4 h-4 text-purple-400" />
                     <span>Text Track</span>
@@ -1098,7 +1104,7 @@ export function Timeline() {
                 >
                   <Flag className="w-3 h-3 text-secondary fill-secondary" />
                   <button
-                    className="absolute -top-1 -right-1 opacity-0 group-hover:opacity-100 p-0.5 bg-error rounded-full"
+                    className="absolute -top-1 -right-1 inline-flex h-4 w-4 items-center justify-center rounded-full bg-error p-0 opacity-0 group-hover:opacity-100"
                     onClick={(e) => {
                       e.stopPropagation()
                       removeMarker(marker.id)

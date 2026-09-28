@@ -110,7 +110,7 @@ export function URLImport({ isOpen, onClose }: URLImportProps) {
               <Link className="w-5 h-5" />
               Import from URL
             </h2>
-            <button onClick={onClose} className="surface-interactive ui-radius-sm p-1">
+            <button onClick={onClose} className="surface-control ui-radius-sm border p-1">
               <X className="w-5 h-5 text-text-muted" />
             </button>
           </div>

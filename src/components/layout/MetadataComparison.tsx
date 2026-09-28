@@ -282,7 +282,7 @@ export function MetadataComparison() {
                 </h3>
                 <button
                   onClick={() => setIsExpanded(false)}
-                  className="surface-interactive ui-radius-sm p-1 transition-colors"
+                  className="surface-control ui-radius-sm border p-1 transition-colors"
                 >
                   <ChevronDown className="w-4 h-4 rotate-180" />
                 </button>

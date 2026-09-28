@@ -53,10 +53,10 @@ export function ScreenshotExportPanel({
               type="button"
               aria-pressed={source === option.value}
               onClick={() => onSourceChange(option.value as ScreenshotSource)}
-              className={`border px-3 py-2 text-sm transition-colors ${
+              className={`surface-control-elevation ui-radius-md border px-3 py-2 text-sm transition-colors ${
                 source === option.value
                   ? 'border-accent bg-accent/10 text-accent'
-                  : 'border-border text-text-secondary hover:border-text-muted'
+                  : 'surface-control text-text-secondary'
               }`}
             >
               {option.label}
@@ -84,10 +84,10 @@ export function ScreenshotExportPanel({
               type="button"
               aria-pressed={resolution === option.value}
               onClick={() => onResolutionChange(option.value as ScreenshotResolution)}
-              className={`border px-3 py-2 text-sm transition-colors ${
+              className={`surface-control-elevation ui-radius-md border px-3 py-2 text-sm transition-colors ${
                 resolution === option.value
                   ? 'border-accent bg-accent/10 text-accent'
-                  : 'border-border text-text-secondary hover:border-text-muted'
+                  : 'surface-control text-text-secondary'
               }`}
             >
               <span className="block font-medium">{option.label}</span>

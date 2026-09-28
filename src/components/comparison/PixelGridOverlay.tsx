@@ -20,6 +20,7 @@ import { useMediaStore } from '../../stores/mediaStore'
 import { usePlaybackStore } from '../../stores/playbackStore'
 import { useProjectStore } from '../../stores/projectStore'
 import { useTimelineStore } from '../../stores/timelineStore'
+import { ElevatedSurface } from '../ui'
 
 export function PixelGridOverlay() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -385,11 +386,14 @@ export function PixelGridOverlay() {
       </div>
 
       {/* Controls */}
-      <div className="absolute top-4 right-4 flex flex-col gap-2">
+      <ElevatedSurface
+        offset={1}
+        className="absolute top-4 right-4 ui-radius-lg flex flex-col gap-2 border border-transparent p-1"
+      >
         {/* Toggle grid */}
         <button
           onClick={togglePixelGrid}
-          className={`p-2 rounded transition-colors ${pixelGridSettings.enabled ? 'bg-accent text-white' : 'bg-black/70 text-gray-400 hover:text-white'}`}
+          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${pixelGridSettings.enabled ? 'border-accent bg-accent text-white' : 'surface-control text-text-secondary hover:text-text-primary'}`}
           title={pixelGridSettings.enabled ? 'Hide grid' : 'Show grid'}
         >
           {pixelGridSettings.enabled ? <Eye size={16} /> : <EyeOff size={16} />}
@@ -398,7 +402,7 @@ export function PixelGridOverlay() {
         {/* Toggle RGB values */}
         <button
           onClick={() => setPixelGridSettings({ showRGBValues: !pixelGridSettings.showRGBValues })}
-          className={`p-2 rounded transition-colors ${pixelGridSettings.showRGBValues ? 'bg-accent text-white' : 'bg-black/70 text-gray-400 hover:text-white'}`}
+          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${pixelGridSettings.showRGBValues ? 'border-accent bg-accent text-white' : 'surface-control text-text-secondary hover:text-text-primary'}`}
           title={pixelGridSettings.showRGBValues ? 'Hide RGB values' : 'Show RGB values'}
         >
           <span className="text-xs font-bold">RGB</span>
@@ -410,14 +414,14 @@ export function PixelGridOverlay() {
             <button
               key={color}
               onClick={() => setPixelGridSettings({ gridColor: color })}
-              className={`p-2 rounded text-xs transition-colors ${pixelGridSettings.gridColor === color ? 'bg-accent text-white' : 'bg-black/70 text-gray-400 hover:text-white'}`}
+              className={`surface-control-elevation ui-radius-md border p-2 text-xs transition-colors ${pixelGridSettings.gridColor === color ? 'border-accent bg-accent text-white' : 'surface-control text-text-secondary hover:text-text-primary'}`}
               title={`${color} grid lines`}
             >
               {color[0].toUpperCase()}
             </button>
           ))}
         </div>
-      </div>
+      </ElevatedSurface>
 
       {/* Mode indicator */}
       <div className="absolute top-4 left-4 bg-black/70 px-3 py-1.5 rounded text-sm">

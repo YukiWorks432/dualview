@@ -21,7 +21,7 @@ export function Header({ onExport, onShowShortcuts, onToggleSidebar }: HeaderPro
     <header className="surface-wash flex h-12 items-center justify-between border-b border-border px-2 min-[769px]:h-10 md:px-3">
       <div className="flex items-center gap-1.5 md:gap-2">
         <Button
-          variant="ghost"
+          variant="secondary"
           size="icon"
           onClick={onToggleSidebar}
           className="show-mobile -ml-1 h-8 w-8 text-text-muted"
@@ -36,7 +36,7 @@ export function Header({ onExport, onShowShortcuts, onToggleSidebar }: HeaderPro
 
         <div className="hide-mobile flex items-center gap-0.5">
           <Button
-            variant="ghost"
+            variant="secondary"
             size="icon"
             aria-label="Undo"
             title="Undo (Ctrl+Z)"
@@ -47,7 +47,7 @@ export function Header({ onExport, onShowShortcuts, onToggleSidebar }: HeaderPro
             <Undo2 className="h-3.5 w-3.5" aria-hidden="true" />
           </Button>
           <Button
-            variant="ghost"
+            variant="secondary"
             size="icon"
             aria-label="Redo"
             title="Redo (Ctrl+Shift+Z)"
@@ -68,7 +68,7 @@ export function Header({ onExport, onShowShortcuts, onToggleSidebar }: HeaderPro
 
       <div className="flex items-center gap-0.5">
         <Button
-          variant="ghost"
+          variant="secondary"
           size="icon"
           aria-label="Keyboard shortcuts"
           title="Keyboard Shortcuts (?)"
@@ -81,7 +81,7 @@ export function Header({ onExport, onShowShortcuts, onToggleSidebar }: HeaderPro
         <div className="hide-mobile mx-0.5 h-4 w-px bg-border" />
 
         <Button
-          variant="ghost"
+          variant="secondary"
           size="sm"
           className={`group h-7 gap-1 px-2 text-xs ${isPlaying ? 'surface-active text-text-primary hover:surface-active' : ''}`}
           onClick={togglePlay}

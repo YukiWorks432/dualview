@@ -313,7 +313,7 @@ export function GamutWarningOverlay({
               <AlertTriangle className="w-4 h-4 text-red-500" />
               <span className="text-sm font-medium text-text-primary">Gamut Warning</span>
             </div>
-            <button onClick={onClose} className="surface-interactive ui-radius-sm p-1">
+            <button onClick={onClose} className="surface-control ui-radius-sm border p-1">
               <X className="w-4 h-4 text-text-muted" />
             </button>
           </div>
@@ -341,7 +341,7 @@ export function GamutWarningOverlay({
                           setTargetGamut(space.name)
                           setShowDropdown(false)
                         }}
-                        className={`w-full px-3 py-2 text-left text-sm hover:bg-surface-hover ${
+                        className={`w-full ui-radius-sm px-3 py-2 text-left text-sm hover:bg-surface-hover ${
                           targetGamut === space.name
                             ? 'bg-accent/20 text-accent'
                             : 'text-text-primary'

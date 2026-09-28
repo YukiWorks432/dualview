@@ -67,15 +67,13 @@ export function StitchExportPanel({
               type="button"
               aria-pressed={trackId === track.id}
               onClick={() => onTrackChange(track.id)}
-              className={`border p-3 text-left transition-colors ${
-                trackId === track.id
-                  ? 'border-accent bg-accent/10'
-                  : 'border-border hover:border-text-muted'
+              className={`surface-control-elevation ui-radius-md border p-3 text-left transition-colors ${
+                trackId === track.id ? 'border-accent bg-accent/10' : 'surface-control'
               }`}
             >
               <div className="mb-1 flex items-center gap-2">
                 <span
-                  className={`h-3 w-3 ${track.type === 'a' ? 'bg-accent' : 'bg-secondary'}`}
+                  className={`h-3 w-3 rounded-full ${track.type === 'a' ? 'bg-accent' : 'bg-secondary'}`}
                   aria-hidden="true"
                 />
                 <span className="text-sm font-medium text-text-primary">{track.name}</span>
@@ -91,7 +89,7 @@ export function StitchExportPanel({
 
       {selectedTrack &&
         (selectedTrack.clipCount === 0 ? (
-          <div className="border border-border bg-surface-alt p-4 text-center">
+          <div className="ui-radius-md border border-border bg-surface-alt p-4 text-center">
             <Film className="mx-auto mb-2 h-8 w-8 text-text-muted" aria-hidden="true" />
             <p className="text-sm text-text-secondary">No clips on this track</p>
             <p className="mt-1 text-xs text-text-muted">Add clips to the timeline to export</p>
@@ -101,7 +99,7 @@ export function StitchExportPanel({
             <div className="text-sm text-text-secondary">
               Clips to Stitch ({selectedTrack.clipCount})
             </div>
-            <div className="max-h-32 space-y-1 overflow-y-auto border border-border bg-surface-alt p-2">
+            <div className="max-h-32 space-y-1 overflow-y-auto ui-radius-md border border-border bg-surface-alt p-2">
               {selectedTrack.clips.map((clip, index) => (
                 <div key={`${clip.name}-${index}`} className="flex items-center gap-2 text-xs">
                   <span className="w-5 text-text-muted">{index + 1}.</span>
@@ -126,10 +124,10 @@ export function StitchExportPanel({
               type="button"
               aria-pressed={resolution === option}
               onClick={() => onResolutionChange(option)}
-              className={`border px-3 py-2 text-sm transition-colors ${
+              className={`surface-control-elevation ui-radius-md border px-3 py-2 text-sm transition-colors ${
                 resolution === option
                   ? 'border-accent bg-accent/10 text-accent'
-                  : 'border-border text-text-secondary hover:border-text-muted'
+                  : 'surface-control text-text-secondary'
               }`}
             >
               {option.toUpperCase()}
@@ -151,10 +149,10 @@ export function StitchExportPanel({
               type="button"
               aria-pressed={quality === option.value}
               onClick={() => onQualityChange(option.value as StitchQuality)}
-              className={`border px-3 py-2 text-sm transition-colors ${
+              className={`surface-control-elevation ui-radius-md border px-3 py-2 text-sm transition-colors ${
                 quality === option.value
                   ? 'border-accent bg-accent/10 text-accent'
-                  : 'border-border text-text-secondary hover:border-text-muted'
+                  : 'surface-control text-text-secondary'
               }`}
             >
               <span className="block">{option.label}</span>
@@ -173,10 +171,10 @@ export function StitchExportPanel({
               type="button"
               aria-pressed={fps === option}
               onClick={() => onFpsChange(option)}
-              className={`border px-3 py-2 text-sm transition-colors ${
+              className={`surface-control-elevation ui-radius-md border px-3 py-2 text-sm transition-colors ${
                 fps === option
                   ? 'border-accent bg-accent/10 text-accent'
-                  : 'border-border text-text-secondary hover:border-text-muted'
+                  : 'surface-control text-text-secondary'
               }`}
             >
               {option} fps
@@ -186,13 +184,16 @@ export function StitchExportPanel({
       </fieldset>
 
       {(progress.status === 'preparing' || progress.status === 'encoding') && (
-        <div className="space-y-3 border border-border bg-surface-alt p-4" role="status">
+        <div
+          className="ui-radius-lg space-y-3 border border-border bg-surface-alt p-4"
+          role="status"
+        >
           <div className="flex items-center justify-between text-sm">
             <span className="text-text-secondary">{progress.message}</span>
             <span className="font-medium text-accent">{progress.progress}%</span>
           </div>
           <div
-            className="h-2 overflow-hidden bg-background"
+            className="ui-radius-sm h-2 overflow-hidden bg-background"
             role="progressbar"
             aria-label="Stitch export progress"
             aria-valuemin={0}
@@ -211,8 +212,8 @@ export function StitchExportPanel({
       )}
 
       {progress.status === 'done' && (
-        <div className="space-y-4 border border-accent/40 bg-gradient-to-br from-accent/20 via-accent/10 to-secondary/10 p-6 text-center">
-          <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center bg-accent/20">
+        <div className="ui-radius-lg space-y-4 border border-accent/40 bg-gradient-to-br from-accent/20 via-accent/10 to-secondary/10 p-6 text-center">
+          <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-accent/20">
             <Check className="h-8 w-8 text-accent" strokeWidth={3} aria-hidden="true" />
           </div>
           <h3 className="text-xl font-bold text-text-primary">Stitch Complete!</h3>
@@ -230,7 +231,7 @@ export function StitchExportPanel({
 
       {progress.status === 'error' && (
         <div
-          className="flex items-center gap-2 border border-error/30 bg-error/10 p-3 text-sm text-error"
+          className="flex items-center gap-2 ui-radius-md border border-error/30 bg-error/10 p-3 text-sm text-error"
           role="alert"
         >
           <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" />

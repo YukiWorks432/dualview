@@ -49,6 +49,7 @@ import { cn, formatTime } from '../../lib/utils'
 import { useMediaStore } from '../../stores/mediaStore'
 import { usePlaybackStore } from '../../stores/playbackStore'
 import { useTimelineStore } from '../../stores/timelineStore'
+import { ElevatedSurface } from '../ui'
 
 type AudioViewMode = 'spectrogram' | 'spectrum' | 'goniometer' | 'loudness' | 'waveform' | 'all'
 type ActiveAudio = 'both' | 'a' | 'b'
@@ -86,7 +87,7 @@ function LoudnessMeter({
 }) {
   if (!metrics) {
     return (
-      <div className="bg-surface-alt p-3 flex-1 min-w-[200px]">
+      <div className="ui-radius-md bg-surface-alt p-3 flex-1 min-w-[200px]">
         <div className="text-xs text-text-muted mb-2">{label}</div>
         <div className="text-2xl font-mono text-text-muted">--</div>
       </div>
@@ -99,7 +100,7 @@ function LoudnessMeter({
   const isQuiet = diff < -1
 
   return (
-    <div className="bg-surface-alt p-3 flex-1 min-w-[200px]">
+    <div className="ui-radius-md bg-surface-alt p-3 flex-1 min-w-[200px]">
       <div className="flex items-center justify-between mb-2">
         <span className="text-xs font-medium" style={{ color }}>
           {label}
@@ -184,7 +185,7 @@ function MeterBar({
         <span className="text-text-muted">{label}</span>
         <span className={cn('font-mono', isClipping && 'text-red-400')}>{formatDb(value)}</span>
       </div>
-      <div className="h-2 bg-surface relative overflow-hidden">
+      <div className="ui-radius-sm h-2 bg-surface relative overflow-hidden">
         <div
           className="h-full transition-all duration-75"
           style={{
@@ -221,9 +222,9 @@ function PhaseCorrelation({
     mode === 'a' ? correlationA : mode === 'b' ? correlationB : (correlationA + correlationB) / 2
 
   return (
-    <div className="bg-surface-alt p-3">
+    <div className="ui-radius-md bg-surface-alt p-3">
       <div className="text-xs text-text-muted mb-2">PHASE CORRELATION</div>
-      <div className="relative h-6 bg-surface">
+      <div className="relative h-6 overflow-hidden ui-radius-sm bg-surface">
         {/* Scale */}
         <div className="absolute inset-0 flex items-center justify-between px-1 text-[8px] text-text-muted">
           <span>-1</span>
@@ -275,9 +276,9 @@ function StereoWidth({
   const width = mode === 'a' ? widthA : mode === 'b' ? widthB : (widthA + widthB) / 2
 
   return (
-    <div className="bg-surface-alt p-3">
+    <div className="ui-radius-md bg-surface-alt p-3">
       <div className="text-xs text-text-muted mb-2">STEREO WIDTH</div>
-      <div className="relative h-4 bg-surface overflow-hidden">
+      <div className="relative h-4 overflow-hidden ui-radius-sm bg-surface">
         <div
           className="absolute top-0 bottom-0 left-1/2 transition-all duration-75 bg-accent/60"
           style={{
@@ -1054,10 +1055,10 @@ export function AudioComparison() {
               key={mode}
               onClick={() => setViewMode(mode as AudioViewMode)}
               className={cn(
-                'px-3 py-1.5 text-xs flex items-center gap-1.5 transition-colors',
+                'surface-control-elevation ui-radius-md flex items-center gap-1.5 border px-3 py-1.5 text-xs transition-colors',
                 viewMode === mode
-                  ? 'bg-accent text-white'
-                  : 'text-text-muted hover:text-text-primary hover:bg-surface-hover',
+                  ? 'border-accent bg-accent text-white'
+                  : 'surface-control text-text-muted hover:text-text-primary',
               )}
             >
               <Icon className="w-3.5 h-3.5" />
@@ -1068,16 +1069,19 @@ export function AudioComparison() {
 
         {/* Transport controls */}
         <div className="flex items-center gap-2">
-          <button onClick={() => seek(0)} className="p-1.5 text-text-muted hover:text-text-primary">
+          <button
+            onClick={() => seek(0)}
+            className="surface-control ui-radius-sm border p-1.5 text-text-muted hover:text-text-primary"
+          >
             <SkipBack className="w-4 h-4" />
           </button>
           <button
             onClick={togglePlay}
             className={cn(
-              'w-8 h-8 flex items-center justify-center',
+              'surface-control-elevation w-8 h-8 ui-radius-md flex items-center justify-center border',
               isPlaying
-                ? 'bg-accent text-white'
-                : 'bg-surface-hover text-text-primary hover:bg-accent hover:text-white',
+                ? 'border-accent bg-accent text-white'
+                : 'surface-control text-text-primary hover:text-text-primary',
             )}
           >
             {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
@@ -1089,31 +1093,34 @@ export function AudioComparison() {
 
         {/* Output selector & settings */}
         <div className="flex items-center gap-3">
-          <div className="flex items-center bg-background border border-border">
+          <ElevatedSurface
+            offset={1}
+            className="ui-radius-md flex items-center gap-0.5 border border-transparent p-0.5"
+          >
             {(['a', 'both', 'b'] as const).map((mode) => (
               <button
                 key={mode}
                 onClick={() => setActiveAudio(mode)}
                 className={cn(
-                  'px-3 py-1 text-xs font-medium transition-all',
+                  'surface-control-elevation ui-radius-sm border px-3 py-1 text-xs font-medium transition-all',
                   activeAudio === mode
                     ? mode === 'a'
-                      ? 'bg-accent text-white'
+                      ? 'border-accent bg-accent text-white'
                       : mode === 'b'
-                        ? 'bg-secondary text-black'
-                        : 'bg-text-primary text-background'
-                    : 'text-text-muted hover:text-text-primary',
+                        ? 'border-secondary bg-secondary text-black'
+                        : 'border-text-primary bg-text-primary text-background'
+                    : 'surface-control text-text-muted hover:text-text-primary',
                 )}
               >
                 {mode === 'both' ? 'A+B' : mode.toUpperCase()}
               </button>
             ))}
-          </div>
+          </ElevatedSurface>
 
           <button
             onClick={() => setShowSettings(!showSettings)}
             className={cn(
-              'p-1.5 transition-colors',
+              'surface-control ui-radius-sm border p-1.5 transition-colors',
               showSettings ? 'text-accent' : 'text-text-muted hover:text-text-primary',
             )}
           >
@@ -1130,7 +1137,7 @@ export function AudioComparison() {
             <select
               value={targetPlatform}
               onChange={(e) => setTargetPlatform(e.target.value as keyof typeof LOUDNESS_TARGETS)}
-              className="bg-surface-hover border border-border px-2 py-1 text-xs"
+              className="surface-control ui-radius-md border px-2 py-1 text-xs"
             >
               {(Object.keys(LOUDNESS_TARGETS) as Array<keyof typeof LOUDNESS_TARGETS>).map(
                 (key) => (
@@ -1199,7 +1206,7 @@ export function AudioComparison() {
           <div className="w-full h-full grid grid-cols-2 grid-rows-2 gap-px bg-border">
             {/* Waveforms */}
             <div className="bg-background relative flex flex-col">
-              <div className="absolute top-2 left-2 z-10 text-[10px] text-text-muted bg-black/50 px-1.5 py-0.5">
+              <div className="absolute top-2 left-2 z-10 text-[10px] text-text-muted ui-radius-sm bg-black/50 px-1.5 py-0.5">
                 WAVEFORM
               </div>
               <div className={cn('flex-1', activeAudio === 'b' && 'opacity-50')}>
@@ -1229,7 +1236,7 @@ export function AudioComparison() {
 
             {/* Analysis / Spectrogram placeholder */}
             <div className="bg-background relative">
-              <div className="absolute top-2 left-2 z-10 text-[10px] text-text-muted bg-black/50 px-1.5 py-0.5">
+              <div className="absolute top-2 left-2 z-10 text-[10px] text-text-muted ui-radius-sm bg-black/50 px-1.5 py-0.5">
                 ANALYSIS
               </div>
               <SpectrogramCanvas
@@ -1242,7 +1249,7 @@ export function AudioComparison() {
 
             {/* Goniometer */}
             <div className="bg-background relative">
-              <div className="absolute top-2 left-2 z-10 text-[10px] text-text-muted bg-black/50 px-1.5 py-0.5">
+              <div className="absolute top-2 left-2 z-10 text-[10px] text-text-muted ui-radius-sm bg-black/50 px-1.5 py-0.5">
                 STEREO FIELD
               </div>
               <GoniometerCanvas
@@ -1254,7 +1261,7 @@ export function AudioComparison() {
 
             {/* Loudness meters */}
             <div className="bg-background p-2 overflow-auto">
-              <div className="absolute top-2 left-2 z-10 text-[10px] text-text-muted bg-black/50 px-1.5 py-0.5">
+              <div className="absolute top-2 left-2 z-10 text-[10px] text-text-muted ui-radius-sm bg-black/50 px-1.5 py-0.5">
                 LOUDNESS
               </div>
               <div className="flex gap-2 h-full pt-6">
@@ -1334,7 +1341,7 @@ export function AudioComparison() {
                 widthB={displayAnalysisB.analysis?.stereo.width || 0}
                 mode={activeAudio}
               />
-              <div className="bg-surface-alt p-3">
+              <div className="ui-radius-md bg-surface-alt p-3">
                 <div className="text-xs text-text-muted mb-2">MID/SIDE</div>
                 <div className="space-y-2 text-xs">
                   <div className="flex justify-between">
@@ -1368,17 +1375,17 @@ export function AudioComparison() {
       {/* Keyboard hints */}
       <div className="h-7 bg-surface border-t border-border flex items-center justify-center gap-4 text-[10px] text-text-muted shrink-0">
         <span>
-          <kbd className="px-1 bg-background font-mono">A</kbd> Solo A
+          <kbd className="ui-radius-sm px-1 bg-background font-mono">A</kbd> Solo A
         </span>
         <span>
-          <kbd className="px-1 bg-background font-mono">B</kbd> Solo B
+          <kbd className="ui-radius-sm px-1 bg-background font-mono">B</kbd> Solo B
         </span>
         <span>
-          <kbd className="px-1 bg-background font-mono">S</kbd> Both
+          <kbd className="ui-radius-sm px-1 bg-background font-mono">S</kbd> Both
         </span>
         <span className="text-border">|</span>
         <span>
-          <kbd className="px-1 bg-background font-mono">Space</kbd> Play/Pause
+          <kbd className="ui-radius-sm px-1 bg-background font-mono">Space</kbd> Play/Pause
         </span>
       </div>
     </div>

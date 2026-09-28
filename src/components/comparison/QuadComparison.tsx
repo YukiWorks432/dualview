@@ -121,7 +121,7 @@ function Quadrant({
           >
             <button
               onClick={() => dropZone.openFileDialog()}
-              className="p-3 rounded-lg border-2 border-dashed border-current hover:bg-accent/10 transition-colors"
+              className="surface-control surface-control-elevation ui-radius-lg border-2 border-dashed border-current p-3 transition-colors hover:bg-accent/10"
             >
               <Upload className={cn('w-6 h-6', dropZone.isDragOver && 'animate-bounce')} />
             </button>
@@ -142,7 +142,7 @@ function Quadrant({
       {/* Expand/Collapse button */}
       <button
         onClick={isExpanded ? onCollapse : onExpand}
-        className="absolute top-2 right-2 p-1.5 bg-black/60 hover:bg-black/80 rounded transition-colors"
+        className="surface-control ui-radius-md absolute top-2 right-2 border p-1.5 text-white transition-colors"
         title={isExpanded ? 'Collapse' : 'Expand to full view'}
       >
         {isExpanded ? (
@@ -259,7 +259,7 @@ export function QuadComparison() {
     <div ref={containerRef} className="w-full h-full bg-black relative" {...containerProps}>
       {/* Zoom indicator */}
       {zoom > 1 && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 bg-black/70 backdrop-blur-sm px-3 py-1 flex items-center gap-2">
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 ui-radius-md bg-black/70 backdrop-blur-sm px-3 py-1 flex items-center gap-2">
           <span className="text-xs text-text-primary font-medium">{Math.round(zoom * 100)}%</span>
           <button
             onClick={(e) => {
@@ -296,13 +296,13 @@ export function QuadComparison() {
       </div>
 
       {/* Mode indicator */}
-      <div className="absolute bottom-4 left-4 bg-black/70 px-3 py-1.5 rounded text-xs text-gray-400">
+      <div className="absolute bottom-4 left-4 ui-radius-sm bg-black/70 px-3 py-1.5 text-xs text-gray-400">
         Quad View{' '}
         {expandedQuadrant !== null ? `- Quadrant ${expandedQuadrant + 1} Expanded` : '- 2x2 Grid'}
       </div>
 
       {/* Help text */}
-      <div className="absolute bottom-4 right-4 bg-black/70 px-3 py-1.5 rounded text-xs text-gray-400">
+      <div className="absolute bottom-4 right-4 ui-radius-sm bg-black/70 px-3 py-1.5 text-xs text-gray-400">
         Click expand icon to focus | Scroll to zoom | Shift+1-4 to cycle sources
       </div>
     </div>

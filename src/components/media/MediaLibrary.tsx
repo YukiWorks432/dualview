@@ -80,7 +80,7 @@ function StatusIndicator({
               e.stopPropagation()
               onRetry()
             }}
-            className="surface-interactive ui-radius-sm p-0.5"
+            className="surface-control ui-radius-sm border p-0.5"
             title="Retry"
           >
             <RotateCcw className="w-3 h-3 text-text-muted hover:text-text-primary" />
@@ -337,7 +337,7 @@ export function MediaLibrary() {
         {/* Clear filters button when not showing 'all' */}
         {!activeFilters.has('all') && (
           <button
-            className="surface-interactive ui-radius-md flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-text-muted transition-colors hover:text-text-primary"
+            className="surface-control ui-radius-md flex items-center gap-1 border px-2 py-1 text-[10px] font-medium text-text-muted transition-colors hover:text-text-primary"
             onClick={() => setActiveFilters(new Set(['all']))}
             title="Clear filters"
           >
@@ -355,7 +355,7 @@ export function MediaLibrary() {
                   'ui-radius-md flex items-center gap-1 px-2 py-1 text-[10px] font-medium transition-colors',
                   statusFilter === 'error'
                     ? 'bg-red-500/20 text-red-400'
-                    : 'surface-interactive text-text-muted hover:text-red-400',
+                    : 'surface-control border text-text-muted hover:text-red-400',
                 )}
                 onClick={() => setStatusFilter(statusFilter === 'error' ? 'all' : 'error')}
                 title="Show failed files"
@@ -370,7 +370,7 @@ export function MediaLibrary() {
                   'ui-radius-md flex items-center gap-1 px-2 py-1 text-[10px] font-medium transition-colors',
                   statusFilter === 'processing'
                     ? 'bg-blue-500/20 text-blue-400'
-                    : 'surface-interactive text-text-muted hover:text-blue-400',
+                    : 'surface-control border text-text-muted hover:text-blue-400',
                 )}
                 onClick={() =>
                   setStatusFilter(statusFilter === 'processing' ? 'all' : 'processing')
@@ -387,7 +387,7 @@ export function MediaLibrary() {
                   'ui-radius-md flex items-center gap-1 px-2 py-1 text-[10px] font-medium transition-colors',
                   statusFilter === 'pending'
                     ? 'bg-amber-500/20 text-amber-400'
-                    : 'surface-interactive text-text-muted hover:text-amber-400',
+                    : 'surface-control border text-text-muted hover:text-amber-400',
                 )}
                 onClick={() => setStatusFilter(statusFilter === 'pending' ? 'all' : 'pending')}
                 title="Show pending files"
@@ -538,7 +538,7 @@ export function MediaLibrary() {
               {/* Actions */}
               <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                 <Button
-                  variant="ghost"
+                  variant="secondary"
                   size="icon"
                   className="h-7 w-7"
                   disabled={!canAddToTrack(file.type, 'a')}
@@ -560,7 +560,7 @@ export function MediaLibrary() {
                   />
                 </Button>
                 <Button
-                  variant="ghost"
+                  variant="secondary"
                   size="icon"
                   className="h-7 w-7"
                   disabled={!canAddToTrack(file.type, 'b')}
@@ -582,7 +582,7 @@ export function MediaLibrary() {
                   />
                 </Button>
                 <Button
-                  variant="ghost"
+                  variant="secondary"
                   size="icon"
                   className="h-7 w-7"
                   onClick={(e) => {

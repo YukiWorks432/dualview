@@ -98,7 +98,7 @@ export function PresetManager({ isOpen, onClose }: PresetManagerProps) {
               <Bookmark className="w-5 h-5" />
               Comparison Presets
             </h2>
-            <button onClick={onClose} className="surface-interactive ui-radius-sm p-1">
+            <button onClick={onClose} className="surface-control ui-radius-sm border p-1">
               <X className="w-5 h-5 text-text-muted" />
             </button>
           </div>
@@ -119,7 +119,7 @@ export function PresetManager({ isOpen, onClose }: PresetManagerProps) {
                 <Button variant="default" size="icon" onClick={handleCreatePreset}>
                   <Check className="w-4 h-4" />
                 </Button>
-                <Button variant="ghost" size="icon" onClick={() => setIsCreating(false)}>
+                <Button variant="outline" size="icon" onClick={() => setIsCreating(false)}>
                   <X className="w-4 h-4" />
                 </Button>
               </div>
@@ -224,10 +224,10 @@ function PresetItem({
           autoFocus
           onKeyDown={(e) => e.key === 'Enter' && onSaveEdit()}
         />
-        <button onClick={onSaveEdit} className="surface-interactive ui-radius-sm p-1">
+        <button onClick={onSaveEdit} className="surface-control ui-radius-sm border p-1">
           <Check className="w-4 h-4 text-green-400" />
         </button>
-        <button onClick={onCancelEdit} className="surface-interactive ui-radius-sm p-1">
+        <button onClick={onCancelEdit} className="surface-control ui-radius-sm border p-1">
           <X className="w-4 h-4 text-text-muted" />
         </button>
       </div>
@@ -237,8 +237,8 @@ function PresetItem({
   return (
     <div
       className={cn(
-        'ui-radius-md flex items-center justify-between p-2 cursor-pointer group',
-        isActive ? 'bg-accent/20 border border-accent/50' : 'surface-interactive',
+        'ui-radius-md flex items-center justify-between border p-2 cursor-pointer group surface-control-elevation',
+        isActive ? 'bg-accent/20 border-accent/50' : 'surface-control',
       )}
       onClick={onApply}
     >
@@ -261,7 +261,7 @@ function PresetItem({
               e.stopPropagation()
               onStartEdit()
             }}
-            className="surface-interactive ui-radius-sm p-1"
+            className="surface-control ui-radius-sm border p-1"
             title="Rename"
           >
             <Edit2 className="w-3 h-3 text-text-muted" />
@@ -271,7 +271,7 @@ function PresetItem({
               e.stopPropagation()
               onDelete()
             }}
-            className="surface-interactive ui-radius-sm p-1"
+            className="surface-control ui-radius-sm border p-1"
             title="Delete"
           >
             <Trash2 className="w-3 h-3 text-error" />
@@ -322,7 +322,7 @@ export function PresetSelector() {
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="surface-interactive ui-radius-md flex items-center gap-1 px-2 py-1 text-xs text-text-secondary hover:text-text-primary"
+        className="surface-control ui-radius-md flex items-center gap-1 border px-2 py-1 text-xs text-text-secondary hover:text-text-primary"
       >
         <Bookmark className="w-3 h-3" />
         {activePreset?.name || 'Presets'}

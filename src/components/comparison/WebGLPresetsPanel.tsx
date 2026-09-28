@@ -26,6 +26,7 @@ import {
   type WebGLPreset,
 } from '../../lib/webgl/presets'
 import { useProjectStore } from '../../stores/projectStore'
+import { ElevatedSurface } from '../ui'
 
 interface WebGLPresetsPanelProps {
   isOpen: boolean
@@ -153,31 +154,34 @@ export function WebGLPresetsPanel({ isOpen, onClose }: WebGLPresetsPanelProps) {
   if (!isOpen) return null
 
   return (
-    <div className="absolute top-12 right-4 w-80 bg-[#1a1a1a] border border-gray-700 rounded-lg shadow-xl z-50 max-h-[80vh] flex flex-col">
+    <ElevatedSurface
+      offset={2}
+      className="absolute top-12 right-4 z-50 flex max-h-[80vh] w-80 flex-col ui-radius-lg border border-transparent"
+    >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-700">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border">
         <div className="flex items-center gap-2">
-          <Bookmark size={16} className="text-[#ff5722]" />
-          <span className="font-medium text-white">Presets</span>
+          <Bookmark size={16} className="text-accent" />
+          <span className="font-medium text-text-primary">Presets</span>
         </div>
         <div className="flex items-center gap-1">
           <button
             onClick={() => setShowSaveDialog(true)}
-            className="p-1.5 rounded bg-[#ff5722] text-white hover:bg-[#e64a19] transition-colors"
+            className="surface-control-elevation ui-radius-sm border border-accent bg-accent p-1.5 text-text-primary transition-colors hover:bg-accent-hover"
             title="Save Current Settings"
           >
             <Save size={14} />
           </button>
           <button
             onClick={handleExport}
-            className="p-1.5 rounded bg-gray-700 text-gray-300 hover:bg-gray-600 transition-colors"
+            className="surface-control ui-radius-sm border p-1.5 text-text-secondary transition-colors hover:text-text-primary"
             title="Export Presets"
           >
             <Download size={14} />
           </button>
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="p-1.5 rounded bg-gray-700 text-gray-300 hover:bg-gray-600 transition-colors"
+            className="surface-control ui-radius-sm border p-1.5 text-text-secondary transition-colors hover:text-text-primary"
             title="Import Presets"
           >
             <Upload size={14} />
@@ -191,7 +195,7 @@ export function WebGLPresetsPanel({ isOpen, onClose }: WebGLPresetsPanelProps) {
           />
           <button
             onClick={onClose}
-            className="p-1.5 rounded text-gray-400 hover:text-white transition-colors ml-2"
+            className="surface-control ui-radius-sm ml-2 border p-1.5 text-text-secondary transition-colors hover:text-text-primary"
           >
             <X size={14} />
           </button>
@@ -200,14 +204,14 @@ export function WebGLPresetsPanel({ isOpen, onClose }: WebGLPresetsPanelProps) {
 
       {/* Save Dialog */}
       {showSaveDialog && (
-        <div className="p-4 border-b border-gray-700 bg-[#252525]">
-          <div className="text-sm text-gray-400 mb-2">Save Current Settings</div>
+        <div className="p-4 border-b border-border bg-surface-alt">
+          <div className="text-sm text-text-secondary mb-2">Save Current Settings</div>
           <input
             type="text"
             value={newPresetName}
             onChange={(e) => setNewPresetName(e.target.value)}
             placeholder="Preset name"
-            className="w-full bg-[#1a1a1a] border border-gray-600 rounded px-3 py-2 text-sm text-white mb-2"
+            className="surface-control w-full ui-radius-md border px-3 py-2 text-sm text-text-primary mb-2"
             autoFocus
           />
           <input
@@ -215,12 +219,12 @@ export function WebGLPresetsPanel({ isOpen, onClose }: WebGLPresetsPanelProps) {
             value={newPresetDescription}
             onChange={(e) => setNewPresetDescription(e.target.value)}
             placeholder="Description (optional)"
-            className="w-full bg-[#1a1a1a] border border-gray-600 rounded px-3 py-2 text-sm text-white mb-2"
+            className="surface-control w-full ui-radius-md border px-3 py-2 text-sm text-text-primary mb-2"
           />
           <select
             value={newPresetCategory}
             onChange={(e) => setNewPresetCategory(e.target.value as 'qa' | 'ai' | 'vfx' | 'custom')}
-            className="w-full bg-[#1a1a1a] border border-gray-600 rounded px-3 py-2 text-sm text-white mb-3"
+            className="surface-control w-full ui-radius-md border px-3 py-2 text-sm text-text-primary mb-3"
           >
             <option value="custom">Custom</option>
             <option value="qa">QA & Testing</option>
@@ -231,13 +235,13 @@ export function WebGLPresetsPanel({ isOpen, onClose }: WebGLPresetsPanelProps) {
             <button
               onClick={handleSavePreset}
               disabled={!newPresetName.trim()}
-              className="flex-1 bg-[#ff5722] text-white py-1.5 rounded text-sm hover:bg-[#e64a19] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="surface-control-elevation ui-radius-sm flex-1 border border-accent bg-accent py-1.5 text-sm text-text-primary transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-50"
             >
               Save Preset
             </button>
             <button
               onClick={() => setShowSaveDialog(false)}
-              className="px-4 py-1.5 bg-gray-700 text-gray-300 rounded text-sm hover:bg-gray-600 transition-colors"
+              className="surface-control ui-radius-sm border px-4 py-1.5 text-sm text-text-secondary transition-colors hover:text-text-primary"
             >
               Cancel
             </button>
@@ -257,31 +261,33 @@ export function WebGLPresetsPanel({ isOpen, onClose }: WebGLPresetsPanelProps) {
             <div key={category}>
               <button
                 onClick={() => toggleCategory(category)}
-                className="w-full flex items-center justify-between px-4 py-2 bg-[#252525] hover:bg-[#2a2a2a] transition-colors"
+                className="w-full flex items-center justify-between px-4 py-2 bg-surface-alt hover:bg-surface-hover transition-colors"
               >
-                <span className="text-sm text-gray-300 font-medium">{label}</span>
+                <span className="text-sm text-text-secondary font-medium">{label}</span>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-500">{categoryPresets.length}</span>
+                  <span className="text-xs text-text-muted">{categoryPresets.length}</span>
                   {isExpanded ? (
-                    <ChevronDown size={14} className="text-gray-500" />
+                    <ChevronDown size={14} className="text-text-muted" />
                   ) : (
-                    <ChevronRight size={14} className="text-gray-500" />
+                    <ChevronRight size={14} className="text-text-muted" />
                   )}
                 </div>
               </button>
 
               {isExpanded && (
-                <div className="bg-[#1a1a1a]">
+                <div className="bg-surface">
                   {categoryPresets.map((preset) => (
                     <div
                       key={preset.id}
-                      className="flex items-center justify-between px-4 py-2 hover:bg-[#252525] group cursor-pointer"
+                      className="flex items-center justify-between px-4 py-2 hover:bg-surface-alt group cursor-pointer"
                       onClick={() => applyPreset(preset)}
                     >
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm text-white truncate">{preset.name}</div>
+                        <div className="text-sm text-text-primary truncate">{preset.name}</div>
                         {preset.description && (
-                          <div className="text-xs text-gray-500 truncate">{preset.description}</div>
+                          <div className="text-xs text-text-muted truncate">
+                            {preset.description}
+                          </div>
                         )}
                       </div>
                       {!preset.isBuiltin && (
@@ -290,7 +296,7 @@ export function WebGLPresetsPanel({ isOpen, onClose }: WebGLPresetsPanelProps) {
                             e.stopPropagation()
                             handleDeletePreset(preset.id)
                           }}
-                          className="p-1 text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="surface-control ui-radius-sm border p-1 text-text-muted opacity-0 transition-opacity hover:text-red-400 group-hover:opacity-100"
                         >
                           <Trash2 size={14} />
                         </button>
@@ -305,10 +311,10 @@ export function WebGLPresetsPanel({ isOpen, onClose }: WebGLPresetsPanelProps) {
       </div>
 
       {/* Keyboard hint */}
-      <div className="px-4 py-2 border-t border-gray-700 text-xs text-gray-500">
+      <div className="px-4 py-2 border-t border-border text-xs text-text-muted">
         Click a preset to apply • Ctrl+1-9 for quick access
       </div>
-    </div>
+    </ElevatedSurface>
   )
 }
 
@@ -317,7 +323,7 @@ export function PresetsToggle({ onClick, isActive }: { onClick: () => void; isAc
   return (
     <button
       onClick={onClick}
-      className={`p-2 rounded transition-colors ${isActive ? 'bg-[#ff5722] text-white' : 'bg-black/70 text-gray-400 hover:text-white'}`}
+      className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${isActive ? 'border-accent bg-accent text-text-primary' : 'surface-control text-text-secondary hover:text-text-primary'}`}
       title="Comparison Presets (WEBGL-015)"
     >
       <Bookmark size={16} />

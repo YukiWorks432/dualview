@@ -12,7 +12,7 @@ export function MetricsOverlay() {
     return (
       <button
         onClick={toggleMetrics}
-        className="absolute top-4 right-4 z-10 bg-black/60 hover:bg-black/80 px-2 py-1 text-xs text-white flex items-center gap-1 transition-colors"
+        className="surface-control absolute top-4 right-4 z-10 ui-radius-sm flex items-center gap-1 border px-2 py-1 text-xs text-white transition-colors"
         title="Show quality metrics (M)"
       >
         <Activity className="w-3 h-3" />
@@ -47,13 +47,16 @@ export function MetricsOverlay() {
   }
 
   return (
-    <div className="absolute top-4 right-4 z-10 bg-black/80 backdrop-blur-sm border border-white/10 p-3 text-white min-w-[140px]">
+    <div className="absolute top-4 right-4 z-10 ui-radius-md bg-black/80 backdrop-blur-sm border border-white/10 p-3 text-white min-w-[140px]">
       <div className="flex items-center justify-between mb-2">
         <span className="text-xs font-medium flex items-center gap-1">
           <Activity className="w-3 h-3" />
           Quality Metrics
         </span>
-        <button onClick={toggleMetrics} className="text-text-muted hover:text-white text-xs">
+        <button
+          onClick={toggleMetrics}
+          className="surface-control ui-radius-sm border px-1.5 py-0.5 text-xs text-text-muted hover:text-white"
+        >
           ×
         </button>
       </div>

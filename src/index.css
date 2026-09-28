@@ -107,6 +107,10 @@
   }
 }
 
+@utility surface-control-elevation {
+  box-shadow: var(--surface-control-shadow);
+}
+
 @utility surface-outline {
   border-color: var(--surface-control-border);
   background-color: transparent;

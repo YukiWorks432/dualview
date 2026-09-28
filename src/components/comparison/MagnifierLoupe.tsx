@@ -125,7 +125,7 @@ export function MagnifierLoupe({
     return (
       <button
         onClick={onToggle}
-        className="absolute top-2 left-2 p-2 bg-surface/80 hover:bg-surface border border-border rounded z-10"
+        className="surface-control ui-radius-md absolute top-2 left-2 z-10 border p-2"
         title="Enable Magnifier (G)"
       >
         <Search className="w-4 h-4 text-text-secondary" />
@@ -138,7 +138,7 @@ export function MagnifierLoupe({
       {/* Toggle button when enabled */}
       <button
         onClick={onToggle}
-        className="absolute top-2 left-2 p-2 bg-accent/80 hover:bg-accent border border-accent rounded z-10"
+        className="surface-control-elevation ui-radius-md absolute top-2 left-2 z-10 border border-accent bg-accent/80 p-2 hover:bg-accent"
         title="Disable Magnifier (G)"
       >
         <Search className="w-4 h-4 text-white" />

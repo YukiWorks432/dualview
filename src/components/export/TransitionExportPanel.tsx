@@ -105,10 +105,10 @@ export function TransitionExportPanel({
               aria-pressed={exportMode === option.value}
               title={option.description}
               onClick={() => onExportModeChange(option.value as TransitionExportMode)}
-              className={`border px-3 py-2 text-sm transition-colors ${
+              className={`surface-control-elevation ui-radius-md border px-3 py-2 text-sm transition-colors ${
                 exportMode === option.value
                   ? 'border-accent bg-accent/10 text-accent'
-                  : 'border-border text-text-secondary hover:border-text-muted'
+                  : 'surface-control text-text-secondary'
               }`}
             >
               {option.label}
@@ -127,10 +127,10 @@ export function TransitionExportPanel({
               aria-pressed={engine === option.id}
               title={option.description}
               onClick={() => onEngineChange(option.id)}
-              className={`flex flex-col items-center border px-2 py-1.5 text-xs transition-colors ${
+              className={`surface-control-elevation flex flex-col items-center ui-radius-md border px-2 py-1.5 text-xs transition-colors ${
                 engine === option.id
                   ? 'border-accent bg-accent/10 text-accent'
-                  : 'border-border text-text-secondary hover:border-text-muted'
+                  : 'surface-control text-text-secondary'
               }`}
             >
               <span className="text-base" aria-hidden="true">
@@ -153,10 +153,10 @@ export function TransitionExportPanel({
               type="button"
               aria-pressed={variant === option.value}
               onClick={() => onVariantChange(option.value)}
-              className={`truncate border px-2 py-1 text-xs transition-colors ${
+              className={`surface-control-elevation truncate ui-radius-md border px-2 py-1 text-xs transition-colors ${
                 variant === option.value
                   ? 'border-accent bg-accent/10 text-accent'
-                  : 'border-border text-text-secondary hover:border-text-muted'
+                  : 'surface-control text-text-secondary'
               }`}
             >
               {option.label}
@@ -212,10 +212,10 @@ export function TransitionExportPanel({
               type="button"
               aria-pressed={format === option.value}
               onClick={() => onFormatChange(option.value as TransitionExportFormat)}
-              className={`border px-3 py-2 text-sm transition-colors ${
+              className={`surface-control-elevation ui-radius-md border px-3 py-2 text-sm transition-colors ${
                 format === option.value
                   ? 'border-accent bg-accent/10 text-accent'
-                  : 'border-border text-text-secondary hover:border-text-muted'
+                  : 'surface-control text-text-secondary'
               }`}
             >
               {option.label}
@@ -238,12 +238,15 @@ export function TransitionExportPanel({
       )}
 
       {isExporting && (
-        <div className="space-y-3 border border-border bg-surface-alt p-4" role="status">
+        <div
+          className="ui-radius-lg space-y-3 border border-border bg-surface-alt p-4"
+          role="status"
+        >
           <div className="flex items-center justify-between text-xs">
-            <span className="bg-accent px-2 py-1 text-white">1. Initialize</span>
+            <span className="ui-radius-sm bg-accent px-2 py-1 text-white">1. Initialize</span>
             <div className="mx-2 h-px flex-1 bg-border" />
             <span
-              className={`px-2 py-1 ${
+              className={`ui-radius-sm px-2 py-1 ${
                 progress >= 10 ? 'bg-accent text-white' : 'bg-border text-text-muted'
               }`}
             >
@@ -251,7 +254,7 @@ export function TransitionExportPanel({
             </span>
             <div className="mx-2 h-px flex-1 bg-border" />
             <span
-              className={`px-2 py-1 ${
+              className={`ui-radius-sm px-2 py-1 ${
                 progress >= 90 ? 'bg-accent text-white' : 'bg-border text-text-muted'
               }`}
             >
@@ -267,7 +270,7 @@ export function TransitionExportPanel({
               </span>
             </div>
             <div
-              className="h-2 overflow-hidden bg-background"
+              className="ui-radius-sm h-2 overflow-hidden bg-background"
               role="progressbar"
               aria-label="Transition export progress"
               aria-valuemin={0}
@@ -284,8 +287,8 @@ export function TransitionExportPanel({
       )}
 
       {exportProgress.status === 'done' && (
-        <div className="space-y-4 border border-accent/40 bg-gradient-to-br from-accent/20 via-accent/10 to-secondary/10 p-6 text-center">
-          <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center bg-accent/20">
+        <div className="ui-radius-lg space-y-4 border border-accent/40 bg-gradient-to-br from-accent/20 via-accent/10 to-secondary/10 p-6 text-center">
+          <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-accent/20">
             <Check className="h-8 w-8 text-accent" strokeWidth={3} aria-hidden="true" />
           </div>
           <h3 className="text-xl font-bold text-text-primary">Transition Export Complete!</h3>

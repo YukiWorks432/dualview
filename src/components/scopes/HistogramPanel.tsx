@@ -502,7 +502,7 @@ export function HistogramPanel({
                       : 'rgb-overlay',
                 )
               }
-              className="p-1.5 rounded text-xs bg-surface-hover text-text-muted hover:text-text-primary"
+              className="surface-control ui-radius-sm border p-1.5 text-xs text-text-muted hover:text-text-primary"
               title="Toggle display mode"
             >
               <Layers className="w-3.5 h-3.5" />
@@ -510,7 +510,7 @@ export function HistogramPanel({
             {/* Log scale toggle */}
             <button
               onClick={() => setUseLogScale(!useLogScale)}
-              className={`p-1.5 rounded text-xs ${useLogScale ? 'bg-accent text-white' : 'bg-surface-hover text-text-muted hover:text-text-primary'}`}
+              className={`surface-control-elevation ui-radius-sm border p-1.5 text-xs ${useLogScale ? 'border-accent bg-accent text-white' : 'surface-control text-text-muted hover:text-text-primary'}`}
               title="Toggle logarithmic scale"
             >
               <Scale className="w-3.5 h-3.5" />
@@ -518,11 +518,11 @@ export function HistogramPanel({
             {/* Side by side toggle */}
             <button
               onClick={() => setShowSideBySide(!showSideBySide)}
-              className={`px-2 py-1 rounded text-xs ${showSideBySide ? 'bg-accent text-white' : 'bg-surface-hover text-text-muted'}`}
+              className={`surface-control-elevation ui-radius-sm border px-2 py-1 text-xs ${showSideBySide ? 'border-accent bg-accent text-white' : 'surface-control text-text-muted'}`}
             >
               {showSideBySide ? 'A|B' : 'Overlay'}
             </button>
-            <button onClick={onClose} className="p-1 hover:bg-surface-hover rounded">
+            <button onClick={onClose} className="surface-control ui-radius-sm border p-1">
               <X className="w-4 h-4 text-text-muted" />
             </button>
           </div>

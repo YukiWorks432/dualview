@@ -53,7 +53,7 @@ function DialogContent({
               <DialogPrimitive.Close
                 render={
                   <Button
-                    variant="ghost"
+                    variant="secondary"
                     size="icon"
                     className="absolute right-2 top-2 h-7 w-7"
                     aria-label="Close dialog"
