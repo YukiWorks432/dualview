@@ -74,10 +74,10 @@ export function Sidebar({ onCollapse, isMobileOpen, onMobileClose, onOpenProject
     `}
     >
       {/* Project controls - at top of sidebar */}
-      <div className="surface-control flex items-center justify-between px-3 py-2 border-b border-border shrink-0">
+      <ElevatedSurface offset={1} className="flex items-center justify-between border-b border-border px-3 py-2 shrink-0">
         <div className="flex items-center gap-1">
           <Button
-            variant="ghost"
+            variant="secondary"
             size="sm"
             title="Open Projects"
             onClick={onOpenProjects}
@@ -87,7 +87,7 @@ export function Sidebar({ onCollapse, isMobileOpen, onMobileClose, onOpenProject
             <span className="hidden sm:inline">Projects</span>
           </Button>
           <Button
-            variant="ghost"
+            variant="secondary"
             size="sm"
             title="Save Project (Ctrl+S)"
             onClick={() => saveCurrentProject()}
@@ -100,7 +100,7 @@ export function Sidebar({ onCollapse, isMobileOpen, onMobileClose, onOpenProject
         </div>
         {saveStatus === 'saved' && <span className="text-[10px] text-text-muted">Saved</span>}
         {saveStatus === 'saving' && <span className="text-[10px] text-accent">Saving...</span>}
-      </div>
+      </ElevatedSurface>
 
       {/* Tab navigation - Jakob's Law: Familiar tab pattern */}
       <div className="flex border-b border-border shrink-0">
@@ -108,16 +108,16 @@ export function Sidebar({ onCollapse, isMobileOpen, onMobileClose, onOpenProject
         {isMobileOpen && onMobileClose && (
           <button
             onClick={onMobileClose}
-            className="surface-interactive px-3 py-3 text-text-muted hover:text-text-primary transition-all"
+            className="surface-control ui-radius-md border px-3 py-3 text-text-muted hover:text-text-primary transition-all"
             title="Close Sidebar"
           >
             <X className="w-5 h-5" />
           </button>
         )}
         <button
-          className={`flex-1 py-3 text-sm font-medium transition-all duration-150 relative ${
+          className={`surface-control flex-1 border py-3 text-sm font-medium transition-all duration-150 relative ${
             activeTab === 'media'
-              ? 'text-text-primary'
+              ? 'surface-active text-text-primary'
               : 'text-text-secondary hover:text-text-primary'
           }`}
           onClick={() => setActiveTab('media')}
@@ -132,9 +132,9 @@ export function Sidebar({ onCollapse, isMobileOpen, onMobileClose, onOpenProject
           )}
         </button>
         <button
-          className={`flex-1 py-3 text-sm font-medium transition-all duration-150 relative ${
+          className={`surface-control flex-1 border py-3 text-sm font-medium transition-all duration-150 relative ${
             activeTab === 'settings'
-              ? 'text-text-primary'
+              ? 'surface-active text-text-primary'
               : 'text-text-secondary hover:text-text-primary'
           }`}
           onClick={() => setActiveTab('settings')}
@@ -150,7 +150,7 @@ export function Sidebar({ onCollapse, isMobileOpen, onMobileClose, onOpenProject
         {onCollapse && !isMobileOpen && (
           <button
             onClick={onCollapse}
-            className="surface-interactive px-2 text-text-muted hover:text-text-primary transition-all duration-150 group hide-mobile"
+            className="surface-control ui-radius-md border px-2 text-text-muted hover:text-text-primary transition-all duration-150 group hide-mobile"
             title="Collapse Sidebar (B)"
           >
             <ChevronLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
@@ -757,7 +757,7 @@ function SettingsPanel({
             className={`ui-radius-md flex w-full items-center justify-between border p-3 transition-colors ${
               hideSlider
                 ? 'surface-active border-accent text-accent'
-                : 'surface-outline text-text-primary'
+                : 'surface-control text-text-primary'
             }`}
           >
             <span className="text-sm font-medium">

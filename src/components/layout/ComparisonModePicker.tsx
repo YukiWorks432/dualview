@@ -28,6 +28,7 @@ import {
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu'
 import { Kbd } from '../ui/kbd'
+import { ElevatedSurface } from '../ui/surface'
 import { TooltipContent, TooltipRoot, TooltipTrigger } from '../ui/tooltip'
 
 export function ComparisonModePicker() {
@@ -97,17 +98,18 @@ export function ComparisonModePicker() {
         </DialogContent>
       </Dialog>
 
-      <div
-        className="hide-mobile flex items-center gap-0.5"
-        role="tablist"
-        aria-label="Comparison modes"
-      >
+      <ElevatedSurface asChild offset={1}>
+        <div
+          className="hide-mobile ui-radius-lg flex items-center gap-0.5 border border-transparent p-0.5"
+          role="tablist"
+          aria-label="Comparison modes"
+        >
         {primaryComparisonModes.map(({ mode, icon: Icon, label, shortcut, description }) => (
           <TooltipRoot key={mode}>
             <TooltipTrigger
               render={
                 <Button
-                  variant="ghost"
+                  variant="secondary"
                   size="sm"
                   onClick={() => setComparisonMode(mode)}
                   className={`relative h-7 gap-1 px-2 text-xs ${
@@ -149,7 +151,7 @@ export function ComparisonModePicker() {
           <DropdownMenuTrigger
             render={
               <Button
-                variant="ghost"
+                variant="secondary"
                 size="sm"
                 className={`h-7 gap-1 px-2 text-xs ${
                   activeSecondaryMode
@@ -216,7 +218,8 @@ export function ComparisonModePicker() {
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
-      </div>
+        </div>
+      </ElevatedSurface>
     </>
   )
 }

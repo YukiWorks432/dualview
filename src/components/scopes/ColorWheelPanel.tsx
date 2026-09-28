@@ -440,7 +440,7 @@ export function ColorWheelPanel({
             {/* View mode toggle */}
             <button
               onClick={() => setViewMode(viewMode === 'a' ? 'b' : viewMode === 'b' ? 'both' : 'a')}
-              className="px-2 py-1 rounded text-xs bg-surface-hover text-text-muted hover:text-text-primary"
+              className="surface-control ui-radius-sm border px-2 py-1 text-xs text-text-muted hover:text-text-primary"
             >
               {viewMode === 'a' ? 'A' : viewMode === 'b' ? 'B' : 'A+B'}
             </button>
@@ -452,7 +452,7 @@ export function ColorWheelPanel({
                 }
                 setShowHighlight(!showHighlight)
               }}
-              className={`p-1.5 rounded ${showHighlight ? 'bg-accent text-white' : 'bg-surface-hover text-text-muted'}`}
+              className={`surface-control-elevation ui-radius-sm border p-1.5 ${showHighlight ? 'border-accent bg-accent text-white' : 'surface-control text-text-muted'}`}
               title="Highlight selected color in image"
             >
               {showHighlight ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
