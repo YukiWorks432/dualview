@@ -355,7 +355,7 @@ export function CustomShaderEditor({ isOpen, onClose, onApplyShader }: CustomSha
                 Apply
               </button>
 
-              <div className="w-px h-6 bg-gray-600 mx-2" />
+              <div className="w-px h-6 bg-border mx-2" />
 
               <button
                 onClick={() => setShowSaveDialog(true)}

@@ -1088,7 +1088,7 @@ export function WebGLComparison() {
               </span>
             </div>
             {/* WEBGL-006: Threshold Pass/Fail Stats */}
-            <div className="border-t border-gray-600 mt-2 pt-2">
+            <div className="border-t border-border mt-2 pt-2">
               <div className="flex justify-between gap-4">
                 <span className="text-gray-400">Pass:</span>
                 <span className="text-green-400 font-medium">
@@ -1348,7 +1348,7 @@ export function WebGLComparison() {
         </button>
 
         {/* Separator */}
-        <div className="w-px h-6 bg-gray-600 mx-1" />
+        <div className="w-px h-6 bg-border mx-1" />
 
         {/* WEBGL-005: Screenshot Export */}
         <button
@@ -1396,7 +1396,7 @@ export function WebGLComparison() {
         {/* WEBGL-009: Temporal Diff Graph Toggle (only for videos) */}
         {(mediaA?.type === 'video' || mediaB?.type === 'video') && (
           <>
-            <div className="w-px h-6 bg-gray-600 mx-1" />
+            <div className="w-px h-6 bg-border mx-1" />
             <button
               onClick={() => setShowTemporalGraph(!showTemporalGraph)}
               className={`p-2 rounded transition-colors ${showTemporalGraph ? 'bg-[#ff5722] text-white' : 'bg-black/70 text-gray-400 hover:text-white'}`}
@@ -1408,7 +1408,7 @@ export function WebGLComparison() {
         )}
 
         {/* Separator for Scopes */}
-        <div className="w-px h-6 bg-gray-600 mx-1" />
+        <div className="w-px h-6 bg-border mx-1" />
 
         {/* SCOPE-008: Histogram Panel Toggle */}
         <button
