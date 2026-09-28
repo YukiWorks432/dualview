@@ -129,7 +129,7 @@ export function FlickerComparison() {
     <div className="relative w-full h-full bg-black" {...containerProps}>
       {/* Zoom indicator (IMG-002) */}
       {zoom > 1 && (
-        <div className="absolute top-4 right-4 z-20 bg-black/70 backdrop-blur-sm px-3 py-1 flex items-center gap-2">
+        <div className="absolute top-4 right-4 z-20 ui-radius-md bg-black/70 backdrop-blur-sm px-3 py-1 flex items-center gap-2">
           <span className="text-xs text-text-primary font-medium">{Math.round(zoom * 100)}%</span>
           <button
             onClick={(e) => {
@@ -168,7 +168,7 @@ export function FlickerComparison() {
       </div>
 
       {/* Controls */}
-      <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-sm p-3 space-y-2 z-10">
+      <div className="absolute top-4 left-4 ui-radius-md bg-black/60 backdrop-blur-sm p-3 space-y-2 z-10">
         <div className="flex items-center gap-2">
           <button
             onClick={() => setAutoFlicker((prev) => !prev)}
@@ -183,7 +183,7 @@ export function FlickerComparison() {
           </button>
           <button
             onClick={toggle}
-            className="px-2 py-1 text-xs bg-surface text-text-primary hover:bg-surface-hover"
+            className="ui-radius-sm px-2 py-1 text-xs bg-surface text-text-primary hover:bg-surface-hover"
             title="Toggle (F or Tab)"
           >
             Toggle
@@ -212,7 +212,7 @@ export function FlickerComparison() {
       </div>
 
       {/* Keyboard hint */}
-      <div className="absolute bottom-4 right-4 text-[10px] text-text-muted bg-black/40 px-2 py-1 z-10">
+      <div className="absolute bottom-4 right-4 ui-radius-sm text-[10px] text-text-muted bg-black/40 px-2 py-1 z-10">
         Press F or Tab to toggle
       </div>
     </div>

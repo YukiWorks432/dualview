@@ -238,7 +238,7 @@ export function ClipContextMenu({ x, y, clipId, trackId, onClose }: ClipContextM
             onMouseLeave={() => setShowReplaceSubmenu(false)}
           >
             <button
-              className={`w-full px-3 py-2 flex items-center gap-2 text-sm text-text-primary hover:bg-surface-hover ${isLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
+              className={`w-full ui-radius-sm px-3 py-2 flex items-center gap-2 text-sm text-text-primary hover:bg-surface-hover ${isLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
               disabled={isLocked}
             >
               <Replace className="w-4 h-4" />
@@ -253,7 +253,7 @@ export function ClipContextMenu({ x, y, clipId, trackId, onClose }: ClipContextM
                   {compatibleMedia.map((media) => (
                     <button
                       key={media.id}
-                      className="w-full px-3 py-1.5 flex items-center gap-2 text-sm text-text-primary hover:bg-surface-hover"
+                      className="w-full ui-radius-sm px-3 py-1.5 flex items-center gap-2 text-sm text-text-primary hover:bg-surface-hover"
                       onClick={() => {
                         pushState()
                         replaceClipMedia(clipId, media.id, media.duration)
@@ -263,7 +263,7 @@ export function ClipContextMenu({ x, y, clipId, trackId, onClose }: ClipContextM
                       {media.thumbnail ? (
                         <img src={media.thumbnail} alt="" className="w-6 h-6 object-cover" />
                       ) : (
-                        <div className="w-6 h-6 bg-surface-hover flex items-center justify-center text-xs">
+                        <div className="w-6 h-6 ui-radius-sm bg-surface-hover flex items-center justify-center text-xs">
                           {media.type[0].toUpperCase()}
                         </div>
                       )}
@@ -300,7 +300,7 @@ export function ClipContextMenu({ x, y, clipId, trackId, onClose }: ClipContextM
           onMouseLeave={() => setShowSpeedSubmenu(false)}
         >
           <button
-            className={`w-full px-3 py-2 flex items-center gap-2 text-sm text-text-primary hover:bg-surface-hover ${isLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
+            className={`w-full ui-radius-sm px-3 py-2 flex items-center gap-2 text-sm text-text-primary hover:bg-surface-hover ${isLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
             disabled={isLocked}
           >
             <Gauge className="w-4 h-4" />
@@ -316,13 +316,13 @@ export function ClipContextMenu({ x, y, clipId, trackId, onClose }: ClipContextM
                 {speedOptions.map((opt) => (
                   <button
                     key={opt.value}
-                    className={`w-full px-3 py-1.5 flex items-center justify-between text-sm hover:bg-surface-hover ${
+                    className={`w-full ui-radius-sm px-3 py-1.5 flex items-center justify-between text-sm hover:bg-surface-hover ${
                       currentSpeed === opt.value ? 'text-accent bg-accent/10' : 'text-text-primary'
                     }`}
                     onClick={() => setSpeed(opt.value)}
                   >
                     <span>{opt.label}</span>
-                    {currentSpeed === opt.value && <span className="w-1.5 h-1.5 bg-accent" />}
+                    {currentSpeed === opt.value && <span className="w-1.5 h-1.5 rounded-full bg-accent" />}
                   </button>
                 ))}
               </div>
@@ -389,7 +389,7 @@ function MenuButton({
   return (
     <button
       className={`
-        w-full px-3 py-2 flex items-center gap-2 text-sm
+        w-full ui-radius-sm px-3 py-2 flex items-center gap-2 text-sm
         ${
           disabled
             ? 'text-text-muted cursor-not-allowed'

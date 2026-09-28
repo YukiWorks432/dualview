@@ -149,7 +149,7 @@ export function BlendModes() {
 
       {/* Zoom indicator (IMG-002) */}
       {zoom > 1 && (
-        <div className="absolute top-4 right-4 z-20 bg-black/70 backdrop-blur-sm px-3 py-1 flex items-center gap-2">
+        <div className="absolute top-4 right-4 z-20 ui-radius-md bg-black/70 backdrop-blur-sm px-3 py-1 flex items-center gap-2">
           <span className="text-xs text-text-primary font-medium">{Math.round(zoom * 100)}%</span>
           <button
             onClick={(e) => {
@@ -195,7 +195,7 @@ export function BlendModes() {
       )}
 
       {/* Blend mode label */}
-      <div className="absolute top-4 left-4 bg-black/60 px-2 py-1 text-xs text-white capitalize">
+      <div className="absolute top-4 left-4 ui-radius-sm bg-black/60 px-2 py-1 text-xs text-white capitalize">
         {blendMode}
       </div>
     </div>

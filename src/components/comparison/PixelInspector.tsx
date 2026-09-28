@@ -74,13 +74,13 @@ export function PixelInspector() {
 
       {/* Pixel info overlay */}
       {pixelInspectorEnabled && hasInfo && (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 bg-black/80 backdrop-blur-sm p-3 space-y-2">
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 ui-radius-md bg-black/80 backdrop-blur-sm p-3 space-y-2">
           <PixelInfo label="A" info={pixelInfoA} labelColor="bg-orange-500 text-white" />
           <PixelInfo label="B" info={pixelInfoB} labelColor="bg-lime-400 text-black" />
 
           {diff && (
             <div className="pt-2 border-t border-white/10 flex items-center gap-3">
-              <div className="px-2 py-0.5 text-xs font-bold bg-gray-600 text-white">Delta</div>
+              <div className="ui-radius-sm px-2 py-0.5 text-xs font-bold bg-gray-600 text-white">Delta</div>
               <div className="text-[10px] font-mono text-text-primary">
                 R: {diff.r} G: {diff.g} B: {diff.b}
               </div>
@@ -92,7 +92,7 @@ export function PixelInspector() {
 
       {/* Instructions when enabled but no info */}
       {pixelInspectorEnabled && !hasInfo && (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 bg-black/60 px-3 py-2 text-[10px] text-text-muted">
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 ui-radius-md bg-black/60 px-3 py-2 text-[10px] text-text-muted">
           Click on image to inspect pixel values
         </div>
       )}

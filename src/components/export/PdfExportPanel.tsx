@@ -55,7 +55,7 @@ export function PdfExportPanel({
         </label>
       </div>
 
-      <div className="flex items-center gap-2 border border-border bg-surface-alt p-3 text-sm text-text-secondary">
+      <div className="flex items-center gap-2 ui-radius-md border border-border bg-surface-alt p-3 text-sm text-text-secondary">
         <FileText className="h-4 w-4 shrink-0" aria-hidden="true" />
         <span>
           Generates a professional PDF report with screenshot, metadata, and quality metrics.

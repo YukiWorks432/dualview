@@ -47,7 +47,7 @@ export function VideoExportPanel({
                   exportSource: option.value as ExportSettings['exportSource'],
                 })
               }
-              className={`border px-3 py-2 text-sm transition-colors ${
+              className={`ui-radius-md border px-3 py-2 text-sm transition-colors ${
                 settings.exportSource === option.value
                   ? 'border-accent bg-accent/10 text-accent'
                   : 'border-border text-text-secondary hover:border-text-muted'
@@ -113,7 +113,7 @@ export function VideoExportPanel({
                   onClick={() =>
                     onSettingsChange({ sweepStyle: style.value as ExportSettings['sweepStyle'] })
                   }
-                  className={`border px-2 py-2 text-lg transition-colors ${
+                  className={`ui-radius-md border px-2 py-2 text-lg transition-colors ${
                     settings.sweepStyle === style.value
                       ? 'border-accent bg-accent/10 text-accent'
                       : 'border-border text-text-secondary hover:border-text-muted'
@@ -135,7 +135,7 @@ export function VideoExportPanel({
           </fieldset>
 
           {(settings.sweepStyle === 'spotlight' || settings.sweepStyle === 'spotlight-circle') && (
-            <div className="space-y-3 border border-border bg-surface-alt p-3">
+            <div className="ui-radius-md space-y-3 border border-border bg-surface-alt p-3">
               {settings.sweepStyle === 'spotlight' ? (
                 <>
                   <div>
@@ -277,7 +277,7 @@ export function VideoExportPanel({
               type="button"
               aria-pressed={settings.format === option.value}
               onClick={() => onSettingsChange({ format: option.value as ExportSettings['format'] })}
-              className={`border px-3 py-2 text-sm transition-colors ${
+              className={`ui-radius-md border px-3 py-2 text-sm transition-colors ${
                 settings.format === option.value
                   ? 'border-accent bg-accent/10 text-accent'
                   : 'border-border text-text-secondary hover:border-text-muted'
@@ -328,12 +328,12 @@ export function VideoExportPanel({
       )}
 
       {isExporting && (
-        <div className="space-y-3 border border-border bg-surface-alt p-4" role="status">
+        <div className="ui-radius-lg space-y-3 border border-border bg-surface-alt p-4" role="status">
           <div className="flex items-center justify-between text-xs">
-            <span className="bg-accent px-2 py-1 text-white">1. Preparing</span>
+            <span className="ui-radius-sm bg-accent px-2 py-1 text-white">1. Preparing</span>
             <div className="mx-2 h-px flex-1 bg-border" />
             <span
-              className={`px-2 py-1 ${
+              className={`ui-radius-sm px-2 py-1 ${
                 progress >= 30 ? 'bg-accent text-white' : 'bg-border text-text-muted'
               }`}
             >
@@ -341,7 +341,7 @@ export function VideoExportPanel({
             </span>
             <div className="mx-2 h-px flex-1 bg-border" />
             <span
-              className={`px-2 py-1 ${
+              className={`ui-radius-sm px-2 py-1 ${
                 progress >= 90 ? 'bg-accent text-white' : 'bg-border text-text-muted'
               }`}
             >
@@ -361,7 +361,7 @@ export function VideoExportPanel({
               </span>
             </div>
             <div
-              className="relative h-2 overflow-hidden bg-background"
+              className="relative h-2 overflow-hidden ui-radius-sm bg-background"
               role="progressbar"
               aria-label="Video export progress"
               aria-valuemin={0}
@@ -386,7 +386,7 @@ export function VideoExportPanel({
       )}
 
       {exportProgress.status === 'done' && (
-        <div className="relative space-y-4 overflow-hidden border border-accent/40 bg-gradient-to-br from-accent/20 via-accent/10 to-secondary/10 p-6 text-center">
+        <div className="relative space-y-4 overflow-hidden ui-radius-lg border border-accent/40 bg-gradient-to-br from-accent/20 via-accent/10 to-secondary/10 p-6 text-center">
           <div className="pointer-events-none absolute inset-0" aria-hidden="true">
             <div
               className="absolute left-4 top-2 h-2 w-2 animate-bounce bg-accent"
@@ -411,7 +411,7 @@ export function VideoExportPanel({
           </div>
 
           <div className="relative z-10">
-            <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center bg-accent/20 shadow-[0_0_30px_rgba(255,87,34,0.4)]">
+            <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-accent/20 shadow-[0_0_30px_rgba(255,87,34,0.4)]">
               <Check className="h-8 w-8 text-accent" strokeWidth={3} aria-hidden="true" />
             </div>
             <h3 className="text-xl font-bold text-text-primary">Export Complete!</h3>

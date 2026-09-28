@@ -286,7 +286,7 @@ export function SliderComparison() {
     >
       {/* Zoom indicator (IMG-002) */}
       {zoom > 1 && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 bg-black/70 backdrop-blur-sm px-3 py-1 flex items-center gap-2">
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 ui-radius-md bg-black/70 backdrop-blur-sm px-3 py-1 flex items-center gap-2">
           <span className="text-xs text-text-primary font-medium">{Math.round(zoom * 100)}%</span>
           <button
             onClick={(e) => {
@@ -466,7 +466,7 @@ export function SliderComparison() {
           {/* Divider line */}
           {!mediaA && !mediaB && (
             <div className="w-px bg-border/50 relative">
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-background border border-border flex items-center justify-center">
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-background border border-border flex items-center justify-center">
                 <span className="text-xs text-text-muted">VS</span>
               </div>
             </div>
@@ -578,10 +578,10 @@ export function SliderComparison() {
       {/* A/B badges when media is loaded */}
       {mediaA && mediaB && videoBounds && (
         <>
-          <div className="absolute bottom-4 left-4 z-20 px-2 py-0.5 bg-accent/80 text-white text-xs font-semibold">
+          <div className="absolute bottom-4 left-4 z-20 ui-radius-sm px-2 py-0.5 bg-accent/80 text-white text-xs font-semibold">
             A
           </div>
-          <div className="absolute bottom-4 right-4 z-20 px-2 py-0.5 bg-secondary/80 text-black text-xs font-semibold">
+          <div className="absolute bottom-4 right-4 z-20 ui-radius-sm px-2 py-0.5 bg-secondary/80 text-black text-xs font-semibold">
             B
           </div>
         </>

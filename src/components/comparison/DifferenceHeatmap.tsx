@@ -217,7 +217,7 @@ export function DifferenceHeatmap() {
       )}
 
       {/* Controls */}
-      <div className="absolute top-4 left-4 bg-black/70 backdrop-blur-sm p-3 space-y-3 z-10">
+      <div className="absolute top-4 left-4 ui-radius-md bg-black/70 backdrop-blur-sm p-3 space-y-3 z-10">
         <div className="text-xs text-text-primary font-medium">Heatmap Mode</div>
 
         <div className="flex gap-2">
@@ -269,16 +269,16 @@ export function DifferenceHeatmap() {
       </div>
 
       {/* Legend */}
-      <div className="absolute bottom-4 left-4 bg-black/60 px-3 py-2 z-10">
+      <div className="absolute bottom-4 left-4 ui-radius-md bg-black/60 px-3 py-2 z-10">
         {mode === 'amplified' && (
           <div className="flex items-center gap-2">
-            <div className="w-24 h-3 bg-gradient-to-r from-blue-500 via-green-500 to-red-500" />
+            <div className="w-24 h-3 ui-radius-sm bg-gradient-to-r from-blue-500 via-green-500 to-red-500" />
             <span className="text-[10px] text-text-muted">Similar → Different</span>
           </div>
         )}
         {mode === 'absolute' && (
           <div className="flex items-center gap-2">
-            <div className="w-24 h-3 bg-gradient-to-r from-black to-white" />
+            <div className="w-24 h-3 ui-radius-sm bg-gradient-to-r from-black to-white" />
             <span className="text-[10px] text-text-muted">Similar → Different</span>
           </div>
         )}

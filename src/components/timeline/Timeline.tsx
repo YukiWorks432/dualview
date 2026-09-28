@@ -598,7 +598,7 @@ export function Timeline() {
         {/* Left: Playback controls - Law of Proximity */}
         <div className="flex items-center gap-1">
           {/* Core transport - most used actions grouped together */}
-          <div className="flex items-center bg-surface p-0.5 gap-0.5">
+          <div className="flex items-center ui-radius-md bg-surface p-0.5 gap-0.5">
             <Button
               variant="ghost"
               size="icon"
@@ -655,7 +655,7 @@ export function Timeline() {
               {formatTime(currentTime)}
             </div>
             {/* Visual progress indicator - hidden on small screens */}
-            <div className="hidden sm:block w-16 h-1 bg-surface relative overflow-hidden">
+            <div className="hidden sm:block w-16 h-1 ui-radius-sm bg-surface relative overflow-hidden">
               <div
                 className="absolute inset-y-0 left-0 bg-accent transition-all duration-75"
                 style={{ width: `${(currentTime / duration) * 100}%` }}
@@ -664,7 +664,7 @@ export function Timeline() {
             <div className="hidden sm:block text-sm font-mono text-text-muted tabular-nums">
               {formatTime(duration)}
             </div>
-            <span className="hidden md:inline text-[10px] text-text-muted px-1.5 py-0.5 bg-surface font-mono">
+            <span className="hidden md:inline ui-radius-sm text-[10px] text-text-muted px-1.5 py-0.5 bg-surface font-mono">
               F:{getCurrentFrame()}
             </span>
           </div>
@@ -673,7 +673,7 @@ export function Timeline() {
         {/* Center: Speed control - Hick's Law: Limited options (hidden on mobile) */}
         <div className="hidden md:flex items-center gap-3">
           {/* Speed selector with visual feedback */}
-          <div className="flex items-center gap-0.5 bg-surface p-0.5">
+          <div className="flex items-center gap-0.5 ui-radius-md bg-surface p-0.5">
             {[0.5, 1, 2].map((speed) => (
               <button
                 key={speed}
@@ -736,7 +736,7 @@ export function Timeline() {
           {showAdvancedTools && (
             <>
               {/* Loop controls */}
-              <div className="flex items-center gap-0.5 bg-surface p-0.5 ml-1">
+              <div className="flex items-center gap-0.5 ui-radius-md bg-surface p-0.5 ml-1">
                 <Button
                   variant={loopRegion ? 'secondary' : 'ghost'}
                   size="icon"
@@ -756,7 +756,7 @@ export function Timeline() {
               {/* Clip editing tools */}
               <div
                 className={cn(
-                  'flex items-center gap-0.5 bg-surface p-0.5 transition-opacity',
+                  'flex items-center gap-0.5 ui-radius-md bg-surface p-0.5 transition-opacity',
                   !selectedClipId && 'opacity-40',
                 )}
               >
@@ -837,7 +837,7 @@ export function Timeline() {
           )}
 
           {/* Zoom controls - always visible */}
-          <div className="flex items-center gap-0.5 bg-surface p-0.5 ml-1 md:ml-2">
+          <div className="flex items-center gap-0.5 ui-radius-md bg-surface p-0.5 ml-1 md:ml-2">
             <Button variant="ghost" size="icon" onClick={zoomOut} className="h-7 w-7">
               <ZoomOut className="w-3.5 h-3.5" />
             </Button>
@@ -872,7 +872,7 @@ export function Timeline() {
                       setOpenTrackSettings(openTrackSettings === track.id ? null : track.id)
                     }
                     className={cn(
-                      'p-1 hover:bg-surface',
+                      'ui-radius-sm p-1 hover:bg-surface',
                       openTrackSettings === track.id && 'bg-surface',
                     )}
                     title="Track Settings"
@@ -881,7 +881,7 @@ export function Timeline() {
                   </button>
                   <button
                     onClick={() => toggleTrackMute(track.id)}
-                    className="p-1 hover:bg-surface"
+                    className="ui-radius-sm p-1 hover:bg-surface"
                     title={track.muted ? 'Unmute' : 'Mute'}
                   >
                     {track.muted ? (
@@ -892,7 +892,7 @@ export function Timeline() {
                   </button>
                   <button
                     onClick={() => toggleTrackLock(track.id)}
-                    className="p-1 hover:bg-surface"
+                    className="ui-radius-sm p-1 hover:bg-surface"
                     title={track.locked ? 'Unlock' : 'Lock'}
                   >
                     {track.locked ? (
@@ -933,7 +933,7 @@ export function Timeline() {
                       return (
                         <label
                           key={type}
-                          className="flex items-center gap-2 py-1 cursor-pointer hover:bg-surface-hover px-1"
+                          className="flex items-center gap-2 ui-radius-sm py-1 cursor-pointer hover:bg-surface-hover px-1"
                         >
                           <input
                             type="checkbox"
@@ -969,7 +969,7 @@ export function Timeline() {
                             removeTrack(track.id)
                             setOpenTrackSettings(null)
                           }}
-                          className="flex items-center gap-2 w-full py-1 px-1 text-error hover:bg-error/10"
+                          className="flex items-center gap-2 w-full ui-radius-sm py-1 px-1 text-error hover:bg-error/10"
                         >
                           <Trash2 className="w-3 h-3" />
                           <span className="text-xs">Delete Track</span>
@@ -1013,7 +1013,7 @@ export function Timeline() {
                       addTrack('media')
                       setShowAddTrackMenu(false)
                     }}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-text-primary hover:bg-surface-hover"
+                    className="w-full flex items-center gap-2 ui-radius-sm px-3 py-2 text-sm text-text-primary hover:bg-surface-hover"
                   >
                     <Video className="w-4 h-4 text-green-400" />
                     <span>Media Track</span>
@@ -1024,7 +1024,7 @@ export function Timeline() {
                       addTrack('audio')
                       setShowAddTrackMenu(false)
                     }}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-text-primary hover:bg-surface-hover"
+                    className="w-full flex items-center gap-2 ui-radius-sm px-3 py-2 text-sm text-text-primary hover:bg-surface-hover"
                   >
                     <Music className="w-4 h-4 text-blue-400" />
                     <span>Audio Track</span>
@@ -1035,7 +1035,7 @@ export function Timeline() {
                       addTrack('text')
                       setShowAddTrackMenu(false)
                     }}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-text-primary hover:bg-surface-hover"
+                    className="w-full flex items-center gap-2 ui-radius-sm px-3 py-2 text-sm text-text-primary hover:bg-surface-hover"
                   >
                     <Type className="w-4 h-4 text-purple-400" />
                     <span>Text Track</span>

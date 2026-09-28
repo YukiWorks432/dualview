@@ -259,7 +259,7 @@ export function QuadComparison() {
     <div ref={containerRef} className="w-full h-full bg-black relative" {...containerProps}>
       {/* Zoom indicator */}
       {zoom > 1 && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 bg-black/70 backdrop-blur-sm px-3 py-1 flex items-center gap-2">
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 ui-radius-md bg-black/70 backdrop-blur-sm px-3 py-1 flex items-center gap-2">
           <span className="text-xs text-text-primary font-medium">{Math.round(zoom * 100)}%</span>
           <button
             onClick={(e) => {
@@ -296,13 +296,13 @@ export function QuadComparison() {
       </div>
 
       {/* Mode indicator */}
-      <div className="absolute bottom-4 left-4 bg-black/70 px-3 py-1.5 rounded text-xs text-gray-400">
+      <div className="absolute bottom-4 left-4 ui-radius-sm bg-black/70 px-3 py-1.5 text-xs text-gray-400">
         Quad View{' '}
         {expandedQuadrant !== null ? `- Quadrant ${expandedQuadrant + 1} Expanded` : '- 2x2 Grid'}
       </div>
 
       {/* Help text */}
-      <div className="absolute bottom-4 right-4 bg-black/70 px-3 py-1.5 rounded text-xs text-gray-400">
+      <div className="absolute bottom-4 right-4 ui-radius-sm bg-black/70 px-3 py-1.5 text-xs text-gray-400">
         Click expand icon to focus | Scroll to zoom | Shift+1-4 to cycle sources
       </div>
     </div>

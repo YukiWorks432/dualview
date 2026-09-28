@@ -124,7 +124,7 @@ export function SideBySide() {
 
       {/* Zoom indicator */}
       {zoom > 1 && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 bg-black/70 backdrop-blur-sm px-3 py-1 flex items-center gap-2">
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 ui-radius-md bg-black/70 backdrop-blur-sm px-3 py-1 flex items-center gap-2">
           <span className="text-xs text-text-primary font-medium">{Math.round(zoom * 100)}%</span>
           <button
             onClick={(e) => {
@@ -189,7 +189,7 @@ export function SideBySide() {
         </div>
         {/* A badge - always visible when media loaded */}
         {mediaA && (
-          <div className="absolute bottom-3 left-3 z-20 px-2 py-0.5 bg-accent/80 text-white text-xs font-semibold">
+          <div className="absolute bottom-3 left-3 z-20 ui-radius-sm px-2 py-0.5 bg-accent/80 text-white text-xs font-semibold">
             A
           </div>
         )}
@@ -265,7 +265,7 @@ export function SideBySide() {
         </div>
         {/* B badge - always visible when media loaded */}
         {mediaB && (
-          <div className="absolute bottom-3 right-3 z-20 px-2 py-0.5 bg-secondary/80 text-black text-xs font-semibold">
+          <div className="absolute bottom-3 right-3 z-20 ui-radius-sm px-2 py-0.5 bg-secondary/80 text-black text-xs font-semibold">
             B
           </div>
         )}
