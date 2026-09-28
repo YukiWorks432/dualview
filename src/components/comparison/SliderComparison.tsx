@@ -412,7 +412,7 @@ export function SliderComparison() {
                 {/* Large A badge */}
                 <div
                   className={cn(
-                    'w-16 h-16 flex items-center justify-center transition-all duration-300',
+                    'w-16 h-16 ui-radius-lg flex items-center justify-center transition-all duration-300',
                     dropZoneA.isDragOver
                       ? 'bg-accent text-white'
                       : 'bg-accent/10 border border-accent/20',
@@ -433,7 +433,7 @@ export function SliderComparison() {
                     dropZoneA.openFileDialog()
                   }}
                   className={cn(
-                    'p-4 border border-dashed transition-all duration-200 group',
+                    'ui-radius-lg p-4 border border-dashed transition-all duration-200 group',
                     dropZoneA.isDragOver
                       ? 'border-accent bg-accent/10'
                       : 'border-text-muted/20 hover:border-accent/50',
@@ -491,7 +491,7 @@ export function SliderComparison() {
                 {/* Large B badge */}
                 <div
                   className={cn(
-                    'w-16 h-16 flex items-center justify-center transition-all duration-300',
+                    'w-16 h-16 ui-radius-lg flex items-center justify-center transition-all duration-300',
                     dropZoneB.isDragOver
                       ? 'bg-secondary text-black'
                       : 'bg-secondary/10 border border-secondary/20',
@@ -512,7 +512,7 @@ export function SliderComparison() {
                     dropZoneB.openFileDialog()
                   }}
                   className={cn(
-                    'p-4 border border-dashed transition-all duration-200 group',
+                    'ui-radius-lg p-4 border border-dashed transition-all duration-200 group',
                     dropZoneB.isDragOver
                       ? 'border-secondary bg-secondary/10'
                       : 'border-text-muted/20 hover:border-secondary/50',
