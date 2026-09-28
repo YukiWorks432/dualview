@@ -38,10 +38,10 @@ export function ExportModeTabs({ value, onValueChange, disabled = false }: Expor
           aria-selected={value === mode}
           disabled={disabled}
           title={title}
-          className={`flex items-center justify-center gap-1 px-1 py-2 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+          className={`surface-control-elevation ui-radius-md flex items-center justify-center border px-1 py-2 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
             value === mode
-              ? 'border-b-2 border-accent bg-surface-alt text-text-primary'
-              : 'text-text-secondary hover:bg-surface-alt/50 hover:text-text-primary'
+              ? 'border-accent bg-surface-active text-text-primary'
+              : 'surface-control text-text-secondary hover:text-text-primary'
           }`}
           onClick={() => onValueChange(mode)}
         >

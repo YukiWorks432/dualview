@@ -217,7 +217,7 @@ export function ScopesPanel() {
           <div className="flex items-center gap-4">
             <button
               onClick={() => setIsCollapsed(!isCollapsed)}
-              className="flex items-center gap-2 text-text-primary hover:text-secondary transition-colors"
+              className="surface-control ui-radius-md flex items-center gap-2 border px-2 py-1 text-text-primary hover:text-secondary transition-colors"
             >
               {isCollapsed ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
               <span className="font-semibold text-sm">Video Scopes</span>
@@ -228,9 +228,9 @@ export function ScopesPanel() {
                 {/* Scope toggles */}
                 <button
                   onClick={toggleWaveform}
-                  className={`flex items-center gap-1.5 px-2 py-1 rounded text-xs transition-colors ${
+                  className={`surface-control-elevation ui-radius-md flex items-center gap-1.5 border px-2 py-1 text-xs transition-colors ${
                     scopesSettings.showWaveform
-                      ? 'bg-accent text-white'
+                      ? 'border-accent bg-accent text-white'
                       : 'surface-control text-text-muted hover:text-text-primary'
                   }`}
                   title="Waveform Monitor (SCOPE-001)"
@@ -241,9 +241,9 @@ export function ScopesPanel() {
 
                 <button
                   onClick={toggleVectorscope}
-                  className={`flex items-center gap-1.5 px-2 py-1 rounded text-xs transition-colors ${
+                  className={`surface-control-elevation ui-radius-md flex items-center gap-1.5 border px-2 py-1 text-xs transition-colors ${
                     scopesSettings.showVectorscope
-                      ? 'bg-accent text-white'
+                      ? 'border-accent bg-accent text-white'
                       : 'surface-control text-text-muted hover:text-text-primary'
                   }`}
                   title="Vectorscope (SCOPE-002)"
@@ -254,9 +254,9 @@ export function ScopesPanel() {
 
                 <button
                   onClick={toggleParade}
-                  className={`flex items-center gap-1.5 px-2 py-1 rounded text-xs transition-colors ${
+                  className={`surface-control-elevation ui-radius-md flex items-center gap-1.5 border px-2 py-1 text-xs transition-colors ${
                     scopesSettings.showParade
-                      ? 'bg-accent text-white'
+                      ? 'border-accent bg-accent text-white'
                       : 'surface-control text-text-muted hover:text-text-primary'
                   }`}
                   title="RGB Parade (SCOPE-003)"
@@ -284,9 +284,9 @@ export function ScopesPanel() {
                 {/* Settings toggle */}
                 <button
                   onClick={() => setShowSettings(!showSettings)}
-                  className={`p-1.5 rounded transition-colors ${
+                  className={`surface-control-elevation ui-radius-md border p-1.5 transition-colors ${
                     showSettings
-                      ? 'bg-accent text-white'
+                      ? 'border-accent bg-accent text-white'
                       : 'surface-control text-text-muted hover:text-text-primary'
                   }`}
                   title="Settings"
@@ -315,7 +315,7 @@ export function ScopesPanel() {
               <span className="text-xs text-gray-400">Intensity:</span>
               <button
                 onClick={() => setScopeIntensity(scopesSettings.scopeIntensity - 0.25)}
-                className="surface-interactive ui-radius-sm p-1 text-text-muted hover:text-text-primary"
+                className="surface-control ui-radius-sm border p-1 text-text-muted hover:text-text-primary"
               >
                 <Minus size={12} />
               </button>
@@ -324,7 +324,7 @@ export function ScopesPanel() {
               </span>
               <button
                 onClick={() => setScopeIntensity(scopesSettings.scopeIntensity + 0.25)}
-                className="surface-interactive ui-radius-sm p-1 text-text-muted hover:text-text-primary"
+                className="surface-control ui-radius-sm border p-1 text-text-muted hover:text-text-primary"
               >
                 <Plus size={12} />
               </button>
@@ -502,9 +502,9 @@ export function ScopesToggle({ onClick, isActive }: { onClick: () => void; isAct
   return (
     <button
       onClick={onClick}
-      className={`ui-radius-md p-2 transition-colors ${
+      className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${
         isActive
-          ? 'bg-accent text-white'
+          ? 'border-accent bg-accent text-white'
           : 'surface-control text-text-muted hover:text-text-primary'
       }`}
       title="Video Scopes (Waveform, Vectorscope, Parade)"

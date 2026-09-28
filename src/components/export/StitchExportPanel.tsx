@@ -67,10 +67,10 @@ export function StitchExportPanel({
               type="button"
               aria-pressed={trackId === track.id}
               onClick={() => onTrackChange(track.id)}
-              className={`ui-radius-md border p-3 text-left transition-colors ${
+              className={`surface-control-elevation ui-radius-md border p-3 text-left transition-colors ${
                 trackId === track.id
                   ? 'border-accent bg-accent/10'
-                  : 'border-border hover:border-text-muted'
+                  : 'surface-control'
               }`}
             >
               <div className="mb-1 flex items-center gap-2">
@@ -126,10 +126,10 @@ export function StitchExportPanel({
               type="button"
               aria-pressed={resolution === option}
               onClick={() => onResolutionChange(option)}
-              className={`ui-radius-md border px-3 py-2 text-sm transition-colors ${
+              className={`surface-control-elevation ui-radius-md border px-3 py-2 text-sm transition-colors ${
                 resolution === option
                   ? 'border-accent bg-accent/10 text-accent'
-                  : 'border-border text-text-secondary hover:border-text-muted'
+                  : 'surface-control text-text-secondary'
               }`}
             >
               {option.toUpperCase()}
@@ -151,10 +151,10 @@ export function StitchExportPanel({
               type="button"
               aria-pressed={quality === option.value}
               onClick={() => onQualityChange(option.value as StitchQuality)}
-              className={`ui-radius-md border px-3 py-2 text-sm transition-colors ${
+              className={`surface-control-elevation ui-radius-md border px-3 py-2 text-sm transition-colors ${
                 quality === option.value
                   ? 'border-accent bg-accent/10 text-accent'
-                  : 'border-border text-text-secondary hover:border-text-muted'
+                  : 'surface-control text-text-secondary'
               }`}
             >
               <span className="block">{option.label}</span>
@@ -173,10 +173,10 @@ export function StitchExportPanel({
               type="button"
               aria-pressed={fps === option}
               onClick={() => onFpsChange(option)}
-              className={`ui-radius-md border px-3 py-2 text-sm transition-colors ${
+              className={`surface-control-elevation ui-radius-md border px-3 py-2 text-sm transition-colors ${
                 fps === option
                   ? 'border-accent bg-accent/10 text-accent'
-                  : 'border-border text-text-secondary hover:border-text-muted'
+                  : 'surface-control text-text-secondary'
               }`}
             >
               {option} fps

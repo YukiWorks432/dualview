@@ -105,10 +105,10 @@ export function TransitionExportPanel({
               aria-pressed={exportMode === option.value}
               title={option.description}
               onClick={() => onExportModeChange(option.value as TransitionExportMode)}
-              className={`ui-radius-md border px-3 py-2 text-sm transition-colors ${
+              className={`surface-control-elevation ui-radius-md border px-3 py-2 text-sm transition-colors ${
                 exportMode === option.value
                   ? 'border-accent bg-accent/10 text-accent'
-                  : 'border-border text-text-secondary hover:border-text-muted'
+                  : 'surface-control text-text-secondary'
               }`}
             >
               {option.label}
@@ -127,10 +127,10 @@ export function TransitionExportPanel({
               aria-pressed={engine === option.id}
               title={option.description}
               onClick={() => onEngineChange(option.id)}
-              className={`flex flex-col items-center ui-radius-md border px-2 py-1.5 text-xs transition-colors ${
+              className={`surface-control-elevation flex flex-col items-center ui-radius-md border px-2 py-1.5 text-xs transition-colors ${
                 engine === option.id
                   ? 'border-accent bg-accent/10 text-accent'
-                  : 'border-border text-text-secondary hover:border-text-muted'
+                  : 'surface-control text-text-secondary'
               }`}
             >
               <span className="text-base" aria-hidden="true">
@@ -153,10 +153,10 @@ export function TransitionExportPanel({
               type="button"
               aria-pressed={variant === option.value}
               onClick={() => onVariantChange(option.value)}
-              className={`truncate ui-radius-md border px-2 py-1 text-xs transition-colors ${
+              className={`surface-control-elevation truncate ui-radius-md border px-2 py-1 text-xs transition-colors ${
                 variant === option.value
                   ? 'border-accent bg-accent/10 text-accent'
-                  : 'border-border text-text-secondary hover:border-text-muted'
+                  : 'surface-control text-text-secondary'
               }`}
             >
               {option.label}
@@ -212,10 +212,10 @@ export function TransitionExportPanel({
               type="button"
               aria-pressed={format === option.value}
               onClick={() => onFormatChange(option.value as TransitionExportFormat)}
-              className={`ui-radius-md border px-3 py-2 text-sm transition-colors ${
+              className={`surface-control-elevation ui-radius-md border px-3 py-2 text-sm transition-colors ${
                 format === option.value
                   ? 'border-accent bg-accent/10 text-accent'
-                  : 'border-border text-text-secondary hover:border-text-muted'
+                  : 'surface-control text-text-secondary'
               }`}
             >
               {option.label}

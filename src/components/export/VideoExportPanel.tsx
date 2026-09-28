@@ -47,10 +47,10 @@ export function VideoExportPanel({
                   exportSource: option.value as ExportSettings['exportSource'],
                 })
               }
-              className={`ui-radius-md border px-3 py-2 text-sm transition-colors ${
+              className={`surface-control-elevation ui-radius-md border px-3 py-2 text-sm transition-colors ${
                 settings.exportSource === option.value
                   ? 'border-accent bg-accent/10 text-accent'
-                  : 'border-border text-text-secondary hover:border-text-muted'
+                  : 'surface-control text-text-secondary'
               }`}
             >
               {option.label}
@@ -113,10 +113,10 @@ export function VideoExportPanel({
                   onClick={() =>
                     onSettingsChange({ sweepStyle: style.value as ExportSettings['sweepStyle'] })
                   }
-                  className={`ui-radius-md border px-2 py-2 text-lg transition-colors ${
+                  className={`surface-control-elevation ui-radius-md border px-2 py-2 text-lg transition-colors ${
                     settings.sweepStyle === style.value
                       ? 'border-accent bg-accent/10 text-accent'
-                      : 'border-border text-text-secondary hover:border-text-muted'
+                      : 'surface-control text-text-secondary'
                   }`}
                 >
                   {style.label}
@@ -277,10 +277,10 @@ export function VideoExportPanel({
               type="button"
               aria-pressed={settings.format === option.value}
               onClick={() => onSettingsChange({ format: option.value as ExportSettings['format'] })}
-              className={`ui-radius-md border px-3 py-2 text-sm transition-colors ${
+              className={`surface-control-elevation ui-radius-md border px-3 py-2 text-sm transition-colors ${
                 settings.format === option.value
                   ? 'border-accent bg-accent/10 text-accent'
-                  : 'border-border text-text-secondary hover:border-text-muted'
+                  : 'surface-control text-text-secondary'
               }`}
             >
               {option.label}
