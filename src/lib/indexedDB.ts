@@ -110,10 +110,75 @@ export async function saveProject(project: ProjectRecord): Promise<void> {
   return new Promise((resolve, reject) => {
     const transaction = database.transaction(['projects'], 'readwrite')
     const store = transaction.objectStore('projects')
-    const request = store.put(project)
+    store.put(project)
 
-    request.onerror = () => reject(request.error)
-    request.onsuccess = () => resolve()
+    transaction.oncomplete = () => resolve()
+    transaction.onerror = () => reject(transaction.error)
+    transaction.onabort = () => reject(transaction.error)
+  })
+}
+
+/**
+ * Decide whether a media record belongs to the active project but is no longer retained.
+ */
+export function shouldDeleteProjectMediaBlob(
+  record: Pick<MediaBlobRecord, 'projectId' | 'mediaId'>,
+  projectId: string,
+  retainedMediaIds: ReadonlySet<string>,
+): boolean {
+  return record.projectId === projectId && !retainedMediaIds.has(record.mediaId)
+}
+
+/**
+ * Save a project record and synchronize its media blobs in one transaction.
+ *
+ * Blobs no longer referenced by the project's manifest are removed, while blobs belonging
+ * to other projects are left untouched.
+ */
+export async function saveProjectWithMedia(
+  project: ProjectRecord,
+  mediaBlobs: ReadonlyMap<string, Blob>,
+): Promise<void> {
+  const database = await getDB()
+
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction(['projects', 'media'], 'readwrite')
+    const projectStore = transaction.objectStore('projects')
+    const mediaStore = transaction.objectStore('media')
+    const retainedMediaIds = new Set(project.mediaManifest.map((entry) => entry.id))
+
+    projectStore.put(project)
+
+    for (const [mediaId, blob] of mediaBlobs) {
+      if (!retainedMediaIds.has(mediaId)) continue
+
+      const record: MediaBlobRecord = {
+        id: `${project.id}:${mediaId}`,
+        projectId: project.id,
+        mediaId,
+        blob,
+        mimeType: blob.type,
+      }
+      mediaStore.put(record)
+    }
+
+    const mediaIndex = mediaStore.index('projectId')
+    const cursorRequest = mediaIndex.openCursor(IDBKeyRange.only(project.id))
+
+    cursorRequest.onsuccess = () => {
+      const cursor = cursorRequest.result
+      if (!cursor) return
+
+      const record = cursor.value as MediaBlobRecord
+      if (shouldDeleteProjectMediaBlob(record, project.id, retainedMediaIds)) {
+        cursor.delete()
+      }
+      cursor.continue()
+    }
+
+    transaction.oncomplete = () => resolve()
+    transaction.onerror = () => reject(transaction.error)
+    transaction.onabort = () => reject(transaction.error)
   })
 }
 
@@ -207,10 +272,11 @@ export async function saveMediaBlob(projectId: string, mediaId: string, blob: Bl
       blob,
       mimeType: blob.type,
     }
-    const request = store.put(record)
+    store.put(record)
 
-    request.onerror = () => reject(request.error)
-    request.onsuccess = () => resolve()
+    transaction.oncomplete = () => resolve()
+    transaction.onerror = () => reject(transaction.error)
+    transaction.onabort = () => reject(transaction.error)
   })
 }
 
