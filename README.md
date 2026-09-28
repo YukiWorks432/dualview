@@ -502,6 +502,23 @@ Toggle with `G` key.
 - **Templates:** Built-in presets + custom templates
 - **Metadata:** Title, description, tags
 
+Local files selected, dropped, pasted, or captured in DualView are processed in the browser; DualView
+does not provide a media-upload endpoint for that workflow. Project metadata, thumbnails, and media
+blobs are saved automatically in this browser's IndexedDB and can remain after the tab is closed.
+
+URL import is different: when you request a URL, the browser connects directly to that destination
+(and any redirects) to fetch the selected media. The destination can receive normal network
+information such as your IP address and the requested URL.
+
+A downloaded `.dualview` project contains the media itself as Base64 data. It is not a
+settings-only or encrypted container, so inspect what it contains before sharing it.
+
+Published site information:
+[Privacy](https://dualview.yukiworks432.workers.dev/privacy/) ·
+[Terms](https://dualview.yukiworks432.workers.dev/terms/) ·
+[About](https://dualview.yukiworks432.workers.dev/about/) ·
+[Licenses](https://dualview.yukiworks432.workers.dev/licenses/)
+
 ---
 
 ## 🛠️ Tech Stack
@@ -743,7 +760,8 @@ DualView's original work remains credited to **Gökay Aydoğan** and the
 
 ## 📄 License
 
-MIT License - see [LICENSE](LICENSE) for details.
+MIT License - see [LICENSE](LICENSE) for details. Browser-distributed dependency notices and
+source links are published on the [Licenses page](https://dualview.yukiworks432.workers.dev/licenses/).
 
 Contributions are welcome on this fork. Feel free to [open an issue](https://github.com/YukiWorks432/dualview/issues) or [submit a pull request](https://github.com/YukiWorks432/dualview/pulls).
 
