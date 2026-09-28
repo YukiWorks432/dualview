@@ -111,7 +111,7 @@ export function Sidebar({ onCollapse, isMobileOpen, onMobileClose, onOpenProject
         {isMobileOpen && onMobileClose && (
           <button
             onClick={onMobileClose}
-            className="surface-control ui-radius-md border px-3 py-3 text-text-muted hover:text-text-primary transition-all"
+            className="surface-control ui-radius-md inline-flex items-center justify-center border px-3 py-3 text-text-muted hover:text-text-primary transition-all"
             title="Close Sidebar"
           >
             <X className="w-5 h-5" />
@@ -153,7 +153,7 @@ export function Sidebar({ onCollapse, isMobileOpen, onMobileClose, onOpenProject
         {onCollapse && !isMobileOpen && (
           <button
             onClick={onCollapse}
-            className="surface-control ui-radius-md border px-2 text-text-muted hover:text-text-primary transition-all duration-150 group hide-mobile"
+            className="surface-control ui-radius-md inline-flex items-center justify-center border px-2 text-text-muted hover:text-text-primary transition-all duration-150 group hide-mobile"
             title="Collapse Sidebar (B)"
           >
             <ChevronLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />

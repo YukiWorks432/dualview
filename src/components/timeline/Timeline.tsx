@@ -878,7 +878,7 @@ export function Timeline() {
                       setOpenTrackSettings(openTrackSettings === track.id ? null : track.id)
                     }
                     className={cn(
-                      'surface-control ui-radius-sm border p-1',
+                      'surface-control ui-radius-sm inline-flex h-7 w-7 items-center justify-center border p-0',
                       openTrackSettings === track.id && 'bg-surface',
                     )}
                     title="Track Settings"
@@ -887,7 +887,7 @@ export function Timeline() {
                   </button>
                   <button
                     onClick={() => toggleTrackMute(track.id)}
-                    className="surface-control ui-radius-sm border p-1"
+                    className="surface-control ui-radius-sm inline-flex h-7 w-7 items-center justify-center border p-0"
                     title={track.muted ? 'Unmute' : 'Mute'}
                   >
                     {track.muted ? (
@@ -898,7 +898,7 @@ export function Timeline() {
                   </button>
                   <button
                     onClick={() => toggleTrackLock(track.id)}
-                    className="surface-control ui-radius-sm border p-1"
+                    className="surface-control ui-radius-sm inline-flex h-7 w-7 items-center justify-center border p-0"
                     title={track.locked ? 'Unlock' : 'Lock'}
                   >
                     {track.locked ? (
@@ -1104,7 +1104,7 @@ export function Timeline() {
                 >
                   <Flag className="w-3 h-3 text-secondary fill-secondary" />
                   <button
-                    className="absolute -top-1 -right-1 opacity-0 group-hover:opacity-100 p-0.5 bg-error rounded-full"
+                    className="absolute -top-1 -right-1 inline-flex h-4 w-4 items-center justify-center rounded-full bg-error p-0 opacity-0 group-hover:opacity-100"
                     onClick={(e) => {
                       e.stopPropagation()
                       removeMarker(marker.id)
