@@ -283,7 +283,7 @@ export function CustomShaderEditor({ isOpen, onClose, onApplyShader }: CustomSha
           </div>
           <button
             onClick={onClose}
-            className="surface-interactive ui-radius-sm p-2 text-text-secondary hover:text-text-primary"
+            className="surface-control ui-radius-sm border p-2 text-text-secondary hover:text-text-primary"
           >
             <X size={20} />
           </button>
@@ -325,7 +325,7 @@ export function CustomShaderEditor({ isOpen, onClose, onApplyShader }: CustomSha
                           e.stopPropagation()
                           deleteShader(shader.id)
                         }}
-                        className="surface-interactive ui-radius-sm p-1 text-text-muted hover:text-red-400"
+                        className="surface-control ui-radius-sm border p-1 text-text-muted hover:text-red-400"
                       >
                         <Trash2 size={12} />
                       </button>

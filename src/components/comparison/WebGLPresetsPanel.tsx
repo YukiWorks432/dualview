@@ -195,7 +195,7 @@ export function WebGLPresetsPanel({ isOpen, onClose }: WebGLPresetsPanelProps) {
           />
           <button
             onClick={onClose}
-            className="p-1.5 ui-radius-sm text-text-secondary hover:text-text-primary transition-colors ml-2"
+            className="surface-control ui-radius-sm ml-2 border p-1.5 text-text-secondary transition-colors hover:text-text-primary"
           >
             <X size={14} />
           </button>
@@ -296,7 +296,7 @@ export function WebGLPresetsPanel({ isOpen, onClose }: WebGLPresetsPanelProps) {
                             e.stopPropagation()
                             handleDeletePreset(preset.id)
                           }}
-                          className="surface-interactive ui-radius-sm p-1 text-text-muted hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="surface-control ui-radius-sm border p-1 text-text-muted opacity-0 transition-opacity hover:text-red-400 group-hover:opacity-100"
                         >
                           <Trash2 size={14} />
                         </button>

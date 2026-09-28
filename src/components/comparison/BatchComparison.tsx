@@ -302,7 +302,7 @@ export function BatchComparison({ isOpen, onClose }: BatchComparisonProps) {
           </div>
           <button
             onClick={onClose}
-            className="surface-interactive ui-radius-sm p-2 text-text-secondary hover:text-text-primary"
+            className="surface-control ui-radius-sm border p-2 text-text-secondary hover:text-text-primary"
           >
             <X size={20} />
           </button>
@@ -371,7 +371,7 @@ export function BatchComparison({ isOpen, onClose }: BatchComparisonProps) {
                   </div>
                   <button
                     onClick={stopProcessing}
-                    className="w-full px-4 py-2 bg-red-600 text-text-primary ui-radius-md flex items-center justify-center gap-2"
+                    className="surface-control-elevation ui-radius-md flex w-full items-center justify-center gap-2 border border-error bg-error px-4 py-2 text-text-primary"
                   >
                     <Pause size={16} />
                     Stop
@@ -381,7 +381,7 @@ export function BatchComparison({ isOpen, onClose }: BatchComparisonProps) {
                 <button
                   onClick={runBatchComparison}
                   disabled={selectedFiles.length < 2}
-                  className="w-full px-4 py-2 bg-accent text-text-primary ui-radius-md flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="surface-control-elevation ui-radius-md flex w-full items-center justify-center gap-2 border border-accent bg-accent px-4 py-2 text-text-primary disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <Play size={16} />
                   Compare ({Math.floor(
@@ -441,7 +441,7 @@ export function BatchComparison({ isOpen, onClose }: BatchComparisonProps) {
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-                  className="bg-surface border border-border ui-radius-md px-2 py-1 text-sm text-text-primary"
+                  className="surface-control ui-radius-md border px-2 py-1 text-sm text-text-primary"
                 >
                   <option value="ssim">SSIM</option>
                   <option value="deltaE">Delta E</option>

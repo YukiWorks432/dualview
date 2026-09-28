@@ -299,7 +299,7 @@ export function ScopesPanel() {
             {/* Close button */}
             <button
               onClick={toggleScopes}
-              className="surface-interactive ui-radius-md p-1.5 text-text-muted hover:text-red-400 transition-colors"
+              className="surface-control ui-radius-md border p-1.5 text-text-muted hover:text-red-400 transition-colors"
               title="Close Scopes"
             >
               <X size={14} />

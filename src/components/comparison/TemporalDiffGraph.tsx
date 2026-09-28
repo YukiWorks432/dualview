@@ -363,7 +363,7 @@ export function TemporalDiffGraph({ videoARef, videoBRef, isVisible }: TemporalD
           )}
           <button
             onClick={togglePlay}
-            className="surface-control ui-radius-sm p-1 text-text-secondary hover:text-text-primary transition-colors"
+            className="surface-control ui-radius-sm border p-1 text-text-secondary hover:text-text-primary transition-colors"
             title={isPlaying ? 'Pause' : 'Play'}
           >
             {isPlaying ? <Pause size={14} /> : <Play size={14} />}
@@ -371,10 +371,10 @@ export function TemporalDiffGraph({ videoARef, videoBRef, isVisible }: TemporalD
           <button
             onClick={analyzeVideo}
             disabled={isAnalyzing}
-            className={`ui-radius-sm px-3 py-1 text-xs font-medium transition-colors ${
+            className={`surface-control-elevation ui-radius-sm border px-3 py-1 text-xs font-medium transition-colors ${
               isAnalyzing
-                ? 'bg-surface-alt text-text-secondary cursor-not-allowed'
-                : 'bg-accent text-text-primary hover:bg-accent-hover'
+                ? 'surface-control text-text-secondary cursor-not-allowed'
+                : 'border-accent bg-accent text-text-primary hover:bg-accent-hover'
             }`}
           >
             {isAnalyzing ? (
@@ -412,7 +412,7 @@ export function TemporalDiffGraph({ videoARef, videoBRef, isVisible }: TemporalD
               <button
                 key={i}
                 onClick={() => seek(point.time)}
-                className="px-2 py-0.5 rounded bg-red-900/50 text-red-300 text-xs hover:bg-red-900 transition-colors whitespace-nowrap"
+                className="surface-control-elevation ui-radius-sm border border-error/40 bg-error/20 px-2 py-0.5 text-xs text-error transition-colors whitespace-nowrap hover:bg-error/30"
               >
                 {minutes}:{seconds.toString().padStart(2, '0')} ({point.avgDiff.toFixed(0)})
               </button>
