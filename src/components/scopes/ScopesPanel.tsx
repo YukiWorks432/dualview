@@ -18,7 +18,7 @@ import {
   Minus,
   Plus,
 } from 'lucide-react'
-import { useEffect, useRef, useCallback, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { ScopesRenderer } from '../../lib/webgl/ScopesRenderer'
 import { useMediaStore } from '../../stores/mediaStore'
