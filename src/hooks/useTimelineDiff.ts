@@ -49,6 +49,7 @@ interface ActiveJob {
 }
 
 let activeJob: ActiveJob | null = null
+let analysisSettledListener: (() => void) | null = null
 let nextJobNumber = 1
 const fileIdentity = new WeakMap<File, number>()
 let nextFileIdentity = 1
@@ -129,7 +130,35 @@ export function cancelTimelineDiffAnalysis(): void {
   cancelActiveJob()
 }
 
-export function startTimelineDiffAnalysis(): void {
+type AutoAnalysisReadiness = 'empty' | 'blocked' | 'ready'
+
+function getAutoAnalysisReadiness(): AutoAnalysisReadiness {
+  const tracks = useTimelineStore.getState().tracks
+  const trackA = tracks.find((track) => track.type === 'a')
+  const trackB = tracks.find((track) => track.type === 'b')
+
+  if (!trackA?.clips.length || !trackB?.clips.length) return 'empty'
+
+  const mediaFiles = useMediaStore.getState().files
+  if (mediaFiles.some((media) => media.status === 'pending' || media.status === 'processing')) {
+    return 'blocked'
+  }
+
+  const mediaById = new Map(mediaFiles.map((media) => [media.id, media]))
+  const comparisonClips = [...trackA.clips, ...trackB.clips]
+  const canAnalyze = comparisonClips.every((clip) => {
+    const media = mediaById.get(clip.mediaId)
+    return media?.type === 'video' && media.status === 'ready'
+  })
+
+  return canAnalyze ? 'ready' : 'blocked'
+}
+
+function notifyAnalysisSettled(): void {
+  analysisSettledListener?.()
+}
+
+function startTimelineDiffAnalysisJob(): void {
   cancelActiveJob()
 
   const snapshot = buildSnapshot()
@@ -178,6 +207,7 @@ export function startTimelineDiffAnalysis(): void {
     useTimelineDiffStore.getState().finishAnalysis(jobId, event.data.status, event.data.message)
     worker.terminate()
     activeJob = null
+    notifyAnalysisSettled()
   })
 
   worker.addEventListener('error', (event) => {
@@ -187,6 +217,7 @@ export function startTimelineDiffAnalysis(): void {
       .finishAnalysis(jobId, 'error', event.message || 'The analysis worker failed.')
     worker.terminate()
     activeJob = null
+    notifyAnalysisSettled()
   })
 
   try {
@@ -201,24 +232,59 @@ export function startTimelineDiffAnalysis(): void {
       )
     worker.terminate()
     activeJob = null
+    notifyAnalysisSettled()
   }
+}
+
+export function startTimelineDiffAnalysis(): void {
+  startTimelineDiffAnalysisJob()
 }
 
 export function useTimelineDiffLifecycle(): void {
   useEffect(() => {
     let lastFingerprint = buildSnapshot().fingerprint
+    let autoAnalysisArmed = true
+    let autoAnalysisTimer: ReturnType<typeof setTimeout> | null = null
+    let lifecycleActive = true
+
+    const scheduleAutoAnalysis = () => {
+      if (!lifecycleActive) return
+      if (autoAnalysisTimer !== null) clearTimeout(autoAnalysisTimer)
+      autoAnalysisTimer = setTimeout(() => {
+        autoAnalysisTimer = null
+
+        const readiness = getAutoAnalysisReadiness()
+        if (readiness === 'empty') {
+          autoAnalysisArmed = true
+          return
+        }
+        if (!autoAnalysisArmed || readiness !== 'ready') return
+
+        const status = useTimelineDiffStore.getState().status
+        if (status === 'analyzing' || status === 'cancelling') {
+          autoAnalysisArmed = false
+          return
+        }
+        if (activeJob) return
+
+        autoAnalysisArmed = false
+        startTimelineDiffAnalysisJob()
+      }, 0)
+    }
 
     const refreshFingerprint = () => {
       const nextFingerprint = buildSnapshot().fingerprint
-      if (nextFingerprint === lastFingerprint) return
+      if (nextFingerprint !== lastFingerprint) {
+        lastFingerprint = nextFingerprint
+        cancelActiveJob()
+        useTimelineDiffStore
+          .getState()
+          .invalidate(
+            'Timeline, project, media, or analysis settings changed. Run the comparison again.',
+          )
+      }
 
-      lastFingerprint = nextFingerprint
-      cancelActiveJob()
-      useTimelineDiffStore
-        .getState()
-        .invalidate(
-          'Timeline, project, media, or analysis settings changed. Run the comparison again.',
-        )
+      scheduleAutoAnalysis()
     }
 
     const unsubscribeTimeline = useTimelineStore.subscribe((state, previous) => {
@@ -238,14 +304,26 @@ export function useTimelineDiffLifecycle(): void {
         state.resolution !== previous.resolution
       ) {
         refreshFingerprint()
+        return
+      }
+
+      if (state.status !== previous.status) {
+        if (state.status === 'analyzing') autoAnalysisArmed = false
+        scheduleAutoAnalysis()
       }
     })
 
+    analysisSettledListener = scheduleAutoAnalysis
+    scheduleAutoAnalysis()
+
     return () => {
+      lifecycleActive = false
+      if (analysisSettledListener === scheduleAutoAnalysis) analysisSettledListener = null
       unsubscribeTimeline()
       unsubscribeMedia()
       unsubscribeProject()
       unsubscribeSettings()
+      if (autoAnalysisTimer !== null) clearTimeout(autoAnalysisTimer)
       cancelActiveJob()
     }
   }, [])
