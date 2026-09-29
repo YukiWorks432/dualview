@@ -109,7 +109,6 @@ function computeMetricsFromCanvas(
   }
 }
 
-
 export function BatchComparison({ isOpen, onClose }: BatchComparisonProps) {
   const { files } = useMediaStore()
   const [selectedFiles, setSelectedFiles] = useState<string[]>([])
