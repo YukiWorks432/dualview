@@ -7,16 +7,36 @@ function replace(path, before, after) {
   writeFileSync(path, source.replace(before, after))
 }
 const controls = 'src/components/timeline/DifferenceControls.tsx'
-replace(controls, 'container.scrollLeft = Math.max(0, x - container.clientWidth / 2)', 'container.scrollTo({ left: Math.max(0, x - container.clientWidth / 2) })')
-replace(controls, 'state.descriptions.map((description) =>', 'state.descriptions.map((description, index) =>')
+replace(
+  controls,
+  'container.scrollLeft = Math.max(0, x - container.clientWidth / 2)',
+  'container.scrollTo({ left: Math.max(0, x - container.clientWidth / 2) })',
+)
+replace(
+  controls,
+  'state.descriptions.map((description) =>',
+  'state.descriptions.map((description, index) =>',
+)
 replace(controls, 'key={description}', 'key={`${index}:${description}`}')
 const timingTests = 'src/lib/difference/model.test.ts'
-replace(timingTests, 'expect(() => pairWindows([clip({ speed: 0 })], [], 1)).toThrow()', "expect(() => pairWindows([clip({ speed: 0 })], [], 1)).toThrow('Invalid timing for clip')")
-replace(timingTests, 'expect(() => normalizeFrameTimings([], 1)).toThrow()', "expect(() => normalizeFrameTimings([], 1)).toThrow('No usable video frame timestamps')")
+replace(
+  timingTests,
+  'expect(() => pairWindows([clip({ speed: 0 })], [], 1)).toThrow()',
+  "expect(() => pairWindows([clip({ speed: 0 })], [], 1)).toThrow('Invalid timing for clip')",
+)
+replace(
+  timingTests,
+  'expect(() => normalizeFrameTimings([], 1)).toThrow()',
+  "expect(() => normalizeFrameTimings([], 1)).toThrow('No usable video frame timestamps')",
+)
 replace(timingTests, ').toThrow()', ").toThrow('Ambiguous or invalid video frame timestamps')")
 const lifecycleTests = 'src/stores/differenceStore.test.ts'
 replace(lifecycleTests, 'terminate = vi.fn()', 'terminate = vi.fn<() => void>()')
-replace(lifecycleTests, 'postMessage = vi.fn()', 'postMessage = vi.fn<(message: unknown) => void>()')
+replace(
+  lifecycleTests,
+  'postMessage = vi.fn()',
+  'postMessage = vi.fn<(message: unknown) => void>()',
+)
 const browserTests = 'tests/browser/difference.e2e.ts'
 const addition = `
 
@@ -49,4 +69,5 @@ test('maps actual decoded frames through placement, trim, speed and reverse', as
   expect(state.regions[1].end).toBeCloseTo(2 + (0.75 - 7 / 24) / 2, 4)
 })
 `
-if (!readFileSync(browserTests, 'utf8').includes("test('colour tolerance can suppress")) writeFileSync(browserTests, readFileSync(browserTests, 'utf8') + addition)
+if (!readFileSync(browserTests, 'utf8').includes("test('colour tolerance can suppress"))
+  writeFileSync(browserTests, readFileSync(browserTests, 'utf8') + addition)

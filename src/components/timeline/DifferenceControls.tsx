@@ -31,7 +31,7 @@ export function DifferenceControls({
     if (container && pixelsPerSecond) {
       const x = region.start * pixelsPerSecond
       if (x < container.scrollLeft || x > container.scrollLeft + container.clientWidth)
-        container.scrollLeft = Math.max(0, x - container.clientWidth / 2)
+        container.scrollTo({ left: Math.max(0, x - container.clientWidth / 2) })
     }
   }
   const status = {
@@ -152,8 +152,8 @@ export function DifferenceControls({
                 Full-frame, display-converted comparison. Preview zoom, alignment and ROI are not
                 applied. Results stay only in this session; no media is uploaded.
               </p>
-              {state.descriptions.map((description) => (
-                <p key={description} className="mt-2 break-words text-text-muted">
+              {state.descriptions.map((description, index) => (
+                <p key={`${index}:${description}`} className="mt-2 break-words text-text-muted">
                   {description}
                 </p>
               ))}

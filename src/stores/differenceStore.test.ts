@@ -7,8 +7,8 @@ class FakeWorker {
   onmessage: ((event: MessageEvent<DifferenceWorkerMessage>) => void) | null = null
   onerror: ((event: ErrorEvent) => void) | null = null
   onmessageerror: (() => void) | null = null
-  terminate = vi.fn()
-  postMessage = vi.fn()
+  terminate = vi.fn<() => void>()
+  postMessage = vi.fn<(message: unknown) => void>()
   constructor() {
     FakeWorker.instances.push(this)
   }

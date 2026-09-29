@@ -106,8 +106,8 @@ describe('timeline difference timing', () => {
     expect(comparisonBoundaries(window, frames, frames)).toEqual([0, 0.1, 0.3, 1])
   })
   it('rejects invalid timing rather than inventing a nominal frame rate', () => {
-    expect(() => pairWindows([clip({ speed: 0 })], [], 1)).toThrow()
-    expect(() => normalizeFrameTimings([], 1)).toThrow()
+    expect(() => pairWindows([clip({ speed: 0 })], [], 1)).toThrow('Invalid timing for clip')
+    expect(() => normalizeFrameTimings([], 1)).toThrow('No usable video frame timestamps')
     expect(() =>
       normalizeFrameTimings(
         [
@@ -116,7 +116,7 @@ describe('timeline difference timing', () => {
         ],
         1,
       ),
-    ).toThrow()
+    ).toThrow('Ambiguous or invalid video frame timestamps')
   })
 })
 describe('difference intervals and viewport', () => {
