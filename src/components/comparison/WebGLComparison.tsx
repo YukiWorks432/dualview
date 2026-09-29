@@ -1055,7 +1055,7 @@ export function WebGLComparison() {
             <div className="flex justify-between gap-4">
               <span className="text-gray-400">SSIM:</span>
               <span
-                className={`font-medium ${webglAnalysisMetrics.ssim > 0.95 ? 'text-green-400' : webglAnalysisMetrics.ssim > 0.8 ? 'text-yellow-400' : 'text-red-400'}`}
+                className={`font-mono ${webglAnalysisMetrics.ssim > 0.95 ? 'text-green-400' : webglAnalysisMetrics.ssim > 0.8 ? 'text-yellow-400' : 'text-red-400'}`}
               >
                 {webglAnalysisMetrics.ssim.toFixed(4)}
               </span>
@@ -1063,7 +1063,7 @@ export function WebGLComparison() {
             <div className="flex justify-between gap-4">
               <span className="text-gray-400">Delta E:</span>
               <span
-                className={`font-medium ${webglAnalysisMetrics.deltaE < 1 ? 'text-green-400' : webglAnalysisMetrics.deltaE < 5 ? 'text-yellow-400' : 'text-red-400'}`}
+                className={`font-mono ${webglAnalysisMetrics.deltaE < 1 ? 'text-green-400' : webglAnalysisMetrics.deltaE < 5 ? 'text-yellow-400' : 'text-red-400'}`}
               >
                 {webglAnalysisMetrics.deltaE.toFixed(2)}
               </span>
@@ -1071,20 +1071,20 @@ export function WebGLComparison() {
             <div className="flex justify-between gap-4">
               <span className="text-gray-400">Diff Pixels:</span>
               <span
-                className={`font-medium ${webglAnalysisMetrics.diffPixelPercent < 1 ? 'text-green-400' : webglAnalysisMetrics.diffPixelPercent < 10 ? 'text-yellow-400' : 'text-red-400'}`}
+                className={`font-mono ${webglAnalysisMetrics.diffPixelPercent < 1 ? 'text-green-400' : webglAnalysisMetrics.diffPixelPercent < 10 ? 'text-yellow-400' : 'text-red-400'}`}
               >
                 {webglAnalysisMetrics.diffPixelPercent.toFixed(1)}%
               </span>
             </div>
             <div className="flex justify-between gap-4">
               <span className="text-gray-400">Peak Diff:</span>
-              <span className="text-gray-200 font-medium">
+              <span className="font-mono text-gray-200">
                 {webglAnalysisMetrics.peakDifference.toFixed(0)}
               </span>
             </div>
             <div className="flex justify-between gap-4">
               <span className="text-gray-400">Mean Diff:</span>
-              <span className="text-gray-200 font-medium">
+              <span className="font-mono text-gray-200">
                 {webglAnalysisMetrics.meanDifference.toFixed(1)}
               </span>
             </div>
@@ -1092,7 +1092,7 @@ export function WebGLComparison() {
             <div className="border-t border-border mt-2 pt-2">
               <div className="flex justify-between gap-4">
                 <span className="text-gray-400">Pass:</span>
-                <span className="text-green-400 font-medium">
+                <span className="font-mono text-green-400">
                   {webglAnalysisMetrics.passPixelCount.toLocaleString()} (
                   {(
                     (webglAnalysisMetrics.passPixelCount / webglAnalysisMetrics.totalPixelCount) *
@@ -1103,7 +1103,7 @@ export function WebGLComparison() {
               </div>
               <div className="flex justify-between gap-4">
                 <span className="text-gray-400">Fail:</span>
-                <span className="text-red-400 font-medium">
+                <span className="font-mono text-red-400">
                   {webglAnalysisMetrics.failPixelCount.toLocaleString()} (
                   {(
                     (webglAnalysisMetrics.failPixelCount / webglAnalysisMetrics.totalPixelCount) *
