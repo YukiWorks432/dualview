@@ -53,6 +53,10 @@ export const VideoSurface = forwardRef<VideoFrameElement, VideoSurfaceProps>(fun
       if (node && node.dataset.frameReady === undefined) {
         node.dataset.frameReady = 'false'
       }
+      if (node) {
+        delete node.dataset.presentedMediaTime
+        delete node.dataset.presentedFrames
+      }
       assignRef(forwardedRef, node)
     },
     [forwardedRef],
@@ -72,6 +76,8 @@ export const VideoSurface = forwardRef<VideoFrameElement, VideoSurfaceProps>(fun
   const handleNativeFramePending = useCallback(
     (event: SyntheticEvent<HTMLVideoElement>) => {
       event.currentTarget.dataset.frameReady = 'false'
+      delete event.currentTarget.dataset.presentedMediaTime
+      delete event.currentTarget.dataset.presentedFrames
       onFrameReady?.()
     },
     [onFrameReady],
@@ -105,6 +111,7 @@ export const VideoSurface = forwardRef<VideoFrameElement, VideoSurfaceProps>(fun
       style={style}
       data-track={dataTrack}
       onClick={onClick}
+      onLoadStart={handleNativeFramePending}
       onLoadedData={handleNativeFrameReady}
       onSeeking={handleNativeFramePending}
       onSeeked={handleNativeFrameReady}

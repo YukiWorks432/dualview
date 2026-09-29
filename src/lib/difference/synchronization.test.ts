@@ -1,6 +1,43 @@
 import { describe, expect, it } from 'vitest'
 
-import { areFrameRangesSynchronized, getPlaybackDifferenceExpiryDelay } from './synchronization'
+import {
+  areFrameRangesSynchronized,
+  getConsecutivePresentedFrameRange,
+  getPlaybackDifferenceExpiryDelay,
+} from './synchronization'
+
+describe('consecutive presented frame ranges', () => {
+  it('uses only adjacent presented frames to infer a displayed interval', () => {
+    expect(
+      getConsecutivePresentedFrameRange(
+        { timelineTime: 5.0667, presentedFrames: 12 },
+        { timelineTime: 5.1, presentedFrames: 13 },
+      ),
+    ).toEqual({ startTime: 5.0667, endTime: 5.1 })
+
+    expect(
+      getConsecutivePresentedFrameRange(
+        { timelineTime: 5.0333, presentedFrames: 12 },
+        { timelineTime: 5.1, presentedFrames: 14 },
+      ),
+    ).toBeNull()
+  })
+
+  it('does not infer a positive interval from invalid or repeated metadata', () => {
+    expect(
+      getConsecutivePresentedFrameRange(
+        { timelineTime: 5, presentedFrames: 12 },
+        { timelineTime: 5, presentedFrames: 13 },
+      ),
+    ).toBeNull()
+    expect(
+      getConsecutivePresentedFrameRange(
+        { timelineTime: 5, presentedFrames: Number.NaN },
+        { timelineTime: 5.0333, presentedFrames: 13 },
+      ),
+    ).toBeNull()
+  })
+})
 
 describe('difference frame synchronization', () => {
   it('accepts overlapping frames from different frame rates at the requested time', () => {
@@ -62,16 +99,44 @@ describe('difference frame synchronization', () => {
     ).toBe(false)
   })
 
-  it('allows a small timestamp gap between paused frames', () => {
+  it('rejects distinct paused presentation timestamps even when both are near the requested time', () => {
     expect(
       areFrameRangesSynchronized(
         [
-          { startTime: 5, endTime: 5 },
+          { startTime: 5.015, endTime: 5.015 },
+          { startTime: 5.03, endTime: 5.03 },
+        ],
+        5.022,
+        0.02,
+        0.001,
+      ),
+    ).toBe(false)
+  })
+
+  it('accepts paused frames with the same presentation timestamp', () => {
+    expect(
+      areFrameRangesSynchronized(
+        [
+          { startTime: 5.015, endTime: 5.015 },
           { startTime: 5.015, endTime: 5.015 },
         ],
-        5.0075,
+        5.015,
         0.02,
-        0.02,
+        0.001,
+      ),
+    ).toBe(true)
+  })
+
+  it('accepts the same presented frame at the end of its hold interval', () => {
+    expect(
+      areFrameRangesSynchronized(
+        [
+          { startTime: 5.9333, endTime: 5.9333 },
+          { startTime: 5.9333, endTime: 5.9333 },
+        ],
+        5.9666,
+        0.05,
+        0.001,
       ),
     ).toBe(true)
   })

@@ -1,5 +1,26 @@
 import type { TimelineFrameRange } from '../media/timeline'
 
+export function getConsecutivePresentedFrameRange(
+  previous: { timelineTime: number; presentedFrames: number },
+  next: { timelineTime: number; presentedFrames: number },
+): TimelineFrameRange | null {
+  if (
+    !Number.isFinite(previous.timelineTime) ||
+    !Number.isFinite(next.timelineTime) ||
+    !Number.isSafeInteger(previous.presentedFrames) ||
+    !Number.isSafeInteger(next.presentedFrames) ||
+    next.presentedFrames !== previous.presentedFrames + 1 ||
+    next.timelineTime === previous.timelineTime
+  ) {
+    return null
+  }
+
+  return {
+    startTime: Math.min(previous.timelineTime, next.timelineTime),
+    endTime: Math.max(previous.timelineTime, next.timelineTime),
+  }
+}
+
 export function areFrameRangesSynchronized(
   frameRanges: readonly (TimelineFrameRange | null)[],
   expectedTime: number,

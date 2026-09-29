@@ -9,6 +9,7 @@ import {
 } from '../lib/difference/settings'
 import {
   areFrameRangesSynchronized,
+  getConsecutivePresentedFrameRange,
   getPlaybackDifferenceExpiryDelay,
 } from '../lib/difference/synchronization'
 import type {
@@ -31,9 +32,12 @@ import type { TimelineClip } from '../types'
 
 const PLAYBACK_ANALYSIS_INTERVAL_MS = 200
 const PLAYBACK_SYNC_TOLERANCE_SECONDS = 0.08
-const PLAYBACK_FRAME_PAIR_TOLERANCE_SECONDS = 0.001
+// Presented timestamps can lead the media element clock while native playback advances.
+const PLAYBACK_PRESENTED_FRAME_SYNC_TOLERANCE_SECONDS = 0.2
+const FRAME_POINT_PAIR_TOLERANCE_SECONDS = 0.001
 const PLAYBACK_MIN_FRAME_OVERLAP_SECONDS = 0.001
-const PAUSED_SYNC_TOLERANCE_SECONDS = 0.02
+// The decoded presentation timestamp can be one held frame behind the paused timeline position.
+const PAUSED_SYNC_TOLERANCE_SECONDS = 0.05
 const PLAYBACK_RESULT_TTL_MS = 500
 const FULL_RESOLUTION_MAX_PIXELS = 12_000_000
 const MAX_REGIONS = 80
@@ -102,6 +106,14 @@ function readCanvasTimelineRange(source: HTMLCanvasElement): TimelineFrameRange 
   return { startTime, endTime }
 }
 
+function readPresentedVideoFrame(video: HTMLVideoElement) {
+  const mediaTime = Number(video.dataset.presentedMediaTime)
+  const presentedFrames = Number(video.dataset.presentedFrames)
+  if (!Number.isFinite(mediaTime) || !Number.isSafeInteger(presentedFrames)) return null
+
+  return { mediaTime, presentedFrames }
+}
+
 function distanceFromTimeToRange(time: number, range: TimelineFrameRange): number {
   if (time < range.startTime) return range.startTime - time
   if (time > range.endTime) return time - range.endTime
@@ -111,7 +123,6 @@ function distanceFromTimeToRange(time: number, range: TimelineFrameRange): numbe
 function waitForPresentedVideoSnapshot(
   video: HTMLVideoElement,
   clip: TimelineClip,
-  timelineTime: number,
   canvas: HTMLCanvasElement,
   width: number,
   height: number,
@@ -123,13 +134,21 @@ function waitForPresentedVideoSnapshot(
     let settled = false
     let callbackId: number | undefined
     let timeoutId: number | undefined
-    let capturedSnapshot: { imageData: ImageData; timelineTime: number } | null = null
+    let capturedSnapshot: {
+      imageData: ImageData
+      timelineTime: number
+      presentedFrames: number
+    } | null = null
+    const handleSeeking = () => {
+      capturedSnapshot = null
+    }
 
     const finish = (snapshot: CapturedSource | null) => {
       if (settled) return
       settled = true
       if (timeoutId !== undefined) window.clearTimeout(timeoutId)
       if (callbackId !== undefined) video.cancelVideoFrameCallback(callbackId)
+      video.removeEventListener('seeking', handleSeeking)
       resolve(snapshot)
     }
 
@@ -145,21 +164,26 @@ function waitForPresentedVideoSnapshot(
           finish(null)
           return
         }
+        if (video.seeking) {
+          capturedSnapshot = null
+          requestNextFrame()
+          return
+        }
 
         const presentedTimelineTime = calculateTimelineTime(metadata.mediaTime, clip)
+        const currentVideoTimelineTime = calculateTimelineTime(video.currentTime, clip)
         if (capturedSnapshot && !video.seeking && presentedTimelineTime !== null) {
-          if (Math.abs(presentedTimelineTime - capturedSnapshot.timelineTime) > 0.000001) {
-            finish({
-              imageData: capturedSnapshot.imageData,
-              timelineRange: {
-                startTime: Math.min(capturedSnapshot.timelineTime, presentedTimelineTime),
-                endTime: Math.max(capturedSnapshot.timelineTime, presentedTimelineTime),
-              },
-            })
-            return
-          }
-
-          requestNextFrame()
+          const consecutiveRange = getConsecutivePresentedFrameRange(capturedSnapshot, {
+            timelineTime: presentedTimelineTime,
+            presentedFrames: metadata.presentedFrames,
+          })
+          finish({
+            imageData: capturedSnapshot.imageData,
+            timelineRange: consecutiveRange ?? {
+              startTime: capturedSnapshot.timelineTime,
+              endTime: capturedSnapshot.timelineTime,
+            },
+          })
           return
         }
 
@@ -167,11 +191,17 @@ function waitForPresentedVideoSnapshot(
           isVisualFrameReady(video) &&
           !video.seeking &&
           presentedTimelineTime !== null &&
-          Math.abs(presentedTimelineTime - timelineTime) <= PLAYBACK_SYNC_TOLERANCE_SECONDS
+          currentVideoTimelineTime !== null &&
+          Math.abs(presentedTimelineTime - currentVideoTimelineTime) <=
+            PLAYBACK_PRESENTED_FRAME_SYNC_TOLERANCE_SECONDS
         ) {
           const imageData = captureSource(video, canvas, width, height)
           if (imageData) {
-            capturedSnapshot = { imageData, timelineTime: presentedTimelineTime }
+            capturedSnapshot = {
+              imageData,
+              timelineTime: presentedTimelineTime,
+              presentedFrames: metadata.presentedFrames,
+            }
             requestNextFrame()
             return
           }
@@ -197,6 +227,7 @@ function waitForPresentedVideoSnapshot(
       },
       Math.max(0, deadline - performance.now()),
     )
+    video.addEventListener('seeking', handleSeeking)
     requestNextFrame()
   })
 }
@@ -225,15 +256,7 @@ async function captureSourceAtTime(
     typeof source.requestVideoFrameCallback === 'function' &&
     typeof source.cancelVideoFrameCallback === 'function'
   ) {
-    return waitForPresentedVideoSnapshot(
-      source,
-      clip,
-      timelineTime,
-      canvas,
-      width,
-      height,
-      isCurrent,
-    )
+    return waitForPresentedVideoSnapshot(source, clip, canvas, width, height, isCurrent)
   }
 
   const tolerance = isPlaying ? PLAYBACK_SYNC_TOLERANCE_SECONDS : PAUSED_SYNC_TOLERANCE_SECONDS
@@ -245,17 +268,23 @@ async function captureSourceAtTime(
     if (isVisualFrameReady(source)) {
       if (source instanceof HTMLVideoElement) {
         if (!source.seeking) {
-          const observedTimelineTime = calculateTimelineTime(source.currentTime, clip)
+          const observedFrame = readPresentedVideoFrame(source)
+          const observedTimelineTime = observedFrame
+            ? calculateTimelineTime(observedFrame.mediaTime, clip)
+            : null
           if (
+            observedFrame &&
             observedTimelineTime !== null &&
             Math.abs(observedTimelineTime - timelineTime) <= tolerance
           ) {
             const imageData = captureSource(source, canvas, width, height)
-            const afterCaptureTimelineTime = calculateTimelineTime(source.currentTime, clip)
+            const afterCaptureFrame = readPresentedVideoFrame(source)
             if (
               imageData &&
-              afterCaptureTimelineTime !== null &&
-              Math.abs(afterCaptureTimelineTime - observedTimelineTime) <= tolerance / 2
+              !source.seeking &&
+              afterCaptureFrame &&
+              afterCaptureFrame.mediaTime === observedFrame.mediaTime &&
+              afterCaptureFrame.presentedFrames === observedFrame.presentedFrames
             ) {
               return {
                 imageData,
@@ -609,17 +638,22 @@ export function useDifferenceRegions({
 
         if (!isCurrent()) return
 
+        const presentedTimelineTimeA =
+          isPlaying && sourceA instanceof HTMLVideoElement
+            ? calculateTimelineTime(sourceA.currentTime, clipA)
+            : null
+        const synchronizationTime = presentedTimelineTimeA ?? sampleTime
         const expectedFrameTolerance = isPlaying
-          ? PLAYBACK_SYNC_TOLERANCE_SECONDS
+          ? PLAYBACK_PRESENTED_FRAME_SYNC_TOLERANCE_SECONDS
           : PAUSED_SYNC_TOLERANCE_SECONDS
         if (
           !capturedA ||
           !capturedB ||
           !areFrameRangesSynchronized(
             [capturedA.timelineRange, capturedB.timelineRange],
-            sampleTime,
+            synchronizationTime,
             expectedFrameTolerance,
-            isPlaying ? PLAYBACK_FRAME_PAIR_TOLERANCE_SECONDS : PAUSED_SYNC_TOLERANCE_SECONDS,
+            FRAME_POINT_PAIR_TOLERANCE_SECONDS,
             isPlaying ? PLAYBACK_MIN_FRAME_OVERLAP_SECONDS : 0,
           )
         ) {

@@ -138,7 +138,11 @@ export function useOptimizedClipSync(
     if (hasRVFC) {
       // Use requestVideoFrameCallback for frame-accurate sync
       const syncState = syncStateRef.current
-      const onFrame = () => {
+      const onFrame = (_now: number, metadata: VideoFrameCallbackMetadata) => {
+        if (!video.seeking && video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+          video.dataset.presentedMediaTime = String(metadata.mediaTime)
+          video.dataset.presentedFrames = String(metadata.presentedFrames)
+        }
         checkAndSync()
         syncState.frameCallbackId = video.requestVideoFrameCallback(onFrame)
       }
