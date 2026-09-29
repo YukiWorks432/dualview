@@ -344,6 +344,18 @@ a {
   min-width: 28px;
 }
 
+button > svg {
+  scale: 1;
+  will-change: scale;
+  transition-property: color, opacity, scale, transform;
+  transition-duration: 150ms;
+  transition-timing-function: ease-out;
+}
+
+button:not(:disabled):hover > svg {
+  scale: 1.25;
+}
+
 :focus-visible {
   outline: 2px solid var(--color-ring);
   outline-offset: 2px;
