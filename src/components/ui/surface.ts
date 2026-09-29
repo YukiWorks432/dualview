@@ -29,7 +29,11 @@ export interface SurfaceProviderProps {
 }
 
 export function SurfaceProvider({ value = SURFACE_MIN_LEVEL, children }: SurfaceProviderProps) {
-  return React.createElement(SurfaceProviderComponent, { value: clampSurfaceLevel(value) }, children)
+  return React.createElement(
+    SurfaceProviderComponent,
+    { value: clampSurfaceLevel(value) },
+    children,
+  )
 }
 
 type SurfaceStyle = CSSProperties & {

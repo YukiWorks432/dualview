@@ -21,9 +21,7 @@ describe('ClipWaveform', () => {
       strokeStyle: '',
     } as unknown as CanvasRenderingContext2D
     const canvas = {
-      getBoundingClientRect: vi.fn<() => DOMRect>(
-        () => ({ height: 20, width: 100 }) as DOMRect,
-      ),
+      getBoundingClientRect: vi.fn<() => DOMRect>(() => ({ height: 20, width: 100 }) as DOMRect),
       getContext: vi.fn<(contextId: '2d') => CanvasRenderingContext2D>(() => context),
     } as unknown as HTMLCanvasElement
 

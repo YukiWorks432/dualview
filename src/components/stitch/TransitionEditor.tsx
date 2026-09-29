@@ -6,9 +6,9 @@
 import { Sparkles, Play, Pause, X, Clock, Zap, Layers, Slice } from 'lucide-react'
 import { useState, useCallback, useRef, useEffect } from 'react'
 
-import type { ClipTransition } from '../../types'
 import { EASE_PRESETS, evaluateEaseCurve } from '../../lib/stitch/easeCurve'
 import { getEffectsByCategory, TRANSITION_EFFECTS } from '../../lib/stitch/transitions'
+import type { ClipTransition } from '../../types'
 
 // Re-export types for convenience
 export type { ClipTransition } from '../../types'
