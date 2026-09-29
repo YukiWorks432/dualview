@@ -280,7 +280,7 @@ export function ScopesPanel() {
             {/* Close button */}
             <button
               onClick={toggleScopes}
-              className="surface-control ui-radius-md border p-1.5 text-muted-foreground hover:text-red-400 transition-colors"
+              className="surface-control ui-radius-md border p-1.5 text-muted-foreground hover:text-destructive transition-colors"
               title="Close Scopes"
             >
               <X size={14} />
@@ -293,14 +293,14 @@ export function ScopesPanel() {
           <div className="surface-control px-4 py-2 border-b border-border flex items-center gap-6">
             {/* Intensity slider */}
             <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-400">Intensity:</span>
+              <span className="text-xs text-muted-foreground">Intensity:</span>
               <button
                 onClick={() => setScopeIntensity(scopesSettings.scopeIntensity - 0.25)}
                 className="surface-control ui-radius-sm border p-1 text-muted-foreground hover:text-foreground"
               >
                 <Minus size={12} />
               </button>
-              <span className="text-xs text-white w-8 text-center">
+              <span className="text-xs text-foreground w-8 text-center">
                 {scopesSettings.scopeIntensity.toFixed(2)}
               </span>
               <button
@@ -314,7 +314,7 @@ export function ScopesPanel() {
             {/* Vectorscope zoom */}
             {scopesSettings.showVectorscope && (
               <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-400">V-Scope Zoom:</span>
+                <span className="text-xs text-muted-foreground">V-Scope Zoom:</span>
                 <select
                   value={scopesSettings.vectorscopeZoom}
                   onChange={(e) => setVectorscopeZoom(Number(e.target.value))}
@@ -330,7 +330,7 @@ export function ScopesPanel() {
 
             {/* Skin tone toggle */}
             {scopesSettings.showVectorscope && (
-              <label className="flex items-center gap-2 text-xs text-gray-400 cursor-pointer">
+              <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
                 <input
                   type="checkbox"
                   checked={scopesSettings.showSkinToneLine}
@@ -343,7 +343,7 @@ export function ScopesPanel() {
 
             {/* Height slider */}
             <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-400">Height:</span>
+              <span className="text-xs text-muted-foreground">Height:</span>
               <input
                 type="range"
                 min="150"
@@ -353,7 +353,7 @@ export function ScopesPanel() {
                 onChange={(e) => setScopesSettings({ scopeHeight: Number(e.target.value) })}
                 className="w-20"
               />
-              <span className="text-xs text-white w-10">{scopesSettings.scopeHeight}px</span>
+              <span className="text-xs text-foreground w-10">{scopesSettings.scopeHeight}px</span>
             </div>
           </div>
         )}
@@ -367,11 +367,11 @@ export function ScopesPanel() {
             {/* Waveform (SCOPE-001) */}
             {scopesSettings.showWaveform && (
               <div className="flex-shrink-0 flex flex-col" style={{ width: scopeWidth }}>
-                <div className="text-xs text-gray-400 mb-1 px-1 flex items-center justify-between">
+                <div className="text-xs text-muted-foreground mb-1 px-1 flex items-center justify-between">
                   <span>Waveform</span>
-                  <span className="text-gray-500">0-100 IRE</span>
+                  <span className="text-muted-foreground">0-100 IRE</span>
                 </div>
-                <div className="flex-1 bg-black rounded overflow-hidden relative">
+                <div className="ui-radius-md relative flex-1 overflow-hidden bg-black">
                   <ScopeCanvas
                     type="waveform"
                     source={sourceElement}
@@ -383,11 +383,11 @@ export function ScopesPanel() {
                   />
                   {/* IRE labels */}
                   <div className="absolute left-1 top-0 bottom-0 flex flex-col justify-between pointer-events-none">
-                    <span className="text-[10px] text-gray-500">100</span>
-                    <span className="text-[10px] text-gray-500">75</span>
-                    <span className="text-[10px] text-gray-500">50</span>
-                    <span className="text-[10px] text-gray-500">25</span>
-                    <span className="text-[10px] text-gray-500">0</span>
+                    <span className="text-[10px] text-muted-foreground">100</span>
+                    <span className="text-[10px] text-muted-foreground">75</span>
+                    <span className="text-[10px] text-muted-foreground">50</span>
+                    <span className="text-[10px] text-muted-foreground">25</span>
+                    <span className="text-[10px] text-muted-foreground">0</span>
                   </div>
                 </div>
               </div>
@@ -396,11 +396,11 @@ export function ScopesPanel() {
             {/* Vectorscope (SCOPE-002) */}
             {scopesSettings.showVectorscope && (
               <div className="flex-shrink-0 flex flex-col" style={{ width: scopeHeight + 20 }}>
-                <div className="text-xs text-gray-400 mb-1 px-1 flex items-center justify-between">
+                <div className="text-xs text-muted-foreground mb-1 px-1 flex items-center justify-between">
                   <span>Vectorscope</span>
-                  <span className="text-gray-500">{scopesSettings.vectorscopeZoom}x</span>
+                  <span className="text-muted-foreground">{scopesSettings.vectorscopeZoom}x</span>
                 </div>
-                <div className="flex-1 bg-black rounded overflow-hidden aspect-square">
+                <div className="ui-radius-md aspect-square flex-1 overflow-hidden bg-black">
                   <ScopeCanvas
                     type="vectorscope"
                     source={sourceElement}
@@ -419,7 +419,7 @@ export function ScopesPanel() {
             {/* RGB Parade (SCOPE-003) */}
             {scopesSettings.showParade && (
               <div className="flex-shrink-0 flex flex-col" style={{ width: scopeWidth * 1.2 }}>
-                <div className="text-xs text-gray-400 mb-1 px-1 flex items-center justify-between">
+                <div className="text-xs text-muted-foreground mb-1 px-1 flex items-center justify-between">
                   <span>RGB Parade</span>
                   <div className="flex gap-2 text-[10px]">
                     <span className="text-red-400">R</span>
@@ -427,7 +427,7 @@ export function ScopesPanel() {
                     <span className="text-blue-400">B</span>
                   </div>
                 </div>
-                <div className="flex-1 bg-black rounded overflow-hidden relative">
+                <div className="ui-radius-md relative flex-1 overflow-hidden bg-black">
                   <ScopeCanvas
                     type="parade"
                     source={sourceElement}
@@ -447,11 +447,11 @@ export function ScopesPanel() {
                   />
                   {/* IRE labels */}
                   <div className="absolute left-1 top-0 bottom-0 flex flex-col justify-between pointer-events-none">
-                    <span className="text-[10px] text-gray-500">100</span>
-                    <span className="text-[10px] text-gray-500">75</span>
-                    <span className="text-[10px] text-gray-500">50</span>
-                    <span className="text-[10px] text-gray-500">25</span>
-                    <span className="text-[10px] text-gray-500">0</span>
+                    <span className="text-[10px] text-muted-foreground">100</span>
+                    <span className="text-[10px] text-muted-foreground">75</span>
+                    <span className="text-[10px] text-muted-foreground">50</span>
+                    <span className="text-[10px] text-muted-foreground">25</span>
+                    <span className="text-[10px] text-muted-foreground">0</span>
                   </div>
                 </div>
               </div>
@@ -459,7 +459,7 @@ export function ScopesPanel() {
 
             {/* Empty state */}
             {!selectedMedia && (
-              <div className="flex-1 flex items-center justify-center text-gray-500 text-sm">
+              <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
                 Add media to Track A or B to view scopes
               </div>
             )}
@@ -468,7 +468,7 @@ export function ScopesPanel() {
 
         {/* Collapsed state */}
         {isCollapsed && (
-          <div className="px-4 py-1 text-xs text-gray-500">
+          <div className="px-4 py-1 text-xs text-muted-foreground">
             {activeScopeCount} scope{activeScopeCount !== 1 ? 's' : ''} active | Source:{' '}
             {scopesSettings.scopeSource.toUpperCase()}
           </div>

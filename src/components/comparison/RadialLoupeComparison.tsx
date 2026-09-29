@@ -377,7 +377,7 @@ export function RadialLoupeComparison() {
             e.stopPropagation()
             toggleRadialLoupeLock()
           }}
-          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${radialLoupeSettings.locked ? 'border-accent bg-accent text-white' : 'surface-control text-text-secondary hover:text-text-primary'}`}
+          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${radialLoupeSettings.locked ? 'border-accent bg-accent text-primary-foreground' : 'surface-control text-text-secondary hover:text-text-primary'}`}
           title={radialLoupeSettings.locked ? 'Unlock position' : 'Lock position'}
         >
           {radialLoupeSettings.locked ? <Lock size={16} /> : <Unlock size={16} />}
@@ -389,7 +389,7 @@ export function RadialLoupeComparison() {
             e.stopPropagation()
             setRadialLoupeSettings({ showRectangular: !radialLoupeSettings.showRectangular })
           }}
-          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${radialLoupeSettings.showRectangular ? 'border-accent bg-accent text-white' : 'surface-control text-text-secondary hover:text-text-primary'}`}
+          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${radialLoupeSettings.showRectangular ? 'border-accent bg-accent text-primary-foreground' : 'surface-control text-text-secondary hover:text-text-primary'}`}
           title={
             radialLoupeSettings.showRectangular ? 'Switch to circular' : 'Switch to rectangular'
           }
@@ -403,13 +403,13 @@ export function RadialLoupeComparison() {
             e.stopPropagation()
             setRadialLoupeSettings({ splitMode: !radialLoupeSettings.splitMode })
           }}
-          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${radialLoupeSettings.splitMode ? 'border-accent bg-accent text-white' : 'surface-control text-text-secondary hover:text-text-primary'}`}
+          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${radialLoupeSettings.splitMode ? 'border-accent bg-accent text-primary-foreground' : 'surface-control text-text-secondary hover:text-text-primary'}`}
           title={radialLoupeSettings.splitMode ? 'Normal mode' : 'Split mode (A|B)'}
         >
           <SplitSquareVertical size={16} />
         </button>
 
-        <div className="w-px h-4 bg-gray-600 mx-auto" />
+        <div className="mx-auto h-4 w-px bg-border" />
 
         {/* Magnification controls */}
         <button
@@ -439,21 +439,21 @@ export function RadialLoupeComparison() {
       </ElevatedSurface>
 
       {/* Mode indicator */}
-      <div className="absolute top-4 left-4 bg-black/70 px-3 py-1.5 rounded text-sm">
-        <span className="text-gray-400">Mode:</span>
-        <span className="text-[#cddc39] ml-2 font-medium">Radial Loupe</span>
-        {radialLoupeSettings.splitMode && <span className="text-orange-400 ml-2">(Split)</span>}
+      <div className="surface-control-elevation ui-radius-md absolute top-4 left-4 border border-border/40 bg-surface-alt/85 px-3 py-1.5 text-sm backdrop-blur-sm">
+        <span className="text-muted-foreground">Mode:</span>
+        <span className="ml-2 font-medium text-primary">Radial Loupe</span>
+        {radialLoupeSettings.splitMode && <span className="ml-2 text-primary">(Split)</span>}
       </div>
 
       {/* Settings display */}
-      <div className="absolute bottom-4 left-4 bg-black/70 px-3 py-1.5 rounded text-xs text-gray-400">
+      <div className="surface-control-elevation ui-radius-md absolute bottom-4 left-4 border border-border/40 bg-surface-alt/85 px-3 py-1.5 text-xs text-muted-foreground backdrop-blur-sm">
         Radius: {radialLoupeSettings.radius}px | Zoom: {radialLoupeSettings.magnification}x |
         {radialLoupeSettings.locked ? ' Locked' : ' Click to lock'}
       </div>
 
       {/* Radius slider */}
-      <div className="absolute bottom-4 right-4 bg-black/70 px-3 py-2 rounded">
-        <label className="text-xs text-gray-400 block mb-1">Radius</label>
+      <div className="surface-control-elevation ui-radius-md absolute bottom-4 right-4 border border-border/40 bg-surface-alt/85 px-3 py-2 backdrop-blur-sm">
+        <label className="mb-1 block text-xs text-muted-foreground">Radius</label>
         <input
           type="range"
           min={50}

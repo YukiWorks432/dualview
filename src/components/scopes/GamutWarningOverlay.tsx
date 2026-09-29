@@ -377,9 +377,9 @@ export function GamutWarningOverlay({
             <div className="space-y-2">
               {/* Source A stats */}
               <div className="flex items-center justify-between">
-                <span className="text-orange-400 font-medium">Source A:</span>
+                <span className="text-compare-a font-medium">Source A:</span>
                 {statsA ? (
-                  <span className={statsA.percentage > 1 ? 'text-red-400' : 'text-green-400'}>
+                  <span className={statsA.percentage > 1 ? 'text-destructive' : 'text-success'}>
                     {statsA.percentage.toFixed(2)}% out of gamut
                   </span>
                 ) : (
@@ -387,9 +387,9 @@ export function GamutWarningOverlay({
                 )}
               </div>
               {statsA && (
-                <div className="w-full bg-surface-alt rounded h-2 overflow-hidden">
+                <div className="ui-radius-sm h-2 w-full overflow-hidden bg-surface-alt">
                   <div
-                    className="h-full bg-red-500 transition-all"
+                    className="h-full bg-destructive transition-all"
                     style={{ width: `${Math.min(statsA.percentage, 100)}%` }}
                   />
                 </div>
@@ -397,9 +397,9 @@ export function GamutWarningOverlay({
 
               {/* Source B stats */}
               <div className="flex items-center justify-between mt-3">
-                <span className="text-lime-400 font-medium">Source B:</span>
+                <span className="text-compare-b font-medium">Source B:</span>
                 {statsB ? (
-                  <span className={statsB.percentage > 1 ? 'text-red-400' : 'text-green-400'}>
+                  <span className={statsB.percentage > 1 ? 'text-destructive' : 'text-success'}>
                     {statsB.percentage.toFixed(2)}% out of gamut
                   </span>
                 ) : (
@@ -407,9 +407,9 @@ export function GamutWarningOverlay({
                 )}
               </div>
               {statsB && (
-                <div className="w-full bg-surface-alt rounded h-2 overflow-hidden">
+                <div className="ui-radius-sm h-2 w-full overflow-hidden bg-surface-alt">
                   <div
-                    className="h-full bg-red-500 transition-all"
+                    className="h-full bg-destructive transition-all"
                     style={{ width: `${Math.min(statsB.percentage, 100)}%` }}
                   />
                 </div>
@@ -437,7 +437,7 @@ export function GamutWarningOverlay({
         {/* Preview A */}
         {statsA && (
           <div className="bg-black/50 rounded overflow-hidden">
-            <div className="text-[10px] text-orange-400 text-center py-0.5 bg-black/70">A</div>
+            <div className="text-[10px] text-compare-a text-center py-0.5 bg-black/70">A</div>
             <canvas
               className="w-[160px] h-[120px]"
               style={{ opacity: overlayOpacity }}
@@ -457,7 +457,7 @@ export function GamutWarningOverlay({
         {/* Preview B */}
         {statsB && (
           <div className="bg-black/50 rounded overflow-hidden">
-            <div className="text-[10px] text-lime-400 text-center py-0.5 bg-black/70">B</div>
+            <div className="text-[10px] text-compare-b text-center py-0.5 bg-black/70">B</div>
             <canvas
               className="w-[160px] h-[120px]"
               style={{ opacity: overlayOpacity }}
