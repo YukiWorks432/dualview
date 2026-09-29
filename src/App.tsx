@@ -11,6 +11,7 @@ import { KeyboardShortcutsHelp } from './components/ui/KeyboardShortcutsHelp'
 import { getComparisonModeByKeyboardCode } from './config/comparisonModes'
 import { useKeyboardShortcutsHelp } from './hooks/useKeyboardShortcutsHelp'
 import { useTimelineDiffLifecycle } from './hooks/useTimelineDiff'
+import { detachFile } from './lib/media/detachFile'
 import { isSupportedMediaFile } from './lib/media/fileTypes'
 import { captureCanvasScreenshot, downloadBlob } from './lib/screenshotExport'
 import { useHistoryStore } from './stores/historyStore'
@@ -281,6 +282,9 @@ export default function App() {
     seek,
     currentTime,
     duration,
+    setLoopIn,
+    setLoopOut,
+    clearLoop,
     zoomIn,
     zoomOut,
     toggleMetrics,
@@ -310,7 +314,7 @@ export default function App() {
       for (let i = 0; i < files.length; i++) {
         const file = files[i]
         if (isSupportedMediaFile(file)) {
-          const mediaFile = await addFile(file)
+          const mediaFile = await addFile(await detachFile(file))
 
           // Auto-add to timeline (respecting accepted types)
           const trackA = tracks.find((t) => t.type === 'a')

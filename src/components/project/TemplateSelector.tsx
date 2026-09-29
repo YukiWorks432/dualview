@@ -90,7 +90,10 @@ export function TemplateSelector({ isOpen, onClose, onApplyTemplate }: TemplateS
   }, [])
 
   // Get templates - re-fetch when templateVersion changes
-  const allTemplates = useMemo(() => getAllTemplates(), [templateVersion])
+  const allTemplates = useMemo(() => {
+    void templateVersion
+    return getAllTemplates()
+  }, [templateVersion])
 
   const filteredTemplates = useMemo(() => {
     if (selectedCategory === 'all') return allTemplates

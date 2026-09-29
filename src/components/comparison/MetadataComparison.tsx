@@ -156,18 +156,28 @@ export function MetadataComparison({ mediaA, mediaB, isOpen, onClose }: Metadata
   )
 
   useEffect(() => {
-    if (mediaA) {
-      extractMetadata(mediaA).then(setMetadataA)
-    } else {
-      setMetadataA(null)
+    let cancelled = false
+    const request = mediaA ? extractMetadata(mediaA) : Promise.resolve(null)
+
+    void request.then((metadata) => {
+      if (!cancelled) setMetadataA(metadata)
+    })
+
+    return () => {
+      cancelled = true
     }
   }, [mediaA])
 
   useEffect(() => {
-    if (mediaB) {
-      extractMetadata(mediaB).then(setMetadataB)
-    } else {
-      setMetadataB(null)
+    let cancelled = false
+    const request = mediaB ? extractMetadata(mediaB) : Promise.resolve(null)
+
+    void request.then((metadata) => {
+      if (!cancelled) setMetadataB(metadata)
+    })
+
+    return () => {
+      cancelled = true
     }
   }, [mediaB])
 

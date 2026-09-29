@@ -23,13 +23,14 @@ import {
 } from 'lucide-react'
 import { useState, useCallback, useRef, useEffect } from 'react'
 
+import { EASE_PRESETS } from '../../lib/stitch/easeCurve'
+import { DEFAULT_SPEED_RAMP } from '../../lib/stitch/speedRamp'
+import { DEFAULT_TRANSITION } from '../../lib/stitch/transitions'
 import { useMediaStore } from '../../stores/mediaStore'
-import { EaseCurveEditor, EASE_PRESETS } from './EaseCurveEditor'
-import type { EaseCurve } from './EaseCurveEditor'
-import { SpeedRampEditor, DEFAULT_SPEED_RAMP } from './SpeedRampEditor'
-import type { SpeedRamp } from './SpeedRampEditor'
-import { TransitionEditor, DEFAULT_TRANSITION } from './TransitionEditor'
-import type { ClipTransition } from './TransitionEditor'
+import type { ClipTransition, EaseCurve, SpeedRamp } from '../../types'
+import { EaseCurveEditor } from './EaseCurveEditor'
+import { SpeedRampEditor } from './SpeedRampEditor'
+import { TransitionEditor } from './TransitionEditor'
 
 interface StitchClip {
   id: string

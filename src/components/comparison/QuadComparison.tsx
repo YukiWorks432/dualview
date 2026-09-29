@@ -48,7 +48,8 @@ function Quadrant({
   const { getFile } = useMediaStore()
   const { tracks } = useTimelineStore()
   const { currentTime } = usePlaybackStore()
-  const dropZone = useDropZone({ trackType: index < 2 ? 'a' : 'b' })
+  const { isDragOver, fileInputRef, openFileDialog, handleFileInputChange, dropZoneProps } =
+    useDropZone({ trackType: index < 2 ? 'a' : 'b' })
 
   // Get media file
   const media = mediaId ? getFile(mediaId) : null
@@ -78,16 +79,16 @@ function Quadrant({
       className={cn(
         'relative overflow-hidden border border-border bg-surface transition-all duration-300',
         isExpanded && 'col-span-2 row-span-2',
-        dropZone.isDragOver && 'ring-2 ring-inset ring-accent bg-accent/10',
+        isDragOver && 'ring-2 ring-inset ring-accent bg-accent/10',
       )}
-      {...dropZone.dropZoneProps}
+      {...dropZoneProps}
     >
       <input
-        ref={dropZone.fileInputRef}
+        ref={fileInputRef}
         type="file"
         accept="video/*,.mov,.mkv,image/*"
         className="hidden"
-        onChange={dropZone.handleFileInputChange}
+        onChange={handleFileInputChange}
       />
 
       <div className="w-full h-full" style={transformStyle}>
@@ -116,14 +117,14 @@ function Quadrant({
           <div
             className={cn(
               'w-full h-full flex flex-col items-center justify-center text-text-muted bg-surface gap-2',
-              dropZone.isDragOver && 'bg-accent/20 text-accent',
+              isDragOver && 'bg-accent/20 text-accent',
             )}
           >
             <button
-              onClick={() => dropZone.openFileDialog()}
+              onClick={() => openFileDialog()}
               className="surface-control surface-control-elevation ui-radius-lg border-2 border-dashed border-current p-3 transition-colors hover:bg-accent/10"
             >
-              <Upload className={cn('w-6 h-6', dropZone.isDragOver && 'animate-bounce')} />
+              <Upload className={cn('w-6 h-6', isDragOver && 'animate-bounce')} />
             </button>
             <span className="text-xs">Slot {index + 1}</span>
           </div>

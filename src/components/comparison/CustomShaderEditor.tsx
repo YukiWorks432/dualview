@@ -16,7 +16,7 @@ import {
   Copy,
   Trash2,
 } from 'lucide-react'
-import { useState, useCallback, useEffect, useRef } from 'react'
+import { useState, useCallback, useRef } from 'react'
 
 import { COMPARISON_COMMON } from '../../lib/webgl/comparison-shaders/common'
 import { ElevatedSurface } from '../ui'
@@ -36,6 +36,16 @@ interface CustomShaderEditorProps {
 }
 
 const STORAGE_KEY = 'dualview-custom-shaders'
+
+function loadSavedShaders(): CustomShader[] {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY)
+    return stored ? JSON.parse(stored) : []
+  } catch (error) {
+    console.error('Failed to load custom shaders:', error)
+    return []
+  }
+}
 
 // Default starter shader
 const DEFAULT_SHADER = `// Custom comparison shader
@@ -71,7 +81,7 @@ void main() {
 
 export function CustomShaderEditor({ isOpen, onClose, onApplyShader }: CustomShaderEditorProps) {
   const [code, setCode] = useState(DEFAULT_SHADER)
-  const [savedShaders, setSavedShaders] = useState<CustomShader[]>([])
+  const [savedShaders, setSavedShaders] = useState<CustomShader[]>(loadSavedShaders)
   const [currentShaderName, setCurrentShaderName] = useState('Untitled')
   const [currentShaderId, setCurrentShaderId] = useState<string | null>(null)
   const [compileStatus, setCompileStatus] = useState<'idle' | 'success' | 'error'>('idle')
@@ -79,18 +89,6 @@ export function CustomShaderEditor({ isOpen, onClose, onApplyShader }: CustomSha
   const [showSaveDialog, setShowSaveDialog] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const lineNumbersRef = useRef<HTMLDivElement>(null)
-
-  // Load saved shaders
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY)
-      if (stored) {
-        setSavedShaders(JSON.parse(stored))
-      }
-    } catch (e) {
-      console.error('Failed to load custom shaders:', e)
-    }
-  }, [])
 
   // Save shaders to localStorage
   const persistShaders = useCallback((shaders: CustomShader[]) => {

@@ -44,7 +44,7 @@ export function MagnifierLoupe({
       const sourceX = x / rect.width
       const sourceY = y / rect.height
 
-      setPosition({ x, y, sourceX, sourceY })
+      setPosition({ x: e.clientX, y: e.clientY, sourceX, sourceY })
     },
     [containerRef],
   )
@@ -149,11 +149,8 @@ export function MagnifierLoupe({
         <div
           className="fixed pointer-events-none z-50 flex gap-1"
           style={{
-            left: position.x + (containerRef.current?.getBoundingClientRect().left || 0) + 20,
-            top:
-              position.y +
-              (containerRef.current?.getBoundingClientRect().top || 0) -
-              LOUPE_SIZE / 2,
+            left: position.x + 20,
+            top: position.y - LOUPE_SIZE / 2,
           }}
         >
           {/* Loupe A */}
@@ -190,19 +187,4 @@ export function MagnifierLoupe({
       )}
     </>
   )
-}
-
-/**
- * Hook to manage magnifier state
- */
-export function useMagnifier() {
-  const [isEnabled, setIsEnabled] = useState(false)
-
-  const toggle = useCallback(() => setIsEnabled((prev) => !prev), [])
-
-  return {
-    isEnabled,
-    toggle,
-    setEnabled: setIsEnabled,
-  }
 }

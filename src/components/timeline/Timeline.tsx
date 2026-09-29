@@ -37,13 +37,13 @@ import {
   getCachedFilmstrip,
   type FilmstripData,
 } from '../../lib/filmstripExtractor'
+import { MEDIA_DRAG_TYPE, type MediaDragData } from '../../lib/media/dragData'
 import { formatTime, cn } from '../../lib/utils'
 import { useHistoryStore } from '../../stores/historyStore'
 import { useMediaStore } from '../../stores/mediaStore'
 import { usePlaybackStore } from '../../stores/playbackStore'
 import { useTimelineStore } from '../../stores/timelineStore'
 import type { MediaType } from '../../types'
-import { MEDIA_DRAG_TYPE, type MediaDragData } from '../media/MediaLibrary'
 import { Button, ElevatedSurface, IconButton } from '../ui'
 import { ClipContextMenu } from './ClipContextMenu'
 import { TimelineClip } from './TimelineClip'

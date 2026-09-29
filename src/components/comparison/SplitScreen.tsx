@@ -1,7 +1,4 @@
-import { useRef } from 'react'
-
 import { useSyncedZoom } from '../../hooks/useSyncedZoom'
-import type { VideoFrameElement } from '../../lib/media/frameSource'
 import { cn } from '../../lib/utils'
 import { useMediaStore } from '../../stores/mediaStore'
 import { useProjectStore } from '../../stores/projectStore'
@@ -16,11 +13,6 @@ const layoutClasses: Record<SplitLayout, string> = {
 }
 
 export function SplitScreen() {
-  const videoARef = useRef<VideoFrameElement>(null)
-  const videoBRef = useRef<VideoFrameElement>(null)
-  const videoCRef = useRef<VideoFrameElement>(null)
-  const videoDRef = useRef<VideoFrameElement>(null)
-
   const { splitLayout } = useProjectStore()
   const { tracks } = useTimelineStore()
   const { getFile } = useMediaStore()
@@ -39,7 +31,6 @@ export function SplitScreen() {
   const slots = splitLayout === '2x2' ? 4 : 2
   const clipList = [clipA, clipB, null, null].slice(0, slots)
   const mediaList = [mediaA, mediaB, null, null].slice(0, slots)
-  const videoRefs = [videoARef, videoBRef, videoCRef, videoDRef].slice(0, slots)
 
   const transformStyle = getTransformStyle()
 
@@ -70,7 +61,6 @@ export function SplitScreen() {
             {media ? (
               media.type === 'video' ? (
                 <VideoSurface
-                  ref={videoRefs[index]}
                   media={media}
                   clip={clipList[index] ?? null}
                   className="w-full h-full object-contain"

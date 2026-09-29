@@ -29,6 +29,7 @@ import {
 } from 'lucide-react'
 import { useEffect, useRef, useCallback, useState, useMemo } from 'react'
 
+import { detachFile } from '../../lib/media/detachFile'
 import { SUPPORTED_MEDIA_ACCEPT } from '../../lib/media/fileTypes'
 import {
   getVisualFrameDimensions,
@@ -820,7 +821,7 @@ export function WebGLComparison() {
 
       const file = files[0]
       try {
-        const mediaFile = await addFile(file)
+        const mediaFile = await addFile(await detachFile(file))
         // Get fresh track references from the store to avoid stale closures
         const currentTracks = useTimelineStore.getState().tracks
         const track = currentTracks.find((t) => t.type === targetTrack)

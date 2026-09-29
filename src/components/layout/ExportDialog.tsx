@@ -936,11 +936,9 @@ export function ExportDialog({ isOpen, onClose, canvasRef, captureFrame }: Expor
         const muxer = await createAvcMp4Muxer()
 
         // Create video encoder
-        let encodedFrames = 0
         const encoder = new VideoEncoder({
           output: (chunk, meta) => {
             muxer.addChunk(chunk, meta)
-            encodedFrames++
           },
           error: (e) => console.error('VideoEncoder error:', e),
         })

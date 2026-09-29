@@ -67,11 +67,11 @@ function createVideoThumbnail(video: HTMLVideoElement): string | undefined {
 }
 
 async function processFile(file: File): Promise<MediaFile> {
-  const id = generateId()
-  const url = URL.createObjectURL(file)
   const type = getSupportedMediaType(file)
   if (!type) throw new Error('DualView only accepts image and video files')
 
+  const id = generateId()
+  const url = URL.createObjectURL(file)
   const mediaFile: MediaFile = {
     id,
     name: file.name,
@@ -82,72 +82,87 @@ async function processFile(file: File): Promise<MediaFile> {
     processingProgress: 0,
   }
 
-  if (type === 'video') {
-    let probeError: unknown = null
+  try {
+    if (type === 'video') {
+      let probeError: unknown = null
 
-    try {
-      const probe = await probeVideoFile(file)
-      mediaFile.videoCodec = probe.codec ?? undefined
-      mediaFile.playbackBackend = probe.codec === 'prores' ? 'mediabunny' : 'native'
-      mediaFile.hasAlpha = probe.hasAlpha
-      mediaFile.duration = probe.duration
-      mediaFile.width = probe.width
-      mediaFile.height = probe.height
-      mediaFile.thumbnail = probe.thumbnail
+      try {
+        const probe = await probeVideoFile(file)
+        mediaFile.videoCodec = probe.codec ?? undefined
+        mediaFile.playbackBackend = probe.codec === 'prores' ? 'mediabunny' : 'native'
+        mediaFile.hasAlpha = probe.hasAlpha
+        mediaFile.duration = probe.duration
+        mediaFile.width = probe.width
+        mediaFile.height = probe.height
+        mediaFile.thumbnail = probe.thumbnail
 
-      if (probe.codec === 'prores') {
-        if (!probe.decodable) {
-          throw new Error('This ProRes stream could not be decoded')
+        if (probe.codec === 'prores') {
+          if (!probe.decodable) {
+            throw new Error('This ProRes stream could not be decoded')
+          }
+
+          mediaFile.status = 'ready'
+          mediaFile.processingProgress = 100
+          return mediaFile
         }
-
-        mediaFile.status = 'ready'
-        mediaFile.processingProgress = 100
-        return mediaFile
+      } catch (error) {
+        probeError = error
+        console.warn('Mediabunny video probe failed; falling back to native video metadata:', error)
       }
-    } catch (error) {
-      probeError = error
-      console.warn('Mediabunny video probe failed; falling back to native video metadata:', error)
+
+      try {
+        const video = await loadNativeVideo(url)
+        try {
+          mediaFile.playbackBackend = 'native'
+          mediaFile.duration = mediaFile.duration ?? video.duration
+          mediaFile.width = mediaFile.width ?? video.videoWidth
+          mediaFile.height = mediaFile.height ?? video.videoHeight
+          mediaFile.thumbnail = createVideoThumbnail(video)
+        } finally {
+          video.removeAttribute('src')
+          video.load()
+        }
+      } catch (nativeError) {
+        if (probeError instanceof Error) {
+          throw new Error(`${probeError.message}; ${(nativeError as Error).message}`)
+        }
+        throw nativeError
+      }
+    } else {
+      const img = new Image()
+      try {
+        img.src = url
+        await new Promise<void>((resolve, reject) => {
+          img.onload = () => {
+            mediaFile.width = img.naturalWidth
+            mediaFile.height = img.naturalHeight
+
+            const canvas = document.createElement('canvas')
+            canvas.width = 160
+            canvas.height = 90
+            const ctx = canvas.getContext('2d')
+            if (ctx) {
+              ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+              mediaFile.thumbnail = canvas.toDataURL('image/jpeg', 0.7)
+            }
+            resolve()
+          }
+          img.onerror = () => reject(new Error('The browser could not decode this image'))
+        })
+      } finally {
+        img.onload = null
+        img.onerror = null
+        img.src = ''
+      }
     }
 
-    try {
-      const video = await loadNativeVideo(url)
-      mediaFile.playbackBackend = 'native'
-      mediaFile.duration = mediaFile.duration ?? video.duration
-      mediaFile.width = mediaFile.width ?? video.videoWidth
-      mediaFile.height = mediaFile.height ?? video.videoHeight
-      mediaFile.thumbnail = createVideoThumbnail(video)
-    } catch (nativeError) {
-      URL.revokeObjectURL(url)
-      if (probeError instanceof Error) {
-        throw new Error(`${probeError.message}; ${(nativeError as Error).message}`)
-      }
-      throw nativeError
-    }
-  } else {
-    const img = new Image()
-    img.src = url
-    await new Promise<void>((resolve, reject) => {
-      img.onload = () => {
-        mediaFile.width = img.naturalWidth
-        mediaFile.height = img.naturalHeight
-
-        const canvas = document.createElement('canvas')
-        canvas.width = 160
-        canvas.height = 90
-        const ctx = canvas.getContext('2d')
-        if (ctx) {
-          ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
-          mediaFile.thumbnail = canvas.toDataURL('image/jpeg', 0.7)
-        }
-        resolve()
-      }
-      img.onerror = () => reject(new Error('The browser could not decode this image'))
-    })
+    mediaFile.status = 'ready'
+    mediaFile.processingProgress = 100
+    return mediaFile
+  } catch (error) {
+    URL.revokeObjectURL(url)
+    throw error
   }
-
-  mediaFile.status = 'ready'
-  mediaFile.processingProgress = 100
-  return mediaFile
 }
 
 export const useMediaStore = create<MediaStore>((set, get) => ({
