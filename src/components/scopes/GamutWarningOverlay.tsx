@@ -435,7 +435,7 @@ export function GamutWarningOverlay({
       {/* For now, we show preview in the panel itself */}
       <div className="absolute top-16 left-[240px] flex gap-2 z-40">
         {/* Preview A */}
-        {statsA && overlayCanvasARef.current && (
+        {statsA && (
           <div className="bg-black/50 rounded overflow-hidden">
             <div className="text-[10px] text-orange-400 text-center py-0.5 bg-black/70">A</div>
             <canvas
@@ -455,7 +455,7 @@ export function GamutWarningOverlay({
           </div>
         )}
         {/* Preview B */}
-        {statsB && overlayCanvasBRef.current && (
+        {statsB && (
           <div className="bg-black/50 rounded overflow-hidden">
             <div className="text-[10px] text-lime-400 text-center py-0.5 bg-black/70">B</div>
             <canvas

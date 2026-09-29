@@ -29,7 +29,7 @@ export function PixelGridOverlay() {
   const imgARef = useRef<HTMLImageElement>(null)
   const animationRef = useRef<number>(0)
 
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0, containerWidth: 400, containerHeight: 300 })
   const [hoveredPixel, setHoveredPixel] = useState<{
     x: number
     y: number
@@ -269,7 +269,7 @@ export function PixelGridOverlay() {
       const rect = e.currentTarget.getBoundingClientRect()
       const x = e.clientX - rect.left
       const y = e.clientY - rect.top
-      setMousePos({ x, y })
+      setMousePos({ x, y, containerWidth: rect.width, containerHeight: rect.height })
 
       // Get pixel info from source
       const sourceA =
@@ -455,8 +455,8 @@ export function PixelGridOverlay() {
         <div
           className="absolute pointer-events-none bg-black/90 px-3 py-2 rounded text-xs font-mono z-50"
           style={{
-            left: Math.min(mousePos.x + 15, (containerRef.current?.offsetWidth || 400) - 200),
-            top: Math.min(mousePos.y + 15, (containerRef.current?.offsetHeight || 300) - 100),
+            left: Math.min(mousePos.x + 15, mousePos.containerWidth - 200),
+            top: Math.min(mousePos.y + 15, mousePos.containerHeight - 100),
           }}
         >
           <div className="text-gray-300 font-semibold mb-1">Pixel Info</div>

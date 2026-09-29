@@ -120,9 +120,9 @@ export function ScopesPanel() {
   const { getFile } = useMediaStore()
   const { tracks } = useTimelineStore()
 
-  // Hidden refs for video/image sources
-  const sourceVideoRef = useRef<HTMLVideoElement>(null)
-  const sourceImageRef = useRef<HTMLImageElement>(null)
+  const [sourceElement, setSourceElement] = useState<HTMLVideoElement | HTMLImageElement | null>(
+    null,
+  )
 
   // Get source media based on selection
   const trackA = tracks.find((t) => t.type === 'a')
@@ -139,25 +139,6 @@ export function ScopesPanel() {
       : scopesSettings.scopeSource === 'b'
         ? mediaB
         : mediaA // Comparison uses A for now
-
-  // Track video/image loading
-  const [sourceLoaded, setSourceLoaded] = useState(false)
-
-  useEffect(() => {
-    setSourceLoaded(false)
-  }, [selectedMedia?.url])
-
-  // Get the appropriate source element
-  const getSourceElement = useCallback((): HTMLVideoElement | HTMLImageElement | null => {
-    if (!selectedMedia || !sourceLoaded) return null
-
-    if (selectedMedia.type === 'video' && sourceVideoRef.current) {
-      return sourceVideoRef.current
-    } else if (selectedMedia.type === 'image' && sourceImageRef.current) {
-      return sourceImageRef.current
-    }
-    return null
-  }, [selectedMedia, sourceLoaded])
 
   if (!scopesSettings.showScopes) {
     return null
@@ -180,7 +161,8 @@ export function ScopesPanel() {
         {/* Hidden video/image elements for texture source */}
         {selectedMedia?.type === 'video' && (
           <video
-            ref={sourceVideoRef}
+            key={selectedMedia.url}
+            ref={setSourceElement}
             src={selectedMedia.url}
             style={{
               position: 'absolute',
@@ -193,12 +175,12 @@ export function ScopesPanel() {
             playsInline
             autoPlay
             loop
-            onLoadedData={() => setSourceLoaded(true)}
           />
         )}
         {selectedMedia?.type === 'image' && (
           <img
-            ref={sourceImageRef}
+            key={selectedMedia.url}
+            ref={setSourceElement}
             src={selectedMedia.url}
             style={{
               position: 'absolute',
@@ -207,7 +189,6 @@ export function ScopesPanel() {
               opacity: 0,
               pointerEvents: 'none',
             }}
-            onLoad={() => setSourceLoaded(true)}
             alt=""
           />
         )}
@@ -393,7 +374,7 @@ export function ScopesPanel() {
                 <div className="flex-1 bg-black rounded overflow-hidden relative">
                   <ScopeCanvas
                     type="waveform"
-                    source={getSourceElement()}
+                    source={sourceElement}
                     settings={{
                       intensity: scopesSettings.scopeIntensity,
                     }}
@@ -422,7 +403,7 @@ export function ScopesPanel() {
                 <div className="flex-1 bg-black rounded overflow-hidden aspect-square">
                   <ScopeCanvas
                     type="vectorscope"
-                    source={getSourceElement()}
+                    source={sourceElement}
                     settings={{
                       intensity: scopesSettings.scopeIntensity,
                       zoom: scopesSettings.vectorscopeZoom,
@@ -449,7 +430,7 @@ export function ScopesPanel() {
                 <div className="flex-1 bg-black rounded overflow-hidden relative">
                   <ScopeCanvas
                     type="parade"
-                    source={getSourceElement()}
+                    source={sourceElement}
                     settings={{
                       intensity: scopesSettings.scopeIntensity,
                       isolatedChannel:
