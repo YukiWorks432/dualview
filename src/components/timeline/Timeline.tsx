@@ -795,8 +795,9 @@ export function Timeline() {
 
                 {/* Toggle tools */}
                 <div className="flex items-center gap-0.5">
-                  <IconButton
+                  <Button
                     variant="secondary"
+                    size="icon"
                     onClick={() => addMarker()}
                     title="Add marker (M)"
                     className="h-7 w-7 relative"
@@ -807,7 +808,7 @@ export function Timeline() {
                         {markers.length}
                       </span>
                     )}
-                  </IconButton>
+                  </Button>
                   <IconButton
                     variant="secondary"
                     onClick={toggleSnap}
