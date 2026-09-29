@@ -583,6 +583,25 @@ Published site information:
 | Playwright | Chromium browser tests                      |
 | GitHub CI  | Frozen install + quality and browser checks |
 
+### Fluid Functionalism surfaces
+
+The relative elevation system is sourced from Fluid Functionalism's `@fluid/elevated` registry
+item. `components.json` registers `@fluid`; the upstream-owned implementation lives in
+`src/lib/surface-context.ts`, `src/lib/surface-provider.tsx`, `src/lib/surface-classes.ts`, and
+`src/lib/elevated.tsx`.
+DualView-specific `asChild` compatibility and control-surface variables stay isolated in
+`src/components/ui/surface.ts`.
+
+Review upstream changes before syncing:
+
+```bash
+pnpm dlx shadcn@latest add @fluid/elevated --diff
+pnpm dlx shadcn@latest add @fluid/elevated --dry-run
+```
+
+After applying an accepted registry update, keep project-specific behavior in the compatibility
+adapter and run `pnpm check`.
+
 Heavy comparison modes and export tooling are split so they are loaded only when needed.
 
 ---
