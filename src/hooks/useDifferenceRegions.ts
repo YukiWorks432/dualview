@@ -40,6 +40,21 @@ export interface DifferenceRegionsResult {
   notifyFrameReady: () => void
 }
 
+function createClipSignature(clip: TimelineClip | null): string {
+  if (!clip) return 'none'
+
+  return [
+    clip.id,
+    clip.mediaId,
+    clip.startTime,
+    clip.endTime,
+    clip.inPoint,
+    clip.outPoint,
+    clip.speed,
+    clip.reverse ? 1 : 0,
+  ].join(':')
+}
+
 function nextAnimationFrame(): Promise<void> {
   return new Promise((resolve) => requestAnimationFrame(() => resolve()))
 }
@@ -192,10 +207,8 @@ export function useDifferenceRegions({
   const signatureRef = useRef('')
 
   const signature = [
-    clipA?.id ?? 'no-a',
-    clipA?.mediaId ?? 'no-a-media',
-    clipB?.id ?? 'no-b',
-    clipB?.mediaId ?? 'no-b-media',
+    createClipSignature(clipA),
+    createClipSignature(clipB),
     enabled ? 'enabled' : 'disabled',
     sensitivity,
     noiseFilter,
