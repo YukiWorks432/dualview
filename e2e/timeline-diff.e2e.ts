@@ -92,6 +92,38 @@ test('restarts automatic analysis after a comparison track is emptied and restor
   })
 })
 
+test('restarts manual analysis after a comparison track is emptied and restored', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Hide filmstrip' }).click()
+
+  await uploadToTrack(page, 'Media A', 'long-quality-high.webm')
+  await page.getByLabel('Analysis resolution').selectOption('detailed')
+  await uploadToTrack(page, 'Media B', 'long-quality-low.webm')
+  await expect(page.getByText('Complete', { exact: true }).first()).toBeVisible({
+    timeout: 60_000,
+  })
+
+  await page.getByRole('button', { name: 'Analyze', exact: true }).click()
+  await expect(page.getByRole('button', { name: 'Cancel' })).toBeVisible()
+  await waitForAnalysisProgress(page)
+
+  await page.locator('[data-clip]').nth(1).click()
+  await page.keyboard.press('Delete')
+  await expect(page.locator('[data-clip]')).toHaveCount(1)
+
+  const mediaCard = page.locator('[draggable="true"]').filter({
+    hasText: 'long-quality-low.webm',
+  })
+  await mediaCard.getByTitle('Add to Track B').click()
+  await expect(page.locator('[data-clip]')).toHaveCount(2)
+  await expect(page.getByText('Complete', { exact: true }).first()).toBeVisible({
+    timeout: 60_000,
+  })
+})
+
 test('keeps a one-frame change and exposes its exact interval on hover', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.goto('/')

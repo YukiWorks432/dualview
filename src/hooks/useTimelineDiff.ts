@@ -49,6 +49,7 @@ interface ActiveJob {
 }
 
 let activeJob: ActiveJob | null = null
+let analysisSettledListener: (() => void) | null = null
 let nextJobNumber = 1
 const fileIdentity = new WeakMap<File, number>()
 let nextFileIdentity = 1
@@ -153,7 +154,11 @@ function getAutoAnalysisReadiness(): AutoAnalysisReadiness {
   return canAnalyze ? 'ready' : 'blocked'
 }
 
-function startTimelineDiffAnalysisJob(onSettled?: () => void): void {
+function notifyAnalysisSettled(): void {
+  analysisSettledListener?.()
+}
+
+function startTimelineDiffAnalysisJob(): void {
   cancelActiveJob()
 
   const snapshot = buildSnapshot()
@@ -202,7 +207,7 @@ function startTimelineDiffAnalysisJob(onSettled?: () => void): void {
     useTimelineDiffStore.getState().finishAnalysis(jobId, event.data.status, event.data.message)
     worker.terminate()
     activeJob = null
-    onSettled?.()
+    notifyAnalysisSettled()
   })
 
   worker.addEventListener('error', (event) => {
@@ -212,7 +217,7 @@ function startTimelineDiffAnalysisJob(onSettled?: () => void): void {
       .finishAnalysis(jobId, 'error', event.message || 'The analysis worker failed.')
     worker.terminate()
     activeJob = null
-    onSettled?.()
+    notifyAnalysisSettled()
   })
 
   try {
@@ -227,7 +232,7 @@ function startTimelineDiffAnalysisJob(onSettled?: () => void): void {
       )
     worker.terminate()
     activeJob = null
-    onSettled?.()
+    notifyAnalysisSettled()
   }
 }
 
@@ -263,7 +268,7 @@ export function useTimelineDiffLifecycle(): void {
         if (activeJob) return
 
         autoAnalysisArmed = false
-        startTimelineDiffAnalysisJob(scheduleAutoAnalysis)
+        startTimelineDiffAnalysisJob()
       }, 0)
     }
 
@@ -308,10 +313,12 @@ export function useTimelineDiffLifecycle(): void {
       }
     })
 
+    analysisSettledListener = scheduleAutoAnalysis
     scheduleAutoAnalysis()
 
     return () => {
       lifecycleActive = false
+      if (analysisSettledListener === scheduleAutoAnalysis) analysisSettledListener = null
       unsubscribeTimeline()
       unsubscribeMedia()
       unsubscribeProject()
