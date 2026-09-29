@@ -30,10 +30,10 @@
   --color-warning-foreground: hsl(var(--warning-foreground));
 
   /* Comparison identity is independent from application chrome. */
-  --color-compare-a: var(--compare-a);
-  --color-compare-a-foreground: var(--compare-a-foreground);
-  --color-compare-b: var(--compare-b);
-  --color-compare-b-foreground: var(--compare-b-foreground);
+  --color-compare-a: hsl(var(--compare-a));
+  --color-compare-a-foreground: hsl(var(--compare-a-foreground));
+  --color-compare-b: hsl(var(--compare-b));
+  --color-compare-b-foreground: hsl(var(--compare-b-foreground));
 
   --color-surface-1: hsl(var(--surface-1));
   --color-surface-2: hsl(var(--surface-2));
@@ -126,10 +126,17 @@
   --warning: 45 93% 47%;
   --warning-foreground: 24 10% 10%;
 
-  --compare-a: #ff5722;
-  --compare-a-foreground: #ffffff;
-  --compare-b: #cddc39;
-  --compare-b-foreground: #000000;
+  /*
+   * Comparison identity colors preserve the original orange/lime hues while
+   * matching the reference accent's OKLCH lightness and relative sRGB gamut usage.
+   * Reference: oklch(0.457 0.24 277.023)
+   * A source:   oklch(0.457 0.1313 36.53)
+   * B source:   oklch(0.457 0.0878 114.85)
+   */
+  --compare-a: 13.55 69.75% 33.61%;
+  --compare-a-foreground: var(--primary-foreground);
+  --compare-b: 66.04 54.89% 23.44%;
+  --compare-b-foreground: var(--primary-foreground);
 }
 
 * {
