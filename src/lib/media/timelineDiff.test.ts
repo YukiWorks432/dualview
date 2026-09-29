@@ -8,6 +8,8 @@ import {
   collectTimelineDiffEventTimes,
   findFrameAtMediaTime,
   findNextTimelineDiffSegment,
+  findTimelineDiffFrameAtTime,
+  findTimelineDiffSegmentAtTime,
   mapFrameIntervalToTimeline,
   type TimelineDiffFrameScore,
 } from './timelineDiff'
@@ -125,6 +127,18 @@ describe('pixel difference rate', () => {
 })
 
 describe('highlighted interval grouping', () => {
+  it('looks up half-open frame and highlight intervals at hover time', () => {
+    const first = score()
+    const second = score({ startTime: 0.5, endTime: 1, sampleTime: 0.75 })
+    const frames = [first, second]
+    const segments = buildTimelineDiffSegments(frames, 0.1)
+
+    expect(findTimelineDiffFrameAtTime(frames, 0.5)).toBe(second)
+    expect(findTimelineDiffFrameAtTime(frames, 1)).toBeNull()
+    expect(findTimelineDiffSegmentAtTime(segments, 0.5)).toBe(segments[0])
+    expect(findTimelineDiffSegmentAtTime(segments, 1)).toBeNull()
+  })
+
   it('joins adjacent changed frames and starts a new segment after gaps and clip changes', () => {
     const segments = buildTimelineDiffSegments(
       [

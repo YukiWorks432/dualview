@@ -27,6 +27,28 @@ export interface TimelineDiffSegment {
   maxDifferenceTime: number
 }
 
+export function findTimelineDiffFrameAtTime(
+  frames: readonly TimelineDiffFrameScore[],
+  timelineTime: number,
+): TimelineDiffFrameScore | null {
+  let low = 0
+  let high = frames.length - 1
+  let candidate = -1
+
+  while (low <= high) {
+    const middle = (low + high) >>> 1
+    if (frames[middle].startTime <= timelineTime) {
+      candidate = middle
+      low = middle + 1
+    } else {
+      high = middle - 1
+    }
+  }
+
+  if (candidate < 0 || timelineTime >= frames[candidate].endTime) return null
+  return frames[candidate]
+}
+
 export interface TimelineDiffFrameInterval {
   startTime: number
   endTime: number
@@ -249,4 +271,26 @@ export function findNextTimelineDiffSegment(
     if (segments[index].startTime < currentTime - TIME_EPSILON) return segments[index]
   }
   return segments[segments.length - 1]
+}
+
+export function findTimelineDiffSegmentAtTime(
+  segments: readonly TimelineDiffSegment[],
+  timelineTime: number,
+): TimelineDiffSegment | null {
+  let low = 0
+  let high = segments.length - 1
+  let candidate = -1
+
+  while (low <= high) {
+    const middle = (low + high) >>> 1
+    if (segments[middle].startTime <= timelineTime) {
+      candidate = middle
+      low = middle + 1
+    } else {
+      high = middle - 1
+    }
+  }
+
+  if (candidate < 0 || timelineTime >= segments[candidate].endTime) return null
+  return segments[candidate]
 }

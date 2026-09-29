@@ -80,7 +80,7 @@ function markSettingsStale(
 
 export const useTimelineDiffStore = create<TimelineDiffStore>((set) => ({
   colorThreshold: 0.1,
-  areaThreshold: 0.01,
+  areaThreshold: 0.02,
   resolution: 'standard',
   status: 'idle',
   message: null,

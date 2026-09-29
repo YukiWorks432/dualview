@@ -1,5 +1,9 @@
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
+import {
+  findTimelineDiffFrameAtTime,
+  findTimelineDiffSegmentAtTime,
+} from '../../lib/media/timelineDiff'
 import { usePlaybackStore } from '../../stores/playbackStore'
 import { useTimelineDiffStore } from '../../stores/timelineDiffStore'
 
@@ -40,9 +44,29 @@ export function TimelineDiffLane({ duration, pixelsPerSecond }: TimelineDiffLane
   const lastDrawRef = useRef({ key: '', frameCount: 0 })
   const currentTime = usePlaybackStore((state) => state.currentTime)
   const seek = usePlaybackStore((state) => state.seek)
+  const [hoveredTime, setHoveredTime] = useState<number | null>(null)
   const areaThreshold = useTimelineDiffStore((state) => state.areaThreshold)
   const status = useTimelineDiffStore((state) => state.status)
   const frames = useTimelineDiffStore((state) => state.frames)
+  const segments = useTimelineDiffStore((state) => state.segments)
+  const hoveredFrame = useMemo(
+    () => (hoveredTime === null ? null : findTimelineDiffFrameAtTime(frames, hoveredTime)),
+    [frames, hoveredTime],
+  )
+  const hoveredSegment = useMemo(
+    () => (hoveredTime === null ? null : findTimelineDiffSegmentAtTime(segments, hoveredTime)),
+    [hoveredTime, segments],
+  )
+
+  const handleMouseMove = useCallback(
+    (event: React.MouseEvent<HTMLCanvasElement>) => {
+      if (pixelsPerSecond <= 0) return
+      const rect = event.currentTarget.getBoundingClientRect()
+      const time = (event.clientX - rect.left) / pixelsPerSecond
+      setHoveredTime(time >= 0 && time < duration ? time : null)
+    },
+    [duration, pixelsPerSecond],
+  )
 
   const seekFromCanvas = useCallback(
     (event: React.MouseEvent<HTMLCanvasElement>) => {
@@ -54,6 +78,20 @@ export function TimelineDiffLane({ duration, pixelsPerSecond }: TimelineDiffLane
     },
     [duration, pixelsPerSecond, seek],
   )
+
+  const hoverTitle = hoveredFrame
+    ? [
+        `${hoveredFrame.startTime.toFixed(3)}–${hoveredFrame.endTime.toFixed(3)}s`,
+        hoveredFrame.status === 'compared'
+          ? `Frame difference: ${((hoveredFrame.differenceRate ?? 0) * 100).toFixed(2)}%`
+          : `${hoveredFrame.status}: ${hoveredFrame.reason ?? 'Frame unavailable'}`,
+        hoveredSegment
+          ? `Highlight peak: ${(hoveredSegment.maxDifferenceRate * 100).toFixed(2)}% at ${hoveredSegment.maxDifferenceTime.toFixed(3)}s`
+          : null,
+      ]
+        .filter(Boolean)
+        .join(' · ')
+    : 'Hover for frame interval details. Click to seek.'
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -137,8 +175,11 @@ export function TimelineDiffLane({ duration, pixelsPerSecond }: TimelineDiffLane
         ref={canvasRef}
         className="block h-[34px] w-full cursor-crosshair"
         onClick={seekFromCanvas}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={() => setHoveredTime(null)}
         role="img"
         aria-label="Read-only A/B difference lane. Click to seek the shared timeline."
+        title={hoverTitle}
       />
       <div
         className="absolute top-0 bottom-0 z-10 w-px bg-white pointer-events-none"
