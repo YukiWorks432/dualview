@@ -23,9 +23,17 @@
 html {
   background: var(--surface);
   color: var(--foreground);
+  /* Keep first paint close to the Adobe Fonts metrics before the kit activates. */
   font-family:
     helvetica-lt-pro,
     hiragino-kaku-gothic-pron,
+    'Helvetica Neue',
+    Helvetica,
+    Arial,
+    'Hiragino Kaku Gothic ProN',
+    'Yu Gothic UI',
+    'Yu Gothic',
+    Meiryo,
     Inter,
     'Noto Sans JP',
     system-ui,
@@ -198,6 +206,7 @@ a:focus-visible {
   letter-spacing: 0.18em;
   text-decoration: none;
   text-shadow: 0 0 18px color-mix(in srgb, var(--accent) 18%, transparent);
+  text-wrap: nowrap;
 }
 
 .brand:hover {
@@ -206,8 +215,9 @@ a:focus-visible {
 
 .site-nav {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
+  justify-content: flex-end;
   gap: 1.6rem;
 }
 
@@ -222,6 +232,7 @@ a:focus-visible {
   letter-spacing: 0.04em;
   text-decoration: none;
   text-shadow: none;
+  text-wrap: nowrap;
 }
 
 .site-nav a::after {
@@ -643,6 +654,7 @@ code {
 
   .site-nav {
     width: 100%;
+    justify-content: flex-start;
     gap: 0.95rem;
   }
 
