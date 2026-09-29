@@ -79,7 +79,7 @@ export function StitchExportPanel({
                 <span className="text-sm font-medium text-foreground">{track.name}</span>
               </div>
               <div className="text-xs text-muted-foreground">
-                {track.clipCount} clip{track.clipCount !== 1 ? 's' : ''} â¢{' '}
+                {track.clipCount} clip{track.clipCount !== 1 ? 's' : ''} •{' '}
                 {formatTime(track.totalDuration)}
               </div>
             </button>

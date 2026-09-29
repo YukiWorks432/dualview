@@ -321,7 +321,7 @@ function MediaPanel() {
       >
         <div className="flex items-center justify-between mb-2">
           <span className="text-xs font-medium text-muted-foreground">
-            {isReady ? 'â Ready to Compare' : 'Setup Progress'}
+            {isReady ? '✓ Ready to Compare' : 'Setup Progress'}
           </span>
           <span
             className={`text-xs font-mono ${isReady ? 'text-primary' : 'text-muted-foreground'}`}
@@ -346,18 +346,18 @@ function MediaPanel() {
           <span
             className={`flex items-center gap-1 ${hasMediaA ? 'text-compare-a' : 'text-muted-foreground'}`}
           >
-            {hasMediaA ? 'â Media A' : 'â Add Media A'}
+            {hasMediaA ? '● Media A' : '○ Add Media A'}
           </span>
           <span
             className={`flex items-center gap-1 ${hasMediaB ? 'text-compare-b' : 'text-muted-foreground'}`}
           >
-            {hasMediaB ? 'â Media B' : 'â Add Media B'}
+            {hasMediaB ? '● Media B' : '○ Add Media B'}
           </span>
         </div>
         {/* Helpful hint - Paradox of Active User */}
         {!isReady && (
           <p className="text-[10px] text-muted-foreground mt-2 pt-2 border-t border-border/50">
-            ð¡ Drag files or paste URLs to add media
+            💡 Drag files or paste URLs to add media
           </p>
         )}
       </ElevatedSurface>
@@ -883,7 +883,7 @@ function SettingsPanel({
           <kbd className="kbd">E</kbd>
         </div>
         <p className="text-[10px] text-muted-foreground -mt-2">
-          Basic settings â¢ Press E for full options
+          Basic settings • Press E for full options
         </p>
         <div className="grid grid-cols-2 gap-3">
           <Select

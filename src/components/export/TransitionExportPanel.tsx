@@ -82,7 +82,7 @@ export function TransitionExportPanel({
           {[
             {
               value: 'sequential',
-              label: 'A â T â B',
+              label: 'A → T → B',
               description: 'Full A, then transition, then full B',
             },
             {
@@ -92,8 +92,8 @@ export function TransitionExportPanel({
             },
             {
               value: 'loop',
-              label: 'Loop AâB',
-              description: 'Continuous AâB transitions',
+              label: 'Loop A↔B',
+              description: 'Continuous A↔B transitions',
             },
             {
               value: 'transition-only',
