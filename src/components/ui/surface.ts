@@ -1,12 +1,16 @@
 import * as React from 'react'
 import type { CSSProperties, HTMLAttributes, ReactNode } from 'react'
 
+import { Elevated } from '../../lib/elevated'
+import { SURFACE_BG, surfaceClasses } from '../../lib/surface-classes'
+import {
+  SurfaceProvider as UpstreamSurfaceProvider,
+  useSurface,
+} from '../../lib/surface-context'
 import { cn } from '../../lib/utils'
 
 export const SURFACE_MIN_LEVEL = 1
-export const SURFACE_MAX_LEVEL = 6
-
-const SurfaceContext = React.createContext(SURFACE_MIN_LEVEL)
+export const SURFACE_MAX_LEVEL = 8
 
 export function clampSurfaceLevel(level: number): number {
   return Math.max(SURFACE_MIN_LEVEL, Math.min(SURFACE_MAX_LEVEL, level))
@@ -22,30 +26,22 @@ export interface SurfaceProviderProps {
 }
 
 export function SurfaceProvider({ value = SURFACE_MIN_LEVEL, children }: SurfaceProviderProps) {
-  return React.createElement(SurfaceContext.Provider, { value: clampSurfaceLevel(value) }, children)
+  return React.createElement(UpstreamSurfaceProvider, { value: clampSurfaceLevel(value) }, children)
 }
 
 type SurfaceStyle = CSSProperties & {
-  '--surface-current-hsl'?: string
-  '--surface-control-hsl'?: string
-  '--surface-shadow-current'?: string
+  '--surface-current'?: string
+  '--surface-control'?: string
   '--surface-control-shadow'?: string
 }
 
-function surfaceStyle(
-  level: number,
-  shadowLevel: number | null | undefined,
-  style?: CSSProperties,
-): SurfaceStyle {
+function surfaceStyle(level: number, style?: CSSProperties): SurfaceStyle {
   const controlLevel = resolveSurfaceLevel(level, 1)
-  const resolvedShadowLevel = shadowLevel === null ? null : clampSurfaceLevel(shadowLevel ?? level)
 
   return {
     ...style,
-    '--surface-current-hsl': `var(--surface-${level})`,
-    '--surface-control-hsl': `var(--surface-${controlLevel})`,
-    '--surface-shadow-current':
-      resolvedShadowLevel === null ? 'none' : `var(--shadow-${resolvedShadowLevel})`,
+    '--surface-current': `var(--surface-${level})`,
+    '--surface-control': `var(--surface-${controlLevel})`,
     '--surface-control-shadow': `var(--shadow-${controlLevel})`,
   }
 }
@@ -56,6 +52,12 @@ type SurfaceChildProps = HTMLAttributes<HTMLElement> & {
   style?: CSSProperties
 }
 
+/**
+ * Compatibility adapter around Fluid Functionalism's upstream surface system.
+ *
+ * Normal surfaces delegate to upstream Elevated. The asChild path and the
+ * control-surface CSS variables are dualview-specific compatibility behavior.
+ */
 export type ElevatedSurfaceProps = HTMLAttributes<HTMLDivElement> & {
   asChild?: boolean
   children?: ReactNode
@@ -72,9 +74,8 @@ export function ElevatedSurface({
   style,
   ...props
 }: ElevatedSurfaceProps) {
-  const substrate = React.useContext(SurfaceContext)
+  const substrate = useSurface()
   const level = resolveSurfaceLevel(substrate, offset)
-  const classNames = cn('fluid-surface', className)
 
   if (asChild) {
     const child = React.Children.only(children)
@@ -84,30 +85,32 @@ export function ElevatedSurface({
     }
 
     const childProps = child.props
+    const surfaceClassName =
+      shadowLevel === null ? SURFACE_BG[level] : surfaceClasses(level, shadowLevel ?? level)
     const elevatedChild = React.cloneElement(child, {
       ...props,
       ...childProps,
       'data-surface-level': level,
-      className: cn(childProps.className, classNames),
-      style: surfaceStyle(level, shadowLevel, {
+      className: cn(childProps.className, surfaceClassName, className),
+      style: surfaceStyle(level, {
         ...childProps.style,
         ...style,
       }),
     })
 
-    return React.createElement(SurfaceContext.Provider, { value: level }, elevatedChild)
+    return React.createElement(UpstreamSurfaceProvider, { value: level }, elevatedChild)
   }
 
-  const surface = React.createElement(
-    'div',
+  return React.createElement(
+    Elevated,
     {
       ...props,
+      offset,
+      shadowLevel: shadowLevel ?? undefined,
       'data-surface-level': level,
-      className: classNames,
-      style: surfaceStyle(level, shadowLevel, style),
+      className: cn(className, shadowLevel === null && 'shadow-none'),
+      style: surfaceStyle(level, style),
     },
     children,
   )
-
-  return React.createElement(SurfaceContext.Provider, { value: level }, surface)
 }

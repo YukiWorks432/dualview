@@ -41,14 +41,24 @@
   --color-compare-b: hsl(var(--compare-b));
   --color-compare-b-foreground: hsl(var(--compare-b-foreground));
 
-  --color-surface-1: hsl(var(--surface-1));
-  --color-surface-2: hsl(var(--surface-2));
-  --color-surface-3: hsl(var(--surface-3));
-  --color-surface-4: hsl(var(--surface-4));
-  --color-surface-5: hsl(var(--surface-5));
-  --color-surface-6: hsl(var(--surface-6));
-  --color-surface: hsl(var(--surface-current-hsl));
-  --color-surface-alt: hsl(var(--surface-control-hsl));
+  --color-surface-1: var(--surface-1);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-surface-4: var(--surface-4);
+  --color-surface-5: var(--surface-5);
+  --color-surface-6: var(--surface-6);
+  --color-surface-7: var(--surface-7);
+  --color-surface-8: var(--surface-8);
+  --color-surface: var(--surface-current);
+  --color-surface-alt: var(--surface-control);
+  --shadow-surface-1: var(--shadow-1);
+  --shadow-surface-2: var(--shadow-2);
+  --shadow-surface-3: var(--shadow-3);
+  --shadow-surface-4: var(--shadow-4);
+  --shadow-surface-5: var(--shadow-5);
+  --shadow-surface-6: var(--shadow-6);
+  --shadow-surface-7: var(--shadow-7);
+  --shadow-surface-8: var(--shadow-8);
   --color-surface-hover: var(--surface-hover);
   --color-surface-active: var(--surface-active);
   --color-border-hover: var(--surface-border-hover);
@@ -73,15 +83,17 @@
   --font-weight-ui-strong: 800;
   --font-weight-technical: 600;
 
-  /* Dark fluid surface ladder. */
-  --surface-1: 240 10% 4%;
-  --surface-2: 240 6% 10%;
-  --surface-3: 240 5% 13%;
-  --surface-4: 240 4% 16%;
-  --surface-5: 240 4% 19%;
-  --surface-6: 240 4% 22%;
-  --surface-current-hsl: var(--surface-1);
-  --surface-control-hsl: var(--surface-2);
+  /* Fluid Functionalism @fluid/elevated surface ladder. */
+  --surface-1: #171717;
+  --surface-2: #1e1e1e;
+  --surface-3: #252525;
+  --surface-4: #2c2c2c;
+  --surface-5: #333333;
+  --surface-6: #3a3a3a;
+  --surface-7: #414141;
+  --surface-8: #484848;
+  --surface-current: var(--surface-1);
+  --surface-control: var(--surface-2);
   --surface-overlay-rgb: 255, 255, 255;
   --surface-hover: rgba(var(--surface-overlay-rgb), 0.06);
   --surface-active: rgba(var(--surface-overlay-rgb), 0.1);
@@ -91,30 +103,45 @@
   --dm-hi-base: rgba(255, 255, 255, 0.01);
   --dm-hi-mid: rgba(255, 255, 255, 0.02);
   --dm-hi-high: rgba(255, 255, 255, 0.04);
+  --dm-hi-peak: rgba(255, 255, 255, 0.06);
   --dm-ring-base: rgba(255, 255, 255, 0.02);
   --dm-ring-mid: rgba(255, 255, 255, 0.04);
   --dm-ring-high: rgba(255, 255, 255, 0.06);
-  --dm-drop: rgba(0, 0, 0, 0.11);
+  --dm-drop: rgba(0, 0, 0, 0.18);
   --shadow-1: inset 0 0 0 1px var(--dm-ring-base);
   --shadow-2:
     inset 0 1px 0 0 var(--dm-hi-base), inset 0 0 0 1px var(--dm-ring-base),
     0 1px 1px -0.5px var(--dm-drop);
   --shadow-3:
     inset 0 1px 0 0 var(--dm-hi-mid), inset 0 0 0 1px var(--dm-ring-base),
-    0 0 0 1px rgba(0, 0, 0, 0.06), 0 1px 1px -0.5px var(--dm-drop), 0 3px 3px -1.5px var(--dm-drop);
+    0 0 0 1px rgba(0, 0, 0, 0.12), 0 1px 1px -0.5px var(--dm-drop),
+    0 3px 3px -1.5px var(--dm-drop);
   --shadow-4:
     inset 0 1px 0 0 var(--dm-hi-mid), inset 0 0 0 1px var(--dm-ring-mid),
-    0 0 0 1px rgba(0, 0, 0, 0.08), 0 1px 1px -0.5px var(--dm-drop), 0 3px 3px -1.5px var(--dm-drop),
-    0 6px 6px -3px var(--dm-drop);
+    0 0 0 1px rgba(0, 0, 0, 0.14), 0 1px 1px -0.5px var(--dm-drop),
+    0 3px 3px -1.5px var(--dm-drop), 0 6px 6px -3px var(--dm-drop);
   --shadow-5:
     inset 0 1px 0 0 var(--dm-hi-high), inset 0 0 0 1px var(--dm-ring-mid),
-    0 0 0 1px rgba(0, 0, 0, 0.09), 0 1px 1px -0.5px var(--dm-drop), 0 3px 3px -1.5px var(--dm-drop),
-    0 6px 6px -3px var(--dm-drop), 0 12px 12px -6px var(--dm-drop);
+    0 0 0 1px rgba(0, 0, 0, 0.16), 0 1px 1px -0.5px var(--dm-drop),
+    0 3px 3px -1.5px var(--dm-drop), 0 6px 6px -3px var(--dm-drop),
+    0 12px 12px -6px var(--dm-drop);
   --shadow-6:
     inset 0 1px 0 0 var(--dm-hi-high), inset 0 0 0 1px var(--dm-ring-high),
-    0 0 0 1px rgba(0, 0, 0, 0.1), 0 1px 1px -0.5px var(--dm-drop), 0 3px 3px -1.5px var(--dm-drop),
-    0 6px 6px -3px var(--dm-drop), 0 12px 12px -6px var(--dm-drop), 0 24px 24px -12px var(--dm-drop);
-  --surface-shadow-current: var(--shadow-1);
+    0 0 0 1px rgba(0, 0, 0, 0.18), 0 1px 1px -0.5px var(--dm-drop),
+    0 3px 3px -1.5px var(--dm-drop), 0 6px 6px -3px var(--dm-drop),
+    0 12px 12px -6px var(--dm-drop), 0 24px 24px -12px var(--dm-drop);
+  --shadow-7:
+    inset 0 1px 0 0 var(--dm-hi-peak), inset 0 0 0 1px var(--dm-ring-high),
+    0 0 0 1px rgba(0, 0, 0, 0.2), 0 1px 1px -0.5px var(--dm-drop),
+    0 3px 3px -1.5px var(--dm-drop), 0 6px 6px -3px var(--dm-drop),
+    0 12px 12px -6px var(--dm-drop), 0 24px 24px -12px var(--dm-drop),
+    0 48px 48px -24px var(--dm-drop);
+  --shadow-8:
+    inset 0 1px 0 0 var(--dm-hi-peak), inset 0 0 0 1px var(--dm-ring-high),
+    0 0 0 1px rgba(0, 0, 0, 0.22), 0 1px 1px -0.5px var(--dm-drop),
+    0 3px 3px -1.5px var(--dm-drop), 0 6px 6px -3px var(--dm-drop),
+    0 12px 12px -6px var(--dm-drop), 0 24px 24px -12px var(--dm-drop),
+    0 48px 48px -24px var(--dm-drop), 0 96px 96px -48px var(--dm-drop);
   --surface-control-shadow: var(--shadow-2);
 
   --background: 240 10% 4%;
@@ -169,17 +196,13 @@
 }
 
 @utility surface-wash {
-  background-color: hsl(var(--surface-1)) !important;
+  background-color: var(--surface-1) !important;
 }
 
-@utility fluid-surface {
-  background-color: hsl(var(--surface-current-hsl));
-  box-shadow: var(--surface-shadow-current);
-}
 
 @utility surface-control {
   border-color: var(--surface-control-border);
-  background-color: hsl(var(--surface-control-hsl));
+  background-color: var(--surface-control);
   box-shadow: var(--surface-control-shadow);
 
   &:hover {
@@ -255,15 +278,15 @@
 }
 
 @utility surface-slider {
-  background-color: hsl(var(--surface-control-hsl));
+  background-color: var(--surface-control);
   box-shadow: inset 0 0 0 1px var(--surface-control-border);
 
   &::-webkit-slider-thumb {
-    border-color: hsl(var(--surface-current-hsl));
+    border-color: var(--surface-current);
   }
 
   &::-moz-range-thumb {
-    border-color: hsl(var(--surface-current-hsl));
+    border-color: var(--surface-current);
   }
 }
 
@@ -623,7 +646,7 @@ a {
 
 header,
 aside {
-  background: hsl(var(--surface-current-hsl));
+  background: var(--surface-current);
 }
 
 .modal-overlay {
@@ -700,7 +723,7 @@ aside {
   width: 85%;
   max-width: 320px;
   z-index: 50;
-  background: hsl(var(--surface-1));
+  background: var(--surface-1);
   box-shadow: 4px 0 20px rgba(0, 0, 0, 0.32);
 }
 
@@ -779,7 +802,7 @@ aside {
   bottom: 0;
   left: 0;
   right: 0;
-  background: hsl(var(--surface-current-hsl));
+  background: var(--surface-current);
   border-top: 1px solid var(--color-border);
   z-index: 60;
   max-height: 70vh;
