@@ -6,7 +6,7 @@
     <title>ライセンスと第三者ソフトウェア | DualView</title>
     <meta
       name="description"
-      content="DualView 本体とブラウザーへ配布する第三者ソフトウェアのライセンス通知・対応ソースを案内します。"
+      content="DualViewと、利用している第三者ソフトウェアのライセンス情報です。"
     />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="stylesheet" href="/site-info.css" />
@@ -26,77 +26,58 @@
 
     <main>
       <div class="hero">
-        <p class="eyebrow">Licenses &amp; corresponding source</p>
+        <p class="eyebrow">Licenses</p>
         <h1>ライセンスと第三者ソフトウェア</h1>
-        <p>
-          DualView 本体のライセンス、バンドルされた依存関係の通知、
-          静的コピーや動的読み込みを含む追加配布物の通知を分けて掲載します。
-        </p>
+        <p>DualViewと、サイト内で利用している第三者ソフトウェアのライセンス情報です。</p>
       </div>
 
       <section class="language-block" lang="ja">
         <span class="language-label">日本語</span>
 
         <section class="card notice">
-          <h2>DualView 本体</h2>
+          <h2>DualView</h2>
           <p>
-            DualView 本体の正本はリポジトリ直下の <code>LICENSE</code> です。
-            <strong>Copyright (c) 2025 DualView Contributors</strong> を含む MIT License
-            を維持しており、この maintained fork の運営者名だけへ置き換えていません。
+            DualViewはMIT Licenseのもとで公開されています。
+            著作権表示とライセンス全文は、以下から確認できます。
           </p>
           <div class="link-list">
-            <a href="/licenses/dualview-license.txt">配布物に含まれる MIT License</a>
+            <a href="/licenses/dualview-license.txt">MIT License</a>
             <a
               href="https://github.com/YukiWorks432/dualview/blob/main/LICENSE"
               target="_blank"
               rel="noopener noreferrer"
-            >
-              リポジトリの LICENSE ↗
-            </a>
+            >Repository LICENSE ↗</a>
           </div>
         </section>
 
         <section class="card">
-          <h2>バンドルされた第三者依存関係</h2>
+          <h2>第三者ソフトウェア</h2>
           <p>
-            production build では Vite の <code>build.license</code> を使い、
-            実際にバンドルされた依存関係について名称・バージョン・著作権表示・ライセンス情報を
-            <code>licenses/third-party.md</code>
-            として生成します。手作業の一覧を正本として重複管理しません。
+            DualViewが利用している第三者ソフトウェアには、それぞれのライセンスが適用されます。
+            配布物に含まれるライセンス通知は以下から確認できます。
           </p>
           <div class="link-list">
-            <a href="/licenses/third-party.md">生成された third-party.md</a>
+            <a href="/licenses/third-party.md">Third-party licenses</a>
+            <a href="/licenses/additional-notices.md">Additional notices</a>
           </div>
-          <p class="meta">
-            このファイルは production build
-            の成果物として生成されるため、開発サーバー上では存在しない場合があります。
-          </p>
         </section>
 
         <section class="card">
-          <h2>静的コピー・動的読み込み・WASM</h2>
+          <h2>対応するソースコード</h2>
           <p>
-            Vite の通常バンドルだけでは拾い切れない配布物は追加通知にまとめています。
-            現在は、静的コピーされる <code>gif.worker.js</code> と、 ProRes デコードで利用する
-            <code>@mediabunny/prores</code> 1.59.0 の対応ソースを明示しています。
+            MPL-2.0が適用されるProResデコード用コンポーネントについては、
+            対応するソースコードを以下から確認できます。
           </p>
           <div class="link-list">
-            <a href="/licenses/additional-notices.md">Additional distributed notices</a>
             <a
               href="https://github.com/Vanilagy/mediabunny/tree/v1.59.0/packages/prores"
               target="_blank"
               rel="noopener noreferrer"
+            >@mediabunny/prores 1.59.0 source ↗</a>
+            <a href="https://www.mozilla.org/MPL/2.0/" target="_blank" rel="noopener noreferrer"
+              >MPL 2.0 ↗</a
             >
-              @mediabunny/prores 1.59.0 source ↗
-            </a>
-            <a href="https://www.mozilla.org/MPL/2.0/" target="_blank" rel="noopener noreferrer">
-              MPL 2.0 ↗
-            </a>
           </div>
-          <p>
-            MPL-2.0 の対象コンポーネントはその条件に従いますが、DualView 本体全体のライセンスを MPL
-            へ変更するものではありません。
-          </p>
         </section>
       </section>
 
@@ -104,32 +85,27 @@
         <span class="language-label">English</span>
 
         <section class="card notice">
-          <h2>DualView application</h2>
+          <h2>DualView</h2>
           <p>
-            The repository-root <code>LICENSE</code> is the canonical license for DualView. It
-            retains the MIT License notice, including
-            <strong>Copyright (c) 2025 DualView Contributors</strong>, rather than replacing it with
-            the maintained-fork operator's name.
+            DualView is published under the MIT License. The copyright notice and full license text
+            are available through the links above.
           </p>
         </section>
 
         <section class="card">
-          <h2>Bundled third-party dependencies</h2>
+          <h2>Third-party software</h2>
           <p>
-            Production builds use Vite <code>build.license</code> to generate
-            <code>licenses/third-party.md</code> from dependencies actually included in the bundle.
-            This avoids maintaining a second hand-written dependency list as the source of truth.
+            Third-party software used by DualView remains subject to its respective licenses.
+            Distributed license notices are available through the third-party and additional notice
+            files above.
           </p>
         </section>
 
         <section class="card">
-          <h2>Copied assets, dynamic loading, and WASM</h2>
+          <h2>Corresponding source</h2>
           <p>
-            Additional notices cover distributed files that are not fully represented by the normal
-            bundle notice. They currently include the copied <code>gif.worker.js</code> file and the
-            fixed corresponding source for <code>@mediabunny/prores</code> 1.59.0. Components
-            covered by MPL-2.0 remain under MPL-2.0; this does not relicense the overall DualView
-            application away from MIT.
+            The corresponding source for the ProRes decoding component covered by MPL-2.0 is
+            available through the source link above.
           </p>
         </section>
       </section>
