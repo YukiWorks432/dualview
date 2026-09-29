@@ -537,9 +537,8 @@ export function MediaLibrary() {
 
               {/* Actions */}
               <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <Button
+                <IconButton
                   variant="secondary"
-                  size="icon"
                   className="h-7 w-7"
                   disabled={!canAddToTrack(file.type, 'a')}
                   onClick={(e) => {
@@ -558,10 +557,9 @@ export function MediaLibrary() {
                       canAddToTrack(file.type, 'a') ? 'text-compare-a' : 'text-muted-foreground',
                     )}
                   />
-                </Button>
-                <Button
+                </IconButton>
+                <IconButton
                   variant="secondary"
-                  size="icon"
                   className="h-7 w-7"
                   disabled={!canAddToTrack(file.type, 'b')}
                   onClick={(e) => {
@@ -580,10 +578,9 @@ export function MediaLibrary() {
                       canAddToTrack(file.type, 'b') ? 'text-compare-b' : 'text-muted-foreground',
                     )}
                   />
-                </Button>
-                <Button
+                </IconButton>
+                <IconButton
                   variant="secondary"
-                  size="icon"
                   className="h-7 w-7"
                   onClick={(e) => {
                     e.stopPropagation()
@@ -592,7 +589,7 @@ export function MediaLibrary() {
                   title="Remove"
                 >
                   <Trash2 className="w-3 h-3 text-destructive" />
-                </Button>
+                </IconButton>
               </div>
             </div>
           </ElevatedSurface>
