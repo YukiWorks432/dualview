@@ -134,8 +134,8 @@ export function URLImport({ isOpen, onClose }: URLImportProps) {
                 Direct HTTP(S) media URLs only. Some sites may block direct browser access.
               </p>
               <div className="ui-radius-md mt-3 border border-border/60 p-3 text-xs leading-relaxed text-text-muted">
-                URL import connects directly to the site you enter to fetch that media. The
-                imported media is processed locally, and your other local files are not sent there.
+                URL import connects directly to the site you enter to fetch that media. The imported
+                media is processed locally, and your other local files are not sent there.
                 <a
                   href="/privacy/#external-communication"
                   target="_blank"
