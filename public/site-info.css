@@ -559,12 +559,11 @@ code {
   align-items: center;
   border: 1px solid color-mix(in srgb, var(--accent) 24%, var(--border));
   border-radius: 9999px;
-  background:
-    linear-gradient(
-      135deg,
-      color-mix(in srgb, var(--highlight) 5%, var(--surface-alt)),
-      color-mix(in srgb, var(--accent) 10%, var(--card))
-    );
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--highlight) 5%, var(--surface-alt)),
+    color-mix(in srgb, var(--accent) 10%, var(--card))
+  );
   padding: 0.58rem 0.9rem;
   color: color-mix(in srgb, var(--highlight-cool) 24%, var(--accent));
   font-size: 0.86rem;
