@@ -1,3 +1,5 @@
+'use client'
+
 import { forwardRef, type ComponentPropsWithoutRef, type ReactNode } from 'react'
 
 import { cn } from '@/lib/utils'

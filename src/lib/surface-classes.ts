@@ -1,3 +1,5 @@
+'use client'
+
 /**
  * Static lookup tables for surface tokens.
  *
