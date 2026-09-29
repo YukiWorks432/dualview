@@ -1292,7 +1292,11 @@ export function WebGLComparison() {
         {/* WEBGL-001: Toggle Metrics */}
         <button
           onClick={toggleWebGLMetricsOverlay}
-          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${webglComparisonSettings.showMetricsOverlay ? 'border-accent bg-accent text-primary-foreground' : 'surface-control text-text-secondary hover:text-text-primary'}`}
+          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${
+            webglComparisonSettings.showMetricsOverlay
+              ? 'border-accent bg-accent text-primary-foreground'
+              : 'surface-control text-text-secondary hover:text-text-primary'
+          }`}
           title="Toggle Metrics Overlay (WEBGL-001)"
         >
           <BarChart3 size={16} />
@@ -1301,7 +1305,11 @@ export function WebGLComparison() {
         {/* WEBGL-002: Toggle Scale Bar */}
         <button
           onClick={toggleWebGLScaleBar}
-          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${webglComparisonSettings.showScaleBar ? 'border-accent bg-accent text-primary-foreground' : 'surface-control text-text-secondary hover:text-text-primary'}`}
+          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${
+            webglComparisonSettings.showScaleBar
+              ? 'border-accent bg-accent text-primary-foreground'
+              : 'surface-control text-text-secondary hover:text-text-primary'
+          }`}
           title="Toggle Scale Bar (WEBGL-002)"
         >
           <Ruler size={16} />
@@ -1310,7 +1318,11 @@ export function WebGLComparison() {
         {/* WEBGL-003: Toggle Cursor Inspector */}
         <button
           onClick={toggleWebGLCursorInspector}
-          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${webglComparisonSettings.showCursorInspector ? 'border-accent bg-accent text-primary-foreground' : 'surface-control text-text-secondary hover:text-text-primary'}`}
+          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${
+            webglComparisonSettings.showCursorInspector
+              ? 'border-accent bg-accent text-primary-foreground'
+              : 'surface-control text-text-secondary hover:text-text-primary'
+          }`}
           title="Toggle Cursor Inspector (WEBGL-003)"
         >
           <Crosshair size={16} />
@@ -1319,7 +1331,11 @@ export function WebGLComparison() {
         {/* WEBGL-004: ROI Selection */}
         <button
           onClick={toggleROIControls}
-          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${webglComparisonSettings.showROIControls ? 'border-accent bg-accent text-primary-foreground' : 'surface-control text-text-secondary hover:text-text-primary'}`}
+          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${
+            webglComparisonSettings.showROIControls
+              ? 'border-accent bg-accent text-primary-foreground'
+              : 'surface-control text-text-secondary hover:text-text-primary'
+          }`}
           title="Draw ROI Selection (WEBGL-004)"
         >
           <Scan size={16} />
@@ -1337,7 +1353,11 @@ export function WebGLComparison() {
         {/* WEBGL-008: Flip A/B */}
         <button
           onClick={toggleWebGLFlipAB}
-          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${webglComparisonSettings.flipAB ? 'border-accent bg-accent text-primary-foreground' : 'surface-control text-text-secondary hover:text-text-primary'}`}
+          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${
+            webglComparisonSettings.flipAB
+              ? 'border-accent bg-accent text-primary-foreground'
+              : 'surface-control text-text-secondary hover:text-text-primary'
+          }`}
           title="Flip A/B Sources (F)"
         >
           <FlipHorizontal size={16} />
@@ -1419,7 +1439,11 @@ export function WebGLComparison() {
             <div className="w-px h-6 bg-border mx-1" />
             <button
               onClick={() => setShowTemporalGraph(!showTemporalGraph)}
-              className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${showTemporalGraph ? 'border-accent bg-accent text-primary-foreground' : 'surface-control text-text-secondary hover:text-text-primary'}`}
+              className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${
+                showTemporalGraph
+                  ? 'border-accent bg-accent text-primary-foreground'
+                  : 'surface-control text-text-secondary hover:text-text-primary'
+              }`}
               title="Temporal Difference Graph (WEBGL-009)"
             >
               <LineChart size={16} />
@@ -1433,7 +1457,11 @@ export function WebGLComparison() {
         {/* SCOPE-008: Histogram Panel Toggle */}
         <button
           onClick={() => setShowHistogramPanel(!showHistogramPanel)}
-          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${showHistogramPanel ? 'border-accent bg-accent text-primary-foreground' : 'surface-control text-text-secondary hover:text-text-primary'}`}
+          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${
+            showHistogramPanel
+              ? 'border-accent bg-accent text-primary-foreground'
+              : 'surface-control text-text-secondary hover:text-text-primary'
+          }`}
           title="Histogram Panel (SCOPE-008)"
         >
           <Activity size={16} />
@@ -1442,7 +1470,11 @@ export function WebGLComparison() {
         {/* SCOPE-009: Color Wheel Panel Toggle */}
         <button
           onClick={() => setShowColorWheelPanel(!showColorWheelPanel)}
-          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${showColorWheelPanel ? 'border-accent bg-accent text-primary-foreground' : 'surface-control text-text-secondary hover:text-text-primary'}`}
+          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${
+            showColorWheelPanel
+              ? 'border-accent bg-accent text-primary-foreground'
+              : 'surface-control text-text-secondary hover:text-text-primary'
+          }`}
           title="Color Wheel Distribution (SCOPE-009)"
         >
           <Palette size={16} />
@@ -1451,7 +1483,11 @@ export function WebGLComparison() {
         {/* SCOPE-010: Gamut Warning Toggle */}
         <button
           onClick={() => setShowGamutWarning(!showGamutWarning)}
-          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${showGamutWarning ? 'border-accent bg-accent text-primary-foreground' : 'surface-control text-text-secondary hover:text-text-primary'}`}
+          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${
+            showGamutWarning
+              ? 'border-accent bg-accent text-primary-foreground'
+              : 'surface-control text-text-secondary hover:text-text-primary'
+          }`}
           title="Gamut Warning Overlay (SCOPE-010, G)"
         >
           <AlertTriangle size={16} />
