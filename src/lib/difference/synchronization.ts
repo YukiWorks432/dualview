@@ -2,6 +2,12 @@ import type { TimelineFrameRange } from '../media/timeline'
 
 const SAME_FRAME_RANGE_TOLERANCE_SECONDS = 0.000001
 
+export type FrameTimeObservation =
+  | { kind: 'unknown' }
+  | { kind: 'point'; time: number }
+  | { kind: 'interval'; range: TimelineFrameRange }
+  | { kind: 'paused-video'; presentedTime: number; currentTime: number }
+
 interface PausedVideoFrameState {
   currentTime: number
   paused: boolean
@@ -68,8 +74,40 @@ export function getConsecutivePresentedFrameRange(
   }
 }
 
-export function areFrameRangesSynchronized(
-  frameRanges: readonly (TimelineFrameRange | null)[],
+function intervalsDescribeSameFrame(ranges: readonly TimelineFrameRange[]): boolean {
+  if (ranges.length < 2) return false
+
+  const firstRange = ranges[0]
+  const commonStart = Math.max(...ranges.map(({ startTime }) => startTime))
+  const commonEnd = Math.min(...ranges.map(({ endTime }) => endTime))
+  return (
+    commonEnd > commonStart &&
+    ranges.every(
+      ({ startTime, endTime }) =>
+        Math.abs(startTime - firstRange.startTime) <= SAME_FRAME_RANGE_TOLERANCE_SECONDS &&
+        Math.abs(endTime - firstRange.endTime) <= SAME_FRAME_RANGE_TOLERANCE_SECONDS,
+    )
+  )
+}
+
+function arePointsSynchronized(
+  times: readonly number[],
+  expectedTime: number,
+  expectedToleranceSeconds: number,
+  maximumGapSeconds: number,
+): boolean {
+  if (times.length === 0) return true
+
+  const pointStart = Math.min(...times)
+  const pointEnd = Math.max(...times)
+  return (
+    pointEnd - pointStart <= maximumGapSeconds &&
+    Math.abs((pointStart + pointEnd) / 2 - expectedTime) <= expectedToleranceSeconds
+  )
+}
+
+export function areFrameObservationsSynchronized(
+  observations: readonly FrameTimeObservation[],
   expectedTime: number,
   expectedToleranceSeconds: number,
   maximumGapSeconds: number,
@@ -87,66 +125,154 @@ export function areFrameRangesSynchronized(
     return false
   }
 
-  const observedRanges = frameRanges.filter((range): range is TimelineFrameRange => range !== null)
+  const pointTimes: number[] = []
+  const intervalRanges: TimelineFrameRange[] = []
+  const pausedVideoObservations: Extract<FrameTimeObservation, { kind: 'paused-video' }>[] = []
+
+  for (const observation of observations) {
+    switch (observation.kind) {
+      case 'unknown':
+        break
+      case 'point':
+        if (!Number.isFinite(observation.time)) return false
+        pointTimes.push(observation.time)
+        break
+      case 'interval': {
+        const { startTime, endTime } = observation.range
+        if (!Number.isFinite(startTime) || !Number.isFinite(endTime) || startTime > endTime) {
+          return false
+        }
+        if (startTime === endTime) pointTimes.push(startTime)
+        else intervalRanges.push(observation.range)
+        break
+      }
+      case 'paused-video':
+        if (
+          !Number.isFinite(observation.presentedTime) ||
+          !Number.isFinite(observation.currentTime)
+        ) {
+          return false
+        }
+        pausedVideoObservations.push(observation)
+        break
+    }
+  }
+
   if (
-    observedRanges.some(
-      ({ startTime, endTime }) =>
-        !Number.isFinite(startTime) || !Number.isFinite(endTime) || startTime > endTime,
+    pausedVideoObservations.some(
+      ({ currentTime }) => Math.abs(currentTime - expectedTime) > expectedToleranceSeconds,
     )
   ) {
     return false
   }
-  if (observedRanges.length === 0) return true
-
-  const pointRanges = observedRanges.filter(({ startTime, endTime }) => startTime === endTime)
-  const intervalRanges = observedRanges.filter(({ startTime, endTime }) => startTime < endTime)
 
   if (intervalRanges.length === 0) {
-    const pointStart = Math.min(...pointRanges.map(({ startTime }) => startTime))
-    const pointEnd = Math.max(...pointRanges.map(({ endTime }) => endTime))
-    return (
-      pointEnd - pointStart <= maximumGapSeconds &&
-      Math.abs((pointStart + pointEnd) / 2 - expectedTime) <= expectedToleranceSeconds
-    )
+    const pausedRanges: TimelineFrameRange[] = []
+    const synchronizedPointTimes = [...pointTimes]
+    for (const { presentedTime, currentTime } of pausedVideoObservations) {
+      const range = {
+        startTime: Math.min(presentedTime, currentTime),
+        endTime: Math.max(presentedTime, currentTime),
+      }
+      if (range.startTime < range.endTime) pausedRanges.push(range)
+      else synchronizedPointTimes.push(presentedTime)
+    }
+    const observedRanges = pausedRanges
+    if (observedRanges.length === 0) {
+      return arePointsSynchronized(
+        synchronizedPointTimes,
+        expectedTime,
+        expectedToleranceSeconds,
+        maximumGapSeconds,
+      )
+    }
+
+    const commonStart = Math.max(...observedRanges.map(({ startTime }) => startTime))
+    const commonEnd = Math.min(...observedRanges.map(({ endTime }) => endTime))
+    const gap = Math.max(0, commonStart - commonEnd)
+    const overlap = Math.max(0, commonEnd - commonStart)
+    const singleShortPausedFrame =
+      synchronizedPointTimes.length === 0 &&
+      observedRanges.length === 1 &&
+      pausedVideoObservations.length === 1 &&
+      observedRanges[0].endTime - observedRanges[0].startTime < minimumOverlapSeconds
+    if (
+      gap > maximumGapSeconds ||
+      (overlap < minimumOverlapSeconds &&
+        !intervalsDescribeSameFrame(observedRanges) &&
+        !singleShortPausedFrame)
+    ) {
+      return false
+    }
+
+    if (synchronizedPointTimes.length > 0) {
+      const pointStart = Math.min(...synchronizedPointTimes)
+      const pointEnd = Math.max(...synchronizedPointTimes)
+      if (
+        pointEnd - pointStart > maximumGapSeconds ||
+        pointStart < commonStart - SAME_FRAME_RANGE_TOLERANCE_SECONDS ||
+        pointEnd > commonEnd + SAME_FRAME_RANGE_TOLERANCE_SECONDS
+      ) {
+        return false
+      }
+
+      return arePointsSynchronized(
+        synchronizedPointTimes,
+        expectedTime,
+        expectedToleranceSeconds,
+        maximumGapSeconds,
+      )
+    }
+
+    const nearestCommonTime =
+      gap > 0
+        ? (commonStart + commonEnd) / 2
+        : Math.min(commonEnd, Math.max(commonStart, expectedTime))
+    return Math.abs(nearestCommonTime - expectedTime) <= expectedToleranceSeconds
   }
 
   const commonStart = Math.max(...intervalRanges.map(({ startTime }) => startTime))
   const commonEnd = Math.min(...intervalRanges.map(({ endTime }) => endTime))
   const gap = Math.max(0, commonStart - commonEnd)
   const overlap = Math.max(0, commonEnd - commonStart)
-  const firstInterval = intervalRanges[0]
-  const intervalsDescribeSameFrame =
-    intervalRanges.length > 1 &&
-    overlap > 0 &&
-    intervalRanges.every(
-      ({ startTime, endTime }) =>
-        Math.abs(startTime - firstInterval.startTime) <= SAME_FRAME_RANGE_TOLERANCE_SECONDS &&
-        Math.abs(endTime - firstInterval.endTime) <= SAME_FRAME_RANGE_TOLERANCE_SECONDS,
-    )
-  if (gap > maximumGapSeconds || (overlap < minimumOverlapSeconds && !intervalsDescribeSameFrame)) {
+  if (
+    gap > maximumGapSeconds ||
+    (overlap < minimumOverlapSeconds && !intervalsDescribeSameFrame(intervalRanges))
+  ) {
     return false
   }
 
-  if (pointRanges.length > 0) {
-    const pointStart = Math.min(...pointRanges.map(({ startTime }) => startTime))
-    const pointEnd = Math.max(...pointRanges.map(({ endTime }) => endTime))
+  if (
+    pausedVideoObservations.some(
+      ({ presentedTime }) =>
+        presentedTime < commonStart - SAME_FRAME_RANGE_TOLERANCE_SECONDS ||
+        presentedTime >= commonEnd,
+    )
+  ) {
+    return false
+  }
+
+  if (pointTimes.length > 0) {
+    const pointStart = Math.min(...pointTimes)
+    const pointEnd = Math.max(...pointTimes)
     if (
       pointEnd - pointStart > maximumGapSeconds ||
-      pointStart < commonStart - maximumGapSeconds ||
-      pointEnd > commonEnd + maximumGapSeconds
+      pointTimes.some(
+        (time) =>
+          time < commonStart - SAME_FRAME_RANGE_TOLERANCE_SECONDS ||
+          time >= commonEnd ||
+          Math.abs(time - expectedTime) > expectedToleranceSeconds,
+      )
     ) {
       return false
     }
-
-    return Math.abs((pointStart + pointEnd) / 2 - expectedTime) <= expectedToleranceSeconds
   }
 
-  const nearestCommonTime =
-    gap > 0
-      ? (commonStart + commonEnd) / 2
-      : Math.min(commonEnd, Math.max(commonStart, expectedTime))
+  if (pausedVideoObservations.length > 0) return true
 
-  return Math.abs(nearestCommonTime - expectedTime) <= expectedToleranceSeconds
+  return (
+    expectedTime >= commonStart - SAME_FRAME_RANGE_TOLERANCE_SECONDS && expectedTime < commonEnd
+  )
 }
 
 export function getPlaybackDifferenceExpiryDelay(

@@ -8,12 +8,13 @@ import {
   sensitivityToPixelmatchThreshold,
 } from '../lib/difference/settings'
 import {
-  areFrameRangesSynchronized,
+  areFrameObservationsSynchronized,
   getConsecutivePresentedFrameRange,
   getPausedVideoFrameRange,
   getPlaybackDifferenceExpiryDelay,
   getStablePausedVideoFrameTime,
   isPlaybackDifferenceResultFresh,
+  type FrameTimeObservation,
 } from '../lib/difference/synchronization'
 import type {
   DifferenceWorkerRequest,
@@ -47,7 +48,7 @@ const MAX_REGIONS = 80
 
 interface CapturedSource {
   imageData: ImageData
-  timelineRange: TimelineFrameRange | null
+  frameObservation: FrameTimeObservation
   capturedAt: number
 }
 
@@ -124,6 +125,19 @@ function distanceFromTimeToRange(time: number, range: TimelineFrameRange): numbe
   return 0
 }
 
+function getObservationTime(observation: FrameTimeObservation, fallbackTime: number): number {
+  switch (observation.kind) {
+    case 'unknown':
+      return fallbackTime
+    case 'point':
+      return observation.time
+    case 'interval':
+      return (observation.range.startTime + observation.range.endTime) / 2
+    case 'paused-video':
+      return observation.currentTime
+  }
+}
+
 function waitForPresentedVideoSnapshot(
   video: HTMLVideoElement,
   clip: TimelineClip,
@@ -184,10 +198,9 @@ function waitForPresentedVideoSnapshot(
           })
           finish({
             imageData: capturedSnapshot.imageData,
-            timelineRange: consecutiveRange ?? {
-              startTime: capturedSnapshot.timelineTime,
-              endTime: capturedSnapshot.timelineTime,
-            },
+            frameObservation: consecutiveRange
+              ? { kind: 'interval', range: consecutiveRange }
+              : { kind: 'point', time: capturedSnapshot.timelineTime },
             capturedAt: capturedSnapshot.capturedAt,
           })
           return
@@ -224,10 +237,7 @@ function waitForPresentedVideoSnapshot(
           isCurrent() && capturedSnapshot
             ? {
                 imageData: capturedSnapshot.imageData,
-                timelineRange: {
-                  startTime: capturedSnapshot.timelineTime,
-                  endTime: capturedSnapshot.timelineTime,
-                },
+                frameObservation: { kind: 'point', time: capturedSnapshot.timelineTime },
                 capturedAt: capturedSnapshot.capturedAt,
               }
             : null,
@@ -255,7 +265,9 @@ async function captureSourceAtTime(
   if (source instanceof HTMLImageElement) {
     if (!isVisualFrameReady(source)) return null
     const imageData = captureSource(source, canvas, width, height)
-    return imageData ? { imageData, timelineRange: null, capturedAt: performance.now() } : null
+    return imageData
+      ? { imageData, frameObservation: { kind: 'unknown' }, capturedAt: performance.now() }
+      : null
   }
 
   if (
@@ -320,12 +332,17 @@ async function captureSourceAtTime(
                         stableTimelineTime,
                         PAUSED_SYNC_TOLERANCE_SECONDS,
                       )
+                const frameObservation: FrameTimeObservation =
+                  stableTimelineTime !== null && pausedFrameRange
+                    ? {
+                        kind: 'paused-video',
+                        presentedTime: observedTimelineTime,
+                        currentTime: stableTimelineTime,
+                      }
+                    : { kind: 'point', time: observedTimelineTime }
                 return {
                   imageData,
-                  timelineRange: pausedFrameRange ?? {
-                    startTime: observedTimelineTime,
-                    endTime: observedTimelineTime,
-                  },
+                  frameObservation,
                   capturedAt: performance.now(),
                 }
               }
@@ -341,10 +358,7 @@ async function captureSourceAtTime(
                 if (stableTimelineTime !== null) {
                   return {
                     imageData,
-                    timelineRange: {
-                      startTime: stableTimelineTime,
-                      endTime: stableTimelineTime,
-                    },
+                    frameObservation: { kind: 'point', time: stableTimelineTime },
                     capturedAt: performance.now(),
                   }
                 }
@@ -362,7 +376,14 @@ async function captureSourceAtTime(
             afterCaptureRange?.startTime === observedRange.startTime &&
             afterCaptureRange.endTime === observedRange.endTime
           ) {
-            return { imageData, timelineRange: observedRange, capturedAt: performance.now() }
+            return {
+              imageData,
+              frameObservation:
+                observedRange.startTime === observedRange.endTime
+                  ? { kind: 'point', time: observedRange.startTime }
+                  : { kind: 'interval', range: observedRange },
+              capturedAt: performance.now(),
+            }
           }
         }
       }
@@ -694,19 +715,17 @@ export function useDifferenceRegions({
 
         if (!isCurrent()) return
 
-        const presentedTimelineTimeA =
-          isPlaying && sourceA instanceof HTMLVideoElement
-            ? calculateTimelineTime(sourceA.currentTime, clipA)
-            : null
-        const synchronizationTime = presentedTimelineTimeA ?? sampleTime
+        const synchronizationTime = capturedA
+          ? getObservationTime(capturedA.frameObservation, sampleTime)
+          : sampleTime
         const expectedFrameTolerance = isPlaying
           ? PLAYBACK_PRESENTED_FRAME_SYNC_TOLERANCE_SECONDS
           : PAUSED_SYNC_TOLERANCE_SECONDS
         if (
           !capturedA ||
           !capturedB ||
-          !areFrameRangesSynchronized(
-            [capturedA.timelineRange, capturedB.timelineRange],
+          !areFrameObservationsSynchronized(
+            [capturedA.frameObservation, capturedB.frameObservation],
             synchronizationTime,
             expectedFrameTolerance,
             FRAME_POINT_PAIR_TOLERANCE_SECONDS,

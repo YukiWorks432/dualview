@@ -1,13 +1,20 @@
 import { describe, expect, it } from 'vitest'
 
 import {
-  areFrameRangesSynchronized,
+  areFrameObservationsSynchronized,
   getConsecutivePresentedFrameRange,
   getPausedVideoFrameRange,
   getPlaybackDifferenceExpiryDelay,
   getStablePausedVideoFrameTime,
   isPlaybackDifferenceResultFresh,
 } from './synchronization'
+
+const unknownObservation = { kind: 'unknown' } as const
+const pointObservation = (time: number) => ({ kind: 'point', time }) as const
+const intervalObservation = (startTime: number, endTime: number) =>
+  ({ kind: 'interval', range: { startTime, endTime } }) as const
+const pausedVideoObservation = (presentedTime: number, currentTime: number) =>
+  ({ kind: 'paused-video', presentedTime, currentTime }) as const
 
 describe('consecutive presented frame ranges', () => {
   it('uses only adjacent presented frames to infer a displayed interval', () => {
@@ -45,11 +52,8 @@ describe('consecutive presented frame ranges', () => {
 describe('difference frame synchronization', () => {
   it('accepts overlapping frames from different frame rates at the requested time', () => {
     expect(
-      areFrameRangesSynchronized(
-        [
-          { startTime: 5, endTime: 5.0417 },
-          { startTime: 5.0333, endTime: 5.0667 },
-        ],
+      areFrameObservationsSynchronized(
+        [intervalObservation(5, 5.0417), intervalObservation(5.0333, 5.0667)],
         5.037,
         0.02,
         0,
@@ -60,11 +64,8 @@ describe('difference frame synchronization', () => {
 
   it('accepts a video timestamp that falls inside a decoded frame interval', () => {
     expect(
-      areFrameRangesSynchronized(
-        [
-          { startTime: 5.0333, endTime: 5.0333 },
-          { startTime: 5.02, endTime: 5.0533 },
-        ],
+      areFrameObservationsSynchronized(
+        [pointObservation(5.0333), intervalObservation(5.02, 5.0533)],
         5.0333,
         0.08,
         1 / 240,
@@ -75,11 +76,8 @@ describe('difference frame synchronization', () => {
 
   it('rejects video frames with distinct presentation timestamps during playback', () => {
     expect(
-      areFrameRangesSynchronized(
-        [
-          { startTime: 5, endTime: 5 },
-          { startTime: 5.0667, endTime: 5.0667 },
-        ],
+      areFrameObservationsSynchronized(
+        [pointObservation(5), pointObservation(5.0667)],
         5.0333,
         0.08,
         1 / 240,
@@ -89,11 +87,8 @@ describe('difference frame synchronization', () => {
 
   it('rejects adjacent 30fps frames even when both starts are near the request time', () => {
     expect(
-      areFrameRangesSynchronized(
-        [
-          { startTime: 5, endTime: 5.0333 },
-          { startTime: 5.0667, endTime: 5.1 },
-        ],
+      areFrameObservationsSynchronized(
+        [intervalObservation(5, 5.0333), intervalObservation(5.0667, 5.1)],
         5.0333,
         0.08,
         0,
@@ -104,11 +99,8 @@ describe('difference frame synchronization', () => {
 
   it('rejects distinct paused presentation timestamps even when both are near the requested time', () => {
     expect(
-      areFrameRangesSynchronized(
-        [
-          { startTime: 5.015, endTime: 5.015 },
-          { startTime: 5.03, endTime: 5.03 },
-        ],
+      areFrameObservationsSynchronized(
+        [pointObservation(5.015), pointObservation(5.03)],
         5.022,
         0.02,
         0.001,
@@ -118,11 +110,8 @@ describe('difference frame synchronization', () => {
 
   it('accepts paused frames with the same presentation timestamp', () => {
     expect(
-      areFrameRangesSynchronized(
-        [
-          { startTime: 5.015, endTime: 5.015 },
-          { startTime: 5.015, endTime: 5.015 },
-        ],
+      areFrameObservationsSynchronized(
+        [pointObservation(5.015), pointObservation(5.015)],
         5.015,
         0.02,
         0.001,
@@ -135,8 +124,8 @@ describe('difference frame synchronization', () => {
 
     expect(presentedFrame).toEqual({ startTime: 5.015, endTime: 5.03 })
     expect(
-      areFrameRangesSynchronized(
-        [presentedFrame, { startTime: 5.03, endTime: 5.03 }],
+      areFrameObservationsSynchronized(
+        [pausedVideoObservation(5.015, 5.03), pointObservation(5.03)],
         5.03,
         0.05,
         0.001,
@@ -145,20 +134,36 @@ describe('difference frame synchronization', () => {
     ).toBe(true)
   })
 
-  it('accepts the same very short held frame range at a 30fps frame boundary', () => {
-    const frameRange = { startTime: 0.033333, endTime: 1 / 30 }
+  it('accepts the same very short held video frame at a 30fps frame boundary', () => {
+    expect(
+      areFrameObservationsSynchronized(
+        [pausedVideoObservation(0.033333, 1 / 30), pausedVideoObservation(0.033333, 1 / 30)],
+        1 / 30,
+        0.05,
+        0.001,
+        0.001,
+      ),
+    ).toBe(true)
+  })
 
-    expect(areFrameRangesSynchronized([frameRange, frameRange], 1 / 30, 0.05, 0.001, 0.001)).toBe(
-      true,
-    )
+  it('matches an image to a single short paused video observation', () => {
+    expect(
+      areFrameObservationsSynchronized(
+        [pausedVideoObservation(0.033333, 1 / 30), unknownObservation],
+        1 / 30,
+        0.05,
+        0.001,
+        0.001,
+      ),
+    ).toBe(true)
   })
 
   it('rejects a sub-millisecond overlap between distinct frame ranges', () => {
     expect(
-      areFrameRangesSynchronized(
+      areFrameObservationsSynchronized(
         [
-          { startTime: 0, endTime: 1 / 30 },
-          { startTime: 1 / 30 - 0.0000005, endTime: 2 / 30 - 0.0000005 },
+          intervalObservation(0, 1 / 30),
+          intervalObservation(1 / 30 - 0.0000005, 2 / 30 - 0.0000005),
         ],
         1 / 30,
         0.05,
@@ -170,8 +175,8 @@ describe('difference frame synchronization', () => {
 
   it('still requires enough evidence when only one short frame range is observed', () => {
     expect(
-      areFrameRangesSynchronized(
-        [{ startTime: 0.033333, endTime: 1 / 30 }, null],
+      areFrameObservationsSynchronized(
+        [intervalObservation(0.033333, 1 / 30), unknownObservation],
         1 / 30,
         0.05,
         0.001,
@@ -182,11 +187,8 @@ describe('difference frame synchronization', () => {
 
   it('rejects adjacent paused frame intervals that only touch', () => {
     expect(
-      areFrameRangesSynchronized(
-        [
-          { startTime: 5, endTime: 5.03 },
-          { startTime: 5.03, endTime: 5.06 },
-        ],
+      areFrameObservationsSynchronized(
+        [intervalObservation(5, 5.03), intervalObservation(5.03, 5.06)],
         5.03,
         0.05,
         0.001,
@@ -197,11 +199,8 @@ describe('difference frame synchronization', () => {
 
   it('accepts the same presented frame at the end of its hold interval', () => {
     expect(
-      areFrameRangesSynchronized(
-        [
-          { startTime: 5.9333, endTime: 5.9333 },
-          { startTime: 5.9333, endTime: 5.9333 },
-        ],
+      areFrameObservationsSynchronized(
+        [pointObservation(5.9333), pointObservation(5.9333)],
         5.9666,
         0.05,
         0.001,
@@ -211,9 +210,62 @@ describe('difference frame synchronization', () => {
 
   it('allows image sources without a changing frame timestamp', () => {
     expect(
-      areFrameRangesSynchronized([null, { startTime: 5.01, endTime: 5.03 }], 5.02, 0.02, 0),
+      areFrameObservationsSynchronized(
+        [unknownObservation, intervalObservation(5.01, 5.03)],
+        5.02,
+        0.02,
+        0,
+      ),
     ).toBe(true)
-    expect(areFrameRangesSynchronized([null, null], 5.02, 0.02, 0)).toBe(true)
+    expect(
+      areFrameObservationsSynchronized([unknownObservation, unknownObservation], 5.02, 0.02, 0),
+    ).toBe(true)
+  })
+
+  it('matches paused video, ProRes, and timestamp-free image observations at a frame boundary', () => {
+    expect(
+      areFrameObservationsSynchronized(
+        [
+          pausedVideoObservation(0.033333, 1 / 30),
+          unknownObservation,
+          intervalObservation(0.033333, 0.066667),
+          pointObservation(1 / 30),
+        ],
+        1 / 30,
+        0.05,
+        0.001,
+        0.001,
+      ),
+    ).toBe(true)
+  })
+
+  it('rejects a frame timestamp at the exclusive end of a different decoded frame', () => {
+    expect(
+      areFrameObservationsSynchronized(
+        [pointObservation(1 / 30), intervalObservation(0, 1 / 30)],
+        1 / 30,
+        0.05,
+        0.001,
+        0.001,
+      ),
+    ).toBe(false)
+  })
+
+  it('rejects a paused video that still shows the previous frame at a ProRes frame boundary', () => {
+    expect(
+      areFrameObservationsSynchronized(
+        [
+          pausedVideoObservation(0, 1 / 30),
+          unknownObservation,
+          intervalObservation(1 / 30, 2 / 30),
+          pointObservation(1 / 30),
+        ],
+        1 / 30,
+        0.05,
+        0.001,
+        0.001,
+      ),
+    ).toBe(false)
   })
 })
 
