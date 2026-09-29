@@ -29,6 +29,16 @@ ffmpeg -f lavfi -i "testsrc2=size=1280x720:rate=24:duration=4" -an -c:v libvpx-v
 ffmpeg -f lavfi -i "testsrc2=size=1280x720:rate=24:duration=4" -an -c:v libvpx-vp9 -deadline realtime -cpu-used 8 -crf 40 -b:v 0 -fps_mode passthrough long-quality-low.webm
 ```
 
+`duration-75s-a.webm` and `duration-75s-b.webm` are generated black 128 × 72, 24 fps clips with
+1,800 frames. The B clip contains a single white frame at 30 seconds. This exercises analysis
+across a longer sequence and confirms that a one-frame highlight remains visible when many later
+unchanged intervals share its lane pixels at low zoom.
+
+```text
+ffmpeg -f lavfi -i "color=c=black:s=128x72:r=24:d=75" -an -c:v libvpx-vp9 -deadline realtime -cpu-used 8 -crf 30 -b:v 0 -fps_mode passthrough duration-75s-a.webm
+ffmpeg -f lavfi -i "color=c=black:s=128x72:r=24:d=75" -vf "drawbox=x=0:y=0:w=iw:h=ih:color=white:t=fill:enable='between(t,30,30.04)'" -an -c:v libvpx-vp9 -deadline realtime -cpu-used 8 -crf 30 -b:v 0 -fps_mode passthrough duration-75s-b.webm
+```
+
 At the default pixel threshold (0.10) and area threshold (2%), Chromium measured a maximum frame
 difference of 0.01% across all 45 NASA frames. The generated pattern measured 2.73% at its peak and
 is highlighted at the default area threshold; raising the area threshold to 5% removes that segment

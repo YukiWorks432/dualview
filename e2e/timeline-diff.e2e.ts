@@ -13,6 +13,24 @@ async function uploadToTrack(
   await chooser.setFiles(path.join(process.cwd(), 'e2e', 'fixtures', fileName))
 }
 
+async function waitForAnalysisProgress(page: import('@playwright/test').Page) {
+  const status = page.getByText(/^Analyzing \d+%$/).first()
+  await expect
+    .poll(
+      async () => {
+        const text = await status.textContent()
+        const match = /Analyzing (\d+)%/.exec(text ?? '')
+        return match ? Number(match[1]) : -1
+      },
+      { timeout: 30_000, intervals: [100, 250, 500] },
+    )
+    .toBeGreaterThanOrEqual(5)
+  const text = await status.textContent()
+  const progress = Number(/Analyzing (\d+)%/.exec(text ?? '')?.[1] ?? -1)
+  expect(progress).toBeLessThan(100)
+  return progress
+}
+
 test('compares uploaded A/B video frames without moving the shared playhead during analysis', async ({
   page,
 }) => {
@@ -168,39 +186,65 @@ test('cancels a high-resolution analysis and keeps partial results', async ({ pa
 
   const cancelButton = page.getByRole('button', { name: 'Cancel' })
   await expect(cancelButton).toBeVisible()
+  await waitForAnalysisProgress(page)
   await cancelButton.click()
   await expect(page.getByText('Partial results', { exact: true }).first()).toBeVisible({
     timeout: 60_000,
   })
   await expect(page.getByRole('button', { name: 'Analyze', exact: true })).toBeEnabled()
+
+  const lane = page.getByRole('img', { name: /Read-only A\/B difference lane/ })
+  const pixelCounts = await lane.evaluate((canvas) => {
+    const context = canvas.getContext('2d')
+    if (!context) throw new Error('Difference lane canvas was not available')
+    const { data, width } = context.getImageData(0, 1, canvas.width, 1)
+    let analyzedNeutral = 0
+    let unanalyzed = 0
+    for (let offset = 0; offset < width * 4; offset += 4) {
+      const red = data[offset]
+      const green = data[offset + 1]
+      const blue = data[offset + 2]
+      if (red >= 45 && red <= 60 && green >= 58 && green <= 73 && blue >= 68 && blue <= 85) {
+        analyzedNeutral++
+      }
+      if (red >= 20 && red <= 30 && green >= 29 && green <= 39 && blue >= 38 && blue <= 48) {
+        unanalyzed++
+      }
+    }
+    return { analyzedNeutral, unanalyzed }
+  })
+  expect(pixelCounts.analyzedNeutral).toBeGreaterThan(0)
+  expect(pixelCounts.unanalyzed).toBeGreaterThan(0)
 })
 
-test('marks results outdated when clip media is replaced', async ({ page }) => {
+test('marks results outdated when clip media is replaced during analysis', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.goto('/')
   await page.getByRole('button', { name: 'Hide filmstrip' }).click()
 
-  await uploadToTrack(page, 'Media A', 'difference-a.webm')
-  await uploadToTrack(page, 'Media B', 'difference-b.mov')
+  await uploadToTrack(page, 'Media A', 'long-quality-high.webm')
+  await uploadToTrack(page, 'Media B', 'long-quality-low.webm')
+  await page.getByLabel('Analysis resolution').selectOption('detailed')
   await page.getByRole('button', { name: 'Analyze', exact: true }).click()
-  await expect(page.getByText('Complete', { exact: true }).first()).toBeVisible({ timeout: 60_000 })
+  await waitForAnalysisProgress(page)
 
   await page.locator('[data-clip]').first().click({ button: 'right' })
   await page.getByText('Replace Media', { exact: true }).hover()
-  await page.getByRole('button', { name: 'difference-b.mov', exact: true }).click()
+  await page.getByRole('button', { name: 'long-quality-low.webm', exact: true }).click()
   await expect(page.getByText('Outdated', { exact: true }).first()).toBeVisible()
   await expect(page.getByRole('button', { name: 'Next highlighted interval' })).toBeDisabled()
 })
 
-test('clears session results after switching projects', async ({ page }) => {
+test('clears session results after switching projects during analysis', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.goto('/')
   await page.getByRole('button', { name: 'Hide filmstrip' }).click()
 
-  await uploadToTrack(page, 'Media A', 'difference-a.webm')
-  await uploadToTrack(page, 'Media B', 'difference-b.mov')
+  await uploadToTrack(page, 'Media A', 'long-quality-high.webm')
+  await uploadToTrack(page, 'Media B', 'long-quality-low.webm')
+  await page.getByLabel('Analysis resolution').selectOption('detailed')
   await page.getByRole('button', { name: 'Analyze', exact: true }).click()
-  await expect(page.getByText('Complete', { exact: true }).first()).toBeVisible({ timeout: 60_000 })
+  await waitForAnalysisProgress(page)
 
   await page.getByRole('button', { name: 'Projects', exact: true }).click()
   const projectDialog = page.getByRole('dialog')
@@ -208,6 +252,52 @@ test('clears session results after switching projects', async ({ page }) => {
   await projectDialog.getByRole('button', { name: 'New Project' }).click()
   await expect(page.getByText('Outdated', { exact: true }).first()).toBeVisible()
   await expect(page.getByRole('button', { name: 'Next highlighted interval' })).toBeDisabled()
+})
+
+test('preserves a one-frame highlight after analyzing a long low-zoom sequence', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Hide filmstrip' }).click()
+
+  await uploadToTrack(page, 'Media A', 'duration-75s-a.webm')
+  await uploadToTrack(page, 'Media B', 'duration-75s-b.webm')
+  await page.getByRole('button', { name: 'Analyze', exact: true }).click()
+  await expect(page.getByText('Complete', { exact: true }).first()).toBeVisible({ timeout: 90_000 })
+  await expect(page.getByRole('button', { name: 'Next highlighted interval' })).toBeEnabled()
+
+  const lane = page.getByRole('img', { name: /Read-only A\/B difference lane/ })
+  await lane.evaluate((canvas) => {
+    const laneWidth = Number.parseFloat(canvas.parentElement?.style.width ?? '0')
+    const pixelsPerSecond = laneWidth / 75
+    const rect = canvas.getBoundingClientRect()
+    canvas.dispatchEvent(
+      new MouseEvent('mousemove', {
+        bubbles: true,
+        clientX: rect.left + 30.02 * pixelsPerSecond,
+        clientY: rect.top + 16,
+      }),
+    )
+  })
+  await expect(lane).toHaveAttribute('title', /30\.000–30\.042s.*100\.00%/)
+
+  const zoomOut = page.locator('button:has(svg.lucide-zoom-out)')
+  for (let step = 0; step < 30; step++) await zoomOut.click()
+  await expect
+    .poll(() =>
+      lane.evaluate((canvas) => {
+        const context = canvas.getContext('2d')
+        if (!context) return 0
+        const { data, width } = context.getImageData(0, 0, canvas.width, 1)
+        let highlightedPixels = 0
+        for (let offset = 0; offset < width * 4; offset += 4) {
+          if (data[offset] > 120 && data[offset] > data[offset + 1] * 1.5) highlightedPixels++
+        }
+        return highlightedPixels
+      }),
+    )
+    .toBeGreaterThan(0)
 })
 
 test('measures both resolutions on long high-resolution video and preserves lane interactions', async ({

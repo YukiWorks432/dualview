@@ -22,6 +22,7 @@ const STATUS_COLORS = {
 } as const
 
 const RASTER_COLORS = [
+  '#18212a',
   '#35434d',
   '#bc3944',
   '#f04452',
@@ -33,17 +34,17 @@ const RASTER_COLORS = [
 function frameRasterValue(frame: TimelineDiffFrameScore, areaThreshold: number): number {
   if (frame.status === 'compared') {
     const rate = frame.differenceRate ?? 0
-    if (rate <= 0 || rate < areaThreshold) return 0
-    return rate >= Math.max(areaThreshold * 3, 0.2) ? 2 : 1
+    if (rate <= 0 || rate < areaThreshold) return 1
+    return rate >= Math.max(areaThreshold * 3, 0.2) ? 3 : 2
   }
 
   switch (frame.status) {
     case 'missing':
-      return 3
-    case 'unsupported':
       return 4
-    case 'error':
+    case 'unsupported':
       return 5
+    case 'error':
+      return 6
   }
   return 0
 }
@@ -149,7 +150,7 @@ export function TimelineDiffLane({ duration, pixelsPerSecond }: TimelineDiffLane
       context.setTransform(1, 0, 0, dpr, 0, 0)
 
       if (needsFullDraw) {
-        context.fillStyle = frames.length > 0 ? RASTER_COLORS[0] : '#18212a'
+        context.fillStyle = RASTER_COLORS[0]
         context.fillRect(0, 0, pixelWidth, height)
       }
 

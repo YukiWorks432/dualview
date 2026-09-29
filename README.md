@@ -528,7 +528,8 @@ compared by their visible color and opacity, while hidden RGB values under two f
 pixels do not create a difference.
 
 The lane marks missing frames or A/B gaps, unsupported media, and decode errors separately from
-frames with no detected difference. Image clips are unsupported by this video-frame analysis.
+frames with no detected difference, and distinguishes analyzed intervals from portions the analysis
+has not reached yet. Image clips are unsupported by this video-frame analysis.
 Analysis results are kept only in the current browser session and are discarded when the project,
 timeline, source media, pixel threshold, or resolution changes. Changing the area threshold updates
 highlights from the current frame scores without decoding again.
