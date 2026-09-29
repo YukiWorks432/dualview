@@ -189,20 +189,20 @@ export function MetadataComparison({ mediaA, mediaB, isOpen, onClose }: Metadata
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-surface border border-border p-6 w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-text-primary flex items-center gap-2">
+          <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
             <Info className="w-5 h-5" />
             Metadata Comparison
           </h2>
           <button onClick={onClose} className="p-1 hover:bg-surface-hover rounded">
-            <X className="w-5 h-5 text-text-muted" />
+            <X className="w-5 h-5 text-muted-foreground" />
           </button>
         </div>
 
         <div className="flex-1 overflow-y-auto">
           <div className="grid grid-cols-2 gap-4">
             {/* Header */}
-            <div className="text-sm font-medium text-orange-400">Track A</div>
-            <div className="text-sm font-medium text-lime-400">Track B</div>
+            <div className="text-sm font-medium text-compare-a">Track A</div>
+            <div className="text-sm font-medium text-compare-b">Track B</div>
 
             {/* Basic Info */}
             <MetadataSection
@@ -317,7 +317,7 @@ function MetadataSection({
     <>
       <button
         onClick={onToggle}
-        className="col-span-2 flex items-center gap-2 py-2 text-sm font-medium text-text-secondary hover:text-text-primary border-b border-border"
+        className="col-span-2 flex items-center gap-2 py-2 text-sm font-medium text-muted-foreground hover:text-foreground border-b border-border"
       >
         {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
         {title}
@@ -342,24 +342,24 @@ function MetadataRow({
 
   return (
     <>
-      <div className="col-span-2 text-xs text-text-muted py-1 border-b border-border/50">
+      <div className="col-span-2 text-xs text-muted-foreground py-1 border-b border-border/50">
         {label}
       </div>
       <div
         className={cn(
           'text-sm py-1 border-b border-border/50 font-mono',
-          isDifferent && highlight ? 'text-orange-400' : 'text-text-primary',
+          isDifferent && highlight ? 'text-compare-a' : 'text-foreground',
         )}
       >
-        {valueA || <span className="text-text-muted">—</span>}
+        {valueA || <span className="text-muted-foreground">—</span>}
       </div>
       <div
         className={cn(
           'text-sm py-1 border-b border-border/50 font-mono',
-          isDifferent && highlight ? 'text-lime-400' : 'text-text-primary',
+          isDifferent && highlight ? 'text-compare-b' : 'text-foreground',
         )}
       >
-        {valueB || <span className="text-text-muted">—</span>}
+        {valueB || <span className="text-muted-foreground">—</span>}
       </div>
     </>
   )

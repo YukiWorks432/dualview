@@ -26,8 +26,8 @@ export function SurfaceProvider({ value = SURFACE_MIN_LEVEL, children }: Surface
 }
 
 type SurfaceStyle = CSSProperties & {
-  '--surface-current'?: string
-  '--surface-control'?: string
+  '--surface-current-hsl'?: string
+  '--surface-control-hsl'?: string
   '--surface-shadow-current'?: string
   '--surface-control-shadow'?: string
 }
@@ -42,11 +42,11 @@ function surfaceStyle(
 
   return {
     ...style,
-    '--surface-current': `var(--surface-${level})`,
-    '--surface-control': `var(--surface-${controlLevel})`,
+    '--surface-current-hsl': `var(--surface-${level})`,
+    '--surface-control-hsl': `var(--surface-${controlLevel})`,
     '--surface-shadow-current':
-      resolvedShadowLevel === null ? 'none' : `var(--surface-shadow-${resolvedShadowLevel})`,
-    '--surface-control-shadow': `var(--surface-shadow-${controlLevel})`,
+      resolvedShadowLevel === null ? 'none' : `var(--shadow-${resolvedShadowLevel})`,
+    '--surface-control-shadow': `var(--shadow-${controlLevel})`,
   }
 }
 

@@ -153,8 +153,8 @@ function ComparisonRow({ label, valueA, valueB, unit }: ComparisonRowProps) {
 
   return (
     <div className="grid grid-cols-[100px_1fr_24px_1fr] gap-2 items-center py-1.5 border-b border-border/50 last:border-0">
-      <span className="text-[11px] text-text-muted font-medium">{label}</span>
-      <div className="text-xs font-mono bg-surface-alt px-2 py-1 text-accent truncate" title={strA}>
+      <span className="text-[11px] text-muted-foreground font-medium">{label}</span>
+      <div className="text-xs font-mono bg-surface-alt px-2 py-1 text-compare-a truncate" title={strA}>
         {strA}
         {unit && strA !== '—' ? ` ${unit}` : ''}
       </div>
@@ -170,7 +170,7 @@ function ComparisonRow({ label, valueA, valueB, unit }: ComparisonRowProps) {
       <div
         className={cn(
           'text-xs font-mono px-2 py-1 truncate',
-          isDifferent ? 'bg-secondary/20 text-secondary' : 'bg-surface-alt text-secondary',
+          isDifferent ? 'bg-compare-b/20 text-compare-b' : 'bg-surface-alt text-compare-b',
         )}
         title={strB}
       >
@@ -255,16 +255,16 @@ export function MetadataComparison() {
         onClick={() => setIsExpanded(!isExpanded)}
         className={cn(
           'flex items-center gap-2 px-3 py-1.5 transition-colors text-sm border',
-          isExpanded ? 'surface-active border-accent/50' : 'surface-control',
+          isExpanded ? 'surface-active border-primary/50' : 'surface-control',
         )}
       >
-        <FileSearch className="w-4 h-4 text-text-muted" />
-        <span className="text-xs font-medium text-text-secondary hidden lg:inline">Metadata</span>
+        <FileSearch className="w-4 h-4 text-muted-foreground" />
+        <span className="text-xs font-medium text-muted-foreground hidden lg:inline">Metadata</span>
         {/* Keep header compact: avoid showing filenames / diff count here */}
 
         <ChevronDown
           className={cn(
-            'w-3.5 h-3.5 text-text-muted transition-transform',
+            'w-3.5 h-3.5 text-muted-foreground transition-transform',
             isExpanded && 'rotate-180',
           )}
         />
@@ -276,7 +276,7 @@ export function MetadataComparison() {
             {/* Header */}
             <div className="surface-control p-3 border-b border-border">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-text-primary flex items-center gap-2">
+                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
                   <FileSearch className="w-4 h-4" />
                   File Metadata Comparison
                 </h3>
@@ -289,11 +289,11 @@ export function MetadataComparison() {
               </div>
 
               {/* Column headers */}
-              <div className="grid grid-cols-[100px_1fr_24px_1fr] gap-2 mt-3 text-[10px] uppercase tracking-wider text-text-muted font-medium">
+              <div className="grid grid-cols-[100px_1fr_24px_1fr] gap-2 mt-3 text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
                 <span>Property</span>
-                <span className="text-accent">Media A</span>
+                <span className="text-compare-a">Media A</span>
                 <span></span>
-                <span className="text-secondary">Media B</span>
+                <span className="text-compare-b">Media B</span>
               </div>
             </div>
 
@@ -301,7 +301,7 @@ export function MetadataComparison() {
             <div className="flex-1 overflow-y-auto p-3">
               {isLoading ? (
                 <div className="flex items-center justify-center py-8">
-                  <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+                  <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                 </div>
               ) : (
                 <div className="space-y-1">
@@ -381,7 +381,7 @@ export function MetadataComparison() {
             </div>
 
             {/* Footer */}
-            <div className="surface-control p-2 border-t border-border flex items-center justify-between text-[10px] text-text-muted">
+            <div className="surface-control p-2 border-t border-border flex items-center justify-between text-[10px] text-muted-foreground">
               <div className="flex items-center gap-3">
                 <span className="flex items-center gap-1">
                   <Equal className="w-3 h-3 text-green-500" /> Same

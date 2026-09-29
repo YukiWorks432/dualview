@@ -59,7 +59,7 @@ export function StitchExportPanel({
   return (
     <>
       <fieldset>
-        <legend className="mb-2 text-sm text-text-secondary">Source Track</legend>
+        <legend className="mb-2 text-sm text-muted-foreground">Source Track</legend>
         <div className="grid grid-cols-2 gap-2">
           {tracks.map((track) => (
             <button
@@ -68,17 +68,17 @@ export function StitchExportPanel({
               aria-pressed={trackId === track.id}
               onClick={() => onTrackChange(track.id)}
               className={`surface-control-elevation ui-radius-md border p-3 text-left transition-colors ${
-                trackId === track.id ? 'border-accent bg-accent/10' : 'surface-control'
+                trackId === track.id ? 'border-primary bg-primary/10' : 'surface-control'
               }`}
             >
               <div className="mb-1 flex items-center gap-2">
                 <span
-                  className={`h-3 w-3 rounded-full ${track.type === 'a' ? 'bg-accent' : 'bg-secondary'}`}
+                  className={`h-3 w-3 rounded-full ${track.type === 'a' ? 'bg-compare-a' : 'bg-compare-b'}`}
                   aria-hidden="true"
                 />
-                <span className="text-sm font-medium text-text-primary">{track.name}</span>
+                <span className="text-sm font-medium text-foreground">{track.name}</span>
               </div>
-              <div className="text-xs text-text-muted">
+              <div className="text-xs text-muted-foreground">
                 {track.clipCount} clip{track.clipCount !== 1 ? 's' : ''} •{' '}
                 {formatTime(track.totalDuration)}
               </div>
@@ -90,33 +90,33 @@ export function StitchExportPanel({
       {selectedTrack &&
         (selectedTrack.clipCount === 0 ? (
           <div className="ui-radius-md border border-border bg-surface-alt p-4 text-center">
-            <Film className="mx-auto mb-2 h-8 w-8 text-text-muted" aria-hidden="true" />
-            <p className="text-sm text-text-secondary">No clips on this track</p>
-            <p className="mt-1 text-xs text-text-muted">Add clips to the timeline to export</p>
+            <Film className="mx-auto mb-2 h-8 w-8 text-muted-foreground" aria-hidden="true" />
+            <p className="text-sm text-muted-foreground">No clips on this track</p>
+            <p className="mt-1 text-xs text-muted-foreground">Add clips to the timeline to export</p>
           </div>
         ) : (
           <div className="space-y-2">
-            <div className="text-sm text-text-secondary">
+            <div className="text-sm text-muted-foreground">
               Clips to Stitch ({selectedTrack.clipCount})
             </div>
             <div className="max-h-32 space-y-1 overflow-y-auto ui-radius-md border border-border bg-surface-alt p-2">
               {selectedTrack.clips.map((clip, index) => (
                 <div key={`${clip.name}-${index}`} className="flex items-center gap-2 text-xs">
-                  <span className="w-5 text-text-muted">{index + 1}.</span>
-                  <Film className="h-3 w-3 text-text-muted" aria-hidden="true" />
-                  <span className="flex-1 truncate text-text-primary">{clip.name}</span>
-                  <span className="text-text-muted">{formatTime(clip.duration)}</span>
+                  <span className="w-5 text-muted-foreground">{index + 1}.</span>
+                  <Film className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
+                  <span className="flex-1 truncate text-foreground">{clip.name}</span>
+                  <span className="text-muted-foreground">{formatTime(clip.duration)}</span>
                 </div>
               ))}
             </div>
-            <div className="text-right text-xs text-text-muted">
+            <div className="text-right text-xs text-muted-foreground">
               Total: {formatTime(selectedTrack.totalDuration)}
             </div>
           </div>
         ))}
 
       <fieldset>
-        <legend className="mb-2 text-sm text-text-secondary">Resolution</legend>
+        <legend className="mb-2 text-sm text-muted-foreground">Resolution</legend>
         <div className="grid grid-cols-3 gap-2">
           {(['720p', '1080p', '4k'] as const).map((option) => (
             <button
@@ -126,8 +126,8 @@ export function StitchExportPanel({
               onClick={() => onResolutionChange(option)}
               className={`surface-control-elevation ui-radius-md border px-3 py-2 text-sm transition-colors ${
                 resolution === option
-                  ? 'border-accent bg-accent/10 text-accent'
-                  : 'surface-control text-text-secondary'
+                  ? 'border-primary bg-primary/10 text-primary'
+                  : 'surface-control text-muted-foreground'
               }`}
             >
               {option.toUpperCase()}
@@ -137,7 +137,7 @@ export function StitchExportPanel({
       </fieldset>
 
       <fieldset>
-        <legend className="mb-2 text-sm text-text-secondary">Quality</legend>
+        <legend className="mb-2 text-sm text-muted-foreground">Quality</legend>
         <div className="grid grid-cols-3 gap-2">
           {[
             { value: 'low', label: 'Low', description: '2 Mbps' },
@@ -151,19 +151,19 @@ export function StitchExportPanel({
               onClick={() => onQualityChange(option.value as StitchQuality)}
               className={`surface-control-elevation ui-radius-md border px-3 py-2 text-sm transition-colors ${
                 quality === option.value
-                  ? 'border-accent bg-accent/10 text-accent'
-                  : 'surface-control text-text-secondary'
+                  ? 'border-primary bg-primary/10 text-primary'
+                  : 'surface-control text-muted-foreground'
               }`}
             >
               <span className="block">{option.label}</span>
-              <span className="block text-[10px] text-text-muted">{option.description}</span>
+              <span className="block text-[10px] text-muted-foreground">{option.description}</span>
             </button>
           ))}
         </div>
       </fieldset>
 
       <fieldset>
-        <legend className="mb-2 text-sm text-text-secondary">Frame Rate</legend>
+        <legend className="mb-2 text-sm text-muted-foreground">Frame Rate</legend>
         <div className="grid grid-cols-3 gap-2">
           {([24, 30, 60] as const).map((option) => (
             <button
@@ -173,8 +173,8 @@ export function StitchExportPanel({
               onClick={() => onFpsChange(option)}
               className={`surface-control-elevation ui-radius-md border px-3 py-2 text-sm transition-colors ${
                 fps === option
-                  ? 'border-accent bg-accent/10 text-accent'
-                  : 'surface-control text-text-secondary'
+                  ? 'border-primary bg-primary/10 text-primary'
+                  : 'surface-control text-muted-foreground'
               }`}
             >
               {option} fps
@@ -189,8 +189,8 @@ export function StitchExportPanel({
           role="status"
         >
           <div className="flex items-center justify-between text-sm">
-            <span className="text-text-secondary">{progress.message}</span>
-            <span className="font-medium text-accent">{progress.progress}%</span>
+            <span className="text-muted-foreground">{progress.message}</span>
+            <span className="font-medium text-primary">{progress.progress}%</span>
           </div>
           <div
             className="ui-radius-sm h-2 overflow-hidden bg-background"
@@ -201,23 +201,23 @@ export function StitchExportPanel({
             aria-valuenow={progress.progress}
           >
             <div
-              className="h-full bg-gradient-to-r from-accent via-accent to-secondary transition-all duration-200"
+              className="h-full bg-gradient-to-r from-primary via-primary to-success transition-all duration-200"
               style={{ width: `${progress.progress}%` }}
             />
           </div>
-          <div className="text-xs text-text-muted">
+          <div className="text-xs text-muted-foreground">
             Clip {progress.currentClip} of {progress.totalClips}
           </div>
         </div>
       )}
 
       {progress.status === 'done' && (
-        <div className="ui-radius-lg space-y-4 border border-accent/40 bg-gradient-to-br from-accent/20 via-accent/10 to-secondary/10 p-6 text-center">
-          <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-accent/20">
-            <Check className="h-8 w-8 text-accent" strokeWidth={3} aria-hidden="true" />
+        <div className="ui-radius-lg space-y-4 border border-primary/40 bg-gradient-to-br from-primary/20 via-primary/10 to-success/10 p-6 text-center">
+          <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-primary/20">
+            <Check className="h-8 w-8 text-primary" strokeWidth={3} aria-hidden="true" />
           </div>
-          <h3 className="text-xl font-bold text-text-primary">Stitch Complete!</h3>
-          <p className="text-sm text-text-secondary">
+          <h3 className="text-xl font-bold text-foreground">Stitch Complete!</h3>
+          <p className="text-sm text-muted-foreground">
             Your combined video is ready in your downloads folder
           </p>
           <div className="flex items-center justify-center gap-3 pt-2">
@@ -231,7 +231,7 @@ export function StitchExportPanel({
 
       {progress.status === 'error' && (
         <div
-          className="flex items-center gap-2 ui-radius-md border border-error/30 bg-error/10 p-3 text-sm text-error"
+          className="flex items-center gap-2 ui-radius-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive"
           role="alert"
         >
           <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" />

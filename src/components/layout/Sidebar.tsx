@@ -103,15 +103,15 @@ export function Sidebar({ onCollapse, isMobileOpen, onMobileClose, onOpenProject
           </Button>
         </div>
         {saveStatus === 'saved' && (
-          <span className="text-[10px] text-text-muted">Saved locally</span>
+          <span className="text-[10px] text-muted-foreground">Saved locally</span>
         )}
         {saveStatus === 'saving' && (
-          <span className="text-[10px] text-accent">Saving locally...</span>
+          <span className="text-[10px] text-primary">Saving locally...</span>
         )}
         {saveStatus === 'unsaved' && (
-          <span className="text-[10px] text-text-muted">Unsaved changes</span>
+          <span className="text-[10px] text-muted-foreground">Unsaved changes</span>
         )}
-        {saveStatus === 'error' && <span className="text-[10px] text-error">Save failed</span>}
+        {saveStatus === 'error' && <span className="text-[10px] text-destructive">Save failed</span>}
       </ElevatedSurface>
 
       {/* Tab navigation - Jakob's Law: Familiar tab pattern */}
@@ -120,7 +120,7 @@ export function Sidebar({ onCollapse, isMobileOpen, onMobileClose, onOpenProject
         {isMobileOpen && onMobileClose && (
           <button
             onClick={onMobileClose}
-            className="surface-control ui-radius-md inline-flex items-center justify-center border px-3 py-3 text-text-muted hover:text-text-primary transition-all"
+            className="surface-control ui-radius-md inline-flex items-center justify-center border px-3 py-3 text-muted-foreground hover:text-foreground transition-all"
             title="Close Sidebar"
           >
             <X className="w-5 h-5" />
@@ -129,8 +129,8 @@ export function Sidebar({ onCollapse, isMobileOpen, onMobileClose, onOpenProject
         <button
           className={`surface-control flex-1 border py-3 text-sm font-medium transition-all duration-150 relative ${
             activeTab === 'media'
-              ? 'surface-active text-text-primary'
-              : 'text-text-secondary hover:text-text-primary'
+              ? 'surface-active text-foreground'
+              : 'text-muted-foreground hover:text-foreground'
           }`}
           onClick={() => setActiveTab('media')}
         >
@@ -140,14 +140,14 @@ export function Sidebar({ onCollapse, isMobileOpen, onMobileClose, onOpenProject
           Media
           {/* Active indicator - Von Restorff Effect */}
           {activeTab === 'media' && (
-            <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-accent" />
+            <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-primary" />
           )}
         </button>
         <button
           className={`surface-control flex-1 border py-3 text-sm font-medium transition-all duration-150 relative ${
             activeTab === 'settings'
-              ? 'surface-active text-text-primary'
-              : 'text-text-secondary hover:text-text-primary'
+              ? 'surface-active text-foreground'
+              : 'text-muted-foreground hover:text-foreground'
           }`}
           onClick={() => setActiveTab('settings')}
         >
@@ -156,13 +156,13 @@ export function Sidebar({ onCollapse, isMobileOpen, onMobileClose, onOpenProject
           />
           Settings
           {activeTab === 'settings' && (
-            <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-accent" />
+            <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-primary" />
           )}
         </button>
         {onCollapse && !isMobileOpen && (
           <button
             onClick={onCollapse}
-            className="surface-control ui-radius-md inline-flex items-center justify-center border px-2 text-text-muted hover:text-text-primary transition-all duration-150 group hide-mobile"
+            className="surface-control ui-radius-md inline-flex items-center justify-center border px-2 text-muted-foreground hover:text-foreground transition-all duration-150 group hide-mobile"
             title="Collapse Sidebar (B)"
           >
             <ChevronLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
@@ -198,7 +198,7 @@ export function Sidebar({ onCollapse, isMobileOpen, onMobileClose, onOpenProject
       <div className="surface-control shrink-0 p-3 border-t border-border/50 safe-area-bottom text-[10px]">
         <div className="space-y-2">
           <div>
-            <div className="text-text-muted mb-1">Site information</div>
+            <div className="text-muted-foreground mb-1">Site information</div>
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
               {[
                 ['Privacy', '/privacy/'],
@@ -212,7 +212,7 @@ export function Sidebar({ onCollapse, isMobileOpen, onMobileClose, onOpenProject
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={`${label} (opens in a new tab)`}
-                  className="inline-flex items-center gap-0.5 text-text-secondary transition-colors hover:text-text-primary"
+                  className="inline-flex items-center gap-0.5 text-muted-foreground transition-colors hover:text-foreground"
                 >
                   {label}
                   <ExternalLink className="h-2.5 w-2.5" aria-hidden="true" />
@@ -221,13 +221,13 @@ export function Sidebar({ onCollapse, isMobileOpen, onMobileClose, onOpenProject
             </div>
           </div>
           <div className="pt-2 border-t border-border/30">
-            <div className="text-text-muted mb-1">Maintained fork</div>
+            <div className="text-muted-foreground mb-1">Maintained fork</div>
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
               <a
                 href="https://github.com/YukiWorks432/dualview"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-text-secondary hover:text-text-primary transition-colors"
+                className="text-muted-foreground hover:text-foreground transition-colors"
               >
                 GitHub
               </a>
@@ -235,7 +235,7 @@ export function Sidebar({ onCollapse, isMobileOpen, onMobileClose, onOpenProject
                 href="https://x.com/YuK1_Works"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-text-secondary hover:text-text-primary transition-colors"
+                className="text-muted-foreground hover:text-foreground transition-colors"
               >
                 @YuK1_Works
               </a>
@@ -243,20 +243,20 @@ export function Sidebar({ onCollapse, isMobileOpen, onMobileClose, onOpenProject
                 href="https://hanayuki.xyz"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-text-secondary hover:text-text-primary transition-colors"
+                className="text-muted-foreground hover:text-foreground transition-colors"
               >
                 hanayuki.xyz
               </a>
             </div>
           </div>
           <div className="pt-2 border-t border-border/30">
-            <div className="text-text-muted mb-1">Original project</div>
+            <div className="text-muted-foreground mb-1">Original project</div>
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
               <a
                 href="https://github.com/gokayfem/dualview"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-text-muted hover:text-text-primary transition-colors"
+                className="text-muted-foreground hover:text-foreground transition-colors"
               >
                 GitHub
               </a>
@@ -264,7 +264,7 @@ export function Sidebar({ onCollapse, isMobileOpen, onMobileClose, onOpenProject
                 href="https://dualview.ai"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-text-muted hover:text-text-primary transition-colors"
+                className="text-muted-foreground hover:text-foreground transition-colors"
               >
                 dualview.ai
               </a>
@@ -272,7 +272,7 @@ export function Sidebar({ onCollapse, isMobileOpen, onMobileClose, onOpenProject
                 href="https://huggingface.co/gokaygokay"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-text-muted hover:text-text-primary transition-colors"
+                className="text-muted-foreground hover:text-foreground transition-colors"
               >
                 Hugging Face
               </a>
@@ -314,14 +314,14 @@ function MediaPanel() {
       <ElevatedSurface
         offset={1}
         className={`ui-radius-lg border p-3 transition-[border-color,box-shadow] duration-200 ${
-          isReady ? 'border-accent/60' : 'border-border'
+          isReady ? 'border-primary/60' : 'border-border'
         }`}
       >
         <div className="flex items-center justify-between mb-2">
-          <span className="text-xs font-medium text-text-secondary">
+          <span className="text-xs font-medium text-muted-foreground">
             {isReady ? '✓ Ready to Compare' : 'Setup Progress'}
           </span>
-          <span className={`text-xs font-mono ${isReady ? 'text-accent' : 'text-text-muted'}`}>
+          <span className={`text-xs font-mono ${isReady ? 'text-primary' : 'text-muted-foreground'}`}>
             {completionSteps}/2
           </span>
         </div>
@@ -329,30 +329,30 @@ function MediaPanel() {
         <div className="flex gap-1 mb-2">
           <div
             className={`ui-radius-sm flex-1 h-1.5 transition-all duration-300 ${
-              hasMediaA ? 'bg-accent' : 'bg-border animate-pulse-subtle'
+              hasMediaA ? 'bg-compare-a' : 'bg-border animate-pulse-subtle'
             }`}
           />
           <div
             className={`ui-radius-sm flex-1 h-1.5 transition-all duration-300 ${
-              hasMediaB ? 'bg-secondary' : 'bg-border animate-pulse-subtle'
+              hasMediaB ? 'bg-compare-b' : 'bg-border animate-pulse-subtle'
             }`}
           />
         </div>
         <div className="flex justify-between text-[10px]">
           <span
-            className={`flex items-center gap-1 ${hasMediaA ? 'text-accent' : 'text-text-muted'}`}
+            className={`flex items-center gap-1 ${hasMediaA ? 'text-compare-a' : 'text-muted-foreground'}`}
           >
             {hasMediaA ? '● Media A' : '○ Add Media A'}
           </span>
           <span
-            className={`flex items-center gap-1 ${hasMediaB ? 'text-secondary' : 'text-text-muted'}`}
+            className={`flex items-center gap-1 ${hasMediaB ? 'text-compare-b' : 'text-muted-foreground'}`}
           >
             {hasMediaB ? '● Media B' : '○ Add Media B'}
           </span>
         </div>
         {/* Helpful hint - Paradox of Active User */}
         {!isReady && (
-          <p className="text-[10px] text-text-muted mt-2 pt-2 border-t border-border/50">
+          <p className="text-[10px] text-muted-foreground mt-2 pt-2 border-t border-border/50">
             💡 Drag files or paste URLs to add media
           </p>
         )}
@@ -361,7 +361,7 @@ function MediaPanel() {
       <MediaUpload />
 
       <div className="space-y-2">
-        <h3 className="text-xs font-semibold text-text-secondary uppercase tracking-wider flex items-center justify-between">
+        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center justify-between">
           Library
           <kbd className="kbd text-[9px]">B</kbd>
         </h3>
@@ -443,14 +443,14 @@ function SettingsPanel({
   return (
     <div className="space-y-4">
       {/* Current mode indicator - helps with context */}
-      <ElevatedSurface offset={1} className="ui-radius-lg border border-accent/30 p-3">
-        <div className="text-[10px] uppercase tracking-wider text-accent font-medium mb-1">
+      <ElevatedSurface offset={1} className="ui-radius-lg border border-primary/30 p-3">
+        <div className="text-[10px] uppercase tracking-wider text-primary font-medium mb-1">
           Current Mode
         </div>
-        <div className="text-sm font-medium text-text-primary capitalize">
+        <div className="text-sm font-medium text-foreground capitalize">
           {comparisonMode.replace('-', ' ')}
         </div>
-        <p className="text-[10px] text-text-muted mt-1">
+        <p className="text-[10px] text-muted-foreground mt-1">
           {modeHints[comparisonMode] || 'Configure settings below'}
         </p>
       </ElevatedSurface>
@@ -461,11 +461,11 @@ function SettingsPanel({
           offset={1}
           className="ui-radius-lg space-y-4 border border-border p-4 animate-slide-down"
         >
-          <h3 className="text-sm font-semibold text-text-primary flex items-center gap-2">
-            <Microscope className="w-4 h-4 text-accent" />
+          <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+            <Microscope className="w-4 h-4 text-primary" />
             Difference
           </h3>
-          <p className="text-[10px] text-text-muted -mt-2">26 advanced comparison modes</p>
+          <p className="text-[10px] text-muted-foreground -mt-2">26 advanced comparison modes</p>
 
           {/* Category selector */}
           <Select
@@ -507,7 +507,7 @@ function SettingsPanel({
           />
 
           {/* Mode description */}
-          <p className="text-[10px] text-text-muted">
+          <p className="text-[10px] text-muted-foreground">
             {getComparisonModeInfo(webglComparisonSettings.mode)?.description || ''}
           </p>
 
@@ -702,7 +702,7 @@ function SettingsPanel({
                 value={webglComparisonSettings.threshold}
                 onChange={(e) => setWebGLComparisonSettings({ threshold: Number(e.target.value) })}
               />
-              <p className="text-[10px] text-text-muted">
+              <p className="text-[10px] text-muted-foreground">
                 Higher = stricter edge detection (fewer peaks)
               </p>
             </>
@@ -741,7 +741,7 @@ function SettingsPanel({
                 value={webglComparisonSettings.threshold}
                 onChange={(e) => setWebGLComparisonSettings({ threshold: Number(e.target.value) })}
               />
-              <p className="text-[10px] text-text-muted">
+              <p className="text-[10px] text-muted-foreground">
                 Show blue zebras for crushed blacks (0 = off)
               </p>
             </>
@@ -750,8 +750,8 @@ function SettingsPanel({
           {/* SCOPE-007: Zone System info */}
           {(webglComparisonSettings.mode === 'exposure-zone-system' ||
             webglComparisonSettings.mode === 'exposure-zone-compare') && (
-            <div className="surface-control ui-radius-md space-y-1 border p-2 text-[10px] text-text-muted">
-              <p className="font-medium text-text-secondary">Ansel Adams Zone System:</p>
+            <div className="surface-control ui-radius-md space-y-1 border p-2 text-[10px] text-muted-foreground">
+              <p className="font-medium text-muted-foreground">Ansel Adams Zone System:</p>
               <div className="grid grid-cols-2 gap-x-2">
                 <span style={{ color: '#000' }}>Zone 0: Pure black</span>
                 <span style={{ color: '#260080' }}>Zone I: Near black</span>
@@ -781,8 +781,8 @@ function SettingsPanel({
           offset={1}
           className="ui-radius-lg space-y-4 border border-border p-4 animate-slide-down"
         >
-          <h3 className="text-sm font-semibold text-text-primary flex items-center gap-2">
-            <Sliders className="w-4 h-4 text-accent" />
+          <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+            <Sliders className="w-4 h-4 text-primary" />
             Slider Settings
           </h3>
 
@@ -791,8 +791,8 @@ function SettingsPanel({
             onClick={toggleHideSlider}
             className={`ui-radius-md flex w-full items-center justify-between border p-3 transition-colors ${
               hideSlider
-                ? 'surface-active border-accent text-accent'
-                : 'surface-control text-text-primary'
+                ? 'surface-active border-primary text-primary'
+                : 'surface-control text-foreground'
             }`}
           >
             <span className="text-sm font-medium">
@@ -808,7 +808,7 @@ function SettingsPanel({
             max={100}
             onChange={(e) => setSliderPosition(Number(e.target.value))}
           />
-          <div className="flex items-center justify-between text-[10px] text-text-muted -mt-2">
+          <div className="flex items-center justify-between text-[10px] text-muted-foreground -mt-2">
             <span>A side</span>
             <span>B side</span>
           </div>
@@ -821,7 +821,7 @@ function SettingsPanel({
               { value: 'horizontal', label: 'Horizontal (Top/Bottom)' },
             ]}
           />
-          <p className="text-[10px] text-text-muted">
+          <p className="text-[10px] text-muted-foreground">
             Press <kbd className="kbd">H</kbd> to toggle slider visibility
           </p>
         </ElevatedSurface>
@@ -832,8 +832,8 @@ function SettingsPanel({
           offset={1}
           className="ui-radius-lg space-y-4 border border-border p-4 animate-slide-down"
         >
-          <h3 className="text-sm font-semibold text-text-primary flex items-center gap-2">
-            <ChevronRight className="w-4 h-4 text-accent" />
+          <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+            <ChevronRight className="w-4 h-4 text-primary" />
             Blend Settings
           </h3>
           <Select
@@ -855,8 +855,8 @@ function SettingsPanel({
           offset={1}
           className="ui-radius-lg space-y-4 border border-border p-4 animate-slide-down"
         >
-          <h3 className="text-sm font-semibold text-text-primary flex items-center gap-2">
-            <ChevronRight className="w-4 h-4 text-accent" />
+          <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+            <ChevronRight className="w-4 h-4 text-primary" />
             Split Layout
           </h3>
           <Select
@@ -875,10 +875,10 @@ function SettingsPanel({
       {/* Export settings card - always visible */}
       <ElevatedSurface offset={1} className="ui-radius-lg space-y-4 border border-border p-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-text-primary">Quick Export</h3>
+          <h3 className="text-sm font-semibold text-foreground">Quick Export</h3>
           <kbd className="kbd">E</kbd>
         </div>
-        <p className="text-[10px] text-text-muted -mt-2">
+        <p className="text-[10px] text-muted-foreground -mt-2">
           Basic settings • Press E for full options
         </p>
         <div className="grid grid-cols-2 gap-3">
@@ -923,7 +923,7 @@ function SettingsPanel({
 
       {/* Keyboard shortcuts hint */}
       <div className="ui-radius-lg border border-dashed border-border p-3 text-center">
-        <p className="text-[10px] text-text-muted">
+        <p className="text-[10px] text-muted-foreground">
           Press <kbd className="kbd">?</kbd> for all keyboard shortcuts
         </p>
       </div>
