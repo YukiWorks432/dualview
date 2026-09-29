@@ -74,10 +74,10 @@ export function useClipAwareVideoSync(
       updateVisibility(false)
     }
 
-
     return () => {
       cancelled = true
-    }  }, [videoRef, clip]) // Re-run when clip changes
+    }
+  }, [videoRef, clip]) // Re-run when clip changes
 
   // Listen for playback-seek events - immediate response
   useEffect(() => {
