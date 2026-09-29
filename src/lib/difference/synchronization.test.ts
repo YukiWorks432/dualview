@@ -4,6 +4,7 @@ import {
   areFrameRangesSynchronized,
   getConsecutivePresentedFrameRange,
   getPlaybackDifferenceExpiryDelay,
+  getStablePausedVideoFrameTime,
 } from './synchronization'
 
 describe('consecutive presented frame ranges', () => {
@@ -146,6 +147,43 @@ describe('difference frame synchronization', () => {
       areFrameRangesSynchronized([null, { startTime: 5.01, endTime: 5.03 }], 5.02, 0.02, 0),
     ).toBe(true)
     expect(areFrameRangesSynchronized([null, null], 5.02, 0.02, 0)).toBe(true)
+  })
+})
+
+describe('paused video frame capture', () => {
+  it('uses a steady paused video time when presented-frame metadata is unavailable', () => {
+    expect(
+      getStablePausedVideoFrameTime(
+        { currentTime: 5.015, paused: true, seeking: false },
+        { currentTime: 5.015, paused: true, seeking: false },
+      ),
+    ).toBe(5.015)
+  })
+
+  it('rejects a capture when playback, seeking, or the video time changes', () => {
+    const before = { currentTime: 5.015, paused: true, seeking: false }
+
+    expect(
+      getStablePausedVideoFrameTime(before, {
+        currentTime: 5.016,
+        paused: true,
+        seeking: false,
+      }),
+    ).toBeNull()
+    expect(
+      getStablePausedVideoFrameTime(before, {
+        currentTime: 5.015,
+        paused: true,
+        seeking: true,
+      }),
+    ).toBeNull()
+    expect(
+      getStablePausedVideoFrameTime(before, {
+        currentTime: 5.015,
+        paused: false,
+        seeking: false,
+      }),
+    ).toBeNull()
   })
 })
 

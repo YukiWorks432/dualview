@@ -11,6 +11,7 @@ import {
   areFrameRangesSynchronized,
   getConsecutivePresentedFrameRange,
   getPlaybackDifferenceExpiryDelay,
+  getStablePausedVideoFrameTime,
 } from '../lib/difference/synchronization'
 import type {
   DifferenceWorkerRequest,
@@ -269,29 +270,57 @@ async function captureSourceAtTime(
       if (source instanceof HTMLVideoElement) {
         if (!source.seeking) {
           const observedFrame = readPresentedVideoFrame(source)
-          const observedTimelineTime = observedFrame
-            ? calculateTimelineTime(observedFrame.mediaTime, clip)
-            : null
+          const pausedFrameState =
+            !observedFrame && !isPlaying && source.paused
+              ? {
+                  currentTime: source.currentTime,
+                  paused: source.paused,
+                  seeking: source.seeking,
+                }
+              : null
+          const observedMediaTime =
+            observedFrame?.mediaTime ?? pausedFrameState?.currentTime ?? null
+          const observedTimelineTime =
+            observedMediaTime === null ? null : calculateTimelineTime(observedMediaTime, clip)
           if (
-            observedFrame &&
             observedTimelineTime !== null &&
             Math.abs(observedTimelineTime - timelineTime) <= tolerance
           ) {
             const imageData = captureSource(source, canvas, width, height)
             const afterCaptureFrame = readPresentedVideoFrame(source)
-            if (
-              imageData &&
-              !source.seeking &&
-              afterCaptureFrame &&
-              afterCaptureFrame.mediaTime === observedFrame.mediaTime &&
-              afterCaptureFrame.presentedFrames === observedFrame.presentedFrames
-            ) {
-              return {
-                imageData,
-                timelineRange: {
-                  startTime: observedTimelineTime,
-                  endTime: observedTimelineTime,
-                },
+            if (imageData && !source.seeking) {
+              if (
+                observedFrame &&
+                afterCaptureFrame &&
+                afterCaptureFrame.mediaTime === observedFrame.mediaTime &&
+                afterCaptureFrame.presentedFrames === observedFrame.presentedFrames
+              ) {
+                return {
+                  imageData,
+                  timelineRange: {
+                    startTime: observedTimelineTime,
+                    endTime: observedTimelineTime,
+                  },
+                }
+              }
+
+              if (pausedFrameState) {
+                const stableFrameTime = getStablePausedVideoFrameTime(pausedFrameState, {
+                  currentTime: source.currentTime,
+                  paused: source.paused,
+                  seeking: source.seeking,
+                })
+                const stableTimelineTime =
+                  stableFrameTime === null ? null : calculateTimelineTime(stableFrameTime, clip)
+                if (stableTimelineTime !== null) {
+                  return {
+                    imageData,
+                    timelineRange: {
+                      startTime: stableTimelineTime,
+                      endTime: stableTimelineTime,
+                    },
+                  }
+                }
               }
             }
           }

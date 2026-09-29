@@ -1,5 +1,29 @@
 import type { TimelineFrameRange } from '../media/timeline'
 
+interface PausedVideoFrameState {
+  currentTime: number
+  paused: boolean
+  seeking: boolean
+}
+
+export function getStablePausedVideoFrameTime(
+  before: PausedVideoFrameState,
+  after: PausedVideoFrameState,
+): number | null {
+  if (
+    !before.paused ||
+    !after.paused ||
+    before.seeking ||
+    after.seeking ||
+    !Number.isFinite(before.currentTime) ||
+    before.currentTime !== after.currentTime
+  ) {
+    return null
+  }
+
+  return before.currentTime
+}
+
 export function getConsecutivePresentedFrameRange(
   previous: { timelineTime: number; presentedFrames: number },
   next: { timelineTime: number; presentedFrames: number },
