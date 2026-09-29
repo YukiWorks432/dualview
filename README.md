@@ -514,6 +514,29 @@ loaded in DualView are not sent to that destination.
 A downloaded `.dualview` project includes the media itself, so share it with the same care as the
 source files.
 
+### A/B Frame Difference Lane
+
+Use **Analyze** in the timeline to compare the displayed video frames on tracks A and B. The
+analysis reads encoded frame timestamps, maps each frame interval through clip trims, playback speed,
+and reverse playback, then decodes and compares frames in a dedicated worker. Mediabunny handles
+video decoding, including ProRes through its ProRes decoder. The analysis does not seek or pause the
+shared preview. Click the lane to seek, or use the previous/next controls to visit each highlighted
+interval. Analysis requires browser Worker and OffscreenCanvas support.
+
+The default comparison size is at most 640 pixels on the longest image edge. **Full** compares at
+the source display dimensions and can use substantially more memory. Pixel threshold controls how
+different an individual pixel must be; area threshold controls the share of changed pixels needed to
+highlight an interval. The default values are 0.10 and 2%, respectively. Transparent pixels are
+compared by their visible color and opacity, while hidden RGB values under two fully transparent
+pixels do not create a difference.
+
+The lane marks missing frames or A/B gaps, unsupported media, and decode errors separately from
+frames with no detected difference, and distinguishes analyzed intervals from portions the analysis
+has not reached yet. Image clips are unsupported by this video-frame analysis.
+Analysis results are kept only in the current browser session and are discarded when the project,
+timeline, source media, pixel threshold, or resolution changes. Changing the area threshold updates
+highlights from the current frame scores without decoding again.
+
 Published site information:
 [Privacy](https://dualview.yukiworks432.workers.dev/privacy/) ·
 [Terms](https://dualview.yukiworks432.workers.dev/terms/) ·
@@ -554,13 +577,14 @@ Published site information:
 
 ### Development Tooling
 
-| Tool      | Purpose                              |
-| --------- | ------------------------------------ |
-| pnpm 12   | Package management and lockfile      |
-| Oxfmt     | Formatting and import sorting        |
-| Oxlint    | Type-aware linting                   |
-| Vitest 5  | Unit tests                           |
-| GitHub CI | Frozen install + full quality checks |
+| Tool       | Purpose                                     |
+| ---------- | ------------------------------------------- |
+| pnpm 12    | Package management and lockfile             |
+| Oxfmt      | Formatting and import sorting               |
+| Oxlint     | Type-aware linting                          |
+| Vitest 5   | Unit tests                                  |
+| Playwright | Chromium browser tests                      |
+| GitHub CI  | Frozen install + quality and browser checks |
 
 Heavy comparison modes and export tooling are split so they are loaded only when needed.
 

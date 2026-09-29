@@ -48,8 +48,9 @@ file.
 
 ## pixelmatch 7.2.0
 
-DualView bundles `pixelmatch` in the frame-difference Web Worker. The worker bundle is emitted
-separately from the main Vite bundle, so its license is included here with the distributed notices.
+DualView bundles `pixelmatch` in the frame-difference Web Worker and the separately emitted
+timeline-difference worker for pixel-level frame comparison. Both workers are emitted separately
+from the main Vite bundle, so the license is included here with the distributed notices.
 
 - Package: `pixelmatch` 7.2.0
 - License: ISC

@@ -1456,8 +1456,6 @@ export function WebGLComparison() {
 
       {/* WEBGL-009: Temporal Difference Graph */}
       <TemporalDiffGraph
-        videoARef={videoARef}
-        videoBRef={videoBRef}
         isVisible={showTemporalGraph && (mediaA?.type === 'video' || mediaB?.type === 'video')}
       />
 
