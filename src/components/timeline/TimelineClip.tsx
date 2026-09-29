@@ -119,17 +119,17 @@ export const TimelineClip = memo(function TimelineClip({
 
   const bgColorClass =
     trackType === 'a'
-      ? 'bg-orange-500/30 border border-orange-500/60'
+      ? 'bg-compare-a/30 border border-compare-a/60'
       : trackType === 'b'
-        ? 'bg-lime-400/30 border border-lime-400/60'
-        : 'bg-gray-500/30 border border-gray-500/60'
+        ? 'bg-compare-b/30 border border-compare-b/60'
+        : 'bg-muted/30 border border-muted-foreground/40'
 
   const waveformColor =
     trackType === 'a'
-      ? 'rgba(249, 115, 22, 0.8)'
+      ? 'hsl(var(--compare-a) / 0.8)'
       : trackType === 'b'
-        ? 'rgba(163, 230, 53, 0.8)'
-        : 'rgba(156, 163, 175, 0.8)'
+        ? 'hsl(var(--compare-b) / 0.8)'
+        : 'hsl(var(--muted-foreground) / 0.8)'
 
   return (
     <div
@@ -200,18 +200,18 @@ export const TimelineClip = memo(function TimelineClip({
           {hasOverlap && (
             <AlertTriangle className="w-3 h-3 text-destructive drop-shadow animate-pulse" />
           )}
-          <span className="text-[10px] text-white font-medium drop-shadow">
+          <span className="text-[10px] text-foreground font-medium drop-shadow">
             {mediaName || 'Clip'}
           </span>
         </div>
         {/* Delete button */}
         {!trackLocked && (
           <button
-            className="opacity-0 group-hover/clip:opacity-100 p-0.5 bg-destructive/80 hover:bg-destructive rounded transition-opacity"
+            className="ui-radius-sm opacity-0 group-hover/clip:opacity-100 p-0.5 bg-destructive/80 hover:bg-destructive transition-opacity"
             onClick={handleDelete}
             title="Delete clip (Del)"
           >
-            <Trash2 className="w-3 h-3 text-white" />
+            <Trash2 className="w-3 h-3 text-destructive-foreground" />
           </button>
         )}
       </div>
@@ -221,14 +221,14 @@ export const TimelineClip = memo(function TimelineClip({
         <>
           <div
             className={cn(
-              'absolute left-0 top-0 bottom-0 w-2 bg-white/30 hover:bg-white/80 cursor-ew-resize z-10 transition-colors',
+              'absolute left-0 top-0 bottom-0 w-2 bg-foreground/30 hover:bg-foreground/80 cursor-ew-resize z-10 transition-colors',
               trimState?.clipId === clip.id && trimState.side === 'start' && 'bg-primary',
             )}
             onMouseDown={handleTrimStartMouseDown}
           />
           <div
             className={cn(
-              'absolute right-0 top-0 bottom-0 w-2 bg-white/30 hover:bg-white/80 cursor-ew-resize z-10 transition-colors',
+              'absolute right-0 top-0 bottom-0 w-2 bg-foreground/30 hover:bg-foreground/80 cursor-ew-resize z-10 transition-colors',
               trimState?.clipId === clip.id && trimState.side === 'end' && 'bg-primary',
             )}
             onMouseDown={handleTrimEndMouseDown}

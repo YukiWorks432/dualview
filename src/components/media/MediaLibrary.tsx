@@ -58,14 +58,14 @@ function StatusIndicator({
 }) {
   if (status === 'pending') {
     return (
-      <div className="flex items-center gap-1 text-amber-400" title="Waiting to process">
+      <div className="flex items-center gap-1 text-warning" title="Waiting to process">
         <Clock className="w-3 h-3" />
       </div>
     )
   }
   if (status === 'processing') {
     return (
-      <div className="flex items-center gap-1 text-blue-400" title="Processing...">
+      <div className="flex items-center gap-1 text-primary" title="Processing...">
         <Loader2 className="w-3 h-3 animate-spin" />
       </div>
     )
@@ -73,7 +73,7 @@ function StatusIndicator({
   if (status === 'error') {
     return (
       <div className="flex items-center gap-1" title={message || 'Error'}>
-        <AlertCircle className="w-3 h-3 text-red-400" />
+        <AlertCircle className="w-3 h-3 text-destructive" />
         {onRetry && (
           <button
             onClick={(e) => {
@@ -262,8 +262,8 @@ export function MediaLibrary() {
         className="ui-radius-lg space-y-2 border border-border py-6 text-center text-muted-foreground"
       >
         <div className="flex justify-center gap-2">
-          <Film className="h-4 w-4 text-green-400/50" />
-          <Image className="h-4 w-4 text-blue-400/50" />
+          <Film className="h-4 w-4 text-muted-foreground/50" />
+          <Image className="h-4 w-4 text-muted-foreground/50" />
         </div>
         <p className="text-sm font-medium text-muted-foreground">No media yet</p>
         <p className="text-xs">Drop files above to get started</p>
@@ -326,7 +326,10 @@ export function MediaLibrary() {
               {config.icon}
               <span>{config.label}</span>
               <span
-                className={cn('ui-radius-sm px-1', isActive ? 'bg-white/20' : 'surface-subtle')}
+                className={cn(
+                  'ui-radius-sm px-1',
+                  isActive ? 'bg-primary-foreground/15' : 'surface-subtle',
+                )}
               >
                 {count}
               </span>
@@ -354,8 +357,8 @@ export function MediaLibrary() {
                 className={cn(
                   'ui-radius-md flex items-center gap-1 px-2 py-1 text-[10px] font-medium transition-colors',
                   statusFilter === 'error'
-                    ? 'bg-red-500/20 text-red-400'
-                    : 'surface-control border text-muted-foreground hover:text-red-400',
+                    ? 'bg-destructive/20 text-destructive'
+                    : 'surface-control border text-muted-foreground hover:text-destructive',
                 )}
                 onClick={() => setStatusFilter(statusFilter === 'error' ? 'all' : 'error')}
                 title="Show failed files"
@@ -369,8 +372,8 @@ export function MediaLibrary() {
                 className={cn(
                   'ui-radius-md flex items-center gap-1 px-2 py-1 text-[10px] font-medium transition-colors',
                   statusFilter === 'processing'
-                    ? 'bg-blue-500/20 text-blue-400'
-                    : 'surface-control border text-muted-foreground hover:text-blue-400',
+                    ? 'bg-primary/20 text-primary'
+                    : 'surface-control border text-muted-foreground hover:text-primary',
                 )}
                 onClick={() =>
                   setStatusFilter(statusFilter === 'processing' ? 'all' : 'processing')
@@ -386,8 +389,8 @@ export function MediaLibrary() {
                 className={cn(
                   'ui-radius-md flex items-center gap-1 px-2 py-1 text-[10px] font-medium transition-colors',
                   statusFilter === 'pending'
-                    ? 'bg-amber-500/20 text-amber-400'
-                    : 'surface-control border text-muted-foreground hover:text-amber-400',
+                    ? 'bg-warning/20 text-warning'
+                    : 'surface-control border text-muted-foreground hover:text-warning',
                 )}
                 onClick={() => setStatusFilter(statusFilter === 'pending' ? 'all' : 'pending')}
                 title="Show pending files"
@@ -482,7 +485,7 @@ export function MediaLibrary() {
               <div className="ui-radius-md relative flex h-10 w-16 flex-shrink-0 items-center justify-center overflow-hidden bg-background">
                 {file.status === 'processing' && (
                   <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10">
-                    <Loader2 className="w-4 h-4 text-blue-400 animate-spin" />
+                    <Loader2 className="w-4 h-4 text-primary animate-spin" />
                   </div>
                 )}
                 {file.thumbnail ? (
@@ -499,8 +502,8 @@ export function MediaLibrary() {
                 )}
                 {/* MEDIA-012: Error overlay */}
                 {file.status === 'error' && (
-                  <div className="absolute inset-0 bg-red-900/50 flex items-center justify-center z-10">
-                    <AlertCircle className="w-4 h-4 text-red-400" />
+                  <div className="absolute inset-0 z-10 flex items-center justify-center bg-destructive/20">
+                    <AlertCircle className="w-4 h-4 text-destructive" />
                   </div>
                 )}
               </div>
@@ -528,7 +531,7 @@ export function MediaLibrary() {
                   )}
                   {/* MEDIA-012: Show error message */}
                   {file.status === 'error' && file.statusMessage && (
-                    <span className="text-red-400 truncate" title={file.statusMessage}>
+                    <span className="text-destructive truncate" title={file.statusMessage}>
                       {file.statusMessage}
                     </span>
                   )}

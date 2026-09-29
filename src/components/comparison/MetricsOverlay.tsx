@@ -12,7 +12,7 @@ export function MetricsOverlay() {
     return (
       <button
         onClick={toggleMetrics}
-        className="surface-control absolute top-4 right-4 z-10 ui-radius-sm flex items-center gap-1 border px-2 py-1 text-xs text-white transition-colors"
+        className="surface-control absolute top-4 right-4 z-10 ui-radius-sm flex items-center gap-1 border px-2 py-1 text-xs text-foreground transition-colors"
         title="Show quality metrics (M)"
       >
         <Activity className="w-3 h-3" />
@@ -36,18 +36,18 @@ export function MetricsOverlay() {
     if (value === null) return 'text-text-muted'
     if (value >= 0.98) return 'text-success'
     if (value >= 0.9) return 'text-warning'
-    return 'text-error'
+    return 'text-destructive'
   }
 
   const getPSNRColor = (value: number | null) => {
     if (value === null) return 'text-text-muted'
     if (value === Infinity || value >= 40) return 'text-success'
     if (value >= 30) return 'text-warning'
-    return 'text-error'
+    return 'text-destructive'
   }
 
   return (
-    <div className="absolute top-4 right-4 z-10 ui-radius-md bg-black/80 backdrop-blur-sm border border-white/10 p-3 text-white min-w-[140px]">
+    <div className="surface-control-elevation ui-radius-md absolute top-4 right-4 z-10 min-w-[140px] border border-border/40 bg-surface-alt/90 p-3 text-foreground backdrop-blur-sm">
       <div className="flex items-center justify-between mb-2">
         <span className="text-xs font-medium flex items-center gap-1">
           <Activity className="w-3 h-3" />
@@ -55,7 +55,7 @@ export function MetricsOverlay() {
         </span>
         <button
           onClick={toggleMetrics}
-          className="surface-control ui-radius-sm border px-1.5 py-0.5 text-xs text-text-muted hover:text-white"
+          className="surface-control ui-radius-sm border px-1.5 py-0.5 text-xs text-text-muted hover:text-foreground"
         >
           ×
         </button>
@@ -77,7 +77,7 @@ export function MetricsOverlay() {
         </div>
       </div>
 
-      <div className="mt-2 pt-2 border-t border-white/10">
+      <div className="mt-2 pt-2 border-t border-border">
         <div className="text-[9px] text-text-muted">
           SSIM: 1.0 = identical
           <br />

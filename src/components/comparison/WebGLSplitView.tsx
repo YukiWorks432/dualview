@@ -273,17 +273,17 @@ export function WebGLSplitView({ isVisible, onToggle }: WebGLSplitViewProps) {
             alt="Source A"
           />
         )}
-        <div className="absolute top-2 left-2 bg-black/70 px-2 py-1 text-xs text-gray-300 rounded">
+        <div className="surface-control-elevation ui-radius-sm absolute top-2 left-2 border border-border/40 bg-surface-alt/85 px-2 py-1 text-xs text-compare-a backdrop-blur-sm">
           Source A
         </div>
       </div>
 
       {/* Left Divider */}
       <div
-        className="w-1 bg-gray-700 hover:bg-[#ff5722] cursor-col-resize flex items-center justify-center group"
+        className="group flex w-1 cursor-col-resize items-center justify-center bg-border hover:bg-primary"
         onMouseDown={() => setIsDraggingLeft(true)}
       >
-        <GripVertical size={12} className="text-gray-500 group-hover:text-white" />
+        <GripVertical size={12} className="text-muted-foreground group-hover:text-foreground" />
       </div>
 
       {/* Analysis Center Panel */}
@@ -298,18 +298,18 @@ export function WebGLSplitView({ isVisible, onToggle }: WebGLSplitViewProps) {
             transform: `scale(${webglComparisonSettings.webglZoom}) translate(${(webglComparisonSettings.webglPanX * 50) / webglComparisonSettings.webglZoom}%, ${(-webglComparisonSettings.webglPanY * 50) / webglComparisonSettings.webglZoom}%)`,
           }}
         />
-        <div className="absolute top-2 left-2 bg-black/70 px-2 py-1 text-xs rounded">
-          <span className="text-gray-400">Analysis: </span>
-          <span className="text-[#cddc39]">{modeInfo?.label || webglComparisonSettings.mode}</span>
+        <div className="surface-control-elevation ui-radius-sm absolute top-2 left-2 border border-border/40 bg-surface-alt/85 px-2 py-1 text-xs backdrop-blur-sm">
+          <span className="text-muted-foreground">Analysis: </span>
+          <span className="text-primary">{modeInfo?.label || webglComparisonSettings.mode}</span>
         </div>
       </div>
 
       {/* Right Divider */}
       <div
-        className="w-1 bg-gray-700 hover:bg-[#ff5722] cursor-col-resize flex items-center justify-center group"
+        className="group flex w-1 cursor-col-resize items-center justify-center bg-border hover:bg-primary"
         onMouseDown={() => setIsDraggingRight(true)}
       >
-        <GripVertical size={12} className="text-gray-500 group-hover:text-white" />
+        <GripVertical size={12} className="text-muted-foreground group-hover:text-foreground" />
       </div>
 
       {/* Source B Panel */}
@@ -340,7 +340,7 @@ export function WebGLSplitView({ isVisible, onToggle }: WebGLSplitViewProps) {
             alt="Source B"
           />
         )}
-        <div className="absolute top-2 right-2 bg-black/70 px-2 py-1 text-xs text-gray-300 rounded">
+        <div className="surface-control-elevation ui-radius-sm absolute top-2 right-2 border border-border/40 bg-surface-alt/85 px-2 py-1 text-xs text-compare-b backdrop-blur-sm">
           Source B
         </div>
       </div>
@@ -362,7 +362,7 @@ export function SplitViewToggle({ onClick, isActive }: { onClick: () => void; is
   return (
     <button
       onClick={onClick}
-      className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${isActive ? 'border-accent bg-accent text-white' : 'surface-control text-text-secondary hover:text-text-primary'}`}
+      className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${isActive ? 'border-accent bg-accent text-primary-foreground' : 'surface-control text-text-secondary hover:text-text-primary'}`}
       title="Split View: A | Analysis | B (WEBGL-011)"
     >
       <Maximize2 size={16} />
