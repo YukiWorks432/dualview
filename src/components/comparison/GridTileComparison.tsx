@@ -368,7 +368,7 @@ export function GridTileComparison() {
         {/* Animation toggle */}
         <button
           onClick={toggleGridTileAnimation}
-          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${gridTileSettings.animated ? 'border-accent bg-accent text-white' : 'surface-control text-text-secondary hover:text-text-primary'}`}
+          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${gridTileSettings.animated ? 'border-accent bg-accent text-primary-foreground' : 'surface-control text-text-secondary hover:text-text-primary'}`}
           title={gridTileSettings.animated ? 'Stop animation' : 'Start animation'}
         >
           {gridTileSettings.animated ? <Pause size={16} /> : <Play size={16} />}
@@ -386,7 +386,7 @@ export function GridTileComparison() {
         {/* Hexagonal toggle */}
         <button
           onClick={() => setGridTileSettings({ hexagonal: !gridTileSettings.hexagonal })}
-          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${gridTileSettings.hexagonal ? 'border-accent bg-accent text-white' : 'surface-control text-text-secondary hover:text-text-primary'}`}
+          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${gridTileSettings.hexagonal ? 'border-accent bg-accent text-primary-foreground' : 'surface-control text-text-secondary hover:text-text-primary'}`}
           title={gridTileSettings.hexagonal ? 'Standard grid' : 'Hexagonal grid'}
         >
           <Grid size={16} />
@@ -394,22 +394,22 @@ export function GridTileComparison() {
       </ElevatedSurface>
 
       {/* Mode indicator */}
-      <div className="absolute top-4 left-4 bg-black/70 px-3 py-1.5 rounded text-sm">
-        <span className="text-gray-400">Mode:</span>
-        <span className="text-[#cddc39] ml-2 font-medium">Grid Tile</span>
-        {gridTileSettings.animated && <span className="text-orange-400 ml-2">(Animated)</span>}
-        {gridTileSettings.hexagonal && <span className="text-blue-400 ml-2">(Hex)</span>}
+      <div className="surface-control-elevation ui-radius-md absolute top-4 left-4 border border-border/40 bg-surface-alt/85 px-3 py-1.5 text-sm backdrop-blur-sm">
+        <span className="text-muted-foreground">Mode:</span>
+        <span className="ml-2 font-medium text-primary">Grid Tile</span>
+        {gridTileSettings.animated && <span className="ml-2 text-primary">(Animated)</span>}
+        {gridTileSettings.hexagonal && <span className="ml-2 text-primary">(Hex)</span>}
       </div>
 
       {/* Settings display */}
-      <div className="absolute bottom-4 left-4 bg-black/70 px-3 py-1.5 rounded text-xs text-gray-400">
+      <div className="surface-control-elevation ui-radius-md absolute bottom-4 left-4 border border-border/40 bg-surface-alt/85 px-3 py-1.5 text-xs text-muted-foreground backdrop-blur-sm">
         Tile Size: {gridTileSettings.tileSize}px | Speed: {gridTileSettings.animationSpeed}s | Drag
         to offset
       </div>
 
       {/* Tile size slider */}
-      <div className="absolute bottom-4 right-4 bg-black/70 px-3 py-2 rounded">
-        <label className="text-xs text-gray-400 block mb-1">Tile Size</label>
+      <div className="surface-control-elevation ui-radius-md absolute bottom-4 right-4 border border-border/40 bg-surface-alt/85 px-3 py-2 backdrop-blur-sm">
+        <label className="mb-1 block text-xs text-muted-foreground">Tile Size</label>
         <input
           type="range"
           min={8}
@@ -418,13 +418,13 @@ export function GridTileComparison() {
           onChange={(e) => setGridTileSettings({ tileSize: parseInt(e.target.value) })}
           className="w-32 accent-accent"
         />
-        <div className="text-xs text-gray-400 mt-1 text-center">{gridTileSettings.tileSize}px</div>
+        <div className="mt-1 text-center text-xs text-muted-foreground">{gridTileSettings.tileSize}px</div>
       </div>
 
       {/* Animation speed slider (when animated) */}
       {gridTileSettings.animated && (
-        <div className="absolute bottom-20 right-4 bg-black/70 px-3 py-2 rounded">
-          <label className="text-xs text-gray-400 block mb-1">Speed</label>
+        <div className="surface-control-elevation ui-radius-md absolute bottom-20 right-4 border border-border/40 bg-surface-alt/85 px-3 py-2 backdrop-blur-sm">
+          <label className="mb-1 block text-xs text-muted-foreground">Speed</label>
           <input
             type="range"
             min={0.1}
@@ -434,7 +434,7 @@ export function GridTileComparison() {
             onChange={(e) => setGridTileSettings({ animationSpeed: parseFloat(e.target.value) })}
             className="w-32 accent-accent"
           />
-          <div className="text-xs text-gray-400 mt-1 text-center">
+          <div className="mt-1 text-center text-xs text-muted-foreground">
             {gridTileSettings.animationSpeed.toFixed(1)}s
           </div>
         </div>

@@ -497,21 +497,21 @@ export function MorphologicalView() {
 
       {/* Processing indicator */}
       {processing && (
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black/80 px-4 py-2 rounded">
-          <span className="text-white">Processing...</span>
+        <div className="surface-control-elevation ui-radius-md absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 border border-border/40 bg-surface-alt/90 px-4 py-2 backdrop-blur-sm">
+          <span className="text-foreground">Processing...</span>
         </div>
       )}
 
       {/* Mode indicator */}
-      <div className="absolute top-4 left-4 bg-black/70 px-3 py-1.5 rounded text-sm">
-        <span className="text-gray-400">Mode:</span>
-        <span className="text-[#cddc39] ml-2 font-medium">Morphological</span>
+      <div className="surface-control-elevation ui-radius-md absolute top-4 left-4 border border-border/40 bg-surface-alt/85 px-3 py-1.5 text-sm backdrop-blur-sm">
+        <span className="text-muted-foreground">Mode:</span>
+        <span className="ml-2 font-medium text-primary">Morphological</span>
       </div>
 
       {/* Operation chain */}
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-black/70 px-3 py-1.5 rounded">
+      <div className="surface-control-elevation ui-radius-md absolute top-4 left-1/2 flex -translate-x-1/2 items-center gap-1 border border-border/40 bg-surface-alt/85 px-3 py-1.5 backdrop-blur-sm">
         {morphologicalSettings.operations.length === 0 ? (
-          <span className="text-gray-500 text-sm">Add operations below</span>
+          <span className="text-sm text-muted-foreground">Add operations below</span>
         ) : (
           morphologicalSettings.operations.map((op, idx) => (
             <div key={idx} className="flex items-center">
@@ -524,7 +524,7 @@ export function MorphologicalView() {
                 <X size={10} className="inline ml-1 opacity-0 group-hover:opacity-100" />
               </button>
               {idx < morphologicalSettings.operations.length - 1 && (
-                <ArrowRight size={12} className="mx-1 text-gray-500" />
+                <ArrowRight size={12} className="mx-1 text-muted-foreground" />
               )}
             </div>
           ))
@@ -550,7 +550,7 @@ export function MorphologicalView() {
           onClick={() =>
             setMorphologicalSettings({ showOriginal: !morphologicalSettings.showOriginal })
           }
-          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${morphologicalSettings.showOriginal ? 'border-accent bg-accent text-white' : 'surface-control text-text-secondary hover:text-text-primary'}`}
+          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${morphologicalSettings.showOriginal ? 'border-accent bg-accent text-primary-foreground' : 'surface-control text-text-secondary hover:text-text-primary'}`}
           title={
             morphologicalSettings.showOriginal ? 'Hide original' : 'Show original side-by-side'
           }
@@ -581,13 +581,13 @@ export function MorphologicalView() {
       >
         {/* Element size */}
         <div>
-          <label className="text-xs text-gray-400 block mb-1">Size</label>
+          <label className="mb-1 block text-xs text-muted-foreground">Size</label>
           <div className="flex gap-1">
             {([3, 5, 7] as MorphElementSize[]).map((size) => (
               <button
                 key={size}
                 onClick={() => setMorphologicalSettings({ elementSize: size })}
-                className={`surface-control-elevation ui-radius-sm border px-2 py-1 text-xs transition-colors ${morphologicalSettings.elementSize === size ? 'border-accent bg-accent text-white' : 'surface-control text-text-secondary hover:text-text-primary'}`}
+                className={`surface-control-elevation ui-radius-sm border px-2 py-1 text-xs transition-colors ${morphologicalSettings.elementSize === size ? 'border-accent bg-accent text-primary-foreground' : 'surface-control text-text-secondary hover:text-text-primary'}`}
               >
                 {size}x{size}
               </button>
@@ -597,13 +597,13 @@ export function MorphologicalView() {
 
         {/* Element shape */}
         <div>
-          <label className="text-xs text-gray-400 block mb-1">Shape</label>
+          <label className="mb-1 block text-xs text-muted-foreground">Shape</label>
           <div className="flex gap-1">
             {shapes.map((shape) => (
               <button
                 key={shape.id}
                 onClick={() => setMorphologicalSettings({ elementShape: shape.id })}
-                className={`surface-control-elevation ui-radius-sm border p-1.5 transition-colors ${morphologicalSettings.elementShape === shape.id ? 'border-accent bg-accent text-white' : 'surface-control text-text-secondary hover:text-text-primary'}`}
+                className={`surface-control-elevation ui-radius-sm border p-1.5 transition-colors ${morphologicalSettings.elementShape === shape.id ? 'border-accent bg-accent text-primary-foreground' : 'surface-control text-text-secondary hover:text-text-primary'}`}
                 title={shape.label}
               >
                 {shape.icon}
@@ -614,8 +614,8 @@ export function MorphologicalView() {
       </ElevatedSurface>
 
       {/* Kernel visualization */}
-      <div className="absolute bottom-4 right-4 bg-black/70 px-3 py-2 rounded">
-        <label className="text-xs text-gray-400 block mb-1">Kernel</label>
+      <div className="surface-control-elevation ui-radius-md absolute bottom-4 right-4 border border-border/40 bg-surface-alt/85 px-3 py-2 backdrop-blur-sm">
+        <label className="mb-1 block text-xs text-muted-foreground">Kernel</label>
         <div className="flex flex-col gap-px">
           {kernel.map((row, y) => (
             <div key={y} className="flex gap-px">

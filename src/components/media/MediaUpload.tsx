@@ -304,8 +304,8 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
           className={cn(
             'surface-interactive ui-radius-lg group cursor-pointer border-2 border-dashed transition-[border-color,box-shadow,opacity] duration-150',
             isDragOverA
-              ? 'border-orange-500 shadow-[0_0_0_1px_rgba(249,115,22,0.22)]'
-              : 'border-orange-500/40 hover:border-orange-500',
+              ? 'border-compare-a'
+              : 'border-compare-a/40 hover:border-compare-a',
             isUploading && 'pointer-events-none opacity-50',
           )}
           onDrop={handleDropA}
@@ -317,7 +317,7 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
             <div
               className={cn(
                 'ui-radius-md mb-1 p-1.5 transition-colors',
-                isDragOverA ? 'bg-orange-500/30' : 'bg-orange-500/10 group-hover:bg-orange-500/20',
+                isDragOverA ? 'bg-compare-a/30' : 'bg-compare-a/10 group-hover:bg-compare-a/20',
               )}
             >
               <FilePlus2
@@ -345,8 +345,8 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
           className={cn(
             'surface-interactive ui-radius-lg group cursor-pointer border-2 border-dashed transition-[border-color,box-shadow,opacity] duration-150',
             isDragOverB
-              ? 'border-lime-400 shadow-[0_0_0_1px_rgba(163,230,53,0.22)]'
-              : 'border-lime-400/40 hover:border-lime-400',
+              ? 'border-compare-b'
+              : 'border-compare-b/40 hover:border-compare-b',
             isUploading && 'pointer-events-none opacity-50',
           )}
           onDrop={handleDropB}
@@ -358,7 +358,7 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
             <div
               className={cn(
                 'ui-radius-md mb-1 p-1.5 transition-colors',
-                isDragOverB ? 'bg-lime-400/30' : 'bg-lime-400/10 group-hover:bg-lime-400/20',
+                isDragOverB ? 'bg-compare-b/30' : 'bg-compare-b/10 group-hover:bg-compare-b/20',
               )}
             >
               <FilePlus2

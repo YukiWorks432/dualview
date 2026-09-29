@@ -26,7 +26,7 @@ function PixelInfo({
     <div className="flex items-center gap-3">
       <div className={cn('px-2 py-0.5 text-xs font-bold', labelColor)}>{label}</div>
       <div className="flex items-center gap-2">
-        <div className="w-6 h-6 border border-white/20" style={{ backgroundColor: hex }} />
+        <div className="ui-radius-sm w-6 h-6 border border-border" style={{ backgroundColor: hex }} />
         <div className="text-[10px] font-mono text-text-primary">
           <div>
             R: {info.r} G: {info.g} B: {info.b}
@@ -64,7 +64,7 @@ export function PixelInspector() {
         className={cn(
           'surface-control-elevation ui-radius-sm absolute top-4 right-4 z-20 border px-2 py-1 text-xs transition-colors',
           pixelInspectorEnabled
-            ? 'border-accent bg-accent text-white'
+            ? 'border-accent bg-accent text-primary-foreground'
             : 'surface-control text-text-muted hover:text-text-primary',
         )}
         title="Toggle Pixel Inspector (Click on image to inspect)"
@@ -74,13 +74,21 @@ export function PixelInspector() {
 
       {/* Pixel info overlay */}
       {pixelInspectorEnabled && hasInfo && (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 ui-radius-md bg-black/80 backdrop-blur-sm p-3 space-y-2">
-          <PixelInfo label="A" info={pixelInfoA} labelColor="bg-orange-500 text-white" />
-          <PixelInfo label="B" info={pixelInfoB} labelColor="bg-lime-400 text-black" />
+        <div className="surface-control-elevation ui-radius-md absolute bottom-4 left-1/2 z-20 -translate-x-1/2 space-y-2 border border-border/40 bg-surface-alt/90 p-3 backdrop-blur-sm">
+          <PixelInfo
+            label="A"
+            info={pixelInfoA}
+            labelColor="ui-radius-sm bg-compare-a text-compare-a-foreground"
+          />
+          <PixelInfo
+            label="B"
+            info={pixelInfoB}
+            labelColor="ui-radius-sm bg-compare-b text-compare-b-foreground"
+          />
 
           {diff && (
-            <div className="pt-2 border-t border-white/10 flex items-center gap-3">
-              <div className="ui-radius-sm px-2 py-0.5 text-xs font-bold bg-gray-600 text-white">
+            <div className="flex items-center gap-3 border-t border-border pt-2">
+              <div className="ui-radius-sm bg-muted px-2 py-0.5 text-xs font-bold text-foreground">
                 Delta
               </div>
               <div className="text-[10px] font-mono text-text-primary">
@@ -94,7 +102,7 @@ export function PixelInspector() {
 
       {/* Instructions when enabled but no info */}
       {pixelInspectorEnabled && !hasInfo && (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 ui-radius-md bg-black/60 px-3 py-2 text-[10px] text-text-muted">
+        <div className="surface-control-elevation ui-radius-md absolute bottom-4 left-1/2 z-20 -translate-x-1/2 border border-border/40 bg-surface-alt/85 px-3 py-2 text-[10px] text-text-muted backdrop-blur-sm">
           Click on image to inspect pixel values
         </div>
       )}
