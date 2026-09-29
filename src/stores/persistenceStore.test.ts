@@ -13,9 +13,9 @@ const dbMocks = vi.hoisted(() => ({
   getProjectMediaBlobs: vi.fn<(projectId: string) => Promise<Map<string, Blob>>>(
     async () => new Map<string, Blob>(),
   ),
-  estimateStorageUsage: vi.fn<
-    () => Promise<{ used: number; quota: number; percentUsed: number }>
-  >(async () => ({ used: 0, quota: 0, percentUsed: 0 })),
+  estimateStorageUsage: vi.fn<() => Promise<{ used: number; quota: number; percentUsed: number }>>(
+    async () => ({ used: 0, quota: 0, percentUsed: 0 }),
+  ),
 }))
 
 vi.mock('../lib/indexedDB', () => ({
