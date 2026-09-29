@@ -26,7 +26,7 @@ test('keeps site information header wrapping deterministic across responsive wid
   page,
 }) => {
   await page.setViewportSize({ width: 681, height: 900 })
-  await page.goto('/privacy/')
+  await page.goto('/privacy/index.html')
   await expectHeaderHasNoOverflow(page)
 
   const brand = page.getByRole('link', { name: 'DualView', exact: true })
