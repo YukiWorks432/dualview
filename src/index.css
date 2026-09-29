@@ -128,15 +128,15 @@
 
   /*
    * Comparison identity colors preserve the original orange/lime hues while
-   * matching the reference accent's OKLCH lightness and relative sRGB gamut usage.
-   * Reference: oklch(0.457 0.24 277.023)
-   * A source:   oklch(0.457 0.1313 36.53)
-   * B source:   oklch(0.457 0.0878 114.85)
+   * raising perceptual lightness for visibility on dark media surfaces.
+   * Reference accent: oklch(0.457 0.24 277.023)
+   * A source:          oklch(0.58 0.167 36.53)
+   * B source:          oklch(0.60 0.129 114.85)
    */
-  --compare-a: 13.55 69.75% 33.61%;
-  --compare-a-foreground: var(--primary-foreground);
-  --compare-b: 66.04 54.89% 23.44%;
-  --compare-b-foreground: var(--primary-foreground);
+  --compare-a: 13.56 67.18% 47.15%;
+  --compare-a-foreground: 0 0% 100%;
+  --compare-b: 65.15 72.44% 31.02%;
+  --compare-b-foreground: 0 0% 0%;
 }
 
 * {
