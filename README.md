@@ -587,7 +587,8 @@ Published site information:
 
 The relative elevation system is sourced from Fluid Functionalism's `@fluid/elevated` registry
 item. `components.json` registers `@fluid`; the upstream-owned implementation lives in
-`src/lib/surface-context.tsx`, `src/lib/surface-classes.ts`, and `src/lib/elevated.tsx`.
+`src/lib/surface-context.ts`, `src/lib/surface-provider.tsx`, `src/lib/surface-classes.ts`, and
+`src/lib/elevated.tsx`.
 DualView-specific `asChild` compatibility and control-surface variables stay isolated in
 `src/components/ui/surface.ts`.
 
