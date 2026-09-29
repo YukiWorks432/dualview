@@ -88,7 +88,7 @@ export function ElevatedSurface({
       ...props,
       ...childProps,
       'data-surface-level': level,
-      className: cn(childProps.className, surfaceClassName, className),
+      className: cn(surfaceClassName, childProps.className, className),
       style: surfaceStyle(level, {
         ...childProps.style,
         ...style,
