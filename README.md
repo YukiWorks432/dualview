@@ -123,6 +123,7 @@ Standalone audio files, text/JSON, 3D models, and document comparison are not pa
 - SSIM & PSNR metrics
 - Delta E perceptual difference
 - Difference heatmaps including alpha
+- Optional difference-region boxes in Slider / Side by Side
 - Pixel inspector
 - Magnifier loupe
 - Video scopes
@@ -209,6 +210,8 @@ DualView currently exposes **12 comparison modes**:
 | **Radial Loupe**  | Magnified circular comparison                         |
 | **Grid Tile**     | Checkerboard A/B comparison                           |
 | **Morphological** | Morphological difference operations                   |
+
+Slider and Side by Side can optionally draw local difference-region boxes over the current A/B frames. During playback the overlay is a throttled preview; paused and frame-step review re-analyzes the current frame. These inspection overlays are not included in exported evidence.
 
 ---
 

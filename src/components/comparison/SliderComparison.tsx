@@ -1,16 +1,25 @@
 import { Upload } from 'lucide-react'
-import { useRef, useState, useCallback, useEffect, useMemo } from 'react'
+import {
+  useRef,
+  useState,
+  useCallback,
+  useEffect,
+  useMemo,
+  type RefObject,
+} from 'react'
 
+import { useDifferenceRegions } from '../../hooks/useDifferenceRegions'
 import { useDropZone } from '../../hooks/useDropZone'
 import { useSyncedZoom } from '../../hooks/useSyncedZoom'
 import { SUPPORTED_MEDIA_ACCEPT } from '../../lib/media/fileTypes'
-import type { VideoFrameElement } from '../../lib/media/frameSource'
+import type { VideoFrameElement, VisualFrameElement } from '../../lib/media/frameSource'
 import { cn } from '../../lib/utils'
 import { useMediaStore } from '../../stores/mediaStore'
 import { usePlaybackStore } from '../../stores/playbackStore'
 import { useProjectStore } from '../../stores/projectStore'
 import { useTimelineStore } from '../../stores/timelineStore'
 import { VideoSurface } from '../media/VideoSurface'
+import { DifferenceRegionsOverlay } from './DifferenceRegionsOverlay'
 
 interface VideoBounds {
   left: number
@@ -70,6 +79,18 @@ export function SliderComparison() {
   const rawMediaB = displayClipB ? getFile(displayClipB.mediaId) : null
   const mediaA = rawMediaA?.type === 'video' || rawMediaA?.type === 'image' ? rawMediaA : null
   const mediaB = rawMediaB?.type === 'video' || rawMediaB?.type === 'image' ? rawMediaB : null
+  const sourceARef = (mediaA?.type === 'video' ? videoARef : imgARef) as RefObject<
+    VisualFrameElement | null
+  >
+  const sourceBRef = (mediaB?.type === 'video' ? videoBRef : imgBRef) as RefObject<
+    VisualFrameElement | null
+  >
+  const difference = useDifferenceRegions({
+    sourceARef,
+    sourceBRef,
+    clipA: activeClipA,
+    clipB: activeClipB,
+  })
 
   // Calculate video bounds within container (accounting for object-contain)
   const calculateVideoBounds = useCallback(() => {
@@ -322,6 +343,7 @@ export function SliderComparison() {
                 clip={mediaB ? activeClipB || firstClipB : activeClipA || firstClipA}
                 className="w-full h-full object-contain"
                 dataTrack="b"
+                onFrameReady={difference.notifyFrameReady}
               />
             ) : (
               <img
@@ -331,6 +353,7 @@ export function SliderComparison() {
                 alt="B"
                 data-track="b"
                 draggable={false}
+                onLoad={difference.notifyFrameReady}
               />
             )
           ) : null}
@@ -356,6 +379,7 @@ export function SliderComparison() {
                   clip={mediaA ? activeClipA || firstClipA : activeClipB || firstClipB}
                   className="w-full h-full object-contain"
                   dataTrack="a"
+                  onFrameReady={difference.notifyFrameReady}
                 />
               ) : (
                 <img
@@ -365,10 +389,29 @@ export function SliderComparison() {
                   alt="A"
                   data-track="a"
                   draggable={false}
+                  onLoad={difference.notifyFrameReady}
                 />
               )
             ) : null}
           </div>
+        </div>
+      )}
+
+      {videoBounds && difference.regions.length > 0 && (
+        <div
+          className="pointer-events-none absolute z-10"
+          style={{
+            ...transformStyle,
+            left: videoBounds.left,
+            top: videoBounds.top,
+            width: videoBounds.width,
+            height: videoBounds.height,
+          }}
+        >
+          <DifferenceRegionsOverlay
+            regions={difference.regions}
+            aspectRatio={difference.aspectRatio}
+          />
         </div>
       )}
 

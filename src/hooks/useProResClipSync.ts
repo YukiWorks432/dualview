@@ -29,6 +29,7 @@ export function useProResClipSync(
       const context = canvas?.getContext('2d')
       if (canvas) {
         canvas.dataset.frameReady = 'false'
+        delete canvas.dataset.frameTimelineTime
       }
       if (canvas && context) {
         context.clearRect(0, 0, canvas.width, canvas.height)
@@ -71,6 +72,7 @@ export function useProResClipSync(
           context.clearRect(0, 0, canvas.width, canvas.height)
           context.drawImage(source, 0, 0, canvas.width, canvas.height)
           canvas.dataset.frameReady = 'true'
+          canvas.dataset.frameTimelineTime = String(request.timelineTime)
 
           if (!usePlaybackStore.getState().isPlaying) {
             onFrameReady?.()
