@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef } from 'react'
 
+import { detachFile } from '../lib/media/detachFile'
 import { isSupportedMediaFile } from '../lib/media/fileTypes'
 import { useMediaStore } from '../stores/mediaStore'
 import { useTimelineStore } from '../stores/timelineStore'
@@ -60,7 +61,7 @@ export function useDropZone({ trackType }: UseDropZoneOptions) {
         if (!isSupportedMediaFile(file)) continue
 
         try {
-          const mediaFile = await addFile(file)
+          const mediaFile = await addFile(await detachFile(file))
           const duration = mediaFile.duration || 10
 
           addClip(track.id, mediaFile.id, nextStartTime, duration)
@@ -94,7 +95,7 @@ export function useDropZone({ trackType }: UseDropZoneOptions) {
         if (!isSupportedMediaFile(file)) continue
 
         try {
-          const mediaFile = await addFile(file)
+          const mediaFile = await addFile(await detachFile(file))
           const duration = mediaFile.duration || 10
 
           addClip(track.id, mediaFile.id, nextStartTime, duration)
