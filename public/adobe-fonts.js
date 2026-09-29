@@ -15,7 +15,7 @@
     },
     h = d.documentElement,
     t = setTimeout(function () {
-      h.className = h.className.replace(/\\bwf-loading\\b/g, '') + ' wf-inactive';
+      h.className = h.className.replace(/\bwf-loading\b/g, '') + ' wf-inactive';
     }, config.scriptTimeout),
     tk = d.createElement('script'),
     f = false,
