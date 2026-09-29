@@ -458,9 +458,7 @@ export function SliderComparison() {
                   <Upload
                     className={cn(
                       'w-8 h-8 transition-transform',
-                      isDragOverA
-                        ? 'animate-bounce text-compare-a'
-                        : 'group-hover:scale-105',
+                      isDragOverA ? 'animate-bounce text-compare-a' : 'group-hover:scale-105',
                     )}
                   />
                 </button>
@@ -541,9 +539,7 @@ export function SliderComparison() {
                   <Upload
                     className={cn(
                       'w-8 h-8 transition-transform',
-                      isDragOverB
-                        ? 'animate-bounce text-compare-b'
-                        : 'group-hover:scale-105',
+                      isDragOverB ? 'animate-bounce text-compare-b' : 'group-hover:scale-105',
                     )}
                   />
                 </button>

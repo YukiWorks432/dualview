@@ -77,197 +77,200 @@ export function RadialLoupeComparison() {
   }, [])
 
   // Render function
-  const render = useCallback(function renderLoop() {
-    const canvas = canvasRef.current
-    const container = containerRef.current
-    if (!canvas || !container) {
-      animationRef.current = requestAnimationFrame(renderLoop)
-      return
-    }
-
-    const ctx = canvas.getContext('2d')
-    if (!ctx) {
-      animationRef.current = requestAnimationFrame(renderLoop)
-      return
-    }
-
-    // Get container dimensions
-    const rect = container.getBoundingClientRect()
-    if (canvas.width !== rect.width || canvas.height !== rect.height) {
-      canvas.width = rect.width
-      canvas.height = rect.height
-    }
-
-    const width = canvas.width
-    const height = canvas.height
-
-    // Get settings
-    const {
-      radius,
-      magnification,
-      featherEdge,
-      splitMode,
-      locked,
-      lockedPosition,
-      showRectangular,
-    } = radialLoupeSettings
-
-    // Determine loupe center (use locked position or current mouse)
-    const loupeCenter = locked && lockedPosition ? lockedPosition : mousePos
-    const loupeCenterX = loupeCenter.x * width
-    const loupeCenterY = loupeCenter.y * height
-
-    // Clear canvas
-    ctx.clearRect(0, 0, width, height)
-
-    // Get sources
-    const sourceA =
-      mediaA?.type === 'video'
-        ? videoARef.current
-        : mediaA?.type === 'image'
-          ? imgARef.current
-          : null
-    const sourceB =
-      mediaB?.type === 'video'
-        ? videoBRef.current
-        : mediaB?.type === 'image'
-          ? imgBRef.current
-          : null
-
-    // Check if sources are ready
-    const sourceAReady =
-      sourceA &&
-      (mediaA?.type === 'video'
-        ? isVideoFrameReady(videoARef.current)
-        : mediaA?.type === 'image' && imagesLoaded.a)
-    const sourceBReady =
-      sourceB &&
-      (mediaB?.type === 'video'
-        ? isVideoFrameReady(videoBRef.current)
-        : mediaB?.type === 'image' && imagesLoaded.b)
-
-    // Draw base layer (source A)
-    if (sourceA && sourceAReady) {
-      ctx.drawImage(sourceA, 0, 0, width, height)
-    } else {
-      ctx.fillStyle = '#1a1a1a'
-      ctx.fillRect(0, 0, width, height)
-    }
-
-    // Draw loupe if source B is available
-    if (sourceB && sourceBReady) {
-      ctx.save()
-
-      // Create clipping path for loupe
-      ctx.beginPath()
-      if (showRectangular) {
-        ctx.rect(loupeCenterX - radius, loupeCenterY - radius, radius * 2, radius * 2)
-      } else {
-        ctx.arc(loupeCenterX, loupeCenterY, radius, 0, Math.PI * 2)
+  const render = useCallback(
+    function renderLoop() {
+      const canvas = canvasRef.current
+      const container = containerRef.current
+      if (!canvas || !container) {
+        animationRef.current = requestAnimationFrame(renderLoop)
+        return
       }
-      ctx.clip()
 
-      // Calculate source coordinates for magnification
-      const { width: srcWidth, height: srcHeight } = getVisualFrameDimensions(sourceB)
+      const ctx = canvas.getContext('2d')
+      if (!ctx) {
+        animationRef.current = requestAnimationFrame(renderLoop)
+        return
+      }
 
-      // Magnified region
-      const srcX = loupeCenter.x * srcWidth - srcWidth / magnification / 2
-      const srcY = loupeCenter.y * srcHeight - srcHeight / magnification / 2
+      // Get container dimensions
+      const rect = container.getBoundingClientRect()
+      if (canvas.width !== rect.width || canvas.height !== rect.height) {
+        canvas.width = rect.width
+        canvas.height = rect.height
+      }
 
-      if (splitMode) {
-        // Split mode: A on left half, B on right half inside loupe
-        // Left half - draw A magnified
+      const width = canvas.width
+      const height = canvas.height
+
+      // Get settings
+      const {
+        radius,
+        magnification,
+        featherEdge,
+        splitMode,
+        locked,
+        lockedPosition,
+        showRectangular,
+      } = radialLoupeSettings
+
+      // Determine loupe center (use locked position or current mouse)
+      const loupeCenter = locked && lockedPosition ? lockedPosition : mousePos
+      const loupeCenterX = loupeCenter.x * width
+      const loupeCenterY = loupeCenter.y * height
+
+      // Clear canvas
+      ctx.clearRect(0, 0, width, height)
+
+      // Get sources
+      const sourceA =
+        mediaA?.type === 'video'
+          ? videoARef.current
+          : mediaA?.type === 'image'
+            ? imgARef.current
+            : null
+      const sourceB =
+        mediaB?.type === 'video'
+          ? videoBRef.current
+          : mediaB?.type === 'image'
+            ? imgBRef.current
+            : null
+
+      // Check if sources are ready
+      const sourceAReady =
+        sourceA &&
+        (mediaA?.type === 'video'
+          ? isVideoFrameReady(videoARef.current)
+          : mediaA?.type === 'image' && imagesLoaded.a)
+      const sourceBReady =
+        sourceB &&
+        (mediaB?.type === 'video'
+          ? isVideoFrameReady(videoBRef.current)
+          : mediaB?.type === 'image' && imagesLoaded.b)
+
+      // Draw base layer (source A)
+      if (sourceA && sourceAReady) {
+        ctx.drawImage(sourceA, 0, 0, width, height)
+      } else {
+        ctx.fillStyle = '#1a1a1a'
+        ctx.fillRect(0, 0, width, height)
+      }
+
+      // Draw loupe if source B is available
+      if (sourceB && sourceBReady) {
         ctx.save()
+
+        // Create clipping path for loupe
         ctx.beginPath()
-        ctx.rect(loupeCenterX - radius, loupeCenterY - radius, radius, radius * 2)
+        if (showRectangular) {
+          ctx.rect(loupeCenterX - radius, loupeCenterY - radius, radius * 2, radius * 2)
+        } else {
+          ctx.arc(loupeCenterX, loupeCenterY, radius, 0, Math.PI * 2)
+        }
         ctx.clip()
 
-        if (sourceA && sourceAReady) {
-          const { width: srcAWidth, height: srcAHeight } = getVisualFrameDimensions(sourceA)
-          const srcAX = loupeCenter.x * srcAWidth - srcAWidth / magnification / 2
-          const srcAY = loupeCenter.y * srcAHeight - srcAHeight / magnification / 2
+        // Calculate source coordinates for magnification
+        const { width: srcWidth, height: srcHeight } = getVisualFrameDimensions(sourceB)
+
+        // Magnified region
+        const srcX = loupeCenter.x * srcWidth - srcWidth / magnification / 2
+        const srcY = loupeCenter.y * srcHeight - srcHeight / magnification / 2
+
+        if (splitMode) {
+          // Split mode: A on left half, B on right half inside loupe
+          // Left half - draw A magnified
+          ctx.save()
+          ctx.beginPath()
+          ctx.rect(loupeCenterX - radius, loupeCenterY - radius, radius, radius * 2)
+          ctx.clip()
+
+          if (sourceA && sourceAReady) {
+            const { width: srcAWidth, height: srcAHeight } = getVisualFrameDimensions(sourceA)
+            const srcAX = loupeCenter.x * srcAWidth - srcAWidth / magnification / 2
+            const srcAY = loupeCenter.y * srcAHeight - srcAHeight / magnification / 2
+
+            ctx.drawImage(
+              sourceA,
+              srcAX,
+              srcAY,
+              srcAWidth / magnification,
+              srcAHeight / magnification,
+              loupeCenterX - radius,
+              loupeCenterY - radius,
+              radius * 2,
+              radius * 2,
+            )
+          }
+          ctx.restore()
+
+          // Right half - draw B magnified
+          ctx.save()
+          ctx.beginPath()
+          ctx.rect(loupeCenterX, loupeCenterY - radius, radius, radius * 2)
+          ctx.clip()
 
           ctx.drawImage(
-            sourceA,
-            srcAX,
-            srcAY,
-            srcAWidth / magnification,
-            srcAHeight / magnification,
+            sourceB,
+            srcX,
+            srcY,
+            srcWidth / magnification,
+            srcHeight / magnification,
+            loupeCenterX - radius,
+            loupeCenterY - radius,
+            radius * 2,
+            radius * 2,
+          )
+          ctx.restore()
+
+          // Draw divider line
+          ctx.strokeStyle = '#ffff00'
+          ctx.lineWidth = 2
+          ctx.beginPath()
+          ctx.moveTo(loupeCenterX, loupeCenterY - radius)
+          ctx.lineTo(loupeCenterX, loupeCenterY + radius)
+          ctx.stroke()
+        } else {
+          // Normal mode: B fills entire loupe
+          ctx.drawImage(
+            sourceB,
+            srcX,
+            srcY,
+            srcWidth / magnification,
+            srcHeight / magnification,
             loupeCenterX - radius,
             loupeCenterY - radius,
             radius * 2,
             radius * 2,
           )
         }
+
         ctx.restore()
 
-        // Right half - draw B magnified
-        ctx.save()
-        ctx.beginPath()
-        ctx.rect(loupeCenterX, loupeCenterY - radius, radius, radius * 2)
-        ctx.clip()
-
-        ctx.drawImage(
-          sourceB,
-          srcX,
-          srcY,
-          srcWidth / magnification,
-          srcHeight / magnification,
-          loupeCenterX - radius,
-          loupeCenterY - radius,
-          radius * 2,
-          radius * 2,
-        )
-        ctx.restore()
-
-        // Draw divider line
-        ctx.strokeStyle = '#ffff00'
+        // Draw loupe border
+        ctx.strokeStyle = featherEdge ? 'rgba(255,255,255,0.5)' : '#ffffff'
         ctx.lineWidth = 2
         ctx.beginPath()
-        ctx.moveTo(loupeCenterX, loupeCenterY - radius)
-        ctx.lineTo(loupeCenterX, loupeCenterY + radius)
+        if (showRectangular) {
+          ctx.rect(loupeCenterX - radius, loupeCenterY - radius, radius * 2, radius * 2)
+        } else {
+          ctx.arc(loupeCenterX, loupeCenterY, radius, 0, Math.PI * 2)
+        }
         ctx.stroke()
-      } else {
-        // Normal mode: B fills entire loupe
-        ctx.drawImage(
-          sourceB,
-          srcX,
-          srcY,
-          srcWidth / magnification,
-          srcHeight / magnification,
-          loupeCenterX - radius,
-          loupeCenterY - radius,
-          radius * 2,
-          radius * 2,
-        )
+
+        // Draw crosshair in center
+        ctx.strokeStyle = 'rgba(255,255,0,0.7)'
+        ctx.lineWidth = 1
+        ctx.beginPath()
+        ctx.moveTo(loupeCenterX - 10, loupeCenterY)
+        ctx.lineTo(loupeCenterX + 10, loupeCenterY)
+        ctx.moveTo(loupeCenterX, loupeCenterY - 10)
+        ctx.lineTo(loupeCenterX, loupeCenterY + 10)
+        ctx.stroke()
       }
 
-      ctx.restore()
-
-      // Draw loupe border
-      ctx.strokeStyle = featherEdge ? 'rgba(255,255,255,0.5)' : '#ffffff'
-      ctx.lineWidth = 2
-      ctx.beginPath()
-      if (showRectangular) {
-        ctx.rect(loupeCenterX - radius, loupeCenterY - radius, radius * 2, radius * 2)
-      } else {
-        ctx.arc(loupeCenterX, loupeCenterY, radius, 0, Math.PI * 2)
-      }
-      ctx.stroke()
-
-      // Draw crosshair in center
-      ctx.strokeStyle = 'rgba(255,255,0,0.7)'
-      ctx.lineWidth = 1
-      ctx.beginPath()
-      ctx.moveTo(loupeCenterX - 10, loupeCenterY)
-      ctx.lineTo(loupeCenterX + 10, loupeCenterY)
-      ctx.moveTo(loupeCenterX, loupeCenterY - 10)
-      ctx.lineTo(loupeCenterX, loupeCenterY + 10)
-      ctx.stroke()
-    }
-
-    animationRef.current = requestAnimationFrame(renderLoop)
-  }, [mediaA, mediaB, mousePos, radialLoupeSettings, imagesLoaded])
+      animationRef.current = requestAnimationFrame(renderLoop)
+    },
+    [mediaA, mediaB, mousePos, radialLoupeSettings, imagesLoaded],
+  )
 
   // Start render loop
   useEffect(() => {
