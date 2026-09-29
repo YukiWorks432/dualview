@@ -12,7 +12,7 @@ import {
 
 import { useHistoryStore } from '../../stores/historyStore'
 import { useTimelineStore } from '../../stores/timelineStore'
-import { Button } from '../ui'
+import { Button, IconButton } from '../ui'
 import { ComparisonModePicker } from './ComparisonModePicker'
 import { MetadataComparison } from './MetadataComparison'
 
