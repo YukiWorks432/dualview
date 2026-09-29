@@ -1,18 +1,6 @@
 @import 'tailwindcss';
 
 @theme {
-  --color-background: #1e1e1e;
-  --color-text-primary: #f2f2f2;
-  --color-text-secondary: #b8b8b8;
-  --color-text-muted: #909090;
-  --color-accent: #ff5722;
-  --color-accent-hover: #e64a19;
-  --color-secondary: #cddc39;
-  --color-secondary-hover: #c0ca33;
-  --color-success: #cddc39;
-  --color-warning: #ff9800;
-  --color-error: #f44336;
-
   --font-sans:
     helvetica-lt-pro, hiragino-kaku-gothic-pron, Inter, 'Noto Sans JP', system-ui, -apple-system,
     'Segoe UI', sans-serif;
@@ -28,12 +16,53 @@
 }
 
 @theme inline {
-  --color-surface: var(--surface-current);
-  --color-surface-alt: var(--surface-control);
-  --color-surface-hover: color-mix(in srgb, var(--surface-current) 94%, white);
-  --color-surface-active: color-mix(in srgb, var(--surface-current) 90%, white);
-  --color-border: var(--surface-control-border);
+  /* Semantic application palette. */
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-success: hsl(var(--success));
+  --color-success-foreground: hsl(var(--success-foreground));
+  --color-warning: hsl(var(--warning));
+  --color-warning-foreground: hsl(var(--warning-foreground));
+
+  /* Comparison identity is independent from application chrome. */
+  --color-compare-a: hsl(var(--compare-a));
+  --color-compare-a-foreground: hsl(var(--compare-a-foreground));
+  --color-compare-b: hsl(var(--compare-b));
+  --color-compare-b-foreground: hsl(var(--compare-b-foreground));
+
+  --color-surface-1: hsl(var(--surface-1));
+  --color-surface-2: hsl(var(--surface-2));
+  --color-surface-3: hsl(var(--surface-3));
+  --color-surface-4: hsl(var(--surface-4));
+  --color-surface-5: hsl(var(--surface-5));
+  --color-surface-6: hsl(var(--surface-6));
+  --color-surface: hsl(var(--surface-current-hsl));
+  --color-surface-alt: hsl(var(--surface-control-hsl));
+  --color-surface-hover: var(--surface-hover);
+  --color-surface-active: var(--surface-active);
   --color-border-hover: var(--surface-border-hover);
+
+  /*
+   * Transitional aliases for existing component classes. New code should prefer
+   * foreground / muted-foreground / primary / destructive.
+   */
+  --color-text-primary: hsl(var(--foreground));
+  --color-text-secondary: hsl(var(--muted-foreground));
+  --color-text-muted: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--primary));
+  --color-accent-hover: hsl(var(--primary) / 0.8);
+  --color-error: hsl(var(--destructive));
 }
 
 :root {
@@ -44,32 +73,79 @@
   --font-weight-ui-strong: 800;
   --font-weight-technical: 600;
 
-  --surface-1: #242424;
-  --surface-2: #292929;
-  --surface-3: #2e2e2e;
-  --surface-4: #333333;
-  --surface-5: #383838;
-  --surface-6: #3d3d3d;
-  --surface-current: var(--surface-1);
-  --surface-control: var(--surface-2);
-  --surface-control-border: rgba(255, 255, 255, 0.1);
-  --surface-border-hover: rgba(255, 255, 255, 0.16);
-  --surface-shadow-1: inset 0 1px 0 rgba(255, 255, 255, 0.01);
-  --surface-shadow-2: inset 0 1px 0 rgba(255, 255, 255, 0.025), 0 1px 2px rgba(0, 0, 0, 0.16);
-  --surface-shadow-3:
-    inset 0 1px 0 rgba(255, 255, 255, 0.035), 0 1px 2px rgba(0, 0, 0, 0.18),
-    0 3px 6px rgba(0, 0, 0, 0.08);
-  --surface-shadow-4:
-    inset 0 1px 0 rgba(255, 255, 255, 0.045), 0 1px 2px rgba(0, 0, 0, 0.2),
-    0 5px 10px rgba(0, 0, 0, 0.1);
-  --surface-shadow-5:
-    inset 0 1px 0 rgba(255, 255, 255, 0.055), 0 2px 4px rgba(0, 0, 0, 0.2),
-    0 8px 16px rgba(0, 0, 0, 0.12);
-  --surface-shadow-6:
-    inset 0 1px 0 rgba(255, 255, 255, 0.065), 0 2px 5px rgba(0, 0, 0, 0.22),
-    0 12px 24px rgba(0, 0, 0, 0.14);
-  --surface-shadow-current: var(--surface-shadow-1);
-  --surface-control-shadow: var(--surface-shadow-2);
+  /* Dark fluid surface ladder. */
+  --surface-1: 240 10% 4%;
+  --surface-2: 240 6% 10%;
+  --surface-3: 240 5% 13%;
+  --surface-4: 240 4% 16%;
+  --surface-5: 240 4% 19%;
+  --surface-6: 240 4% 22%;
+  --surface-current-hsl: var(--surface-1);
+  --surface-control-hsl: var(--surface-2);
+  --surface-overlay-rgb: 255, 255, 255;
+  --surface-hover: rgba(var(--surface-overlay-rgb), 0.06);
+  --surface-active: rgba(var(--surface-overlay-rgb), 0.1);
+  --surface-control-border: rgba(var(--surface-overlay-rgb), 0.1);
+  --surface-border-hover: rgba(var(--surface-overlay-rgb), 0.12);
+
+  --dm-hi-base: rgba(255, 255, 255, 0.01);
+  --dm-hi-mid: rgba(255, 255, 255, 0.02);
+  --dm-hi-high: rgba(255, 255, 255, 0.04);
+  --dm-ring-base: rgba(255, 255, 255, 0.02);
+  --dm-ring-mid: rgba(255, 255, 255, 0.04);
+  --dm-ring-high: rgba(255, 255, 255, 0.06);
+  --dm-drop: rgba(0, 0, 0, 0.11);
+  --shadow-1: inset 0 0 0 1px var(--dm-ring-base);
+  --shadow-2:
+    inset 0 1px 0 0 var(--dm-hi-base), inset 0 0 0 1px var(--dm-ring-base),
+    0 1px 1px -0.5px var(--dm-drop);
+  --shadow-3:
+    inset 0 1px 0 0 var(--dm-hi-mid), inset 0 0 0 1px var(--dm-ring-base),
+    0 0 0 1px rgba(0, 0, 0, 0.06), 0 1px 1px -0.5px var(--dm-drop), 0 3px 3px -1.5px var(--dm-drop);
+  --shadow-4:
+    inset 0 1px 0 0 var(--dm-hi-mid), inset 0 0 0 1px var(--dm-ring-mid),
+    0 0 0 1px rgba(0, 0, 0, 0.08), 0 1px 1px -0.5px var(--dm-drop), 0 3px 3px -1.5px var(--dm-drop),
+    0 6px 6px -3px var(--dm-drop);
+  --shadow-5:
+    inset 0 1px 0 0 var(--dm-hi-high), inset 0 0 0 1px var(--dm-ring-mid),
+    0 0 0 1px rgba(0, 0, 0, 0.09), 0 1px 1px -0.5px var(--dm-drop), 0 3px 3px -1.5px var(--dm-drop),
+    0 6px 6px -3px var(--dm-drop), 0 12px 12px -6px var(--dm-drop);
+  --shadow-6:
+    inset 0 1px 0 0 var(--dm-hi-high), inset 0 0 0 1px var(--dm-ring-high),
+    0 0 0 1px rgba(0, 0, 0, 0.1), 0 1px 1px -0.5px var(--dm-drop), 0 3px 3px -1.5px var(--dm-drop),
+    0 6px 6px -3px var(--dm-drop), 0 12px 12px -6px var(--dm-drop), 0 24px 24px -12px var(--dm-drop);
+  --surface-shadow-current: var(--shadow-1);
+  --surface-control-shadow: var(--shadow-2);
+
+  --background: 240 10% 4%;
+  --foreground: 0 0% 98%;
+  --primary: 246 61% 50%;
+  --primary-foreground: 226 100% 97%;
+  --secondary: 240 4% 16%;
+  --secondary-foreground: 0 0% 98%;
+  --muted: 240 4% 16%;
+  --muted-foreground: 240 5% 64%;
+  --destructive: 0 80% 50%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 0 0% 30%;
+  --input: 0 0% 20%;
+  --ring: 246 61% 50%;
+  --success: 142 62% 34%;
+  --success-foreground: 0 0% 98%;
+  --warning: 45 93% 47%;
+  --warning-foreground: 24 10% 10%;
+
+  /*
+   * Comparison identity colors preserve the original orange/lime hues while
+   * raising perceptual lightness for visibility on dark media surfaces.
+   * Reference accent: oklch(0.457 0.24 277.023)
+   * A source:          oklch(0.58 0.167 36.53)
+   * B source:          oklch(0.60 0.129 114.85)
+   */
+  --compare-a: 13.56 67.18% 47.15%;
+  --compare-a-foreground: 0 0% 100%;
+  --compare-b: 65.15 72.44% 31.02%;
+  --compare-b-foreground: 0 0% 0%;
 }
 
 * {
@@ -93,26 +169,26 @@
 }
 
 @utility surface-wash {
-  background-color: var(--surface-1) !important;
+  background-color: hsl(var(--surface-1)) !important;
 }
 
 @utility fluid-surface {
-  background-color: var(--surface-current);
+  background-color: hsl(var(--surface-current-hsl));
   box-shadow: var(--surface-shadow-current);
 }
 
 @utility surface-control {
   border-color: var(--surface-control-border);
-  background-color: var(--surface-control);
+  background-color: hsl(var(--surface-control-hsl));
   box-shadow: var(--surface-control-shadow);
 
   &:hover {
     border-color: var(--surface-border-hover);
-    background-color: color-mix(in srgb, var(--surface-control) 94%, white);
+    background-color: var(--surface-hover);
   }
 
   &:active {
-    background-color: color-mix(in srgb, var(--surface-control) 90%, white);
+    background-color: var(--surface-active);
   }
 }
 
@@ -127,11 +203,11 @@
 
   &:hover {
     border-color: var(--surface-border-hover);
-    background-color: color-mix(in srgb, var(--surface-current) 94%, white);
+    background-color: var(--surface-hover);
   }
 
   &:active {
-    background-color: color-mix(in srgb, var(--surface-current) 90%, white);
+    background-color: var(--surface-active);
   }
 }
 
@@ -142,11 +218,11 @@
     box-shadow 150ms ease-out;
 
   &:hover {
-    background-color: color-mix(in srgb, var(--surface-current) 94%, white);
+    background-color: var(--surface-hover);
   }
 
   &:active {
-    background-color: color-mix(in srgb, var(--surface-current) 90%, white);
+    background-color: var(--surface-active);
   }
 }
 
@@ -161,11 +237,11 @@
 }
 
 @utility surface-hover {
-  background-color: color-mix(in srgb, var(--surface-current) 94%, white);
+  background-color: var(--surface-hover);
 }
 
 @utility surface-active {
-  background-color: color-mix(in srgb, var(--surface-current) 90%, white);
+  background-color: var(--surface-active);
 }
 
 @utility surface-subtle {
@@ -174,20 +250,20 @@
 
 @utility surface-highlighted {
   &[data-highlighted] {
-    background-color: color-mix(in srgb, var(--surface-current) 94%, white);
+    background-color: var(--surface-hover);
   }
 }
 
 @utility surface-slider {
-  background-color: var(--surface-control);
+  background-color: hsl(var(--surface-control-hsl));
   box-shadow: inset 0 0 0 1px var(--surface-control-border);
 
   &::-webkit-slider-thumb {
-    border-color: var(--surface-current);
+    border-color: hsl(var(--surface-current-hsl));
   }
 
   &::-moz-range-thumb {
-    border-color: var(--surface-current);
+    border-color: hsl(var(--surface-current-hsl));
   }
 }
 
@@ -269,7 +345,7 @@ a {
 }
 
 :focus-visible {
-  outline: 2px solid var(--color-accent);
+  outline: 2px solid var(--color-ring);
   outline-offset: 2px;
 }
 
@@ -299,7 +375,7 @@ a {
 }
 
 .timeline-clip {
-  @apply cursor-grab border border-accent/50 bg-accent/20;
+  @apply cursor-grab border border-primary/50 bg-primary/20;
 }
 
 .timeline-clip:active {
@@ -307,7 +383,7 @@ a {
 }
 
 .timeline-playhead {
-  @apply w-0.5 bg-accent;
+  @apply w-0.5 bg-primary;
 }
 
 @keyframes fade-in {
@@ -454,7 +530,7 @@ a {
 }
 
 .selected-ring {
-  box-shadow: inset 0 0 0 2px var(--color-accent);
+  box-shadow: inset 0 0 0 2px var(--color-primary);
 }
 
 .tooltip-arrow {
@@ -484,15 +560,15 @@ a {
 }
 
 .track-a {
-  border-left: 3px solid var(--color-accent);
+  border-left: 3px solid var(--color-compare-a);
 }
 
 .track-b {
-  border-left: 3px solid var(--color-secondary);
+  border-left: 3px solid var(--color-compare-b);
 }
 
 .track-audio {
-  border-left: 3px solid var(--color-text-muted);
+  border-left: 3px solid var(--color-muted-foreground);
 }
 
 .kbd {
@@ -506,7 +582,7 @@ a {
   background: var(--color-surface-hover);
   border: 1px solid var(--color-border);
   border-radius: var(--ui-radius-sm) !important;
-  color: var(--color-text-secondary);
+  color: var(--color-muted-foreground);
 }
 
 /* Depth utilities are intentionally shallow so media remains the visual focus. */
@@ -533,11 +609,11 @@ a {
 }
 
 .bg-gradient-accent {
-  background: color-mix(in srgb, var(--color-accent) 12%, var(--color-surface));
+  background: color-mix(in srgb, var(--color-primary) 12%, var(--color-surface));
 }
 
 .bg-gradient-secondary {
-  background: color-mix(in srgb, var(--color-secondary) 10%, var(--color-surface));
+  background: color-mix(in srgb, var(--color-compare-b) 10%, var(--color-surface));
 }
 
 .divider-depth {
@@ -547,7 +623,7 @@ a {
 
 header,
 aside {
-  background: var(--surface-current);
+  background: hsl(var(--surface-current-hsl));
 }
 
 .modal-overlay {
@@ -624,7 +700,7 @@ aside {
   width: 85%;
   max-width: 320px;
   z-index: 50;
-  background: var(--surface-1);
+  background: hsl(var(--surface-1));
   box-shadow: 4px 0 20px rgba(0, 0, 0, 0.32);
 }
 
@@ -703,7 +779,7 @@ aside {
   bottom: 0;
   left: 0;
   right: 0;
-  background: var(--surface-current);
+  background: hsl(var(--surface-current-hsl));
   border-top: 1px solid var(--color-border);
   z-index: 60;
   max-height: 70vh;
@@ -717,7 +793,7 @@ aside {
   right: 20px;
   width: 56px;
   height: 56px;
-  background: var(--color-accent);
+  background: var(--color-primary);
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.32);
   z-index: 30;
   display: none;

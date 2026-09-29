@@ -29,7 +29,7 @@ function DropdownMenuContent({
         <ElevatedSurface asChild offset={1}>
           <MenuPrimitive.Popup
             className={cn(
-              'min-w-40 ui-radius-md border border-transparent py-1 text-text-primary outline-none data-[starting-style]:scale-[0.99] data-[starting-style]:opacity-0 data-[ending-style]:scale-[0.99] data-[ending-style]:opacity-0',
+              'min-w-40 ui-radius-md border border-transparent py-1 text-foreground outline-none data-[starting-style]:scale-[0.99] data-[starting-style]:opacity-0 data-[ending-style]:scale-[0.99] data-[ending-style]:opacity-0',
               className,
             )}
             {...props}
@@ -61,7 +61,7 @@ function DropdownMenuLabel({
 }: React.ComponentProps<typeof MenuPrimitive.GroupLabel>) {
   return (
     <MenuPrimitive.GroupLabel
-      className={cn('px-3 py-1.5 text-xs font-semibold text-text-secondary', className)}
+      className={cn('px-3 py-1.5 text-xs font-semibold text-muted-foreground', className)}
       {...props}
     />
   )
@@ -75,7 +75,7 @@ function DropdownMenuSeparator({
 }
 
 function DropdownMenuShortcut({ className, ...props }: React.ComponentProps<'span'>) {
-  return <span className={cn('ml-auto text-[10px] text-text-muted', className)} {...props} />
+  return <span className={cn('ml-auto text-[10px] text-muted-foreground', className)} {...props} />
 }
 
 export {

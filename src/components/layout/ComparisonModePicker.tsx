@@ -53,9 +53,9 @@ export function ComparisonModePicker() {
             />
           }
         >
-          <CurrentModeIcon className="h-4 w-4 text-accent" aria-hidden="true" />
+          <CurrentModeIcon className="h-4 w-4 text-primary" aria-hidden="true" />
           <span>{currentMode.label}</span>
-          <ChevronDown className="h-3 w-3 text-text-muted" aria-hidden="true" />
+          <ChevronDown className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
         </DialogTrigger>
         <DialogContent
           showCloseButton={false}
@@ -64,7 +64,7 @@ export function ComparisonModePicker() {
         >
           <div className="border-b border-border p-4">
             <DialogTitle className="text-sm font-semibold">Comparison Mode</DialogTitle>
-            <DialogDescription className="mt-1 text-xs text-text-muted">
+            <DialogDescription className="mt-1 text-xs text-muted-foreground">
               Choose how the current sources are compared.
             </DialogDescription>
           </div>
@@ -76,22 +76,22 @@ export function ComparisonModePicker() {
                   <button
                     type="button"
                     onClick={() => setComparisonMode(mode)}
-                    className={`flex min-h-24 flex-col items-center justify-center gap-2 ui-radius-md border p-4 text-center outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+                    className={`flex min-h-24 flex-col items-center justify-center gap-2 ui-radius-md border p-4 text-center outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                       comparisonMode === mode
-                        ? 'surface-active surface-selected-border text-text-primary hover:surface-active'
-                        : 'surface-control text-text-primary'
+                        ? 'surface-active surface-selected-border text-foreground hover:surface-active'
+                        : 'surface-control text-foreground'
                     }`}
                   />
                 }
               >
                 <Icon
                   className={`h-6 w-6 ${
-                    comparisonMode === mode ? 'text-accent' : 'text-text-secondary'
+                    comparisonMode === mode ? 'text-primary' : 'text-muted-foreground'
                   }`}
                   aria-hidden="true"
                 />
                 <span className="text-sm font-medium">{label}</span>
-                <span className="text-[10px] text-text-muted">{description}</span>
+                <span className="text-[10px] text-muted-foreground">{description}</span>
               </DialogClose>
             ))}
           </div>
@@ -114,7 +114,7 @@ export function ComparisonModePicker() {
                     onClick={() => setComparisonMode(mode)}
                     className={`relative h-7 gap-1 px-2 text-xs ${
                       comparisonMode === mode
-                        ? 'surface-active surface-selected-border text-text-primary hover:surface-active'
+                        ? 'surface-active surface-selected-border text-foreground hover:surface-active'
                         : ''
                     }`}
                     aria-selected={comparisonMode === mode}
@@ -124,21 +124,21 @@ export function ComparisonModePicker() {
                 }
               >
                 <Icon
-                  className={`h-3.5 w-3.5 ${comparisonMode === mode ? 'text-accent' : ''}`}
+                  className={`h-3.5 w-3.5 ${comparisonMode === mode ? 'text-primary' : ''}`}
                   aria-hidden="true"
                 />
                 <span className="hidden lg:inline">{label}</span>
                 {comparisonMode === mode && (
-                  <span className="absolute -bottom-px left-1/2 h-px w-3/4 -translate-x-1/2 bg-accent" />
+                  <span className="absolute -bottom-px left-1/2 h-px w-3/4 -translate-x-1/2 bg-primary" />
                 )}
               </TooltipTrigger>
               <TooltipContent>
                 <div className="font-medium">{label}</div>
-                <div className="mt-0.5 text-[10px] text-text-muted">{description}</div>
+                <div className="mt-0.5 text-[10px] text-muted-foreground">{description}</div>
                 {shortcut && (
                   <div className="mt-1 flex items-center gap-1">
                     <Kbd>{shortcut.key}</Kbd>
-                    <span className="text-[9px] text-text-muted">to switch</span>
+                    <span className="text-[9px] text-muted-foreground">to switch</span>
                   </div>
                 )}
               </TooltipContent>
@@ -155,7 +155,7 @@ export function ComparisonModePicker() {
                   size="sm"
                   className={`h-7 gap-1 px-2 text-xs ${
                     activeSecondaryMode
-                      ? 'surface-active surface-selected-border text-text-primary hover:surface-active'
+                      ? 'surface-active surface-selected-border text-foreground hover:surface-active'
                       : ''
                   }`}
                   aria-label="More comparison modes"
@@ -164,7 +164,7 @@ export function ComparisonModePicker() {
             >
               {activeSecondaryMode && ActiveSecondaryIcon ? (
                 <>
-                  <ActiveSecondaryIcon className="h-3.5 w-3.5 text-accent" aria-hidden="true" />
+                  <ActiveSecondaryIcon className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
                   <span className="hidden lg:inline">{activeSecondaryMode.label}</span>
                 </>
               ) : (
@@ -176,7 +176,7 @@ export function ComparisonModePicker() {
               <ChevronDown className="h-2.5 w-2.5" aria-hidden="true" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" sideOffset={8} className="w-64 py-2">
-              <div className="border-b border-border px-3 pb-2 text-[10px] text-text-muted">
+              <div className="border-b border-border px-3 pb-2 text-[10px] text-muted-foreground">
                 Advanced comparison tools for detailed analysis
               </div>
               {comparisonModeGroups.map((group, index) => (
@@ -185,29 +185,31 @@ export function ComparisonModePicker() {
                   <DropdownMenuLabel className="pb-0 text-[10px] uppercase tracking-wider">
                     {group.name}
                   </DropdownMenuLabel>
-                  <div className="px-3 pb-1 text-[9px] text-text-muted">{group.description}</div>
+                  <div className="px-3 pb-1 text-[9px] text-muted-foreground">
+                    {group.description}
+                  </div>
                   {group.modes.map(({ mode, icon: Icon, label, description, shortcut }) => (
                     <DropdownMenuItem
                       key={mode}
                       onClick={() => setComparisonMode(mode)}
                       className={
                         comparisonMode === mode
-                          ? 'surface-active text-text-primary hover:surface-active'
+                          ? 'surface-active text-foreground hover:surface-active'
                           : undefined
                       }
                     >
                       <span
                         className={`flex h-8 w-8 items-center justify-center ui-radius-sm ${
                           comparisonMode === mode
-                            ? 'surface-active text-accent'
-                            : 'surface-control text-text-secondary'
+                            ? 'surface-active text-primary'
+                            : 'surface-control text-muted-foreground'
                         }`}
                       >
                         <Icon className="h-4 w-4" aria-hidden="true" />
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="block font-medium">{label}</span>
-                        <span className="block truncate text-[10px] text-text-muted">
+                        <span className="block truncate text-[10px] text-muted-foreground">
                           {description}
                         </span>
                       </span>

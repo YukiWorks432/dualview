@@ -323,21 +323,19 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
               <FilePlus2
                 className={cn(
                   'h-5 w-5',
-                  isDragOverA
-                    ? 'text-orange-500'
-                    : 'text-orange-500/70 group-hover:text-orange-500',
+                  isDragOverA ? 'text-compare-a' : 'text-compare-a/70 group-hover:text-compare-a',
                 )}
               />
             </div>
             <p
               className={cn(
                 'text-center text-xs font-medium',
-                isDragOverA ? 'text-orange-500' : 'text-text-primary',
+                isDragOverA ? 'text-compare-a' : 'text-foreground',
               )}
             >
               {isDragOverA ? 'Drop for A' : 'Media A'}
             </p>
-            <p className="mt-0.5 text-[10px] text-text-muted">Track A</p>
+            <p className="mt-0.5 text-[10px] text-muted-foreground">Track A</p>
           </div>
         </ElevatedSurface>
 
@@ -366,19 +364,19 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
               <FilePlus2
                 className={cn(
                   'h-5 w-5',
-                  isDragOverB ? 'text-lime-400' : 'text-lime-400/70 group-hover:text-lime-400',
+                  isDragOverB ? 'text-compare-b' : 'text-compare-b/70 group-hover:text-compare-b',
                 )}
               />
             </div>
             <p
               className={cn(
                 'text-center text-xs font-medium',
-                isDragOverB ? 'text-lime-400' : 'text-text-primary',
+                isDragOverB ? 'text-compare-b' : 'text-foreground',
               )}
             >
               {isDragOverB ? 'Drop for B' : 'Media B'}
             </p>
-            <p className="mt-0.5 text-[10px] text-text-muted">Track B</p>
+            <p className="mt-0.5 text-[10px] text-muted-foreground">Track B</p>
           </div>
         </ElevatedSurface>
       </div>
@@ -389,8 +387,8 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
         className={cn(
           'surface-interactive ui-radius-lg group cursor-pointer border-2 border-dashed transition-[border-color,box-shadow,opacity] duration-150',
           isDragOverGeneral
-            ? 'border-accent shadow-[0_0_0_1px_rgba(255,87,34,0.2)]'
-            : 'border-border hover:border-accent/60',
+            ? 'border-primary shadow-[0_0_0_1px_hsl(var(--primary)/0.2)]'
+            : 'border-border hover:border-primary/60',
           isUploading && 'pointer-events-none opacity-50',
         )}
         onDrop={handleDropGeneral}
@@ -402,7 +400,7 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
           <p
             className={cn(
               'text-center text-xs',
-              isDragOverGeneral ? 'text-accent' : 'text-text-muted',
+              isDragOverGeneral ? 'text-primary' : 'text-muted-foreground',
             )}
           >
             {isUploading
@@ -412,15 +410,15 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
                 : 'Drop multiple files (auto A/B)'}
           </p>
           <div className="mt-2 flex gap-2">
-            <Film className="h-3 w-3 text-text-muted/50" />
-            <Image className="w-3 h-3 text-text-muted/50" />
+            <Film className="h-3 w-3 text-muted-foreground/50" />
+            <Image className="w-3 h-3 text-muted-foreground/50" />
           </div>
         </div>
       </ElevatedSurface>
 
-      <div className="ui-radius-md border border-border/60 px-2.5 py-2 text-[10px] leading-relaxed text-text-muted">
+      <div className="ui-radius-md border border-border/60 px-2.5 py-2 text-[10px] leading-relaxed text-muted-foreground">
         <p>
-          <strong className="font-semibold text-text-secondary">Files are not uploaded.</strong>{' '}
+          <strong className="font-semibold text-muted-foreground">Files are not uploaded.</strong>{' '}
           Comparison and analysis happen in your browser. Projects and media are saved in this
           browser so you can continue later.
         </p>
@@ -429,7 +427,7 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
           target="_blank"
           rel="noopener noreferrer"
           aria-label="Privacy and storage information (opens in a new tab)"
-          className="mt-1 inline-flex items-center gap-1 text-accent hover:underline"
+          className="mt-1 inline-flex items-center gap-1 text-primary hover:underline"
         >
           Privacy &amp; storage
           <ExternalLink className="h-2.5 w-2.5" aria-hidden="true" />
@@ -443,7 +441,7 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
             e.stopPropagation()
             setIsURLImportOpen(true)
           }}
-          className="surface-control ui-radius-md flex items-center justify-center gap-1 border px-2 py-2 text-xs text-text-secondary transition-colors hover:text-text-primary"
+          className="surface-control ui-radius-md flex items-center justify-center gap-1 border px-2 py-2 text-xs text-muted-foreground transition-colors hover:text-foreground"
         >
           <Link className="w-3 h-3" />
           URL
@@ -453,7 +451,7 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
             e.stopPropagation()
             navigator.clipboard.read().catch(() => {})
           }}
-          className="surface-control ui-radius-md flex items-center justify-center gap-1 border px-2 py-2 text-xs text-text-secondary transition-colors hover:text-text-primary"
+          className="surface-control ui-radius-md flex items-center justify-center gap-1 border px-2 py-2 text-xs text-muted-foreground transition-colors hover:text-foreground"
           title="Ctrl+V to paste images"
         >
           <Clipboard className="w-3 h-3" />
@@ -466,7 +464,7 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
           }}
           disabled={isCapturing}
           className={cn(
-            'surface-control ui-radius-md flex items-center justify-center gap-1 border px-2 py-2 text-xs text-text-secondary transition-colors hover:text-text-primary',
+            'surface-control ui-radius-md flex items-center justify-center gap-1 border px-2 py-2 text-xs text-muted-foreground transition-colors hover:text-foreground',
             isCapturing && 'opacity-50 cursor-wait',
           )}
           title="Capture screen region"
@@ -477,7 +475,7 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
       </div>
 
       {error && (
-        <div className="ui-radius-md flex items-center gap-2 border border-error/30 bg-error/10 px-3 py-2 text-xs text-error">
+        <div className="ui-radius-md flex items-center gap-2 border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive">
           <AlertCircle className="w-4 h-4 flex-shrink-0" />
           <span>{error}</span>
         </div>
