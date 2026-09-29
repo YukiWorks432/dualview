@@ -104,7 +104,6 @@ export function ElevatedSurface({
       ...props,
       offset,
       shadowLevel: shadowLevel ?? undefined,
-      'data-surface-level': level,
       className: cn(className, shadowLevel === null && 'shadow-none'),
       style: surfaceStyle(level, style),
     },
