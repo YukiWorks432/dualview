@@ -145,6 +145,41 @@ describe('difference frame synchronization', () => {
     ).toBe(true)
   })
 
+  it('accepts the same very short held frame range at a 30fps frame boundary', () => {
+    const frameRange = { startTime: 0.033333, endTime: 1 / 30 }
+
+    expect(areFrameRangesSynchronized([frameRange, frameRange], 1 / 30, 0.05, 0.001, 0.001)).toBe(
+      true,
+    )
+  })
+
+  it('rejects a sub-millisecond overlap between distinct frame ranges', () => {
+    expect(
+      areFrameRangesSynchronized(
+        [
+          { startTime: 0, endTime: 1 / 30 },
+          { startTime: 1 / 30 - 0.0000005, endTime: 2 / 30 - 0.0000005 },
+        ],
+        1 / 30,
+        0.05,
+        0.001,
+        0.001,
+      ),
+    ).toBe(false)
+  })
+
+  it('still requires enough evidence when only one short frame range is observed', () => {
+    expect(
+      areFrameRangesSynchronized(
+        [{ startTime: 0.033333, endTime: 1 / 30 }, null],
+        1 / 30,
+        0.05,
+        0.001,
+        0.001,
+      ),
+    ).toBe(false)
+  })
+
   it('rejects adjacent paused frame intervals that only touch', () => {
     expect(
       areFrameRangesSynchronized(

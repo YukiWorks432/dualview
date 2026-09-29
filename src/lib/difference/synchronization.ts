@@ -1,5 +1,7 @@
 import type { TimelineFrameRange } from '../media/timeline'
 
+const SAME_FRAME_RANGE_TOLERANCE_SECONDS = 0.000001
+
 interface PausedVideoFrameState {
   currentTime: number
   paused: boolean
@@ -112,7 +114,18 @@ export function areFrameRangesSynchronized(
   const commonEnd = Math.min(...intervalRanges.map(({ endTime }) => endTime))
   const gap = Math.max(0, commonStart - commonEnd)
   const overlap = Math.max(0, commonEnd - commonStart)
-  if (gap > maximumGapSeconds || overlap < minimumOverlapSeconds) return false
+  const firstInterval = intervalRanges[0]
+  const intervalsDescribeSameFrame =
+    intervalRanges.length > 1 &&
+    overlap > 0 &&
+    intervalRanges.every(
+      ({ startTime, endTime }) =>
+        Math.abs(startTime - firstInterval.startTime) <= SAME_FRAME_RANGE_TOLERANCE_SECONDS &&
+        Math.abs(endTime - firstInterval.endTime) <= SAME_FRAME_RANGE_TOLERANCE_SECONDS,
+    )
+  if (gap > maximumGapSeconds || (overlap < minimumOverlapSeconds && !intervalsDescribeSameFrame)) {
+    return false
+  }
 
   if (pointRanges.length > 0) {
     const pointStart = Math.min(...pointRanges.map(({ startTime }) => startTime))
