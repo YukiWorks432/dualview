@@ -43,7 +43,7 @@ function DialogContent({
         <ElevatedSurface asChild offset={3}>
           <DialogPrimitive.Popup
             className={cn(
-              'relative w-full max-w-lg ui-radius-lg border border-transparent text-text-primary outline-none data-[starting-style]:scale-[0.99] data-[starting-style]:opacity-0 data-[ending-style]:scale-[0.99] data-[ending-style]:opacity-0',
+              'relative w-full max-w-lg ui-radius-lg border border-transparent text-foreground outline-none data-[starting-style]:scale-[0.99] data-[starting-style]:opacity-0 data-[ending-style]:scale-[0.99] data-[ending-style]:opacity-0',
               className,
             )}
             {...props}

@@ -217,7 +217,7 @@ export function ScopesPanel() {
           <div className="flex items-center gap-4">
             <button
               onClick={() => setIsCollapsed(!isCollapsed)}
-              className="surface-control ui-radius-md flex items-center gap-2 border px-2 py-1 text-text-primary hover:text-secondary transition-colors"
+              className="surface-control ui-radius-md flex items-center gap-2 border px-2 py-1 text-foreground hover:text-primary transition-colors"
             >
               {isCollapsed ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
               <span className="font-semibold text-sm">Video Scopes</span>
@@ -230,8 +230,8 @@ export function ScopesPanel() {
                   onClick={toggleWaveform}
                   className={`surface-control-elevation ui-radius-md flex items-center gap-1.5 border px-2 py-1 text-xs transition-colors ${
                     scopesSettings.showWaveform
-                      ? 'border-accent bg-accent text-white'
-                      : 'surface-control text-text-muted hover:text-text-primary'
+                      ? 'border-primary bg-primary text-primary-foreground'
+                      : 'surface-control text-muted-foreground hover:text-foreground'
                   }`}
                   title="Waveform Monitor (SCOPE-001)"
                 >
@@ -243,8 +243,8 @@ export function ScopesPanel() {
                   onClick={toggleVectorscope}
                   className={`surface-control-elevation ui-radius-md flex items-center gap-1.5 border px-2 py-1 text-xs transition-colors ${
                     scopesSettings.showVectorscope
-                      ? 'border-accent bg-accent text-white'
-                      : 'surface-control text-text-muted hover:text-text-primary'
+                      ? 'border-primary bg-primary text-primary-foreground'
+                      : 'surface-control text-muted-foreground hover:text-foreground'
                   }`}
                   title="Vectorscope (SCOPE-002)"
                 >
@@ -256,8 +256,8 @@ export function ScopesPanel() {
                   onClick={toggleParade}
                   className={`surface-control-elevation ui-radius-md flex items-center gap-1.5 border px-2 py-1 text-xs transition-colors ${
                     scopesSettings.showParade
-                      ? 'border-accent bg-accent text-white'
-                      : 'surface-control text-text-muted hover:text-text-primary'
+                      ? 'border-primary bg-primary text-primary-foreground'
+                      : 'surface-control text-muted-foreground hover:text-foreground'
                   }`}
                   title="RGB Parade (SCOPE-003)"
                 >
@@ -275,7 +275,7 @@ export function ScopesPanel() {
                 <select
                   value={scopesSettings.scopeSource}
                   onChange={(e) => setScopeSource(e.target.value as 'a' | 'b' | 'comparison')}
-                  className="surface-control ui-radius-md border text-text-primary text-xs px-2 py-1"
+                  className="surface-control ui-radius-md border text-foreground text-xs px-2 py-1"
                 >
                   <option value="a">Source A</option>
                   <option value="b">Source B</option>
@@ -286,8 +286,8 @@ export function ScopesPanel() {
                   onClick={() => setShowSettings(!showSettings)}
                   className={`surface-control-elevation ui-radius-md border p-1.5 transition-colors ${
                     showSettings
-                      ? 'border-accent bg-accent text-white'
-                      : 'surface-control text-text-muted hover:text-text-primary'
+                      ? 'border-primary bg-primary text-primary-foreground'
+                      : 'surface-control text-muted-foreground hover:text-foreground'
                   }`}
                   title="Settings"
                 >
@@ -299,7 +299,7 @@ export function ScopesPanel() {
             {/* Close button */}
             <button
               onClick={toggleScopes}
-              className="surface-control ui-radius-md border p-1.5 text-text-muted hover:text-red-400 transition-colors"
+              className="surface-control ui-radius-md border p-1.5 text-muted-foreground hover:text-red-400 transition-colors"
               title="Close Scopes"
             >
               <X size={14} />
@@ -315,7 +315,7 @@ export function ScopesPanel() {
               <span className="text-xs text-gray-400">Intensity:</span>
               <button
                 onClick={() => setScopeIntensity(scopesSettings.scopeIntensity - 0.25)}
-                className="surface-control ui-radius-sm border p-1 text-text-muted hover:text-text-primary"
+                className="surface-control ui-radius-sm border p-1 text-muted-foreground hover:text-foreground"
               >
                 <Minus size={12} />
               </button>
@@ -324,7 +324,7 @@ export function ScopesPanel() {
               </span>
               <button
                 onClick={() => setScopeIntensity(scopesSettings.scopeIntensity + 0.25)}
-                className="surface-control ui-radius-sm border p-1 text-text-muted hover:text-text-primary"
+                className="surface-control ui-radius-sm border p-1 text-muted-foreground hover:text-foreground"
               >
                 <Plus size={12} />
               </button>
@@ -337,7 +337,7 @@ export function ScopesPanel() {
                 <select
                   value={scopesSettings.vectorscopeZoom}
                   onChange={(e) => setVectorscopeZoom(Number(e.target.value))}
-                  className="surface-control ui-radius-md border text-text-primary text-xs px-2 py-1"
+                  className="surface-control ui-radius-md border text-foreground text-xs px-2 py-1"
                 >
                   <option value="1">1x</option>
                   <option value="2">2x</option>
@@ -504,8 +504,8 @@ export function ScopesToggle({ onClick, isActive }: { onClick: () => void; isAct
       onClick={onClick}
       className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${
         isActive
-          ? 'border-accent bg-accent text-white'
-          : 'surface-control text-text-muted hover:text-text-primary'
+          ? 'border-primary bg-primary text-primary-foreground'
+          : 'surface-control text-muted-foreground hover:text-foreground'
       }`}
       title="Video Scopes (Waveform, Vectorscope, Parade)"
     >

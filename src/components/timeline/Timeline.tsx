@@ -627,7 +627,7 @@ export function Timeline() {
                 size="icon"
                 onClick={togglePlay}
                 title="Play/Pause (Space)"
-                className={`h-8 w-8 ${isPlaying ? 'bg-accent/20 text-accent' : ''}`}
+                className={`h-8 w-8 ${isPlaying ? 'bg-primary/20 text-primary' : ''}`}
               >
                 {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
               </Button>
@@ -656,21 +656,21 @@ export function Timeline() {
             <div className="ml-2 md:ml-3 flex items-center gap-2">
               <div
                 data-testid="timeline-current-time"
-                className="text-xs md:text-sm font-mono text-text-primary tabular-nums"
+                className="text-xs md:text-sm font-mono text-foreground tabular-nums"
               >
                 {formatTime(currentTime)}
               </div>
               {/* Visual progress indicator - hidden on small screens */}
               <div className="hidden sm:block w-16 h-1 ui-radius-sm bg-surface relative overflow-hidden">
                 <div
-                  className="absolute inset-y-0 left-0 bg-accent transition-all duration-75"
+                  className="absolute inset-y-0 left-0 bg-primary transition-all duration-75"
                   style={{ width: `${(currentTime / duration) * 100}%` }}
                 />
               </div>
-              <div className="hidden sm:block text-sm font-mono text-text-muted tabular-nums">
+              <div className="hidden sm:block text-sm font-mono text-muted-foreground tabular-nums">
                 {formatTime(duration)}
               </div>
-              <span className="hidden md:inline ui-radius-sm text-[10px] text-text-muted px-1.5 py-0.5 bg-surface font-mono">
+              <span className="hidden md:inline ui-radius-sm text-[10px] text-muted-foreground px-1.5 py-0.5 bg-surface font-mono">
                 F:{getCurrentFrame()}
               </span>
             </div>
@@ -687,8 +687,8 @@ export function Timeline() {
                   className={cn(
                     'surface-control-elevation ui-radius-sm border px-2.5 py-1 text-xs font-medium transition-all duration-150',
                     playbackSpeed === speed && shuttleSpeed === 0
-                      ? 'border-accent bg-accent text-white'
-                      : 'surface-control text-text-muted hover:text-text-primary',
+                      ? 'border-primary bg-primary text-primary-foreground'
+                      : 'surface-control text-muted-foreground hover:text-foreground',
                   )}
                 >
                   {speed === 1 ? '1×' : `${speed}×`}
@@ -721,7 +721,7 @@ export function Timeline() {
               size="icon"
               onClick={() => setShowFilmstrip(!showFilmstrip)}
               title={showFilmstrip ? 'Hide filmstrip' : 'Show filmstrip'}
-              className={`hidden md:flex h-7 w-7 ${showFilmstrip ? 'bg-accent/10 text-accent' : ''}`}
+              className={`hidden md:flex h-7 w-7 ${showFilmstrip ? 'bg-primary/10 text-primary' : ''}`}
             >
               <Video className="w-3.5 h-3.5" />
             </Button>
@@ -732,7 +732,7 @@ export function Timeline() {
               size="sm"
               onClick={() => setShowAdvancedTools(!showAdvancedTools)}
               title="Toggle advanced tools"
-              className={`hidden md:flex h-7 px-2 text-[10px] gap-1 ${showAdvancedTools ? 'bg-accent/10 text-accent' : ''}`}
+              className={`hidden md:flex h-7 px-2 text-[10px] gap-1 ${showAdvancedTools ? 'bg-primary/10 text-primary' : ''}`}
             >
               <Settings className="w-3 h-3" />
               <span className="hidden sm:inline">{showAdvancedTools ? 'Less' : 'More'}</span>
@@ -748,12 +748,12 @@ export function Timeline() {
                     size="icon"
                     onClick={() => (loopRegion ? clearLoop() : setLoopIn())}
                     title={loopRegion ? 'Clear loop (Esc)' : 'Set loop in (I/O)'}
-                    className={`h-7 w-7 ${loopRegion ? 'bg-accent/20 text-accent' : ''}`}
+                    className={`h-7 w-7 ${loopRegion ? 'bg-primary/20 text-primary' : ''}`}
                   >
                     <Repeat className="w-3.5 h-3.5" />
                   </Button>
                   {loopRegion && (
-                    <span className="text-[10px] text-accent font-mono px-1">
+                    <span className="text-[10px] text-primary font-mono px-1">
                       {formatTime(loopRegion.inPoint)}→{formatTime(loopRegion.outPoint)}
                     </span>
                   )}
@@ -819,7 +819,7 @@ export function Timeline() {
                   >
                     <Flag className="w-3.5 h-3.5" />
                     {markers.length > 0 && (
-                      <span className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-secondary text-[8px] text-black font-bold flex items-center justify-center">
+                      <span className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-warning text-[8px] text-warning-foreground font-bold flex items-center justify-center">
                         {markers.length}
                       </span>
                     )}
@@ -829,7 +829,7 @@ export function Timeline() {
                     size="icon"
                     onClick={toggleSnap}
                     title="Snap to edges (N)"
-                    className={`h-7 w-7 ${snapEnabled ? 'bg-accent/20 text-accent' : ''}`}
+                    className={`h-7 w-7 ${snapEnabled ? 'bg-primary/20 text-primary' : ''}`}
                   >
                     <Magnet className="w-3.5 h-3.5" />
                   </Button>
@@ -838,7 +838,7 @@ export function Timeline() {
                     size="icon"
                     onClick={toggleRipple}
                     title="Ripple edit (R)"
-                    className={`h-7 w-7 ${rippleEnabled ? 'bg-accent/20 text-accent' : ''}`}
+                    className={`h-7 w-7 ${rippleEnabled ? 'bg-primary/20 text-primary' : ''}`}
                   >
                     <ArrowRightLeft className="w-3.5 h-3.5" />
                   </Button>
@@ -851,7 +851,7 @@ export function Timeline() {
               <Button variant="secondary" size="icon" onClick={zoomOut} className="h-7 w-7">
                 <ZoomOut className="w-3.5 h-3.5" />
               </Button>
-              <span className="hidden sm:inline text-[10px] text-text-secondary w-10 text-center font-mono">
+              <span className="hidden sm:inline text-[10px] text-muted-foreground w-10 text-center font-mono">
                 {Math.round(zoom * 100)}%
               </span>
               <Button variant="secondary" size="icon" onClick={zoomIn} className="h-7 w-7">
@@ -876,7 +876,7 @@ export function Timeline() {
               className="h-12 md:h-16 px-2 flex flex-col justify-center border-b border-border relative"
             >
               <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-text-secondary truncate">
+                <span className="text-xs font-medium text-muted-foreground truncate">
                   {track.name}
                 </span>
                 <div className="flex gap-1">
@@ -891,7 +891,7 @@ export function Timeline() {
                     )}
                     title="Track Settings"
                   >
-                    <Settings className="w-3 h-3 text-text-muted" />
+                    <Settings className="w-3 h-3 text-muted-foreground" />
                   </button>
                   <button
                     onClick={() => toggleTrackMute(track.id)}
@@ -899,9 +899,9 @@ export function Timeline() {
                     title={track.muted ? 'Unmute' : 'Mute'}
                   >
                     {track.muted ? (
-                      <VolumeX className="w-3 h-3 text-error" />
+                      <VolumeX className="w-3 h-3 text-destructive" />
                     ) : (
-                      <Volume2 className="w-3 h-3 text-text-muted" />
+                      <Volume2 className="w-3 h-3 text-muted-foreground" />
                     )}
                   </button>
                   <button
@@ -912,7 +912,7 @@ export function Timeline() {
                     {track.locked ? (
                       <Lock className="w-3 h-3 text-warning" />
                     ) : (
-                      <Unlock className="w-3 h-3 text-text-muted" />
+                      <Unlock className="w-3 h-3 text-muted-foreground" />
                     )}
                   </button>
                 </div>
@@ -921,12 +921,12 @@ export function Timeline() {
               <div className="flex gap-1 mt-1">
                 {track.acceptedTypes.includes('video') && (
                   <span title="Accepts video">
-                    <Video className="w-3 h-3 text-accent" />
+                    <Video className="w-3 h-3 text-green-400" />
                   </span>
                 )}
                 {track.acceptedTypes.includes('image') && (
                   <span title="Accepts images">
-                    <Image className="w-3 h-3 text-secondary" />
+                    <Image className="w-3 h-3 text-blue-400" />
                   </span>
                 )}
               </div>
@@ -938,7 +938,7 @@ export function Timeline() {
                     data-track-settings
                     className="ui-radius-md absolute left-full top-0 ml-1 z-30 border border-transparent p-2 min-w-[140px]"
                   >
-                    <div className="text-xs font-medium text-text-secondary mb-2">
+                    <div className="text-xs font-medium text-muted-foreground mb-2">
                       Accepted Media Types
                     </div>
                     {(['video', 'image'] as MediaType[]).map((type) => {
@@ -960,16 +960,16 @@ export function Timeline() {
                                 setTrackAcceptedTypes(track.id, newTypes)
                               }
                             }}
-                            className="w-3 h-3 accent-accent"
+                            className="w-3 h-3 accent-primary"
                           />
                           <Icon
                             className={cn(
                               'w-3 h-3',
-                              type === 'video' && 'text-accent',
-                              type === 'image' && 'text-secondary',
+                              type === 'video' && 'text-green-400',
+                              type === 'image' && 'text-blue-400',
                             )}
                           />
-                          <span className="text-xs text-text-primary capitalize">{type}</span>
+                          <span className="text-xs text-foreground capitalize">{type}</span>
                         </label>
                       )
                     })}
@@ -983,7 +983,7 @@ export function Timeline() {
                             removeTrack(track.id)
                             setOpenTrackSettings(null)
                           }}
-                          className="flex items-center gap-2 w-full ui-radius-sm py-1 px-1 text-error hover:bg-error/10"
+                          className="flex items-center gap-2 w-full ui-radius-sm py-1 px-1 text-destructive hover:bg-destructive/10"
                         >
                           <Trash2 className="w-3 h-3" />
                           <span className="text-xs">Delete Track</span>
@@ -1005,8 +1005,8 @@ export function Timeline() {
               className={cn(
                 'surface-control-elevation ui-radius-md flex items-center gap-1.5 border px-2 py-1 text-xs font-medium transition-colors',
                 showAddTrackMenu
-                  ? 'border-accent bg-accent text-white'
-                  : 'surface-control text-text-muted hover:text-text-primary',
+                  ? 'border-primary bg-primary text-primary-foreground'
+                  : 'surface-control text-muted-foreground hover:text-foreground',
               )}
               title="Add new track"
             >
@@ -1027,7 +1027,7 @@ export function Timeline() {
                       addTrack('media')
                       setShowAddTrackMenu(false)
                     }}
-                    className="w-full flex items-center gap-2 ui-radius-sm px-3 py-2 text-sm text-text-primary hover:bg-surface-hover"
+                    className="w-full flex items-center gap-2 ui-radius-sm px-3 py-2 text-sm text-foreground hover:bg-surface-hover"
                   >
                     <Video className="w-4 h-4 text-green-400" />
                     <span>Media Track</span>
@@ -1038,7 +1038,7 @@ export function Timeline() {
                       addTrack('audio')
                       setShowAddTrackMenu(false)
                     }}
-                    className="w-full flex items-center gap-2 ui-radius-sm px-3 py-2 text-sm text-text-primary hover:bg-surface-hover"
+                    className="w-full flex items-center gap-2 ui-radius-sm px-3 py-2 text-sm text-foreground hover:bg-surface-hover"
                   >
                     <Music className="w-4 h-4 text-blue-400" />
                     <span>Audio Track</span>
@@ -1049,7 +1049,7 @@ export function Timeline() {
                       addTrack('text')
                       setShowAddTrackMenu(false)
                     }}
-                    className="w-full flex items-center gap-2 ui-radius-sm px-3 py-2 text-sm text-text-primary hover:bg-surface-hover"
+                    className="w-full flex items-center gap-2 ui-radius-sm px-3 py-2 text-sm text-foreground hover:bg-surface-hover"
                   >
                     <Type className="w-4 h-4 text-purple-400" />
                     <span>Text Track</span>
@@ -1073,7 +1073,7 @@ export function Timeline() {
               {/* Loop region indicator (VID-003) */}
               {loopRegion && (
                 <div
-                  className="absolute top-0 h-full bg-accent/20 border-x-2 border-accent"
+                  className="absolute top-0 h-full bg-primary/20 border-x-2 border-primary"
                   style={{
                     left: loopRegion.inPoint * pixelsPerSecond,
                     width: (loopRegion.outPoint - loopRegion.inPoint) * pixelsPerSecond,
@@ -1091,7 +1091,7 @@ export function Timeline() {
                     className={cn('w-px', marker.major ? 'h-3 bg-border' : 'h-1.5 bg-border/50')}
                   />
                   {marker.major && (
-                    <span className="text-[10px] text-text-muted">
+                    <span className="text-[10px] text-muted-foreground">
                       {formatMarkerTime(marker.time)}
                     </span>
                   )}
@@ -1110,9 +1110,9 @@ export function Timeline() {
                   }}
                   title={`${marker.label} - ${formatTime(marker.time)}`}
                 >
-                  <Flag className="w-3 h-3 text-secondary fill-secondary" />
+                  <Flag className="w-3 h-3 text-warning fill-warning" />
                   <button
-                    className="absolute -top-1 -right-1 inline-flex h-4 w-4 items-center justify-center rounded-full bg-error p-0 opacity-0 group-hover:opacity-100"
+                    className="absolute -top-1 -right-1 inline-flex h-4 w-4 items-center justify-center rounded-full bg-destructive p-0 opacity-0 group-hover:opacity-100"
                     onClick={(e) => {
                       e.stopPropagation()
                       removeMarker(marker.id)
@@ -1138,17 +1138,17 @@ export function Timeline() {
                 className={cn(
                   'h-12 md:h-16 border-b border-border relative transition-colors',
                   track.locked && 'opacity-50',
-                  dragOverTrackId === track.id && 'bg-accent/10 border-accent/50',
+                  dragOverTrackId === track.id && 'bg-primary/10 border-primary/50',
                 )}
               >
                 {/* Drop indicator line */}
                 {dragOverTrackId === track.id && dropIndicatorX !== null && (
                   <div
-                    className="absolute top-0 bottom-0 w-0.5 bg-accent z-20 pointer-events-none"
+                    className="absolute top-0 bottom-0 w-0.5 bg-primary z-20 pointer-events-none"
                     style={{ left: dropIndicatorX }}
                   >
-                    <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-accent rounded-full" />
-                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-accent rounded-full" />
+                    <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-primary rounded-full" />
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-primary rounded-full" />
                   </div>
                 )}
                 {/* Clips - using memoized component for performance */}
@@ -1221,7 +1221,7 @@ export function Timeline() {
               if (snapPoint !== null) {
                 return (
                   <div
-                    className="absolute top-0 bottom-0 w-0.5 bg-secondary z-15 pointer-events-none animate-pulse"
+                    className="absolute top-0 bottom-0 w-0.5 bg-warning z-15 pointer-events-none animate-pulse"
                     style={{ left: snapPoint * pixelsPerSecond }}
                   />
                 )
@@ -1232,17 +1232,17 @@ export function Timeline() {
             {/* Playhead */}
             <div
               ref={playheadRef}
-              className="absolute top-0 bottom-0 w-0.5 bg-accent z-20 cursor-ew-resize"
+              className="absolute top-0 bottom-0 w-0.5 bg-primary z-20 cursor-ew-resize"
               style={{ left: currentTime * pixelsPerSecond }}
               onMouseDown={handlePlayheadMouseDown}
             >
-              <div className="absolute -top-0 left-1/2 -translate-x-1/2 w-3 h-3 bg-accent rounded-b-sm" />
+              <div className="absolute -top-0 left-1/2 -translate-x-1/2 w-3 h-3 bg-primary rounded-b-sm" />
             </div>
 
             {/* TL-004: Marquee selection box */}
             {isSelecting && getSelectionBoxStyle() && (
               <div
-                className="absolute border-2 border-accent bg-accent/10 pointer-events-none z-30"
+                className="absolute border-2 border-primary bg-primary/10 pointer-events-none z-30"
                 style={getSelectionBoxStyle() || undefined}
               />
             )}

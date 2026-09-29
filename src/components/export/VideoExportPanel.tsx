@@ -31,7 +31,7 @@ export function VideoExportPanel({
   return (
     <>
       <fieldset>
-        <legend className="mb-2 text-sm text-text-secondary">Export Source</legend>
+        <legend className="mb-2 text-sm text-muted-foreground">Export Source</legend>
         <div className="grid grid-cols-3 gap-2">
           {[
             { value: 'comparison', label: 'Comparison' },
@@ -49,8 +49,8 @@ export function VideoExportPanel({
               }
               className={`surface-control-elevation ui-radius-md border px-3 py-2 text-sm transition-colors ${
                 settings.exportSource === option.value
-                  ? 'border-accent bg-accent/10 text-accent'
-                  : 'surface-control text-text-secondary'
+                  ? 'border-primary bg-primary/10 text-primary'
+                  : 'surface-control text-muted-foreground'
               }`}
             >
               {option.label}
@@ -63,7 +63,7 @@ export function VideoExportPanel({
         <div>
           <label
             htmlFor="video-export-slider-position"
-            className="mb-2 block text-sm text-text-secondary"
+            className="mb-2 block text-sm text-muted-foreground"
           >
             Slider Position: {settings.sliderPosition}%
           </label>
@@ -75,7 +75,7 @@ export function VideoExportPanel({
             max={100}
             step={1}
           />
-          <div className="mt-1 flex justify-between text-xs text-text-muted">
+          <div className="mt-1 flex justify-between text-xs text-muted-foreground">
             <span>Full A</span>
             <span>50/50</span>
             <span>Full B</span>
@@ -88,13 +88,13 @@ export function VideoExportPanel({
           checked={settings.loopShorterVideo}
           onCheckedChange={(checked) => onSettingsChange({ loopShorterVideo: Boolean(checked) })}
         />
-        <span className="text-sm text-text-primary">Loop shorter video to match longer</span>
+        <span className="text-sm text-foreground">Loop shorter video to match longer</span>
       </label>
 
       {settings.exportSource === 'comparison' && (
         <>
           <fieldset>
-            <legend className="mb-2 text-sm text-text-secondary">Sweep Style</legend>
+            <legend className="mb-2 text-sm text-muted-foreground">Sweep Style</legend>
             <div className="grid grid-cols-7 gap-1">
               {[
                 { value: 'horizontal', label: '↔', title: 'Horizontal' },
@@ -115,15 +115,15 @@ export function VideoExportPanel({
                   }
                   className={`surface-control-elevation ui-radius-md border px-2 py-2 text-lg transition-colors ${
                     settings.sweepStyle === style.value
-                      ? 'border-accent bg-accent/10 text-accent'
-                      : 'surface-control text-text-secondary'
+                      ? 'border-primary bg-primary/10 text-primary'
+                      : 'surface-control text-muted-foreground'
                   }`}
                 >
                   {style.label}
                 </button>
               ))}
             </div>
-            <p className="mt-1 text-xs text-text-muted">
+            <p className="mt-1 text-xs text-muted-foreground">
               {settings.sweepStyle === 'horizontal' && 'Left ↔ Right sweep'}
               {settings.sweepStyle === 'vertical' && 'Top ↔ Bottom sweep'}
               {settings.sweepStyle === 'diagonal' && 'Diagonal corner sweep'}
@@ -141,7 +141,7 @@ export function VideoExportPanel({
                   <div>
                     <label
                       htmlFor="video-export-spotlight-width"
-                      className="mb-1 block text-xs text-text-secondary"
+                      className="mb-1 block text-xs text-muted-foreground"
                     >
                       Width: {Math.round(settings.spotlightWidth * 100)}%
                     </label>
@@ -159,7 +159,7 @@ export function VideoExportPanel({
                   <div>
                     <label
                       htmlFor="video-export-spotlight-height"
-                      className="mb-1 block text-xs text-text-secondary"
+                      className="mb-1 block text-xs text-muted-foreground"
                     >
                       Height: {Math.round(settings.spotlightHeight * 100)}%
                     </label>
@@ -179,7 +179,7 @@ export function VideoExportPanel({
                 <div>
                   <label
                     htmlFor="video-export-spotlight-size"
-                    className="mb-1 block text-xs text-text-secondary"
+                    className="mb-1 block text-xs text-muted-foreground"
                   >
                     Size:{' '}
                     {Math.round(((settings.spotlightWidth + settings.spotlightHeight) / 2) * 100)}%
@@ -201,7 +201,7 @@ export function VideoExportPanel({
               <div>
                 <label
                   htmlFor="video-export-spotlight-speed"
-                  className="mb-1 block text-xs text-text-secondary"
+                  className="mb-1 block text-xs text-muted-foreground"
                 >
                   Speed: {settings.spotlightSpeed.toFixed(1)}x
                 </label>
@@ -215,7 +215,7 @@ export function VideoExportPanel({
                   max={50}
                   step={1}
                 />
-                <div className="mt-1 flex justify-between text-[10px] text-text-muted">
+                <div className="mt-1 flex justify-between text-[10px] text-muted-foreground">
                   <span>Very Slow</span>
                   <span>Fast</span>
                 </div>
@@ -227,7 +227,7 @@ export function VideoExportPanel({
             <div>
               <label
                 htmlFor="video-export-loops"
-                className="mb-2 block text-sm text-text-secondary"
+                className="mb-2 block text-sm text-muted-foreground"
               >
                 Video Loops: {settings.videoLoops}
               </label>
@@ -239,12 +239,12 @@ export function VideoExportPanel({
                 max={10}
                 step={1}
               />
-              <p className="mt-1 text-[10px] text-text-muted">Times video plays</p>
+              <p className="mt-1 text-[10px] text-muted-foreground">Times video plays</p>
             </div>
             <div>
               <label
                 htmlFor="video-export-sweeps"
-                className="mb-2 block text-sm text-text-secondary"
+                className="mb-2 block text-sm text-muted-foreground"
               >
                 Sweeps per Loop: {settings.sweepsPerLoop}
               </label>
@@ -258,14 +258,14 @@ export function VideoExportPanel({
                 max={10}
                 step={1}
               />
-              <p className="mt-1 text-[10px] text-text-muted">Sweeps per video</p>
+              <p className="mt-1 text-[10px] text-muted-foreground">Sweeps per video</p>
             </div>
           </div>
         </>
       )}
 
       <fieldset>
-        <legend className="mb-2 text-sm text-text-secondary">Format</legend>
+        <legend className="mb-2 text-sm text-muted-foreground">Format</legend>
         <div className="grid grid-cols-3 gap-2">
           {[
             { value: 'webm', label: 'WebM' },
@@ -279,15 +279,15 @@ export function VideoExportPanel({
               onClick={() => onSettingsChange({ format: option.value as ExportSettings['format'] })}
               className={`surface-control-elevation ui-radius-md border px-3 py-2 text-sm transition-colors ${
                 settings.format === option.value
-                  ? 'border-accent bg-accent/10 text-accent'
-                  : 'surface-control text-text-secondary'
+                  ? 'border-primary bg-primary/10 text-primary'
+                  : 'surface-control text-muted-foreground'
               }`}
             >
               {option.label}
             </button>
           ))}
         </div>
-        <p className="mt-1 text-xs text-text-muted">
+        <p className="mt-1 text-xs text-muted-foreground">
           {settings.format === 'webm' && 'Fastest export, modern browsers'}
           {settings.format === 'mp4' && 'Universal compatibility, hardware accelerated'}
           {settings.format === 'gif' && 'Animated image, works everywhere'}
@@ -333,11 +333,13 @@ export function VideoExportPanel({
           role="status"
         >
           <div className="flex items-center justify-between text-xs">
-            <span className="ui-radius-sm bg-accent px-2 py-1 text-white">1. Preparing</span>
+            <span className="ui-radius-sm bg-primary px-2 py-1 text-white">1. Preparing</span>
             <div className="mx-2 h-px flex-1 bg-border" />
             <span
               className={`ui-radius-sm px-2 py-1 ${
-                progress >= 30 ? 'bg-accent text-white' : 'bg-border text-text-muted'
+                progress >= 30
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-border text-muted-foreground'
               }`}
             >
               2. {settings.format === 'gif' ? 'Capturing' : 'Encoding'}
@@ -345,7 +347,9 @@ export function VideoExportPanel({
             <div className="mx-2 h-px flex-1 bg-border" />
             <span
               className={`ui-radius-sm px-2 py-1 ${
-                progress >= 90 ? 'bg-accent text-white' : 'bg-border text-text-muted'
+                progress >= 90
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-border text-muted-foreground'
               }`}
             >
               3. Finishing
@@ -354,10 +358,10 @@ export function VideoExportPanel({
 
           <div className="space-y-1">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-text-secondary">{exportProgress.message}</span>
+              <span className="text-muted-foreground">{exportProgress.message}</span>
               <span
                 className={`font-medium transition-all ${
-                  progress >= 90 ? 'scale-110 text-secondary' : 'text-accent'
+                  progress >= 90 ? 'scale-110 text-success' : 'text-primary'
                 }`}
               >
                 {Math.round(progress)}%
@@ -372,7 +376,7 @@ export function VideoExportPanel({
               aria-valuenow={Math.round(progress)}
             >
               <div
-                className={`h-full bg-gradient-to-r from-accent via-accent to-secondary transition-all ${
+                className={`h-full bg-gradient-to-r from-primary via-primary to-success transition-all ${
                   progress >= 90 ? 'duration-150' : progress >= 70 ? 'duration-200' : 'duration-300'
                 }`}
                 style={{ width: `${progress}%` }}
@@ -382,43 +386,43 @@ export function VideoExportPanel({
               )}
             </div>
             {progress >= 85 && progress < 100 && (
-              <p className="animate-pulse text-xs text-secondary">Almost there!</p>
+              <p className="animate-pulse text-xs text-success">Almost there!</p>
             )}
           </div>
         </div>
       )}
 
       {exportProgress.status === 'done' && (
-        <div className="relative space-y-4 overflow-hidden ui-radius-lg border border-accent/40 bg-gradient-to-br from-accent/20 via-accent/10 to-secondary/10 p-6 text-center">
+        <div className="relative space-y-4 overflow-hidden ui-radius-lg border border-primary/40 bg-gradient-to-br from-primary/20 via-primary/10 to-success/10 p-6 text-center">
           <div className="pointer-events-none absolute inset-0" aria-hidden="true">
             <div
-              className="absolute left-4 top-2 h-2 w-2 animate-bounce bg-accent"
+              className="absolute left-4 top-2 h-2 w-2 animate-bounce bg-primary"
               style={{ animationDelay: '0ms' }}
             />
             <div
-              className="absolute right-8 top-4 h-1.5 w-1.5 animate-bounce bg-secondary"
+              className="absolute right-8 top-4 h-1.5 w-1.5 animate-bounce bg-success"
               style={{ animationDelay: '150ms' }}
             />
             <div
-              className="absolute bottom-6 left-12 h-1 w-1 animate-bounce bg-accent"
+              className="absolute bottom-6 left-12 h-1 w-1 animate-bounce bg-primary"
               style={{ animationDelay: '300ms' }}
             />
             <div
-              className="absolute left-1/4 top-8 h-1.5 w-1.5 animate-bounce bg-secondary"
+              className="absolute left-1/4 top-8 h-1.5 w-1.5 animate-bounce bg-success"
               style={{ animationDelay: '100ms' }}
             />
             <div
-              className="absolute bottom-4 right-1/4 h-2 w-2 animate-bounce bg-accent"
+              className="absolute bottom-4 right-1/4 h-2 w-2 animate-bounce bg-primary"
               style={{ animationDelay: '200ms' }}
             />
           </div>
 
           <div className="relative z-10">
-            <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-accent/20 shadow-[0_0_30px_rgba(255,87,34,0.4)]">
-              <Check className="h-8 w-8 text-accent" strokeWidth={3} aria-hidden="true" />
+            <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-primary/20 shadow-[0_0_30px_hsl(var(--primary)/0.4)]">
+              <Check className="h-8 w-8 text-primary" strokeWidth={3} aria-hidden="true" />
             </div>
-            <h3 className="text-xl font-bold text-text-primary">Export Complete!</h3>
-            <p className="mt-1 text-sm text-text-secondary">
+            <h3 className="text-xl font-bold text-foreground">Export Complete!</h3>
+            <p className="mt-1 text-sm text-muted-foreground">
               Your {settings.format.toUpperCase()} is ready in your downloads folder
             </p>
           </div>
@@ -433,7 +437,7 @@ export function VideoExportPanel({
       )}
 
       {error && (
-        <div className="flex items-center gap-2 text-sm text-error" role="alert">
+        <div className="flex items-center gap-2 text-sm text-destructive" role="alert">
           <AlertCircle className="h-4 w-4" aria-hidden="true" />
           <span>{error}</span>
         </div>
