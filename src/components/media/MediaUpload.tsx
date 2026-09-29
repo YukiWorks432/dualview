@@ -303,9 +303,7 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
           offset={1}
           className={cn(
             'surface-interactive ui-radius-lg group cursor-pointer border-2 border-dashed transition-[border-color,box-shadow,opacity] duration-150',
-            isDragOverA
-              ? 'border-compare-a'
-              : 'border-compare-a/40 hover:border-compare-a',
+            isDragOverA ? 'border-compare-a' : 'border-compare-a/40 hover:border-compare-a',
             isUploading && 'pointer-events-none opacity-50',
           )}
           onDrop={handleDropA}
@@ -344,9 +342,7 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
           offset={1}
           className={cn(
             'surface-interactive ui-radius-lg group cursor-pointer border-2 border-dashed transition-[border-color,box-shadow,opacity] duration-150',
-            isDragOverB
-              ? 'border-compare-b'
-              : 'border-compare-b/40 hover:border-compare-b',
+            isDragOverB ? 'border-compare-b' : 'border-compare-b/40 hover:border-compare-b',
             isUploading && 'pointer-events-none opacity-50',
           )}
           onDrop={handleDropB}

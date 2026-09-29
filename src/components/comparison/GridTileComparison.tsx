@@ -368,7 +368,11 @@ export function GridTileComparison() {
         {/* Animation toggle */}
         <button
           onClick={toggleGridTileAnimation}
-          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${gridTileSettings.animated ? 'border-accent bg-accent text-primary-foreground' : 'surface-control text-text-secondary hover:text-text-primary'}`}
+          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${
+            gridTileSettings.animated
+              ? 'border-accent bg-accent text-primary-foreground'
+              : 'surface-control text-text-secondary hover:text-text-primary'
+          }`}
           title={gridTileSettings.animated ? 'Stop animation' : 'Start animation'}
         >
           {gridTileSettings.animated ? <Pause size={16} /> : <Play size={16} />}
@@ -386,7 +390,11 @@ export function GridTileComparison() {
         {/* Hexagonal toggle */}
         <button
           onClick={() => setGridTileSettings({ hexagonal: !gridTileSettings.hexagonal })}
-          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${gridTileSettings.hexagonal ? 'border-accent bg-accent text-primary-foreground' : 'surface-control text-text-secondary hover:text-text-primary'}`}
+          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${
+            gridTileSettings.hexagonal
+              ? 'border-accent bg-accent text-primary-foreground'
+              : 'surface-control text-text-secondary hover:text-text-primary'
+          }`}
           title={gridTileSettings.hexagonal ? 'Standard grid' : 'Hexagonal grid'}
         >
           <Grid size={16} />
@@ -418,7 +426,9 @@ export function GridTileComparison() {
           onChange={(e) => setGridTileSettings({ tileSize: parseInt(e.target.value) })}
           className="w-32 accent-accent"
         />
-        <div className="mt-1 text-center text-xs text-muted-foreground">{gridTileSettings.tileSize}px</div>
+        <div className="mt-1 text-center text-xs text-muted-foreground">
+          {gridTileSettings.tileSize}px
+        </div>
       </div>
 
       {/* Animation speed slider (when animated) */}

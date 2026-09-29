@@ -26,7 +26,10 @@ function PixelInfo({
     <div className="flex items-center gap-3">
       <div className={cn('px-2 py-0.5 text-xs font-bold', labelColor)}>{label}</div>
       <div className="flex items-center gap-2">
-        <div className="ui-radius-sm w-6 h-6 border border-border" style={{ backgroundColor: hex }} />
+        <div
+          className="ui-radius-sm w-6 h-6 border border-border"
+          style={{ backgroundColor: hex }}
+        />
         <div className="text-[10px] font-mono text-text-primary">
           <div>
             R: {info.r} G: {info.g} B: {info.b}

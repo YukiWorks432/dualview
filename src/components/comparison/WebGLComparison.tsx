@@ -1055,7 +1055,13 @@ export function WebGLComparison() {
             <div className="flex justify-between gap-4">
               <span className="text-muted-foreground">SSIM:</span>
               <span
-                className={`font-mono ${webglAnalysisMetrics.ssim > 0.95 ? 'text-success' : webglAnalysisMetrics.ssim > 0.8 ? 'text-warning' : 'text-destructive'}`}
+                className={`font-mono ${
+                  webglAnalysisMetrics.ssim > 0.95
+                    ? 'text-success'
+                    : webglAnalysisMetrics.ssim > 0.8
+                      ? 'text-warning'
+                      : 'text-destructive'
+                }`}
               >
                 {webglAnalysisMetrics.ssim.toFixed(4)}
               </span>
@@ -1063,7 +1069,13 @@ export function WebGLComparison() {
             <div className="flex justify-between gap-4">
               <span className="text-muted-foreground">Delta E:</span>
               <span
-                className={`font-mono ${webglAnalysisMetrics.deltaE < 1 ? 'text-success' : webglAnalysisMetrics.deltaE < 5 ? 'text-warning' : 'text-destructive'}`}
+                className={`font-mono ${
+                  webglAnalysisMetrics.deltaE < 1
+                    ? 'text-success'
+                    : webglAnalysisMetrics.deltaE < 5
+                      ? 'text-warning'
+                      : 'text-destructive'
+                }`}
               >
                 {webglAnalysisMetrics.deltaE.toFixed(2)}
               </span>
@@ -1071,7 +1083,13 @@ export function WebGLComparison() {
             <div className="flex justify-between gap-4">
               <span className="text-muted-foreground">Diff Pixels:</span>
               <span
-                className={`font-mono ${webglAnalysisMetrics.diffPixelPercent < 1 ? 'text-success' : webglAnalysisMetrics.diffPixelPercent < 10 ? 'text-warning' : 'text-destructive'}`}
+                className={`font-mono ${
+                  webglAnalysisMetrics.diffPixelPercent < 1
+                    ? 'text-success'
+                    : webglAnalysisMetrics.diffPixelPercent < 10
+                      ? 'text-warning'
+                      : 'text-destructive'
+                }`}
               >
                 {webglAnalysisMetrics.diffPixelPercent.toFixed(1)}%
               </span>
