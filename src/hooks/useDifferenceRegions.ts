@@ -10,8 +10,10 @@ import {
 import {
   areFrameRangesSynchronized,
   getConsecutivePresentedFrameRange,
+  getPausedVideoFrameRange,
   getPlaybackDifferenceExpiryDelay,
   getStablePausedVideoFrameTime,
+  isPlaybackDifferenceResultFresh,
 } from '../lib/difference/synchronization'
 import type {
   DifferenceWorkerRequest,
@@ -36,7 +38,7 @@ const PLAYBACK_SYNC_TOLERANCE_SECONDS = 0.08
 // Presented timestamps can lead the media element clock while native playback advances.
 const PLAYBACK_PRESENTED_FRAME_SYNC_TOLERANCE_SECONDS = 0.2
 const FRAME_POINT_PAIR_TOLERANCE_SECONDS = 0.001
-const PLAYBACK_MIN_FRAME_OVERLAP_SECONDS = 0.001
+const MIN_FRAME_OVERLAP_SECONDS = 0.001
 // The decoded presentation timestamp can be one held frame behind the paused timeline position.
 const PAUSED_SYNC_TOLERANCE_SECONDS = 0.05
 const PLAYBACK_RESULT_TTL_MS = 500
@@ -46,6 +48,7 @@ const MAX_REGIONS = 80
 interface CapturedSource {
   imageData: ImageData
   timelineRange: TimelineFrameRange | null
+  capturedAt: number
 }
 
 interface DifferenceResult {
@@ -139,6 +142,7 @@ function waitForPresentedVideoSnapshot(
       imageData: ImageData
       timelineTime: number
       presentedFrames: number
+      capturedAt: number
     } | null = null
     const handleSeeking = () => {
       capturedSnapshot = null
@@ -184,6 +188,7 @@ function waitForPresentedVideoSnapshot(
               startTime: capturedSnapshot.timelineTime,
               endTime: capturedSnapshot.timelineTime,
             },
+            capturedAt: capturedSnapshot.capturedAt,
           })
           return
         }
@@ -202,6 +207,7 @@ function waitForPresentedVideoSnapshot(
               imageData,
               timelineTime: presentedTimelineTime,
               presentedFrames: metadata.presentedFrames,
+              capturedAt: performance.now(),
             }
             requestNextFrame()
             return
@@ -222,6 +228,7 @@ function waitForPresentedVideoSnapshot(
                   startTime: capturedSnapshot.timelineTime,
                   endTime: capturedSnapshot.timelineTime,
                 },
+                capturedAt: capturedSnapshot.capturedAt,
               }
             : null,
         )
@@ -248,7 +255,7 @@ async function captureSourceAtTime(
   if (source instanceof HTMLImageElement) {
     if (!isVisualFrameReady(source)) return null
     const imageData = captureSource(source, canvas, width, height)
-    return imageData ? { imageData, timelineRange: null } : null
+    return imageData ? { imageData, timelineRange: null, capturedAt: performance.now() } : null
   }
 
   if (
@@ -271,7 +278,7 @@ async function captureSourceAtTime(
         if (!source.seeking) {
           const observedFrame = readPresentedVideoFrame(source)
           const pausedFrameState =
-            !observedFrame && !isPlaying && source.paused
+            !isPlaying && source.paused
               ? {
                   currentTime: source.currentTime,
                   paused: source.paused,
@@ -295,16 +302,35 @@ async function captureSourceAtTime(
                 afterCaptureFrame.mediaTime === observedFrame.mediaTime &&
                 afterCaptureFrame.presentedFrames === observedFrame.presentedFrames
               ) {
+                const stableFrameTime =
+                  pausedFrameState === null
+                    ? null
+                    : getStablePausedVideoFrameTime(pausedFrameState, {
+                        currentTime: source.currentTime,
+                        paused: source.paused,
+                        seeking: source.seeking,
+                      })
+                const stableTimelineTime =
+                  stableFrameTime === null ? null : calculateTimelineTime(stableFrameTime, clip)
+                const pausedFrameRange =
+                  stableTimelineTime === null
+                    ? null
+                    : getPausedVideoFrameRange(
+                        observedTimelineTime,
+                        stableTimelineTime,
+                        PAUSED_SYNC_TOLERANCE_SECONDS,
+                      )
                 return {
                   imageData,
-                  timelineRange: {
+                  timelineRange: pausedFrameRange ?? {
                     startTime: observedTimelineTime,
                     endTime: observedTimelineTime,
                   },
+                  capturedAt: performance.now(),
                 }
               }
 
-              if (pausedFrameState) {
+              if (pausedFrameState && !observedFrame) {
                 const stableFrameTime = getStablePausedVideoFrameTime(pausedFrameState, {
                   currentTime: source.currentTime,
                   paused: source.paused,
@@ -319,6 +345,7 @@ async function captureSourceAtTime(
                       startTime: stableTimelineTime,
                       endTime: stableTimelineTime,
                     },
+                    capturedAt: performance.now(),
                   }
                 }
               }
@@ -335,7 +362,7 @@ async function captureSourceAtTime(
             afterCaptureRange?.startTime === observedRange.startTime &&
             afterCaptureRange.endTime === observedRange.endTime
           ) {
-            return { imageData, timelineRange: observedRange }
+            return { imageData, timelineRange: observedRange, capturedAt: performance.now() }
           }
         }
       }
@@ -683,7 +710,7 @@ export function useDifferenceRegions({
             synchronizationTime,
             expectedFrameTolerance,
             FRAME_POINT_PAIR_TOLERANCE_SECONDS,
-            isPlaying ? PLAYBACK_MIN_FRAME_OVERLAP_SECONDS : 0,
+            MIN_FRAME_OVERLAP_SECONDS,
           )
         ) {
           setResult(createEmptyResult(runSignature))
@@ -698,6 +725,7 @@ export function useDifferenceRegions({
 
         const imageA = capturedA.imageData
         const imageB = capturedB.imageData
+        const capturedAt = Math.min(capturedA.capturedAt, capturedB.capturedAt)
 
         setRuntime({
           status: 'analyzing',
@@ -739,11 +767,25 @@ export function useDifferenceRegions({
           return
         }
 
+        if (
+          isPlaying &&
+          !isPlaybackDifferenceResultFresh(performance.now(), capturedAt, PLAYBACK_RESULT_TTL_MS)
+        ) {
+          setResult(createEmptyResult(runSignature))
+          setRuntime({
+            status: 'syncing',
+            message: 'Waiting for a fresh playback frame pair…',
+            regionCount: 0,
+            approximate: true,
+          })
+          return
+        }
+
         setResult({
           signature: runSignature,
           regions: response.regions,
           aspectRatio: analysisDimensions.aspectRatio,
-          capturedAt: performance.now(),
+          capturedAt,
         })
 
         if (response.regions.length > 0) {

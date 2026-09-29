@@ -3,8 +3,10 @@ import { describe, expect, it } from 'vitest'
 import {
   areFrameRangesSynchronized,
   getConsecutivePresentedFrameRange,
+  getPausedVideoFrameRange,
   getPlaybackDifferenceExpiryDelay,
   getStablePausedVideoFrameTime,
+  isPlaybackDifferenceResultFresh,
 } from './synchronization'
 
 describe('consecutive presented frame ranges', () => {
@@ -128,6 +130,36 @@ describe('difference frame synchronization', () => {
     ).toBe(true)
   })
 
+  it('matches a held paused video frame with a stable current-time fallback', () => {
+    const presentedFrame = getPausedVideoFrameRange(5.015, 5.03, 0.05)
+
+    expect(presentedFrame).toEqual({ startTime: 5.015, endTime: 5.03 })
+    expect(
+      areFrameRangesSynchronized(
+        [presentedFrame, { startTime: 5.03, endTime: 5.03 }],
+        5.03,
+        0.05,
+        0.001,
+        0.001,
+      ),
+    ).toBe(true)
+  })
+
+  it('rejects adjacent paused frame intervals that only touch', () => {
+    expect(
+      areFrameRangesSynchronized(
+        [
+          { startTime: 5, endTime: 5.03 },
+          { startTime: 5.03, endTime: 5.06 },
+        ],
+        5.03,
+        0.05,
+        0.001,
+        0.001,
+      ),
+    ).toBe(false)
+  })
+
   it('accepts the same presented frame at the end of its hold interval', () => {
     expect(
       areFrameRangesSynchronized(
@@ -192,5 +224,11 @@ describe('playback difference result expiry', () => {
     expect(getPlaybackDifferenceExpiryDelay(1_000, 1_000, 500)).toBe(500)
     expect(getPlaybackDifferenceExpiryDelay(1_499, 1_000, 500)).toBe(1)
     expect(getPlaybackDifferenceExpiryDelay(1_501, 1_000, 500)).toBe(0)
+  })
+
+  it('rejects worker results that arrive at or after their capture-time expiry', () => {
+    expect(isPlaybackDifferenceResultFresh(1_499, 1_000, 500)).toBe(true)
+    expect(isPlaybackDifferenceResultFresh(1_500, 1_000, 500)).toBe(false)
+    expect(isPlaybackDifferenceResultFresh(1_501, 1_000, 500)).toBe(false)
   })
 })

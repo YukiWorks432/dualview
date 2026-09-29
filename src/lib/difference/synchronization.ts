@@ -24,6 +24,27 @@ export function getStablePausedVideoFrameTime(
   return before.currentTime
 }
 
+export function getPausedVideoFrameRange(
+  presentedTimelineTime: number,
+  pausedTimelineTime: number,
+  maximumFrameLagSeconds: number,
+): TimelineFrameRange | null {
+  if (
+    !Number.isFinite(presentedTimelineTime) ||
+    !Number.isFinite(pausedTimelineTime) ||
+    !Number.isFinite(maximumFrameLagSeconds) ||
+    maximumFrameLagSeconds < 0 ||
+    Math.abs(presentedTimelineTime - pausedTimelineTime) > maximumFrameLagSeconds
+  ) {
+    return null
+  }
+
+  return {
+    startTime: Math.min(presentedTimelineTime, pausedTimelineTime),
+    endTime: Math.max(presentedTimelineTime, pausedTimelineTime),
+  }
+}
+
 export function getConsecutivePresentedFrameRange(
   previous: { timelineTime: number; presentedFrames: number },
   next: { timelineTime: number; presentedFrames: number },
@@ -131,4 +152,12 @@ export function getPlaybackDifferenceExpiryDelay(
   }
 
   return Math.max(0, capturedAt + maxAge - now)
+}
+
+export function isPlaybackDifferenceResultFresh(
+  now: number,
+  capturedAt: number,
+  maxAge: number,
+): boolean {
+  return getPlaybackDifferenceExpiryDelay(now, capturedAt, maxAge) > 0
 }
