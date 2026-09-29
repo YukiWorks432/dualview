@@ -722,7 +722,7 @@ disabled, while current-frame Image and PDF export remain available.
 
 This repository is a maintained fork of the original
 [gokayfem/dualview](https://github.com/gokayfem/dualview) project. The citation metadata keeps
-credit to original creator Gökay Aydoğan while identifying YukiWorks432 as the maintainer of this
+credit to original creator Gökay Aydoğan while identifying 花雪 / HanaYuki as the maintainer of this
 fork.
 
 If your work depends on this maintained fork, GitHub's **Cite this repository** action uses
