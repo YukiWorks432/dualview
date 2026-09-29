@@ -153,7 +153,7 @@ function getAutoAnalysisReadiness(): AutoAnalysisReadiness {
   return canAnalyze ? 'ready' : 'blocked'
 }
 
-export function startTimelineDiffAnalysis(): void {
+function startTimelineDiffAnalysisJob(onSettled?: () => void): void {
   cancelActiveJob()
 
   const snapshot = buildSnapshot()
@@ -202,6 +202,7 @@ export function startTimelineDiffAnalysis(): void {
     useTimelineDiffStore.getState().finishAnalysis(jobId, event.data.status, event.data.message)
     worker.terminate()
     activeJob = null
+    onSettled?.()
   })
 
   worker.addEventListener('error', (event) => {
@@ -211,6 +212,7 @@ export function startTimelineDiffAnalysis(): void {
       .finishAnalysis(jobId, 'error', event.message || 'The analysis worker failed.')
     worker.terminate()
     activeJob = null
+    onSettled?.()
   })
 
   try {
@@ -225,7 +227,12 @@ export function startTimelineDiffAnalysis(): void {
       )
     worker.terminate()
     activeJob = null
+    onSettled?.()
   }
+}
+
+export function startTimelineDiffAnalysis(): void {
+  startTimelineDiffAnalysisJob()
 }
 
 export function useTimelineDiffLifecycle(): void {
@@ -233,8 +240,10 @@ export function useTimelineDiffLifecycle(): void {
     let lastFingerprint = buildSnapshot().fingerprint
     let autoAnalysisArmed = true
     let autoAnalysisTimer: ReturnType<typeof setTimeout> | null = null
+    let lifecycleActive = true
 
     const scheduleAutoAnalysis = () => {
+      if (!lifecycleActive) return
       if (autoAnalysisTimer !== null) clearTimeout(autoAnalysisTimer)
       autoAnalysisTimer = setTimeout(() => {
         autoAnalysisTimer = null
@@ -254,7 +263,7 @@ export function useTimelineDiffLifecycle(): void {
         if (activeJob) return
 
         autoAnalysisArmed = false
-        startTimelineDiffAnalysis()
+        startTimelineDiffAnalysisJob(scheduleAutoAnalysis)
       }, 0)
     }
 
@@ -302,6 +311,7 @@ export function useTimelineDiffLifecycle(): void {
     scheduleAutoAnalysis()
 
     return () => {
+      lifecycleActive = false
       unsubscribeTimeline()
       unsubscribeMedia()
       unsubscribeProject()
