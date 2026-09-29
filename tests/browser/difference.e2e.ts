@@ -132,9 +132,7 @@ test('preserves results across comparison modes', async ({ page }) => {
   expect((await result(page)).jobId).toBe(initial.jobId)
 })
 
-test('colour tolerance can suppress small decoded changes without suppressing a strict comparison', async ({
-  page,
-}) => {
+test('colour tolerance distinguishes small decoded changes', async ({ page }) => {
   await seed(page, ['base.mp4', 'near-black.mp4'])
   const tolerant = await analyze(page)
   expect(tolerant.unavailable).toBe(0)
@@ -154,19 +152,16 @@ test('maps actual decoded frames through placement, trim, speed and reverse', as
   await page.evaluate(async () => {
     const path = '/src/stores/timelineStore.ts'
     const store = (await import(path)).useTimelineStore
-    for (const track of store
-      .getState()
-      .tracks.filter((item: { type: string }) => ['a', 'b'].includes(item.type))) {
-      store
-        .getState()
-        .updateClip(track.clips[0].id, {
-          startTime: 2,
-          endTime: 2.25,
-          inPoint: 0.25,
-          outPoint: 0.75,
-          speed: 2,
-          reverse: true,
-        })
+    const { tracks, updateClip } = store.getState()
+    for (const track of tracks.filter((item: { type: string }) => ['a', 'b'].includes(item.type))) {
+      updateClip(track.clips[0].id, {
+        startTime: 2,
+        endTime: 2.25,
+        inPoint: 0.25,
+        outPoint: 0.75,
+        speed: 2,
+        reverse: true,
+      })
     }
   })
   const state = await analyze(page)

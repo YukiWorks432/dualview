@@ -16,6 +16,7 @@ concurrency:
 jobs:
   checks:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -49,3 +50,21 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+      - name: Set up FFmpeg
+        run: sudo apt-get -qq update && sudo apt-get -qq install -y ffmpeg
+
+      - name: Install test browser
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Browser difference tests
+        run: pnpm test:browser
+
+      - name: Preserve browser failure evidence
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: difference-browser-failure
+          path: test-results/
+          if-no-files-found: ignore
+          retention-days: 7
