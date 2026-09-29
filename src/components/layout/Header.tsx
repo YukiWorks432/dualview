@@ -12,7 +12,7 @@ import {
 
 import { useHistoryStore } from '../../stores/historyStore'
 import { useTimelineStore } from '../../stores/timelineStore'
-import { Button, IconButton } from '../ui'
+import { ButtonWithIcon, IconButton } from '../ui'
 import { ComparisonModePicker } from './ComparisonModePicker'
 import { MetadataComparison } from './MetadataComparison'
 
@@ -99,31 +99,33 @@ export function Header({ onExport, onShowShortcuts, onToggleSidebar }: HeaderPro
 
         <div className="hide-mobile mx-0.5 h-4 w-px bg-border" />
 
-        <Button
+        <ButtonWithIcon
           variant="secondary"
           size="sm"
-          className={`group h-7 gap-1 px-2 text-xs ${isPlaying ? 'surface-active text-foreground hover:surface-active' : ''}`}
+          className={`h-7 gap-1 px-2 text-xs ${isPlaying ? 'surface-active text-foreground hover:surface-active' : ''}`}
           onClick={togglePlay}
           title="Toggle playback (Space)"
+          icon={
+            isPlaying ? (
+              <Pause className="h-3.5 w-3.5 animate-pulse-subtle" aria-hidden="true" />
+            ) : (
+              <Play className="h-3.5 w-3.5" aria-hidden="true" />
+            )
+          }
         >
-          {isPlaying ? (
-            <Pause className="h-3.5 w-3.5 animate-pulse-subtle" aria-hidden="true" />
-          ) : (
-            <Play className="h-3.5 w-3.5" aria-hidden="true" />
-          )}
           <span className="hidden xl:inline">{isPlaying ? 'Pause' : 'Play'}</span>
-        </Button>
+        </ButtonWithIcon>
 
-        <Button
+        <ButtonWithIcon
           size="sm"
           className="group relative h-7 gap-1 overflow-hidden px-2 text-xs md:px-3"
           onClick={onExport}
           title="Export (E)"
+          icon={<Download className="relative z-10 h-3.5 w-3.5" aria-hidden="true" />}
         >
           <span className="absolute inset-0 bg-white/5 opacity-0 transition-opacity duration-150 group-hover:opacity-100" />
-          <Download className="relative z-10 h-3.5 w-3.5" aria-hidden="true" />
           <span className="relative z-10 hidden md:inline">Export</span>
-        </Button>
+        </ButtonWithIcon>
       </div>
     </header>
   )
