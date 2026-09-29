@@ -635,4 +635,3 @@ export function SliderComparison() {
     </div>
   )
 }
-,D	*&©Ý}¨¥yÜ"¶±×(uí
