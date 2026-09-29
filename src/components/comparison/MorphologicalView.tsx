@@ -268,8 +268,6 @@ export function MorphologicalView() {
       return
     }
 
-    setProcessing(true)
-
     // Create temporary canvas for processing
     const tempCanvas = document.createElement('canvas')
     const { width: srcWidth, height: srcHeight } = getVisualFrameDimensions(source)
@@ -281,11 +279,9 @@ export function MorphologicalView() {
     tempCanvas.height = srcHeight * scale
 
     const tempCtx = tempCanvas.getContext('2d')
-    if (!tempCtx) {
-      setProcessing(false)
-      return
-    }
+    if (!tempCtx) return
 
+    setProcessing(true)
     tempCtx.drawImage(source, 0, 0, tempCanvas.width, tempCanvas.height)
     const imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height)
 
