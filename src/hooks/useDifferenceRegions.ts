@@ -171,8 +171,15 @@ export function useDifferenceRegions({
   const setRuntime = useDifferenceHighlightStore((state) => state.setRuntime)
   const { currentTime, isPlaying, isExporting } = usePlaybackStore()
 
-  const [regions, setRegions] = useState<NormalizedDifferenceRegion[]>([])
-  const [aspectRatio, setAspectRatio] = useState(16 / 9)
+  const [result, setResult] = useState<{
+    signature: string
+    regions: NormalizedDifferenceRegion[]
+    aspectRatio: number
+  }>({
+    signature: '',
+    regions: [],
+    aspectRatio: 16 / 9,
+  })
   const [frameRevision, setFrameRevision] = useState(0)
   const [retryRevision, setRetryRevision] = useState(0)
   const workerRef = useRef<Worker | null>(null)
@@ -193,12 +200,12 @@ export function useDifferenceRegions({
     sensitivity,
     noiseFilter,
     analysisQuality,
+    isExporting ? 'exporting' : 'preview',
     isPlaying ? 'playing' : currentTime,
   ].join('|')
-  signatureRef.current = signature
 
   useEffect(() => {
-    setRegions([])
+    signatureRef.current = signature
   }, [signature])
 
   const notifyFrameReady = useCallback(() => {
@@ -247,12 +254,10 @@ export function useDifferenceRegions({
 
   useEffect(() => {
     if (!enabled) {
-      setRegions([])
       return
     }
 
     if (isExporting || document.visibilityState === 'hidden') {
-      setRegions([])
       setRuntime({
         status: 'idle',
         message: isExporting
@@ -265,7 +270,6 @@ export function useDifferenceRegions({
     }
 
     if (!clipA || !clipB) {
-      setRegions([])
       setRuntime({
         status: 'unavailable',
         message: 'Both A and B need an active clip at the current timeline position',
@@ -301,7 +305,6 @@ export function useDifferenceRegions({
       calculateMediaTime(sampleTime, clipA) === null ||
       calculateMediaTime(sampleTime, clipB) === null
     ) {
-      setRegions([])
       setRuntime({
         status: 'unavailable',
         message: 'Both A and B need an active clip at the sampled timeline position',
@@ -337,8 +340,7 @@ export function useDifferenceRegions({
 
         if (!isCurrent()) return
         if (!readyA || !readyB) {
-          setRegions([])
-          setRuntime({
+              setRuntime({
             status: 'syncing',
             message: 'Waiting for the matching displayed frames…',
             regionCount: 0,
@@ -356,8 +358,7 @@ export function useDifferenceRegions({
         })
 
         if (!analysisDimensions.ok) {
-          setRegions([])
-          const message =
+              const message =
             analysisDimensions.reason === 'aspect-mismatch'
               ? 'A/B aspect ratios must match before regions can be compared'
               : analysisDimensions.reason === 'too-large'
@@ -427,8 +428,7 @@ export function useDifferenceRegions({
 
         if (!isCurrent()) return
         if (response.type === 'error') {
-          setRegions([])
-          setRuntime({
+              setRuntime({
             status: 'unavailable',
             message: response.message,
             regionCount: 0,
@@ -437,8 +437,11 @@ export function useDifferenceRegions({
           return
         }
 
-        setRegions(response.regions)
-        setAspectRatio(analysisDimensions.aspectRatio)
+        setResult({
+          signature: runSignature,
+          regions: response.regions,
+          aspectRatio: analysisDimensions.aspectRatio,
+        })
 
         if (response.regions.length > 0) {
           setRuntime({
@@ -462,7 +465,11 @@ export function useDifferenceRegions({
         }
       } catch (error) {
         if (!isCurrent()) return
-        setRegions([])
+          setResult({
+          signature: runSignature,
+          regions: [],
+          aspectRatio: 16 / 9,
+        })
         setRuntime({
           status: 'unavailable',
           message: error instanceof Error ? error.message : 'Difference analysis failed',
@@ -496,9 +503,11 @@ export function useDifferenceRegions({
     sourceBRef,
   ])
 
+  const hasCurrentResult = result.signature === signature
+
   return {
-    regions,
-    aspectRatio,
+    regions: hasCurrentResult ? result.regions : [],
+    aspectRatio: hasCurrentResult ? result.aspectRatio : 16 / 9,
     notifyFrameReady,
   }
 }
