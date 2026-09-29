@@ -22,6 +22,7 @@ import { useState } from 'react'
 
 import { usePersistenceStore, type ProjectMetadata } from '../../stores/persistenceStore'
 import { Button } from '../ui/button'
+import { ButtonWithIcon } from '../ui/button-with-icon'
 import { IconButton } from '../ui/icon-button'
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '../ui/dialog'
 import { Input } from '../ui/input'
@@ -158,23 +159,28 @@ export function ProjectSelector({ isOpen, onClose }: ProjectSelectorProps) {
         </div>
 
         <div className="flex flex-wrap items-center gap-3 border-b border-border px-6 py-3">
-          <Button size="sm" onClick={handleNewProject}>
-            <Plus className="h-4 w-4" aria-hidden="true" />
+          <ButtonWithIcon
+            size="sm"
+            onClick={handleNewProject}
+            icon={<Plus className="h-4 w-4" aria-hidden="true" />}
+          >
             New Project
-          </Button>
-          <Button
+          </ButtonWithIcon>
+          <ButtonWithIcon
             variant="secondary"
             size="sm"
             onClick={handleImportProject}
             disabled={isImporting}
+            icon={
+              isImporting ? (
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+              ) : (
+                <Upload className="h-4 w-4" aria-hidden="true" />
+              )
+            }
           >
-            {isImporting ? (
-              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-            ) : (
-              <Upload className="h-4 w-4" aria-hidden="true" />
-            )}
             Import
-          </Button>
+          </ButtonWithIcon>
 
           <div className="min-w-56 flex-1" />
 
