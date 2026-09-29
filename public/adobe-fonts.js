@@ -8,6 +8,13 @@
 
   if (!isProduction && !isWorkersPreview) return
 
+  var fontOrigin = 'https://use.typekit.net'
+  var preconnect = d.createElement('link')
+  preconnect.rel = 'preconnect'
+  preconnect.href = fontOrigin
+  preconnect.crossOrigin = 'anonymous'
+  d.head.appendChild(preconnect)
+
   var config = {
       kitId: 'qhu1llm',
       scriptTimeout: 3000,
@@ -23,7 +30,7 @@
     a
 
   h.className += ' wf-loading'
-  tk.src = 'https://use.typekit.net/' + config.kitId + '.js'
+  tk.src = fontOrigin + '/' + config.kitId + '.js'
   tk.async = true
   tk.onload = tk.onreadystatechange = function () {
     a = this.readyState
