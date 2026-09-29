@@ -2,10 +2,7 @@ import type { ReactNode } from 'react'
 
 import { cn } from '../../lib/utils'
 import { Button, type ButtonProps } from './button'
-import {
-  iconButtonGroupClasses,
-  iconButtonIconHoverScaleClasses,
-} from './icon-interactions'
+import { iconButtonGroupClasses, iconButtonIconHoverScaleClasses } from './icon-interactions'
 
 export type IconButtonProps = Omit<ButtonProps, 'children' | 'size'> & {
   children: ReactNode
