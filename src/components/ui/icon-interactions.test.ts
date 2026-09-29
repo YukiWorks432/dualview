@@ -20,8 +20,6 @@ describe('icon hover scale', () => {
     expect(iconButtonGroupClasses).toBe('group/icon-button')
     expect(iconButtonIconHoverScaleClasses).toContain('group-hover/icon-button:scale-[1.25]')
     expect(labeledButtonGroupClasses).toBe('group/labeled-button')
-    expect(labeledButtonIconHoverScaleClasses).toContain(
-      'group-hover/labeled-button:scale-[1.25]',
-    )
+    expect(labeledButtonIconHoverScaleClasses).toContain('group-hover/labeled-button:scale-[1.25]')
   })
 })
