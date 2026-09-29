@@ -22,6 +22,7 @@ import { useState } from 'react'
 
 import { usePersistenceStore, type ProjectMetadata } from '../../stores/persistenceStore'
 import { Button } from '../ui/button'
+import { IconButton } from '../ui/icon-button'
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '../ui/dialog'
 import { Input } from '../ui/input'
 import { ElevatedSurface } from '../ui/surface'
@@ -376,9 +377,8 @@ function ProjectCard({
             <Button size="sm" onClick={onLoad} className="h-7 flex-1">
               Open
             </Button>
-            <Button
+            <IconButton
               variant="secondary"
-              size="icon"
               onClick={() => {
                 void onDuplicate()
               }}
@@ -386,10 +386,9 @@ function ProjectCard({
               aria-label={`Duplicate ${project.name}`}
             >
               <Copy className="h-3.5 w-3.5" aria-hidden="true" />
-            </Button>
-            <Button
+            </IconButton>
+            <IconButton
               variant="secondary"
-              size="icon"
               onClick={onExport}
               disabled={isExporting}
               className="h-7 w-7"
@@ -400,16 +399,15 @@ function ProjectCard({
               ) : (
                 <Download className="h-3.5 w-3.5" aria-hidden="true" />
               )}
-            </Button>
-            <Button
+            </IconButton>
+            <IconButton
               variant="destructive"
-              size="icon"
               onClick={onDelete}
               className="h-7 w-7"
               aria-label={`Delete ${project.name}`}
             >
               <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
-            </Button>
+            </IconButton>
           </div>
         )}
 
