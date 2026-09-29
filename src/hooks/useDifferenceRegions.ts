@@ -10,6 +10,7 @@ import {
 import {
   areFrameObservationsSynchronized,
   getConsecutivePresentedFrameRange,
+  getFrameObservationAnchor,
   getPausedVideoFrameRange,
   getPlaybackDifferenceExpiryDelay,
   getStablePausedVideoFrameTime,
@@ -123,19 +124,6 @@ function distanceFromTimeToRange(time: number, range: TimelineFrameRange): numbe
   if (time < range.startTime) return range.startTime - time
   if (time > range.endTime) return time - range.endTime
   return 0
-}
-
-function getObservationTime(observation: FrameTimeObservation, fallbackTime: number): number {
-  switch (observation.kind) {
-    case 'unknown':
-      return fallbackTime
-    case 'point':
-      return observation.time
-    case 'interval':
-      return (observation.range.startTime + observation.range.endTime) / 2
-    case 'paused-video':
-      return observation.currentTime
-  }
 }
 
 function waitForPresentedVideoSnapshot(
@@ -715,9 +703,13 @@ export function useDifferenceRegions({
 
         if (!isCurrent()) return
 
-        const synchronizationTime = capturedA
-          ? getObservationTime(capturedA.frameObservation, sampleTime)
-          : sampleTime
+        const synchronizationTime =
+          capturedA && capturedB
+            ? getFrameObservationAnchor(
+                [capturedA.frameObservation, capturedB.frameObservation],
+                sampleTime,
+              )
+            : sampleTime
         const expectedFrameTolerance = isPlaying
           ? PLAYBACK_PRESENTED_FRAME_SYNC_TOLERANCE_SECONDS
           : PAUSED_SYNC_TOLERANCE_SECONDS

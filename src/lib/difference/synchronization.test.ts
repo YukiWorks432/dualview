@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   areFrameObservationsSynchronized,
   getConsecutivePresentedFrameRange,
+  getFrameObservationAnchor,
   getPausedVideoFrameRange,
   getPlaybackDifferenceExpiryDelay,
   getStablePausedVideoFrameTime,
@@ -50,6 +51,22 @@ describe('consecutive presented frame ranges', () => {
 })
 
 describe('difference frame synchronization', () => {
+  it('anchors playback synchronization to the observed side when the other side is an image', () => {
+    const playbackFrame = intervalObservation(1.033333, 1.066667)
+
+    for (const observations of [
+      [unknownObservation, playbackFrame],
+      [playbackFrame, unknownObservation],
+    ]) {
+      const anchor = getFrameObservationAnchor(observations, 1)
+
+      expect(anchor).toBeCloseTo(1.05)
+      expect(areFrameObservationsSynchronized(observations, anchor, 0.2, 0.001, 0.001)).toBe(true)
+    }
+
+    expect(getFrameObservationAnchor([unknownObservation, unknownObservation], 1)).toBe(1)
+  })
+
   it('accepts overlapping frames from different frame rates at the requested time', () => {
     expect(
       areFrameObservationsSynchronized(

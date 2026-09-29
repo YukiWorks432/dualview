@@ -8,6 +8,25 @@ export type FrameTimeObservation =
   | { kind: 'interval'; range: TimelineFrameRange }
   | { kind: 'paused-video'; presentedTime: number; currentTime: number }
 
+export function getFrameObservationAnchor(
+  observations: readonly FrameTimeObservation[],
+  fallbackTime: number,
+): number {
+  const observation = observations.find(({ kind }) => kind !== 'unknown')
+  if (!observation) return fallbackTime
+
+  switch (observation.kind) {
+    case 'unknown':
+      return fallbackTime
+    case 'point':
+      return observation.time
+    case 'interval':
+      return (observation.range.startTime + observation.range.endTime) / 2
+    case 'paused-video':
+      return observation.currentTime
+  }
+}
+
 interface PausedVideoFrameState {
   currentTime: number
   paused: boolean
