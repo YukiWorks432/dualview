@@ -14,6 +14,26 @@ describe('createDifferenceMask', () => {
     const a = new Uint8ClampedArray([255, 255, 255, 255])
     const b = new Uint8ClampedArray([255, 255, 255, 0])
 
-    expect(createDifferenceMask(a, b, 1, 1, 0.1).diffPixelCount).toBe(1)
+    const result = createDifferenceMask(a, b, 1, 1, 0.1)
+
+    expect(result.diffPixelCount).toBe(1)
+    expect(result.mask[3]).toBe(255)
+  })
+
+  it('detects alpha differences when the composited colors match the checkerboard', () => {
+    const a = new Uint8ClampedArray([48, 48, 48, 255])
+    const b = new Uint8ClampedArray([0, 0, 0, 0])
+
+    const result = createDifferenceMask(a, b, 1, 1, 0.02)
+
+    expect(result.diffPixelCount).toBe(1)
+    expect(result.mask[3]).toBe(255)
+  })
+
+  it('counts a pixel with both color and alpha differences only once', () => {
+    const a = new Uint8ClampedArray([255, 0, 0, 255])
+    const b = new Uint8ClampedArray([0, 0, 255, 0])
+
+    expect(createDifferenceMask(a, b, 1, 1, 0.02).diffPixelCount).toBe(1)
   })
 })
