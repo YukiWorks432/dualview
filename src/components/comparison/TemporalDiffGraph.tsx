@@ -1,353 +1,227 @@
-/**
- * WEBGL-009: Temporal Difference Graph
- * Line graph showing difference values over video timeline
- * Clickable to seek, highlights peaks/anomalies
- */
+import { BarChart2 } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
-import { Play, Pause, BarChart2, Loader2 } from 'lucide-react'
-import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
-
-import { isVideoFrameReady, type VideoFrameElement } from '../../lib/media/frameSource'
 import { usePlaybackStore } from '../../stores/playbackStore'
+import { useTimelineDiffStore } from '../../stores/timelineDiffStore'
 import { useTimelineStore } from '../../stores/timelineStore'
 import { ElevatedSurface } from '../ui'
 
-interface DifferenceDataPoint {
-  time: number
-  avgDiff: number
-  peakDiff: number
-}
-
 interface TemporalDiffGraphProps {
-  videoARef: React.RefObject<VideoFrameElement | null>
-  videoBRef: React.RefObject<VideoFrameElement | null>
   isVisible: boolean
 }
 
-export function TemporalDiffGraph({ videoARef, videoBRef, isVisible }: TemporalDiffGraphProps) {
+interface GraphPoint {
+  time: number
+  rate: number | null
+}
+
+function statusLabel(status: string): string {
+  switch (status) {
+    case 'analyzing':
+      return 'Analyzing'
+    case 'cancelling':
+      return 'Stopping'
+    case 'complete':
+      return 'Complete'
+    case 'partial':
+      return 'Partial results'
+    case 'stale':
+      return 'Outdated'
+    case 'unsupported':
+      return 'Unsupported'
+    case 'error':
+      return 'Failed'
+    default:
+      return 'Not analyzed'
+  }
+}
+
+export function TemporalDiffGraph({ isVisible }: TemporalDiffGraphProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-  const [data, setData] = useState<DifferenceDataPoint[]>([])
-  const [isAnalyzing, setIsAnalyzing] = useState(false)
-  const [analysisProgress, setAnalysisProgress] = useState(0)
   const [hoveredTime, setHoveredTime] = useState<number | null>(null)
+  const currentTime = usePlaybackStore((state) => state.currentTime)
+  const seek = usePlaybackStore((state) => state.seek)
+  const duration = useTimelineStore((state) => state.duration)
+  const status = useTimelineDiffStore((state) => state.status)
+  const message = useTimelineDiffStore((state) => state.message)
+  const progress = useTimelineDiffStore((state) => state.progress)
+  const frames = useTimelineDiffStore((state) => state.frames)
+  const segments = useTimelineDiffStore((state) => state.segments)
 
-  const { currentTime, seek, isPlaying, togglePlay } = usePlaybackStore()
-  const { duration } = useTimelineStore()
-
-  // Sample interval in seconds (analyze every 0.5 seconds)
-  const sampleInterval = 0.5
-
-  // Compute difference between two video frames
-  const computeFrameDifference = useCallback(
-    (
-      videoA: VideoFrameElement,
-      videoB: VideoFrameElement,
-    ): { avgDiff: number; peakDiff: number } => {
-      const canvas = document.createElement('canvas')
-      const width = 160 // Sample at low resolution for speed
-      const height = 90
-      canvas.width = width
-      canvas.height = height
-      const ctx = canvas.getContext('2d')
-
-      if (!ctx) return { avgDiff: 0, peakDiff: 0 }
-
-      // Draw video A
-      ctx.drawImage(videoA, 0, 0, width, height)
-      const dataA = ctx.getImageData(0, 0, width, height)
-
-      // Draw video B
-      ctx.drawImage(videoB, 0, 0, width, height)
-      const dataB = ctx.getImageData(0, 0, width, height)
-
-      let totalDiff = 0
-      let peakDiff = 0
-      const pixelCount = width * height
-
-      for (let i = 0; i < dataA.data.length; i += 4) {
-        const rDiff = Math.abs(dataA.data[i] - dataB.data[i])
-        const gDiff = Math.abs(dataA.data[i + 1] - dataB.data[i + 1])
-        const bDiff = Math.abs(dataA.data[i + 2] - dataB.data[i + 2])
-        const pixelDiff = (rDiff + gDiff + bDiff) / 3
-        totalDiff += pixelDiff
-        peakDiff = Math.max(peakDiff, Math.max(rDiff, gDiff, bDiff))
+  const points = useMemo<GraphPoint[]>(() => {
+    const step = Math.max(1, Math.ceil(frames.length / 1200))
+    const result: GraphPoint[] = []
+    for (let index = 0; index < frames.length; index += step) {
+      const group = frames.slice(index, index + step)
+      const compared = group.filter(
+        (frame) => frame.status === 'compared' && frame.differenceRate !== null,
+      )
+      if (compared.length === 0) {
+        const frame = group[0]
+        result.push({ time: (frame.startTime + frame.endTime) / 2, rate: null })
+        continue
       }
-
-      return {
-        avgDiff: totalDiff / pixelCount,
-        peakDiff,
-      }
-    },
-    [],
-  )
-
-  // Analyze video and build difference data
-  const analyzeVideo = useCallback(async () => {
-    const videoA = videoARef.current
-    const videoB = videoBRef.current
-
-    if (!videoA || !videoB || !duration) return
-
-    setIsAnalyzing(true)
-    setData([])
-    setAnalysisProgress(0)
-
-    const points: DifferenceDataPoint[] = []
-    const totalSamples = Math.ceil(duration / sampleInterval)
-
-    // Drive both native and Mediabunny surfaces through the shared playback clock.
-    const originalTime = usePlaybackStore.getState().currentTime
-    const wasPlaying = usePlaybackStore.getState().isPlaying
-    if (wasPlaying) {
-      usePlaybackStore.getState().pause()
+      const peak = compared.reduce((best, frame) =>
+        (frame.differenceRate ?? 0) > (best.differenceRate ?? 0) ? frame : best,
+      )
+      result.push({ time: peak.sampleTime, rate: peak.differenceRate })
     }
+    return result
+  }, [frames])
 
-    try {
-      for (let i = 0; i <= totalSamples; i++) {
-        const time = Math.min(i * sampleInterval, duration)
-        seek(time)
+  const peakCount = segments.length
 
-        // Native <video> seeking and ProRes WASM decoding both complete asynchronously.
-        // Two animation frames allow the shared surfaces to present the requested frame.
-        await new Promise<void>((resolve) => {
-          requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
-        })
-
-        if (!isVideoFrameReady(videoA) || !isVideoFrameReady(videoB)) {
-          continue
-        }
-
-        const diff = computeFrameDifference(videoA, videoB)
-        points.push({ time, ...diff })
-        setAnalysisProgress(((i + 1) / totalSamples) * 100)
-
-        await new Promise((resolve) => setTimeout(resolve, 0))
-      }
-    } finally {
-      seek(originalTime)
-      if (wasPlaying) {
-        usePlaybackStore.getState().play()
-      }
-    }
-
-    setData(points)
-    setIsAnalyzing(false)
-  }, [videoARef, videoBRef, duration, sampleInterval, computeFrameDifference])
-
-  // Find peaks/anomalies in the data
-  const peaks = useMemo(() => {
-    if (data.length < 3) return []
-
-    const threshold = 30 // Difference threshold for peak detection
-    const peaks: number[] = []
-
-    for (let i = 1; i < data.length - 1; i++) {
-      const prev = data[i - 1].avgDiff
-      const curr = data[i].avgDiff
-      const next = data[i + 1].avgDiff
-
-      // Local maximum above threshold
-      if (curr > prev && curr > next && curr > threshold) {
-        peaks.push(i)
-      }
-    }
-
-    return peaks
-  }, [data])
-
-  // Draw the graph
   useEffect(() => {
     const canvas = canvasRef.current
     const container = containerRef.current
     if (!canvas || !container || !isVisible) return
 
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
-
-    const { width, height } = container.getBoundingClientRect()
-    canvas.width = width * 2 // 2x for retina
-    canvas.height = height * 2
-    ctx.scale(2, 2)
-
-    // Clear
-    ctx.fillStyle = '#1a1a1a'
-    ctx.fillRect(0, 0, width, height)
-
-    if (data.length === 0) {
-      ctx.fillStyle = '#666666'
-      ctx.font = '12px system-ui'
-      ctx.textAlign = 'center'
-      ctx.fillText('Click "Analyze" to generate temporal difference graph', width / 2, height / 2)
-      return
-    }
-
-    // Find max for scaling
-    const maxDiff = Math.max(...data.map((d) => d.avgDiff), 1)
-    const graphPadding = { top: 20, right: 20, bottom: 30, left: 50 }
-    const graphWidth = width - graphPadding.left - graphPadding.right
-    const graphHeight = height - graphPadding.top - graphPadding.bottom
-
-    // Draw grid
-    ctx.strokeStyle = '#333333'
-    ctx.lineWidth = 0.5
-    for (let i = 0; i <= 4; i++) {
-      const y = graphPadding.top + (graphHeight * i) / 4
-      ctx.beginPath()
-      ctx.moveTo(graphPadding.left, y)
-      ctx.lineTo(width - graphPadding.right, y)
-      ctx.stroke()
-    }
-
-    // Draw Y-axis labels
-    ctx.fillStyle = '#666666'
-    ctx.font = '10px monospace'
-    ctx.textAlign = 'right'
-    for (let i = 0; i <= 4; i++) {
-      const y = graphPadding.top + (graphHeight * i) / 4
-      const value = maxDiff * (1 - i / 4)
-      ctx.fillText(value.toFixed(0), graphPadding.left - 5, y + 3)
-    }
-
-    // Draw X-axis labels (time)
-    ctx.textAlign = 'center'
-    const timeStep = Math.ceil(duration / 5)
-    for (let t = 0; t <= duration; t += timeStep) {
-      const x = graphPadding.left + (t / duration) * graphWidth
-      const minutes = Math.floor(t / 60)
-      const seconds = Math.floor(t % 60)
-      ctx.fillText(`${minutes}:${seconds.toString().padStart(2, '0')}`, x, height - 10)
-    }
-
-    // Draw difference line
-    ctx.beginPath()
-    ctx.strokeStyle = '#ff5722'
-    ctx.lineWidth = 1.5
-    data.forEach((point, i) => {
-      const x = graphPadding.left + (point.time / duration) * graphWidth
-      const y = graphPadding.top + graphHeight - (point.avgDiff / maxDiff) * graphHeight
-
-      if (i === 0) {
-        ctx.moveTo(x, y)
-      } else {
-        ctx.lineTo(x, y)
-      }
-    })
-    ctx.stroke()
-
-    // Draw peak markers
-    ctx.fillStyle = '#ff0000'
-    peaks.forEach((peakIndex) => {
-      const point = data[peakIndex]
-      const x = graphPadding.left + (point.time / duration) * graphWidth
-      const y = graphPadding.top + graphHeight - (point.avgDiff / maxDiff) * graphHeight
-
-      ctx.beginPath()
-      ctx.arc(x, y, 4, 0, Math.PI * 2)
-      ctx.fill()
-    })
-
-    // Draw playhead position
-    const playheadX = graphPadding.left + (currentTime / duration) * graphWidth
-    ctx.strokeStyle = '#cddc39'
-    ctx.lineWidth = 2
-    ctx.beginPath()
-    ctx.moveTo(playheadX, graphPadding.top)
-    ctx.lineTo(playheadX, height - graphPadding.bottom)
-    ctx.stroke()
-
-    // Draw hover indicator
-    if (hoveredTime !== null) {
-      const hoverX = graphPadding.left + (hoveredTime / duration) * graphWidth
-      ctx.strokeStyle = '#ffffff'
-      ctx.lineWidth = 1
-      ctx.setLineDash([4, 4])
-      ctx.beginPath()
-      ctx.moveTo(hoverX, graphPadding.top)
-      ctx.lineTo(hoverX, height - graphPadding.bottom)
-      ctx.stroke()
-      ctx.setLineDash([])
-
-      // Find closest data point
-      const closestPoint = data.reduce((closest, point) =>
-        Math.abs(point.time - hoveredTime) < Math.abs(closest.time - hoveredTime) ? point : closest,
-      )
-
-      // Draw tooltip
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.8)'
-      ctx.fillRect(hoverX + 10, 30, 100, 50)
-      ctx.fillStyle = '#ffffff'
-      ctx.font = '10px monospace'
-      ctx.textAlign = 'left'
-      ctx.fillText(`Time: ${hoveredTime.toFixed(1)}s`, hoverX + 15, 45)
-      ctx.fillText(`Avg: ${closestPoint.avgDiff.toFixed(1)}`, hoverX + 15, 58)
-      ctx.fillText(`Peak: ${closestPoint.peakDiff.toFixed(0)}`, hoverX + 15, 71)
-    }
-
-    // Axis labels
-    ctx.fillStyle = '#888888'
-    ctx.font = '10px system-ui'
-    ctx.textAlign = 'center'
-    ctx.fillText('Time', width / 2, height - 2)
-
-    ctx.save()
-    ctx.translate(12, height / 2)
-    ctx.rotate(-Math.PI / 2)
-    ctx.fillText('Avg Difference', 0, 0)
-    ctx.restore()
-  }, [data, currentTime, duration, isVisible, peaks, hoveredTime])
-
-  // Handle click to seek
-  const handleClick = useCallback(
-    (e: React.MouseEvent<HTMLCanvasElement>) => {
-      const canvas = canvasRef.current
-      const container = containerRef.current
-      if (!canvas || !container || !duration) return
-
+    const draw = () => {
       const rect = container.getBoundingClientRect()
-      const graphPadding = { left: 50, right: 20 }
-      const graphWidth = rect.width - graphPadding.left - graphPadding.right
-      const x = e.clientX - rect.left - graphPadding.left
+      const width = rect.width
+      const height = rect.height
+      if (width <= 0 || height <= 0) return
+      const dpr = Math.min(window.devicePixelRatio || 1, 2)
+      canvas.width = Math.ceil(width * dpr)
+      canvas.height = Math.ceil(height * dpr)
+      const context = canvas.getContext('2d')
+      if (!context) return
+      context.setTransform(dpr, 0, 0, dpr, 0, 0)
+      context.fillStyle = '#1a1a1a'
+      context.fillRect(0, 0, width, height)
 
-      if (x >= 0 && x <= graphWidth) {
-        const time = (x / graphWidth) * duration
-        seek(time)
+      const padding = { top: 14, right: 16, bottom: 24, left: 42 }
+      const graphWidth = width - padding.left - padding.right
+      const graphHeight = height - padding.top - padding.bottom
+
+      context.strokeStyle = '#333333'
+      context.lineWidth = 1
+      for (let index = 0; index <= 4; index++) {
+        const y = padding.top + (graphHeight * index) / 4
+        context.beginPath()
+        context.moveTo(padding.left, y)
+        context.lineTo(width - padding.right, y)
+        context.stroke()
       }
+
+      if (duration > 0) {
+        context.fillStyle = 'rgba(240, 68, 82, 0.22)'
+        for (const segment of segments) {
+          const left = padding.left + (segment.startTime / duration) * graphWidth
+          const right = padding.left + (segment.endTime / duration) * graphWidth
+          context.fillRect(left, padding.top, Math.max(1, right - left), graphHeight)
+        }
+
+        const maxRate = Math.max(...points.map((point) => point.rate ?? 0), 0.01)
+        context.fillStyle = '#858585'
+        context.font = '9px monospace'
+        context.textAlign = 'right'
+        for (let index = 0; index <= 4; index++) {
+          const value = maxRate * (1 - index / 4) * 100
+          const y = padding.top + (graphHeight * index) / 4
+          context.fillText(value.toFixed(1) + '%', padding.left - 4, y + 3)
+        }
+
+        context.strokeStyle = '#ff6974'
+        context.lineWidth = 1.5
+        context.beginPath()
+        let started = false
+        for (const point of points) {
+          if (point.rate === null) {
+            started = false
+            continue
+          }
+          const x = padding.left + (point.time / duration) * graphWidth
+          const y = padding.top + graphHeight - (point.rate / maxRate) * graphHeight
+          if (!started) {
+            context.moveTo(x, y)
+            started = true
+          } else {
+            context.lineTo(x, y)
+          }
+        }
+        context.stroke()
+
+        if (currentTime >= 0) {
+          const playheadX = padding.left + (currentTime / duration) * graphWidth
+          context.strokeStyle = '#cddc39'
+          context.lineWidth = 1
+          context.beginPath()
+          context.moveTo(playheadX, padding.top)
+          context.lineTo(playheadX, height - padding.bottom)
+          context.stroke()
+        }
+
+        if (hoveredTime !== null) {
+          const hoverX = padding.left + (hoveredTime / duration) * graphWidth
+          context.strokeStyle = '#ffffff'
+          context.setLineDash([3, 3])
+          context.beginPath()
+          context.moveTo(hoverX, padding.top)
+          context.lineTo(hoverX, height - padding.bottom)
+          context.stroke()
+          context.setLineDash([])
+          context.fillStyle = '#ffffff'
+          context.font = '10px monospace'
+          context.textAlign = 'left'
+          context.fillText(
+            hoveredTime.toFixed(2) + ' s',
+            Math.min(hoverX + 6, width - 58),
+            padding.top + 10,
+          )
+        }
+
+        context.fillStyle = '#888888'
+        context.font = '9px monospace'
+        context.textAlign = 'left'
+        context.fillText('0 s', padding.left, height - 7)
+        context.textAlign = 'right'
+        context.fillText(duration.toFixed(1) + ' s', width - padding.right, height - 7)
+      } else {
+        context.fillStyle = '#888888'
+        context.font = '12px system-ui'
+        context.textAlign = 'center'
+        context.fillText('Timeline has no duration', width / 2, height / 2)
+      }
+    }
+
+    draw()
+    const observer = new ResizeObserver(draw)
+    observer.observe(container)
+    return () => observer.disconnect()
+  }, [currentTime, duration, frames, hoveredTime, isVisible, points, segments])
+
+  const handleClick = useCallback(
+    (event: React.MouseEvent<HTMLCanvasElement>) => {
+      const container = containerRef.current
+      if (!container || duration <= 0) return
+      const rect = container.getBoundingClientRect()
+      const padding = { left: 42, right: 16 }
+      const graphWidth = rect.width - padding.left - padding.right
+      const x = event.clientX - rect.left - padding.left
+      if (x >= 0 && x <= graphWidth) seek((x / graphWidth) * duration)
     },
     [duration, seek],
   )
 
-  // Handle mouse move for hover
   const handleMouseMove = useCallback(
-    (e: React.MouseEvent<HTMLCanvasElement>) => {
-      const canvas = canvasRef.current
+    (event: React.MouseEvent<HTMLCanvasElement>) => {
       const container = containerRef.current
-      if (!canvas || !container || !duration) return
-
+      if (!container || duration <= 0) return
       const rect = container.getBoundingClientRect()
-      const graphPadding = { left: 50, right: 20 }
-      const graphWidth = rect.width - graphPadding.left - graphPadding.right
-      const x = e.clientX - rect.left - graphPadding.left
-
-      if (x >= 0 && x <= graphWidth) {
-        const time = (x / graphWidth) * duration
-        setHoveredTime(time)
-      } else {
-        setHoveredTime(null)
-      }
+      const padding = { left: 42, right: 16 }
+      const graphWidth = rect.width - padding.left - padding.right
+      const x = event.clientX - rect.left - padding.left
+      setHoveredTime(x >= 0 && x <= graphWidth ? (x / graphWidth) * duration : null)
     },
     [duration],
   )
-
-  const handleMouseLeave = useCallback(() => {
-    setHoveredTime(null)
-  }, [])
 
   if (!isVisible) return null
 
   return (
     <ElevatedSurface offset={1} shadowLevel={null} className="border-t border-border">
-      {/* Header */}
       <div className="flex items-center justify-between px-4 py-2 border-b border-border">
         <div className="flex items-center gap-2">
           <BarChart2 size={16} className="text-accent" />
@@ -355,71 +229,28 @@ export function TemporalDiffGraph({ videoARef, videoBRef, isVisible }: TemporalD
             Temporal Difference Analysis
           </span>
         </div>
-        <div className="flex items-center gap-2">
-          {data.length > 0 && (
-            <span className="text-xs text-text-muted">
-              {peaks.length} peak{peaks.length !== 1 ? 's' : ''} detected
-            </span>
-          )}
-          <button
-            onClick={togglePlay}
-            className="surface-control ui-radius-sm border p-1 text-text-secondary hover:text-text-primary transition-colors"
-            title={isPlaying ? 'Pause' : 'Play'}
-          >
-            {isPlaying ? <Pause size={14} /> : <Play size={14} />}
-          </button>
-          <button
-            onClick={analyzeVideo}
-            disabled={isAnalyzing}
-            className={`surface-control-elevation ui-radius-sm border px-3 py-1 text-xs font-medium transition-colors ${
-              isAnalyzing
-                ? 'surface-control text-text-secondary cursor-not-allowed'
-                : 'border-accent bg-accent text-text-primary hover:bg-accent-hover'
-            }`}
-          >
-            {isAnalyzing ? (
-              <span className="flex items-center gap-1">
-                <Loader2 size={12} className="animate-spin" />
-                {analysisProgress.toFixed(0)}%
-              </span>
-            ) : (
-              'Analyze'
-            )}
-          </button>
-        </div>
+        <span className="text-xs text-text-muted" title={message ?? undefined}>
+          {statusLabel(status)}
+          {status === 'analyzing' ? ' ' + progress.toFixed(0) + '%' : ''}
+          {frames.length > 0 ? ' · ' + peakCount + ' highlighted intervals' : ''}
+        </span>
       </div>
-
-      {/* Graph */}
       <div ref={containerRef} className="h-32 relative">
         <canvas
           ref={canvasRef}
           className="w-full h-full cursor-crosshair"
           onClick={handleClick}
           onMouseMove={handleMouseMove}
-          onMouseLeave={handleMouseLeave}
+          onMouseLeave={() => setHoveredTime(null)}
+          role="img"
+          aria-label="Temporal A/B frame difference graph. Click to seek."
         />
+        {frames.length === 0 && status === 'idle' && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none text-xs text-text-muted">
+            Run analysis from the timeline controls to view results.
+          </div>
+        )}
       </div>
-
-      {/* Peak list */}
-      {peaks.length > 0 && (
-        <div className="flex items-center gap-2 px-4 py-2 border-t border-border overflow-x-auto">
-          <span className="text-xs text-text-muted whitespace-nowrap">Jump to peak:</span>
-          {peaks.map((peakIndex, i) => {
-            const point = data[peakIndex]
-            const minutes = Math.floor(point.time / 60)
-            const seconds = Math.floor(point.time % 60)
-            return (
-              <button
-                key={i}
-                onClick={() => seek(point.time)}
-                className="surface-control-elevation ui-radius-sm border border-error/40 bg-error/20 px-2 py-0.5 text-xs text-error transition-colors whitespace-nowrap hover:bg-error/30"
-              >
-                {minutes}:{seconds.toString().padStart(2, '0')} ({point.avgDiff.toFixed(0)})
-              </button>
-            )
-          })}
-        </div>
-      )}
     </ElevatedSurface>
   )
 }

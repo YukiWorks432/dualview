@@ -48,6 +48,8 @@ import { ElevatedSurface } from '../ui'
 import { Button } from '../ui'
 import { ClipContextMenu } from './ClipContextMenu'
 import { TimelineClip } from './TimelineClip'
+import { TimelineDiffControls } from './TimelineDiffControls'
+import { TimelineDiffLane } from './TimelineDiffLane'
 
 export function Timeline() {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -253,7 +255,7 @@ export function Timeline() {
     containerRef,
     pixelsPerSecond,
     trackHeight: 64,
-    rulerHeight: 24,
+    rulerHeight: 58,
   })
 
   // Loop back to start when reaching end
@@ -592,7 +594,7 @@ export function Timeline() {
   )
 
   return (
-    <div className="h-40 md:h-64 bg-surface border-t border-border flex flex-col">
+    <div className="h-64 md:h-80 bg-surface border-t border-border flex flex-col">
       {/* Transport controls - Miller's Law: Grouped into logical chunks */}
       <ElevatedSurface asChild offset={1}>
         <div className="h-10 px-2 md:px-4 flex items-center justify-between border-b border-border">
@@ -652,7 +654,10 @@ export function Timeline() {
 
             {/* Time display - Goal-Gradient Effect: Show progress */}
             <div className="ml-2 md:ml-3 flex items-center gap-2">
-              <div className="text-xs md:text-sm font-mono text-foreground tabular-nums">
+              <div
+                data-testid="timeline-current-time"
+                className="text-xs md:text-sm font-mono text-foreground tabular-nums"
+              >
                 {formatTime(currentTime)}
               </div>
               {/* Visual progress indicator - hidden on small screens */}
@@ -857,11 +862,14 @@ export function Timeline() {
         </div>
       </ElevatedSurface>
 
+      <TimelineDiffControls />
+
       {/* Timeline area */}
       <div className="flex-1 flex overflow-hidden">
         {/* Track labels - hidden on mobile */}
         <div className="hidden md:block w-40 flex-shrink-0 border-r border-border">
           <div className="h-6 border-b border-border" /> {/* Ruler spacer */}
+          <div className="h-[34px] border-b border-border" aria-hidden="true" />
           {tracks.map((track) => (
             <div
               key={track.id}
@@ -1116,6 +1124,8 @@ export function Timeline() {
                 </div>
               ))}
             </div>
+
+            <TimelineDiffLane duration={duration} pixelsPerSecond={pixelsPerSecond} />
 
             {/* Tracks */}
             {tracks.map((track) => (
