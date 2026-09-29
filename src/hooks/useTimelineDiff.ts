@@ -129,6 +129,32 @@ export function cancelTimelineDiffAnalysis(): void {
   cancelActiveJob()
 }
 
+type AutoAnalysisReadiness = 'empty' | 'blocked' | 'ready'
+
+function getAutoAnalysisReadiness(): AutoAnalysisReadiness {
+  const tracks = useTimelineStore.getState().tracks
+  const trackA = tracks.find((track) => track.type === 'a')
+  const trackB = tracks.find((track) => track.type === 'b')
+
+  if (!trackA?.clips.length || !trackB?.clips.length) return 'empty'
+
+  const mediaFiles = useMediaStore.getState().files
+  if (
+    mediaFiles.some((media) => media.status === 'pending' || media.status === 'processing')
+  ) {
+    return 'blocked'
+  }
+
+  const mediaById = new Map(mediaFiles.map((media) => [media.id, media]))
+  const comparisonClips = [...trackA.clips, ...trackB.clips]
+  const canAnalyze = comparisonClips.every((clip) => {
+    const media = mediaById.get(clip.mediaId)
+    return media?.type === 'video' && media.status === 'ready'
+  })
+
+  return canAnalyze ? 'ready' : 'blocked'
+}
+
 export function startTimelineDiffAnalysis(): void {
   cancelActiveJob()
 
@@ -207,18 +233,46 @@ export function startTimelineDiffAnalysis(): void {
 export function useTimelineDiffLifecycle(): void {
   useEffect(() => {
     let lastFingerprint = buildSnapshot().fingerprint
+    let autoAnalysisArmed = true
+    let autoAnalysisTimer: ReturnType<typeof setTimeout> | null = null
+
+    const scheduleAutoAnalysis = () => {
+      if (autoAnalysisTimer !== null) clearTimeout(autoAnalysisTimer)
+      autoAnalysisTimer = setTimeout(() => {
+        autoAnalysisTimer = null
+
+        const readiness = getAutoAnalysisReadiness()
+        if (readiness === 'empty') {
+          autoAnalysisArmed = true
+          return
+        }
+        if (!autoAnalysisArmed || readiness !== 'ready') return
+
+        const status = useTimelineDiffStore.getState().status
+        if (status === 'analyzing' || status === 'cancelling') {
+          autoAnalysisArmed = false
+          return
+        }
+        if (activeJob) return
+
+        autoAnalysisArmed = false
+        startTimelineDiffAnalysis()
+      }, 0)
+    }
 
     const refreshFingerprint = () => {
       const nextFingerprint = buildSnapshot().fingerprint
-      if (nextFingerprint === lastFingerprint) return
+      if (nextFingerprint !== lastFingerprint) {
+        lastFingerprint = nextFingerprint
+        cancelActiveJob()
+        useTimelineDiffStore
+          .getState()
+          .invalidate(
+            'Timeline, project, media, or analysis settings changed. Run the comparison again.',
+          )
+      }
 
-      lastFingerprint = nextFingerprint
-      cancelActiveJob()
-      useTimelineDiffStore
-        .getState()
-        .invalidate(
-          'Timeline, project, media, or analysis settings changed. Run the comparison again.',
-        )
+      scheduleAutoAnalysis()
     }
 
     const unsubscribeTimeline = useTimelineStore.subscribe((state, previous) => {
@@ -238,14 +292,23 @@ export function useTimelineDiffLifecycle(): void {
         state.resolution !== previous.resolution
       ) {
         refreshFingerprint()
+        return
+      }
+
+      if (state.status !== previous.status) {
+        if (state.status === 'analyzing') autoAnalysisArmed = false
+        scheduleAutoAnalysis()
       }
     })
+
+    scheduleAutoAnalysis()
 
     return () => {
       unsubscribeTimeline()
       unsubscribeMedia()
       unsubscribeProject()
       unsubscribeSettings()
+      if (autoAnalysisTimer !== null) clearTimeout(autoAnalysisTimer)
       cancelActiveJob()
     }
   }, [])
