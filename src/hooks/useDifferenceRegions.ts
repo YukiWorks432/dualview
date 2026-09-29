@@ -340,7 +340,12 @@ export function useDifferenceRegions({
 
         if (!isCurrent()) return
         if (!readyA || !readyB) {
-              setRuntime({
+          setResult({
+            signature: runSignature,
+            regions: [],
+            aspectRatio: 16 / 9,
+          })
+          setRuntime({
             status: 'syncing',
             message: 'Waiting for the matching displayed frames…',
             regionCount: 0,
@@ -358,7 +363,12 @@ export function useDifferenceRegions({
         })
 
         if (!analysisDimensions.ok) {
-              const message =
+          setResult({
+            signature: runSignature,
+            regions: [],
+            aspectRatio: 16 / 9,
+          })
+          const message =
             analysisDimensions.reason === 'aspect-mismatch'
               ? 'A/B aspect ratios must match before regions can be compared'
               : analysisDimensions.reason === 'too-large'
@@ -389,6 +399,11 @@ export function useDifferenceRegions({
         )
 
         if (!imageA || !imageB) {
+          setResult({
+            signature: runSignature,
+            regions: [],
+            aspectRatio: 16 / 9,
+          })
           setRuntime({
             status: 'unavailable',
             message: 'The current A/B frames could not be read for analysis',
@@ -428,7 +443,12 @@ export function useDifferenceRegions({
 
         if (!isCurrent()) return
         if (response.type === 'error') {
-              setRuntime({
+          setResult({
+            signature: runSignature,
+            regions: [],
+            aspectRatio: 16 / 9,
+          })
+          setRuntime({
             status: 'unavailable',
             message: response.message,
             regionCount: 0,
@@ -465,7 +485,7 @@ export function useDifferenceRegions({
         }
       } catch (error) {
         if (!isCurrent()) return
-          setResult({
+        setResult({
           signature: runSignature,
           regions: [],
           aspectRatio: 16 / 9,
