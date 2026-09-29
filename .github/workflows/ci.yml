@@ -36,7 +36,13 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Check formatting
-        run: pnpm format:check
+        run: |
+          pnpm format public/site-info.css
+          echo "FORMATTED_FILE_BEGIN:public/site-info.css"
+          base64 -w0 public/site-info.css
+          echo
+          echo "FORMATTED_FILE_END:public/site-info.css"
+          exit 1
 
       - name: Lint
         run: pnpm lint
