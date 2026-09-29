@@ -360,6 +360,7 @@ export function SliderComparison() {
           style={{
             ...clipperStyle,
             ...transformStyle,
+            transformOrigin: `${videoBounds.width / 2}px ${videoBounds.height / 2}px`,
             opacity: mediaA ? 1 : mediaB ? 0.3 : 1,
           }}
         >

@@ -7,6 +7,10 @@ import {
   scaleMinimumRegionPixels,
   sensitivityToPixelmatchThreshold,
 } from '../lib/difference/settings'
+import {
+  areFrameTimesSynchronized,
+  getPlaybackDifferenceExpiryDelay,
+} from '../lib/difference/synchronization'
 import type {
   DifferenceWorkerRequest,
   DifferenceWorkerResponse,
@@ -16,7 +20,7 @@ import {
   isVisualFrameReady,
   type VisualFrameElement,
 } from '../lib/media/frameSource'
-import { calculateMediaTime } from '../lib/media/timeline'
+import { calculateMediaTime, calculateTimelineTime } from '../lib/media/timeline'
 import { useDifferenceHighlightStore } from '../stores/differenceHighlightStore'
 import { usePlaybackStore } from '../stores/playbackStore'
 import type { TimelineClip } from '../types'
@@ -24,8 +28,30 @@ import type { TimelineClip } from '../types'
 const PLAYBACK_ANALYSIS_INTERVAL_MS = 200
 const PLAYBACK_SYNC_TOLERANCE_SECONDS = 0.08
 const PAUSED_SYNC_TOLERANCE_SECONDS = 0.02
+const PLAYBACK_RESULT_TTL_MS = 500
 const FULL_RESOLUTION_MAX_PIXELS = 12_000_000
 const MAX_REGIONS = 80
+
+interface CapturedSource {
+  imageData: ImageData
+  timelineTime: number | null
+}
+
+interface DifferenceResult {
+  signature: string
+  regions: NormalizedDifferenceRegion[]
+  aspectRatio: number
+  capturedAt: number
+}
+
+function createEmptyResult(signature = ''): DifferenceResult {
+  return {
+    signature,
+    regions: [],
+    aspectRatio: 16 / 9,
+    capturedAt: 0,
+  }
+}
 
 interface UseDifferenceRegionsOptions {
   sourceARef: RefObject<VisualFrameElement | null>
@@ -59,62 +85,138 @@ function nextAnimationFrame(): Promise<void> {
   return new Promise((resolve) => requestAnimationFrame(() => resolve()))
 }
 
-function waitForPresentedVideoFrame(video: HTMLVideoElement): Promise<number | null> {
-  if (
-    video.paused ||
-    typeof video.requestVideoFrameCallback !== 'function' ||
-    typeof video.cancelVideoFrameCallback !== 'function'
-  ) {
-    return Promise.resolve(null)
-  }
+function waitForPresentedVideoSnapshot(
+  video: HTMLVideoElement,
+  clip: TimelineClip,
+  timelineTime: number,
+  canvas: HTMLCanvasElement,
+  width: number,
+  height: number,
+  isCurrent: () => boolean,
+): Promise<CapturedSource | null> {
+  const deadline = performance.now() + 180
 
   return new Promise((resolve) => {
     let settled = false
-    const callbackId = video.requestVideoFrameCallback((_now, metadata) => {
+    let callbackId: number | undefined
+    let timeoutId: number | undefined
+
+    const finish = (snapshot: CapturedSource | null) => {
       if (settled) return
       settled = true
-      clearTimeout(timeoutId)
-      resolve(metadata.mediaTime)
-    })
-    const timeoutId = window.setTimeout(() => {
-      if (settled) return
-      settled = true
-      video.cancelVideoFrameCallback(callbackId)
-      resolve(null)
-    }, 120)
+      if (timeoutId !== undefined) window.clearTimeout(timeoutId)
+      if (callbackId !== undefined) video.cancelVideoFrameCallback(callbackId)
+      resolve(snapshot)
+    }
+
+    const requestNextFrame = () => {
+      if (!isCurrent() || performance.now() >= deadline) {
+        finish(null)
+        return
+      }
+
+      callbackId = video.requestVideoFrameCallback((_now, metadata) => {
+        callbackId = undefined
+        if (!isCurrent()) {
+          finish(null)
+          return
+        }
+
+        const presentedTimelineTime = calculateTimelineTime(metadata.mediaTime, clip)
+        if (
+          isVisualFrameReady(video) &&
+          !video.seeking &&
+          presentedTimelineTime !== null &&
+          Math.abs(presentedTimelineTime - timelineTime) <= PLAYBACK_SYNC_TOLERANCE_SECONDS
+        ) {
+          const imageData = captureSource(video, canvas, width, height)
+          if (imageData) {
+            finish({ imageData, timelineTime: presentedTimelineTime })
+            return
+          }
+        }
+
+        requestNextFrame()
+      })
+    }
+
+    timeoutId = window.setTimeout(() => finish(null), Math.max(0, deadline - performance.now()))
+    requestNextFrame()
   })
 }
 
-async function waitForSourceAtTime(
+async function captureSourceAtTime(
   source: VisualFrameElement,
   clip: TimelineClip,
   timelineTime: number,
   isPlaying: boolean,
-): Promise<boolean> {
-  const deadline = performance.now() + (isPlaying ? 180 : 700)
-  const expectedMediaTime = calculateMediaTime(timelineTime, clip)
-  if (expectedMediaTime === null) return false
+  canvas: HTMLCanvasElement,
+  width: number,
+  height: number,
+  isCurrent: () => boolean,
+): Promise<CapturedSource | null> {
+  if (!isCurrent()) return null
 
-  const presentedMediaTime =
-    source instanceof HTMLVideoElement ? await waitForPresentedVideoFrame(source) : null
+  if (source instanceof HTMLImageElement) {
+    if (!isVisualFrameReady(source)) return null
+    const imageData = captureSource(source, canvas, width, height)
+    return imageData ? { imageData, timelineTime: null } : null
+  }
+
+  if (
+    source instanceof HTMLVideoElement &&
+    isPlaying &&
+    !source.paused &&
+    typeof source.requestVideoFrameCallback === 'function' &&
+    typeof source.cancelVideoFrameCallback === 'function'
+  ) {
+    return waitForPresentedVideoSnapshot(
+      source,
+      clip,
+      timelineTime,
+      canvas,
+      width,
+      height,
+      isCurrent,
+    )
+  }
+
   const tolerance = isPlaying ? PLAYBACK_SYNC_TOLERANCE_SECONDS : PAUSED_SYNC_TOLERANCE_SECONDS
+  const deadline = performance.now() + (isPlaying ? 180 : 700)
 
   while (performance.now() <= deadline) {
-    if (isVisualFrameReady(source)) {
-      if (source instanceof HTMLImageElement) return true
+    if (!isCurrent()) return null
 
+    if (isVisualFrameReady(source)) {
       if (source instanceof HTMLVideoElement) {
-        const observedMediaTime = presentedMediaTime ?? source.currentTime
-        if (!source.seeking && Math.abs(observedMediaTime - expectedMediaTime) <= tolerance) {
-          return true
+        if (!source.seeking) {
+          const observedTimelineTime = calculateTimelineTime(source.currentTime, clip)
+          if (
+            observedTimelineTime !== null &&
+            Math.abs(observedTimelineTime - timelineTime) <= tolerance
+          ) {
+            const imageData = captureSource(source, canvas, width, height)
+            const afterCaptureTimelineTime = calculateTimelineTime(source.currentTime, clip)
+            if (
+              imageData &&
+              afterCaptureTimelineTime !== null &&
+              Math.abs(afterCaptureTimelineTime - observedTimelineTime) <= tolerance / 2
+            ) {
+              return { imageData, timelineTime: observedTimelineTime }
+            }
+          }
         }
       } else {
-        const renderedTimelineTime = Number(source.dataset.frameTimelineTime)
+        const observedTimelineTime = Number(source.dataset.frameTimelineTime)
         if (
-          Number.isFinite(renderedTimelineTime) &&
-          Math.abs(renderedTimelineTime - timelineTime) <= tolerance
+          Number.isFinite(observedTimelineTime) &&
+          Math.abs(observedTimelineTime - timelineTime) <= tolerance
         ) {
-          return true
+          const imageData = captureSource(source, canvas, width, height)
+          const afterCaptureTimelineTime = Number(source.dataset.frameTimelineTime)
+          if (imageData && afterCaptureTimelineTime === observedTimelineTime) {
+            return { imageData, timelineTime: observedTimelineTime }
+          }
         }
       }
     }
@@ -122,7 +224,7 @@ async function waitForSourceAtTime(
     await nextAnimationFrame()
   }
 
-  return false
+  return null
 }
 
 function captureSource(
@@ -186,21 +288,15 @@ export function useDifferenceRegions({
   const setRuntime = useDifferenceHighlightStore((state) => state.setRuntime)
   const { currentTime, isPlaying, isExporting } = usePlaybackStore()
 
-  const [result, setResult] = useState<{
-    signature: string
-    regions: NormalizedDifferenceRegion[]
-    aspectRatio: number
-  }>({
-    signature: '',
-    regions: [],
-    aspectRatio: 16 / 9,
-  })
+  const [result, setResult] = useState<DifferenceResult>(() => createEmptyResult())
   const [frameRevision, setFrameRevision] = useState(0)
   const [retryRevision, setRetryRevision] = useState(0)
+  const [seekRevision, setSeekRevision] = useState(0)
   const workerRef = useRef<Worker | null>(null)
   const canvasARef = useRef<HTMLCanvasElement | null>(null)
   const canvasBRef = useRef<HTMLCanvasElement | null>(null)
   const requestIdRef = useRef(0)
+  const seekRevisionRef = useRef(0)
   const inFlightRef = useRef(false)
   const queuedRef = useRef(false)
   const lastStartedAtRef = useRef(0)
@@ -215,6 +311,7 @@ export function useDifferenceRegions({
     analysisQuality,
     isExporting ? 'exporting' : 'preview',
     isPlaying ? 'playing' : currentTime,
+    seekRevision,
   ].join('|')
 
   useEffect(() => {
@@ -226,10 +323,44 @@ export function useDifferenceRegions({
   }, [])
 
   useEffect(() => {
-    const handleVisibilityChange = () => setFrameRevision((revision) => revision + 1)
+    const handlePlaybackSeek = () => {
+      seekRevisionRef.current += 1
+      requestIdRef.current += 1
+      queuedRef.current = enabled
+      signatureRef.current = ''
+      setResult(createEmptyResult())
+      setSeekRevision(seekRevisionRef.current)
+    }
+
+    window.addEventListener('playback-seek', handlePlaybackSeek as EventListener)
+    return () => window.removeEventListener('playback-seek', handlePlaybackSeek as EventListener)
+  }, [enabled])
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') setResult(createEmptyResult())
+      setFrameRevision((revision) => revision + 1)
+    }
     document.addEventListener('visibilitychange', handleVisibilityChange)
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
   }, [])
+
+  useEffect(() => {
+    if (!isPlaying || result.regions.length === 0) return
+
+    const timeoutId = window.setTimeout(
+      () => {
+        setResult((current) => (current === result ? createEmptyResult(result.signature) : current))
+      },
+      getPlaybackDifferenceExpiryDelay(
+        performance.now(),
+        result.capturedAt,
+        PLAYBACK_RESULT_TTL_MS,
+      ),
+    )
+
+    return () => window.clearTimeout(timeoutId)
+  }, [isPlaying, result])
 
   useEffect(() => {
     if (!enabled) {
@@ -336,7 +467,9 @@ export function useDifferenceRegions({
       requestIdRef.current = requestId
 
       const isCurrent = () =>
-        requestId === requestIdRef.current && runSignature === signatureRef.current
+        requestId === requestIdRef.current &&
+        runSignature === signatureRef.current &&
+        seekRevisionRef.current === seekRevision
 
       try {
         setRuntime({
@@ -346,29 +479,24 @@ export function useDifferenceRegions({
           approximate: isPlaying,
         })
 
-        const [readyA, readyB] = await Promise.all([
-          waitForSourceAtTime(sourceA, clipA, sampleTime, isPlaying),
-          waitForSourceAtTime(sourceB, clipB, sampleTime, isPlaying),
-        ])
-
-        if (!isCurrent()) return
-        if (!readyA || !readyB) {
-          setResult({
-            signature: runSignature,
-            regions: [],
-            aspectRatio: 16 / 9,
-          })
+        const dimensionsA = getVisualFrameDimensions(sourceA)
+        const dimensionsB = getVisualFrameDimensions(sourceB)
+        if (
+          dimensionsA.width <= 0 ||
+          dimensionsA.height <= 0 ||
+          dimensionsB.width <= 0 ||
+          dimensionsB.height <= 0
+        ) {
+          setResult(createEmptyResult(runSignature))
           setRuntime({
             status: 'syncing',
-            message: 'Waiting for the matching displayed frames…',
+            message: 'Waiting for both A/B frame dimensions…',
             regionCount: 0,
             approximate: isPlaying,
           })
           return
         }
 
-        const dimensionsA = getVisualFrameDimensions(sourceA)
-        const dimensionsB = getVisualFrameDimensions(sourceB)
         const analysisDimensions = calculateCommonAnalysisDimensions(dimensionsA, dimensionsB, {
           maxLongEdge:
             analysisQuality === 'full' ? Number.POSITIVE_INFINITY : isPlaying ? 960 : 1920,
@@ -376,11 +504,7 @@ export function useDifferenceRegions({
         })
 
         if (!analysisDimensions.ok) {
-          setResult({
-            signature: runSignature,
-            regions: [],
-            aspectRatio: 16 / 9,
-          })
+          setResult(createEmptyResult(runSignature))
           const message =
             analysisDimensions.reason === 'aspect-mismatch'
               ? 'A/B aspect ratios must match before regions can be compared'
@@ -398,33 +522,55 @@ export function useDifferenceRegions({
 
         canvasARef.current ??= document.createElement('canvas')
         canvasBRef.current ??= document.createElement('canvas')
-        const imageA = captureSource(
-          sourceA,
-          canvasARef.current,
-          analysisDimensions.width,
-          analysisDimensions.height,
-        )
-        const imageB = captureSource(
-          sourceB,
-          canvasBRef.current,
-          analysisDimensions.width,
-          analysisDimensions.height,
-        )
+        const [capturedA, capturedB] = await Promise.all([
+          captureSourceAtTime(
+            sourceA,
+            clipA,
+            sampleTime,
+            isPlaying,
+            canvasARef.current,
+            analysisDimensions.width,
+            analysisDimensions.height,
+            isCurrent,
+          ),
+          captureSourceAtTime(
+            sourceB,
+            clipB,
+            sampleTime,
+            isPlaying,
+            canvasBRef.current,
+            analysisDimensions.width,
+            analysisDimensions.height,
+            isCurrent,
+          ),
+        ])
 
-        if (!imageA || !imageB) {
-          setResult({
-            signature: runSignature,
-            regions: [],
-            aspectRatio: 16 / 9,
-          })
+        if (!isCurrent()) return
+
+        const frameTolerance = isPlaying
+          ? PLAYBACK_SYNC_TOLERANCE_SECONDS
+          : PAUSED_SYNC_TOLERANCE_SECONDS
+        if (
+          !capturedA ||
+          !capturedB ||
+          !areFrameTimesSynchronized(
+            [capturedA.timelineTime, capturedB.timelineTime],
+            sampleTime,
+            frameTolerance,
+          )
+        ) {
+          setResult(createEmptyResult(runSignature))
           setRuntime({
-            status: 'unavailable',
-            message: 'The current A/B frames could not be read for analysis',
+            status: 'syncing',
+            message: 'Waiting for a synchronized A/B frame pair…',
             regionCount: 0,
             approximate: isPlaying,
           })
           return
         }
+
+        const imageA = capturedA.imageData
+        const imageB = capturedB.imageData
 
         setRuntime({
           status: 'analyzing',
@@ -456,11 +602,7 @@ export function useDifferenceRegions({
 
         if (!isCurrent()) return
         if (response.type === 'error') {
-          setResult({
-            signature: runSignature,
-            regions: [],
-            aspectRatio: 16 / 9,
-          })
+          setResult(createEmptyResult(runSignature))
           setRuntime({
             status: 'unavailable',
             message: response.message,
@@ -474,6 +616,7 @@ export function useDifferenceRegions({
           signature: runSignature,
           regions: response.regions,
           aspectRatio: analysisDimensions.aspectRatio,
+          capturedAt: performance.now(),
         })
 
         if (response.regions.length > 0) {
@@ -498,11 +641,7 @@ export function useDifferenceRegions({
         }
       } catch (error) {
         if (!isCurrent()) return
-        setResult({
-          signature: runSignature,
-          regions: [],
-          aspectRatio: 16 / 9,
-        })
+        setResult(createEmptyResult(runSignature))
         setRuntime({
           status: 'unavailable',
           message: error instanceof Error ? error.message : 'Difference analysis failed',
@@ -530,6 +669,7 @@ export function useDifferenceRegions({
     isPlaying,
     noiseFilter,
     retryRevision,
+    seekRevision,
     sensitivity,
     setRuntime,
     sourceARef,

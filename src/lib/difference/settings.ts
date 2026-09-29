@@ -23,6 +23,8 @@ export function scaleMinimumRegionPixels(
   width: number,
   height: number,
 ): number {
+  if (basePixels <= 1) return 1
+
   const referencePixels = 960 * 540
   const scale = Math.max(0.25, (width * height) / referencePixels)
   return Math.max(1, Math.round(basePixels * scale))

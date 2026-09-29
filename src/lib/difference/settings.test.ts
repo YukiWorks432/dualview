@@ -13,6 +13,7 @@ describe('difference settings', () => {
 
   it('keeps the off filter at one changed pixel', () => {
     expect(getBaseMinimumRegionPixels('off')).toBe(1)
+    expect(scaleMinimumRegionPixels(getBaseMinimumRegionPixels('off'), 1920, 1080)).toBe(1)
   })
 
   it('scales region filtering with analysis area', () => {
