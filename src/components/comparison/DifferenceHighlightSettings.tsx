@@ -33,9 +33,7 @@ export function DifferenceHighlightSettings() {
         aria-pressed={enabled}
         onClick={() => setEnabled(!enabled)}
         className={`ui-radius-md flex w-full items-center justify-between border p-3 text-sm font-medium transition-colors ${
-          enabled
-            ? 'surface-active border-accent text-accent'
-            : 'surface-control text-text-primary'
+          enabled ? 'surface-active border-accent text-accent' : 'surface-control text-text-primary'
         }`}
       >
         <span>{enabled ? 'Highlighting On' : 'Highlighting Off'}</span>

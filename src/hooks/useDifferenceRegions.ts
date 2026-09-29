@@ -82,9 +82,7 @@ async function waitForSourceAtTime(
 
   const presentedMediaTime =
     source instanceof HTMLVideoElement ? await waitForPresentedVideoFrame(source) : null
-  const tolerance = isPlaying
-    ? PLAYBACK_SYNC_TOLERANCE_SECONDS
-    : PAUSED_SYNC_TOLERANCE_SECONDS
+  const tolerance = isPlaying ? PLAYBACK_SYNC_TOLERANCE_SECONDS : PAUSED_SYNC_TOLERANCE_SECONDS
 
   while (performance.now() <= deadline) {
     if (isVisualFrameReady(source)) {

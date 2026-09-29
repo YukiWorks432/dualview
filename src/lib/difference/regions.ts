@@ -31,12 +31,7 @@ function regionsAreNear(a: PixelRegion, b: PixelRegion, gap: number): boolean {
   const bRight = b.x + b.width
   const bBottom = b.y + b.height
 
-  return (
-    a.x <= bRight + gap &&
-    aRight + gap >= b.x &&
-    a.y <= bBottom + gap &&
-    aBottom + gap >= b.y
-  )
+  return a.x <= bRight + gap && aRight + gap >= b.x && a.y <= bBottom + gap && aBottom + gap >= b.y
 }
 
 function mergeRegionPair(a: PixelRegion, b: PixelRegion): PixelRegion {

@@ -1,12 +1,5 @@
 import { Upload } from 'lucide-react'
-import {
-  useRef,
-  useState,
-  useCallback,
-  useEffect,
-  useMemo,
-  type RefObject,
-} from 'react'
+import { useRef, useState, useCallback, useEffect, useMemo, type RefObject } from 'react'
 
 import { useDifferenceRegions } from '../../hooks/useDifferenceRegions'
 import { useDropZone } from '../../hooks/useDropZone'
@@ -79,12 +72,12 @@ export function SliderComparison() {
   const rawMediaB = displayClipB ? getFile(displayClipB.mediaId) : null
   const mediaA = rawMediaA?.type === 'video' || rawMediaA?.type === 'image' ? rawMediaA : null
   const mediaB = rawMediaB?.type === 'video' || rawMediaB?.type === 'image' ? rawMediaB : null
-  const sourceARef = (mediaA?.type === 'video' ? videoARef : imgARef) as RefObject<
-    VisualFrameElement | null
-  >
-  const sourceBRef = (mediaB?.type === 'video' ? videoBRef : imgBRef) as RefObject<
-    VisualFrameElement | null
-  >
+  const sourceARef = (
+    mediaA?.type === 'video' ? videoARef : imgARef
+  ) as RefObject<VisualFrameElement | null>
+  const sourceBRef = (
+    mediaB?.type === 'video' ? videoBRef : imgBRef
+  ) as RefObject<VisualFrameElement | null>
   const difference = useDifferenceRegions({
     sourceARef,
     sourceBRef,

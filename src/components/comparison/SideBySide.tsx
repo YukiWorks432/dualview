@@ -88,12 +88,12 @@ export function SideBySide() {
   const transformStyle = getTransformStyle()
 
   // Refs for magnifier
-  const sourceARef = (mediaA?.type === 'video' ? videoARef : imgARef) as RefObject<
-    VisualFrameElement | null
-  >
-  const sourceBRef = (mediaB?.type === 'video' ? videoBRef : imgBRef) as RefObject<
-    VisualFrameElement | null
-  >
+  const sourceARef = (
+    mediaA?.type === 'video' ? videoARef : imgARef
+  ) as RefObject<VisualFrameElement | null>
+  const sourceBRef = (
+    mediaB?.type === 'video' ? videoBRef : imgBRef
+  ) as RefObject<VisualFrameElement | null>
   const difference = useDifferenceRegions({
     sourceARef,
     sourceBRef,

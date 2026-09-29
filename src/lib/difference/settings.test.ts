@@ -8,9 +8,7 @@ import {
 
 describe('difference settings', () => {
   it('maps higher sensitivity to a lower pixelmatch threshold', () => {
-    expect(sensitivityToPixelmatchThreshold(80)).toBeLessThan(
-      sensitivityToPixelmatchThreshold(20),
-    )
+    expect(sensitivityToPixelmatchThreshold(80)).toBeLessThan(sensitivityToPixelmatchThreshold(20))
   })
 
   it('keeps the off filter at one changed pixel', () => {
