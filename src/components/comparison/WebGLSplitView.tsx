@@ -135,7 +135,7 @@ export function WebGLSplitView({ isVisible, onToggle }: WebGLSplitViewProps) {
   // Start render loop
   useEffect(() => {
     if (!isVisible) return
-    animationRef.current = requestAnimationFrame(renderLoop)
+    animationRef.current = requestAnimationFrame(render)
     return () => {
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current)

@@ -271,7 +271,7 @@ export function RadialLoupeComparison() {
 
   // Start render loop
   useEffect(() => {
-    animationRef.current = requestAnimationFrame(renderLoop)
+    animationRef.current = requestAnimationFrame(render)
     return () => {
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current)

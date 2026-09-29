@@ -254,7 +254,7 @@ export function GridTileComparison() {
   // Start render loop
   useEffect(() => {
     lastFrameTimeRef.current = performance.now()
-    animationRef.current = requestAnimationFrame(renderLoop)
+    animationRef.current = requestAnimationFrame(render)
     return () => {
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current)
