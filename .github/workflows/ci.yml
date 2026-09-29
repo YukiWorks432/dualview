@@ -35,10 +35,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Format probe
-        run: |
-          pnpm format
-          git diff --no-ext-diff -- .
+      - name: Check formatting
+        run: pnpm format:check
 
       - name: Lint
         run: pnpm lint

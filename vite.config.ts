@@ -5,6 +5,9 @@ import { defineConfig } from 'vite'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  optimizeDeps: {
+    include: ['pixelmatch'],
+  },
   build: {
     license: {
       fileName: 'licenses/third-party.md',
