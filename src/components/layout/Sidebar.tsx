@@ -23,7 +23,7 @@ import { useTimelineStore } from '../../stores/timelineStore'
 import type { BlendMode, SplitLayout, ExportSettings, WebGLComparisonMode } from '../../types'
 import { MediaLibrary } from '../media/MediaLibrary'
 import { MediaUpload } from '../media/MediaUpload'
-import { AspectRatioSelector, Button, ElevatedSurface, Select, Slider } from '../ui'
+import { AspectRatioSelector, ButtonWithIcon, ElevatedSurface, Select, Slider } from '../ui'
 
 type Tab = 'media' | 'settings'
 
@@ -80,27 +80,27 @@ export function Sidebar({ onCollapse, isMobileOpen, onMobileClose, onOpenProject
         className="flex items-center justify-between border-b border-border px-3 py-2 shrink-0"
       >
         <div className="flex items-center gap-1">
-          <Button
+          <ButtonWithIcon
             variant="secondary"
             size="sm"
             title="Open Projects"
             onClick={onOpenProjects}
             className="h-7 px-2 gap-1.5 text-xs"
+            icon={<FolderOpen className="w-3.5 h-3.5" aria-hidden="true" />}
           >
-            <FolderOpen className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Projects</span>
-          </Button>
-          <Button
+          </ButtonWithIcon>
+          <ButtonWithIcon
             variant="secondary"
             size="sm"
             title="Save Project (Ctrl+S)"
             onClick={() => saveCurrentProject()}
             disabled={saveStatus === 'saving' || !projectMetadata}
             className={`h-7 px-2 gap-1.5 text-xs ${saveStatus === 'saving' ? 'animate-pulse' : ''}`}
+            icon={<Save className="w-3.5 h-3.5" aria-hidden="true" />}
           >
-            <Save className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Save</span>
-          </Button>
+          </ButtonWithIcon>
         </div>
         {saveStatus === 'saved' && (
           <span className="text-[10px] text-muted-foreground">Saved locally</span>
