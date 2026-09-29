@@ -345,7 +345,6 @@ a {
 }
 
 button > svg {
-  scale: 1;
   will-change: scale;
   transition-property: color, opacity, scale, transform;
   transition-duration: 150ms;
