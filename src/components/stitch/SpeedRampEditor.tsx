@@ -8,7 +8,7 @@ import { useState, useCallback, useRef, useEffect } from 'react'
 
 import type { SpeedRamp, SpeedKeyframe } from '../../types'
 import { EASE_PRESETS } from '../../lib/stitch/easeCurve'
-import { getSpeedAtTime } from '../../lib/stitch/speedRamp'
+import { DEFAULT_SPEED_RAMP, getSpeedAtTime } from '../../lib/stitch/speedRamp'
 
 // Re-export types for convenience
 export type { SpeedRamp, SpeedKeyframe } from '../../types'

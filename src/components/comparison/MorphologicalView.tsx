@@ -281,16 +281,28 @@ export function MorphologicalView() {
     const tempCtx = tempCanvas.getContext('2d')
     if (!tempCtx) return
 
-    setProcessing(true)
+    let cancelled = false
+    queueMicrotask(() => {
+      if (!cancelled) setProcessing(true)
+    })
+
     tempCtx.drawImage(source, 0, 0, tempCanvas.width, tempCanvas.height)
     const imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height)
 
-    // Apply operations (in a setTimeout to not block UI)
-    setTimeout(() => {
+    // Apply operations in a separate task so React can paint the processing state first.
+    const timeoutId = window.setTimeout(() => {
+      if (cancelled) return
+
       const result = applyOperations(imageData, morphologicalSettings.operations)
       processedImageRef.current = result
       setProcessing(false)
     }, 0)
+
+    return () => {
+      cancelled = true
+      window.clearTimeout(timeoutId)
+      queueMicrotask(() => setProcessing(false))
+    }
   }, [mediaA, morphologicalSettings.operations, applyOperations, imagesLoaded])
 
   // Render function
