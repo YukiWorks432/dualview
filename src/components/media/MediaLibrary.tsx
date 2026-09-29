@@ -14,21 +14,13 @@ import {
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import type { DragEvent } from 'react'
 
+import { MEDIA_DRAG_TYPE, type MediaDragData } from '../../lib/media/dragData'
 import { cn, formatTime } from '../../lib/utils'
 import { useMediaStore } from '../../stores/mediaStore'
 import { useTimelineStore } from '../../stores/timelineStore'
 import type { MediaType, MediaStatus } from '../../types'
 import { ElevatedSurface, IconButton } from '../ui'
 
-// Drag data type for media items
-export const MEDIA_DRAG_TYPE = 'application/x-dualview-media'
-
-export interface MediaDragData {
-  mediaId: string
-  mediaType: MediaType
-  duration: number
-  name: string
-}
 
 // Filter type includes 'all' plus all media types
 type FilterType = 'all' | MediaType
