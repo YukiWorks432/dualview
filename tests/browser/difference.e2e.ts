@@ -149,21 +149,24 @@ test('colour tolerance distinguishes small decoded changes', async ({ page }) =>
 
 test('maps actual decoded frames through placement, trim, speed and reverse', async ({ page }) => {
   await seed(page, ['base.mp4', 'changed.mp4'])
-  await page.evaluate(async () => {
+  const duration = await page.evaluate(async () => {
     const path = '/src/stores/timelineStore.ts'
     const store = (await import(path)).useTimelineStore
-    const { tracks, updateClip } = store.getState()
+    const { tracks, updateClip, moveClip } = store.getState()
     for (const track of tracks.filter((item: { type: string }) => ['a', 'b'].includes(item.type))) {
       updateClip(track.clips[0].id, {
-        startTime: 2,
-        endTime: 2.25,
+        startTime: 0,
+        endTime: 0.25,
         inPoint: 0.25,
         outPoint: 0.75,
         speed: 2,
         reverse: true,
       })
+      moveClip(track.clips[0].id, track.id, 2)
     }
+    return store.getState().duration
   })
+  expect(duration).toBeCloseTo(2.25, 5)
   const state = await analyze(page)
   expect(state.regions).toHaveLength(2)
   expect(state.regions[0].start).toBeCloseTo(2 + (0.75 - 16 / 24) / 2, 4)
