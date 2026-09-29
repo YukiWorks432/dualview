@@ -2,10 +2,14 @@ import pixelmatch from 'pixelmatch'
 
 /** Reusable buffers keep memory proportional to one comparison, not video duration. */
 export class PixelComparator {
+  private readonly width: number
+  private readonly height: number
   private readonly a: Uint8ClampedArray
   private readonly b: Uint8ClampedArray
   private readonly mask: Uint8ClampedArray
-  constructor(private readonly width: number, private readonly height: number) {
+  constructor(width: number, height: number) {
+    this.width = width
+    this.height = height
     const size = width * height * 4
     this.a = new Uint8ClampedArray(size)
     this.b = new Uint8ClampedArray(size)
