@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { drawWaveform } from './ClipWaveform'
+import { drawWaveform } from '../../lib/timeline/waveform'
 
 describe('ClipWaveform', () => {
   afterEach(() => {
@@ -9,25 +9,29 @@ describe('ClipWaveform', () => {
 
   it('resolves CSS token colors before drawing bars to the canvas', () => {
     const context = {
-      beginPath: vi.fn(),
-      clearRect: vi.fn(),
-      fillRect: vi.fn(),
+      beginPath: vi.fn<CanvasRenderingContext2D['beginPath']>(),
+      clearRect: vi.fn<CanvasRenderingContext2D['clearRect']>(),
+      fillRect: vi.fn<CanvasRenderingContext2D['fillRect']>(),
       fillStyle: '',
-      lineTo: vi.fn(),
+      lineTo: vi.fn<CanvasRenderingContext2D['lineTo']>(),
       lineWidth: 0,
-      moveTo: vi.fn(),
-      scale: vi.fn(),
-      stroke: vi.fn(),
+      moveTo: vi.fn<CanvasRenderingContext2D['moveTo']>(),
+      scale: vi.fn<CanvasRenderingContext2D['scale']>(),
+      stroke: vi.fn<CanvasRenderingContext2D['stroke']>(),
       strokeStyle: '',
     } as unknown as CanvasRenderingContext2D
     const canvas = {
-      getBoundingClientRect: vi.fn(() => ({ height: 20, width: 100 })),
-      getContext: vi.fn(() => context),
+      getBoundingClientRect: vi.fn<() => DOMRect>(
+        () => ({ height: 20, width: 100 }) as DOMRect,
+      ),
+      getContext: vi.fn<(contextId: '2d') => CanvasRenderingContext2D>(() => context),
     } as unknown as HTMLCanvasElement
 
     vi.stubGlobal('window', {
       devicePixelRatio: 1,
-      getComputedStyle: vi.fn(() => ({ color: 'rgba(201, 76, 39, 0.8)' })),
+      getComputedStyle: vi.fn<(element: Element) => CSSStyleDeclaration>(
+        () => ({ color: 'rgba(201, 76, 39, 0.8)' }) as CSSStyleDeclaration,
+      ),
     })
 
     drawWaveform(canvas, [0.5], 'hsl(var(--compare-a) / 0.8)')
