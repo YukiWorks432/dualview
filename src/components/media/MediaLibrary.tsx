@@ -18,7 +18,7 @@ import { cn, formatTime } from '../../lib/utils'
 import { useMediaStore } from '../../stores/mediaStore'
 import { useTimelineStore } from '../../stores/timelineStore'
 import type { MediaType, MediaStatus } from '../../types'
-import { Button, ElevatedSurface, IconButton } from '../ui'
+import { ElevatedSurface, IconButton } from '../ui'
 
 // Drag data type for media items
 export const MEDIA_DRAG_TYPE = 'application/x-dualview-media'
