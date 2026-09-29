@@ -3,10 +3,7 @@ import type { CSSProperties, HTMLAttributes, ReactNode } from 'react'
 
 import { Elevated } from '../../lib/elevated'
 import { SURFACE_BG, surfaceClasses } from '../../lib/surface-classes'
-import {
-  SurfaceProvider as UpstreamSurfaceProvider,
-  useSurface,
-} from '../../lib/surface-context'
+import { SurfaceProvider as UpstreamSurfaceProvider, useSurface } from '../../lib/surface-context'
 import { cn } from '../../lib/utils'
 
 export const SURFACE_MIN_LEVEL = 1
