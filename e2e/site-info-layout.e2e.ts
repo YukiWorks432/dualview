@@ -25,7 +25,7 @@ async function expectHeaderHasNoOverflow(page: import('@playwright/test').Page) 
 test('keeps site information header wrapping deterministic across responsive widths', async ({
   page,
 }) => {
-  await page.setViewportSize({ width: 900, height: 900 })
+  await page.setViewportSize({ width: 681, height: 900 })
   await page.goto('/privacy/')
   await expectHeaderHasNoOverflow(page)
 
