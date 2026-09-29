@@ -70,12 +70,14 @@ export function TransitionExportPanel({
   return (
     <>
       <div className="mb-2 flex items-center justify-between">
-        <span className="text-xs text-text-muted">{shaderCount} transition effects available</span>
-        {!webglSupported && <span className="text-xs text-error">WebGL not supported</span>}
+        <span className="text-xs text-muted-foreground">
+          {shaderCount} transition effects available
+        </span>
+        {!webglSupported && <span className="text-xs text-destructive">WebGL not supported</span>}
       </div>
 
       <fieldset>
-        <legend className="mb-2 text-sm text-text-secondary">Export Mode</legend>
+        <legend className="mb-2 text-sm text-muted-foreground">Export Mode</legend>
         <div className="grid grid-cols-2 gap-2">
           {[
             {
@@ -107,8 +109,8 @@ export function TransitionExportPanel({
               onClick={() => onExportModeChange(option.value as TransitionExportMode)}
               className={`surface-control-elevation ui-radius-md border px-3 py-2 text-sm transition-colors ${
                 exportMode === option.value
-                  ? 'border-accent bg-accent/10 text-accent'
-                  : 'surface-control text-text-secondary'
+                  ? 'border-primary bg-primary/10 text-primary'
+                  : 'surface-control text-muted-foreground'
               }`}
             >
               {option.label}
@@ -118,7 +120,7 @@ export function TransitionExportPanel({
       </fieldset>
 
       <fieldset>
-        <legend className="mb-2 text-sm text-text-secondary">Effect Category</legend>
+        <legend className="mb-2 text-sm text-muted-foreground">Effect Category</legend>
         <div className="grid max-h-32 grid-cols-4 gap-1 overflow-y-auto">
           {engines.map((option) => (
             <button
@@ -129,8 +131,8 @@ export function TransitionExportPanel({
               onClick={() => onEngineChange(option.id)}
               className={`surface-control-elevation flex flex-col items-center ui-radius-md border px-2 py-1.5 text-xs transition-colors ${
                 engine === option.id
-                  ? 'border-accent bg-accent/10 text-accent'
-                  : 'surface-control text-text-secondary'
+                  ? 'border-primary bg-primary/10 text-primary'
+                  : 'surface-control text-muted-foreground'
               }`}
             >
               <span className="text-base" aria-hidden="true">
@@ -143,7 +145,7 @@ export function TransitionExportPanel({
       </fieldset>
 
       <fieldset>
-        <legend className="mb-2 text-sm text-text-secondary">
+        <legend className="mb-2 text-sm text-muted-foreground">
           Variant ({variants.length} options)
         </legend>
         <div className="grid max-h-24 grid-cols-4 gap-1 overflow-y-auto">
@@ -155,8 +157,8 @@ export function TransitionExportPanel({
               onClick={() => onVariantChange(option.value)}
               className={`surface-control-elevation truncate ui-radius-md border px-2 py-1 text-xs transition-colors ${
                 variant === option.value
-                  ? 'border-accent bg-accent/10 text-accent'
-                  : 'surface-control text-text-secondary'
+                  ? 'border-primary bg-primary/10 text-primary'
+                  : 'surface-control text-muted-foreground'
               }`}
             >
               {option.label}
@@ -169,7 +171,7 @@ export function TransitionExportPanel({
         <div>
           <label
             htmlFor="transition-export-duration"
-            className="mb-2 block text-sm text-text-secondary"
+            className="mb-2 block text-sm text-muted-foreground"
           >
             Duration: {duration.toFixed(1)}s
           </label>
@@ -185,7 +187,7 @@ export function TransitionExportPanel({
         <div>
           <label
             htmlFor="transition-export-intensity"
-            className="mb-2 block text-sm text-text-secondary"
+            className="mb-2 block text-sm text-muted-foreground"
           >
             Intensity: {Math.round(intensity * 100)}%
           </label>
@@ -201,7 +203,7 @@ export function TransitionExportPanel({
       </div>
 
       <fieldset>
-        <legend className="mb-2 text-sm text-text-secondary">Format</legend>
+        <legend className="mb-2 text-sm text-muted-foreground">Format</legend>
         <div className="grid grid-cols-2 gap-2">
           {[
             { value: 'mp4', label: 'MP4' },
@@ -214,8 +216,8 @@ export function TransitionExportPanel({
               onClick={() => onFormatChange(option.value as TransitionExportFormat)}
               className={`surface-control-elevation ui-radius-md border px-3 py-2 text-sm transition-colors ${
                 format === option.value
-                  ? 'border-accent bg-accent/10 text-accent'
-                  : 'surface-control text-text-secondary'
+                  ? 'border-primary bg-primary/10 text-primary'
+                  : 'surface-control text-muted-foreground'
               }`}
             >
               {option.label}
@@ -243,11 +245,13 @@ export function TransitionExportPanel({
           role="status"
         >
           <div className="flex items-center justify-between text-xs">
-            <span className="ui-radius-sm bg-accent px-2 py-1 text-white">1. Initialize</span>
+            <span className="ui-radius-sm bg-primary px-2 py-1 text-white">1. Initialize</span>
             <div className="mx-2 h-px flex-1 bg-border" />
             <span
               className={`ui-radius-sm px-2 py-1 ${
-                progress >= 10 ? 'bg-accent text-white' : 'bg-border text-text-muted'
+                progress >= 10
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-border text-muted-foreground'
               }`}
             >
               2. Rendering
@@ -255,7 +259,9 @@ export function TransitionExportPanel({
             <div className="mx-2 h-px flex-1 bg-border" />
             <span
               className={`ui-radius-sm px-2 py-1 ${
-                progress >= 90 ? 'bg-accent text-white' : 'bg-border text-text-muted'
+                progress >= 90
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-border text-muted-foreground'
               }`}
             >
               3. Encode
@@ -264,8 +270,8 @@ export function TransitionExportPanel({
 
           <div className="space-y-1">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-text-secondary">{exportProgress.message}</span>
-              <span className={`font-medium ${progress >= 90 ? 'text-secondary' : 'text-accent'}`}>
+              <span className="text-muted-foreground">{exportProgress.message}</span>
+              <span className={`font-medium ${progress >= 90 ? 'text-success' : 'text-primary'}`}>
                 {Math.round(progress)}%
               </span>
             </div>
@@ -278,7 +284,7 @@ export function TransitionExportPanel({
               aria-valuenow={Math.round(progress)}
             >
               <div
-                className="h-full bg-gradient-to-r from-accent via-accent to-secondary transition-all duration-200"
+                className="h-full bg-gradient-to-r from-primary via-primary to-success transition-all duration-200"
                 style={{ width: `${progress}%` }}
               />
             </div>
@@ -287,12 +293,12 @@ export function TransitionExportPanel({
       )}
 
       {exportProgress.status === 'done' && (
-        <div className="ui-radius-lg space-y-4 border border-accent/40 bg-gradient-to-br from-accent/20 via-accent/10 to-secondary/10 p-6 text-center">
-          <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-accent/20">
-            <Check className="h-8 w-8 text-accent" strokeWidth={3} aria-hidden="true" />
+        <div className="ui-radius-lg space-y-4 border border-primary/40 bg-gradient-to-br from-primary/20 via-primary/10 to-success/10 p-6 text-center">
+          <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-primary/20">
+            <Check className="h-8 w-8 text-primary" strokeWidth={3} aria-hidden="true" />
           </div>
-          <h3 className="text-xl font-bold text-text-primary">Transition Export Complete!</h3>
-          <p className="text-sm text-text-secondary">
+          <h3 className="text-xl font-bold text-foreground">Transition Export Complete!</h3>
+          <p className="text-sm text-muted-foreground">
             Your {format.toUpperCase()} with {engine}/{variant} effect is ready
           </p>
           <div className="flex items-center justify-center gap-3 pt-2">
@@ -305,7 +311,7 @@ export function TransitionExportPanel({
       )}
 
       {error && (
-        <div className="flex items-center gap-2 text-sm text-error" role="alert">
+        <div className="flex items-center gap-2 text-sm text-destructive" role="alert">
           <AlertCircle className="h-4 w-4" aria-hidden="true" />
           <span>{error}</span>
         </div>

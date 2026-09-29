@@ -34,13 +34,13 @@ export function Header({ onExport, onShowShortcuts, onToggleSidebar }: HeaderPro
           variant="secondary"
           size="icon"
           onClick={onToggleSidebar}
-          className="show-mobile -ml-1 h-8 w-8 text-text-muted"
+          className="show-mobile -ml-1 h-8 w-8 text-muted-foreground"
           aria-label="Toggle sidebar"
         >
           <Menu className="h-4 w-4" aria-hidden="true" />
         </Button>
 
-        <h1 className="text-sm font-semibold text-text-primary">DualView</h1>
+        <h1 className="text-sm font-semibold text-foreground">DualView</h1>
 
         <div className="hide-mobile h-4 w-px bg-border" />
 
@@ -83,7 +83,7 @@ export function Header({ onExport, onShowShortcuts, onToggleSidebar }: HeaderPro
           rel="noopener noreferrer"
           aria-label="Privacy information (opens in a new tab)"
           title="Privacy information (opens in a new tab)"
-          className="surface-control ui-radius-md inline-flex h-7 items-center gap-1 border px-2 text-xs text-text-secondary transition-colors hover:text-text-primary"
+          className="surface-control ui-radius-md inline-flex h-7 items-center gap-1 border px-2 text-xs text-muted-foreground transition-colors hover:text-foreground"
         >
           <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
           <span className="hidden lg:inline">Privacy</span>
@@ -106,7 +106,7 @@ export function Header({ onExport, onShowShortcuts, onToggleSidebar }: HeaderPro
         <Button
           variant="secondary"
           size="sm"
-          className={`group h-7 gap-1 px-2 text-xs ${isPlaying ? 'surface-active text-text-primary hover:surface-active' : ''}`}
+          className={`group h-7 gap-1 px-2 text-xs ${isPlaying ? 'surface-active text-foreground hover:surface-active' : ''}`}
           onClick={togglePlay}
           title="Toggle playback (Space)"
         >

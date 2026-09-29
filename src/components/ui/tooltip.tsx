@@ -28,7 +28,7 @@ function TooltipContent({
         <ElevatedSurface asChild offset={1}>
           <TooltipPrimitive.Popup
             className={cn(
-              'ui-radius-sm border border-transparent px-2 py-1.5 text-xs text-text-primary data-[starting-style]:scale-[0.99] data-[starting-style]:opacity-0 data-[ending-style]:scale-[0.99] data-[ending-style]:opacity-0',
+              'ui-radius-sm border border-transparent px-2 py-1.5 text-xs text-foreground data-[starting-style]:scale-[0.99] data-[starting-style]:opacity-0 data-[ending-style]:scale-[0.99] data-[ending-style]:opacity-0',
               className,
             )}
             {...props}

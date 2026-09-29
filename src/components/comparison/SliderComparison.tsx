@@ -287,13 +287,13 @@ export function SliderComparison() {
       {/* Zoom indicator (IMG-002) */}
       {zoom > 1 && (
         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 ui-radius-md bg-black/70 backdrop-blur-sm px-3 py-1 flex items-center gap-2">
-          <span className="text-xs text-text-primary font-medium">{Math.round(zoom * 100)}%</span>
+          <span className="text-xs text-foreground font-medium">{Math.round(zoom * 100)}%</span>
           <button
             onClick={(e) => {
               e.stopPropagation()
               resetZoom()
             }}
-            className="text-[10px] text-text-muted hover:text-text-primary"
+            className="text-[10px] text-muted-foreground hover:text-foreground"
           >
             Reset
           </button>
@@ -398,7 +398,7 @@ export function SliderComparison() {
             className={cn(
               'flex-1 flex flex-col items-center justify-center transition-all duration-300 pointer-events-auto relative overflow-hidden',
               !mediaA && 'bg-surface',
-              dropZoneA.isDragOver && 'bg-accent/15 ring-2 ring-inset ring-accent',
+              dropZoneA.isDragOver && 'bg-compare-a/15 ring-2 ring-inset ring-compare-a',
             )}
             {...dropZoneA.dropZoneProps}
           >
@@ -406,7 +406,7 @@ export function SliderComparison() {
               <div
                 className={cn(
                   'flex flex-col items-center gap-4 text-center relative z-10',
-                  dropZoneA.isDragOver ? 'text-accent scale-105' : 'text-text-muted',
+                  dropZoneA.isDragOver ? 'text-compare-a scale-105' : 'text-muted-foreground',
                 )}
               >
                 {/* Large A badge */}
@@ -414,14 +414,14 @@ export function SliderComparison() {
                   className={cn(
                     'w-16 h-16 ui-radius-lg flex items-center justify-center transition-all duration-300',
                     dropZoneA.isDragOver
-                      ? 'bg-accent text-white'
-                      : 'bg-accent/10 border border-accent/20',
+                      ? 'bg-compare-a text-compare-a-foreground'
+                      : 'bg-compare-a/10 border border-compare-a/20',
                   )}
                 >
                   <span
                     className={cn(
                       'text-2xl font-bold',
-                      dropZoneA.isDragOver ? 'text-white' : 'text-accent',
+                      dropZoneA.isDragOver ? 'text-compare-a-foreground' : 'text-compare-a',
                     )}
                   >
                     A
@@ -435,14 +435,16 @@ export function SliderComparison() {
                   className={cn(
                     'surface-control surface-control-elevation ui-radius-lg border border-dashed p-4 transition-all duration-200 group',
                     dropZoneA.isDragOver
-                      ? 'border-accent bg-accent/10'
-                      : 'border-text-muted/20 hover:border-accent/50',
+                      ? 'border-compare-a bg-compare-a/10'
+                      : 'border-muted-foreground/20 hover:border-compare-a/50',
                   )}
                 >
                   <Upload
                     className={cn(
                       'w-8 h-8 transition-transform',
-                      dropZoneA.isDragOver ? 'animate-bounce text-accent' : 'group-hover:scale-105',
+                      dropZoneA.isDragOver
+                        ? 'animate-bounce text-compare-a'
+                        : 'group-hover:scale-105',
                     )}
                   />
                 </button>
@@ -451,10 +453,12 @@ export function SliderComparison() {
                     {mediaA ? 'Replace Media A' : 'Drop Media A'}
                   </span>
                   {!mediaA && (
-                    <span className="text-sm text-text-muted/60 block">Before / Original</span>
+                    <span className="text-sm text-muted-foreground/60 block">
+                      Before / Original
+                    </span>
                   )}
                   {!mediaA && (
-                    <span className="text-xs text-text-muted/40 block mt-2">
+                    <span className="text-xs text-muted-foreground/40 block mt-2">
                       Video, Image, or Audio
                     </span>
                   )}
@@ -467,7 +471,7 @@ export function SliderComparison() {
           {!mediaA && !mediaB && (
             <div className="w-px bg-border/50 relative">
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-background border border-border flex items-center justify-center">
-                <span className="text-xs text-text-muted">VS</span>
+                <span className="text-xs text-muted-foreground">VS</span>
               </div>
             </div>
           )}
@@ -477,7 +481,7 @@ export function SliderComparison() {
             className={cn(
               'flex-1 flex flex-col items-center justify-center transition-all duration-300 pointer-events-auto relative overflow-hidden',
               !mediaB && 'bg-surface/90',
-              dropZoneB.isDragOver && 'bg-secondary/15 ring-2 ring-inset ring-secondary',
+              dropZoneB.isDragOver && 'bg-compare-b/15 ring-2 ring-inset ring-compare-b',
             )}
             {...dropZoneB.dropZoneProps}
           >
@@ -485,7 +489,7 @@ export function SliderComparison() {
               <div
                 className={cn(
                   'flex flex-col items-center gap-4 text-center relative z-10',
-                  dropZoneB.isDragOver ? 'text-secondary scale-105' : 'text-text-muted',
+                  dropZoneB.isDragOver ? 'text-compare-b scale-105' : 'text-muted-foreground',
                 )}
               >
                 {/* Large B badge */}
@@ -493,14 +497,14 @@ export function SliderComparison() {
                   className={cn(
                     'w-16 h-16 ui-radius-lg flex items-center justify-center transition-all duration-300',
                     dropZoneB.isDragOver
-                      ? 'bg-secondary text-black'
-                      : 'bg-secondary/10 border border-secondary/20',
+                      ? 'bg-compare-b text-compare-b-foreground'
+                      : 'bg-compare-b/10 border border-compare-b/20',
                   )}
                 >
                   <span
                     className={cn(
                       'text-2xl font-bold',
-                      dropZoneB.isDragOver ? 'text-black' : 'text-secondary',
+                      dropZoneB.isDragOver ? 'text-compare-b-foreground' : 'text-compare-b',
                     )}
                   >
                     B
@@ -514,15 +518,15 @@ export function SliderComparison() {
                   className={cn(
                     'surface-control surface-control-elevation ui-radius-lg border border-dashed p-4 transition-all duration-200 group',
                     dropZoneB.isDragOver
-                      ? 'border-secondary bg-secondary/10'
-                      : 'border-text-muted/20 hover:border-secondary/50',
+                      ? 'border-compare-b bg-compare-b/10'
+                      : 'border-muted-foreground/20 hover:border-compare-b/50',
                   )}
                 >
                   <Upload
                     className={cn(
                       'w-8 h-8 transition-transform',
                       dropZoneB.isDragOver
-                        ? 'animate-bounce text-secondary'
+                        ? 'animate-bounce text-compare-b'
                         : 'group-hover:scale-105',
                     )}
                   />
@@ -532,10 +536,10 @@ export function SliderComparison() {
                     {mediaB ? 'Replace Media B' : 'Drop Media B'}
                   </span>
                   {!mediaB && (
-                    <span className="text-sm text-text-muted/60 block">After / Modified</span>
+                    <span className="text-sm text-muted-foreground/60 block">After / Modified</span>
                   )}
                   {!mediaB && (
-                    <span className="text-xs text-text-muted/40 block mt-2">
+                    <span className="text-xs text-muted-foreground/40 block mt-2">
                       Video, Image, or Audio
                     </span>
                   )}
@@ -555,10 +559,10 @@ export function SliderComparison() {
               e.stopPropagation()
               dropZoneA.openFileDialog()
             }}
-            className="surface-control ui-radius-lg absolute top-4 left-4 z-20 border p-2 text-white transition-colors group hover:bg-accent/80"
+            className="surface-control ui-radius-lg absolute top-4 left-4 z-20 border p-2 text-compare-a-foreground transition-colors group hover:bg-compare-a/80"
             title="Replace Media A"
           >
-            <Upload className="w-5 h-5 text-white group-hover:scale-110 transition-transform" />
+            <Upload className="w-5 h-5 text-compare-a-foreground group-hover:scale-110 transition-transform" />
           </button>
 
           {/* Upload button B (top-right) */}
@@ -567,10 +571,10 @@ export function SliderComparison() {
               e.stopPropagation()
               dropZoneB.openFileDialog()
             }}
-            className="surface-control ui-radius-lg absolute top-4 right-4 z-20 border p-2 text-white transition-colors group hover:bg-secondary/80"
+            className="surface-control ui-radius-lg absolute top-4 right-4 z-20 border p-2 text-compare-b-foreground transition-colors group hover:bg-compare-b/80"
             title="Replace Media B"
           >
-            <Upload className="w-5 h-5 text-white group-hover:scale-110 transition-transform" />
+            <Upload className="w-5 h-5 text-compare-b-foreground group-hover:scale-110 transition-transform" />
           </button>
         </>
       )}
@@ -578,10 +582,10 @@ export function SliderComparison() {
       {/* A/B badges when media is loaded */}
       {mediaA && mediaB && videoBounds && (
         <>
-          <div className="absolute bottom-4 left-4 z-20 ui-radius-sm px-2 py-0.5 bg-accent/80 text-white text-xs font-semibold">
+          <div className="absolute bottom-4 left-4 z-20 ui-radius-sm px-2 py-0.5 bg-compare-a/80 text-compare-a-foreground text-xs font-semibold">
             A
           </div>
-          <div className="absolute bottom-4 right-4 z-20 ui-radius-sm px-2 py-0.5 bg-secondary/80 text-black text-xs font-semibold">
+          <div className="absolute bottom-4 right-4 z-20 ui-radius-sm px-2 py-0.5 bg-compare-b/80 text-compare-b-foreground text-xs font-semibold">
             B
           </div>
         </>

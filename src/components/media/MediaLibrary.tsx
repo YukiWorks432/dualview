@@ -83,7 +83,7 @@ function StatusIndicator({
             className="surface-control ui-radius-sm border p-0.5"
             title="Retry"
           >
-            <RotateCcw className="w-3 h-3 text-text-muted hover:text-text-primary" />
+            <RotateCcw className="w-3 h-3 text-muted-foreground hover:text-foreground" />
           </button>
         )}
       </div>
@@ -171,7 +171,7 @@ export function MediaLibrary() {
     return (
       <>
         {before}
-        <span className="bg-accent/30 text-accent">{match}</span>
+        <span className="bg-primary/30 text-primary">{match}</span>
         {after}
       </>
     )
@@ -259,13 +259,13 @@ export function MediaLibrary() {
     return (
       <ElevatedSurface
         offset={1}
-        className="ui-radius-lg space-y-2 border border-border py-6 text-center text-text-muted"
+        className="ui-radius-lg space-y-2 border border-border py-6 text-center text-muted-foreground"
       >
         <div className="flex justify-center gap-2">
-          <Film className="h-4 w-4 text-accent/50" />
-          <Image className="h-4 w-4 text-secondary/50" />
+          <Film className="h-4 w-4 text-green-400/50" />
+          <Image className="h-4 w-4 text-blue-400/50" />
         </div>
-        <p className="text-sm font-medium text-text-secondary">No media yet</p>
+        <p className="text-sm font-medium text-muted-foreground">No media yet</p>
         <p className="text-xs">Drop files above to get started</p>
       </ElevatedSurface>
     )
@@ -275,7 +275,7 @@ export function MediaLibrary() {
     <div className="space-y-2">
       {/* Search Input */}
       <div className="relative">
-        <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-text-muted" />
+        <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
         <input
           ref={searchInputRef}
           type="text"
@@ -284,14 +284,14 @@ export function MediaLibrary() {
           onChange={(e) => setSearchQuery(e.target.value)}
           className={cn(
             'surface-control ui-radius-md w-full border px-7 py-1.5 text-xs',
-            'placeholder:text-text-muted text-text-primary',
-            'focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20',
+            'placeholder:text-muted-foreground text-foreground',
+            'focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20',
             'transition-colors',
           )}
         />
         {hasActiveSearch && (
           <button
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary"
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
             onClick={() => setSearchQuery('')}
             title="Clear search"
           >
@@ -315,8 +315,8 @@ export function MediaLibrary() {
               className={cn(
                 'ui-radius-md flex items-center gap-1 px-2 py-1 text-[10px] font-medium transition-colors',
                 isActive
-                  ? 'bg-accent text-white hover:bg-accent-hover'
-                  : 'surface-control text-text-muted hover:text-text-primary',
+                  ? 'bg-primary text-primary-foreground hover:bg-primary/80'
+                  : 'surface-control text-muted-foreground hover:text-foreground',
               )}
               onClick={(e) => handleFilterClick(config.type, e.ctrlKey || e.metaKey)}
               title={`${config.label} (Alt+${config.shortcut})${
@@ -337,7 +337,7 @@ export function MediaLibrary() {
         {/* Clear filters button when not showing 'all' */}
         {!activeFilters.has('all') && (
           <button
-            className="surface-control ui-radius-md flex items-center gap-1 border px-2 py-1 text-[10px] font-medium text-text-muted transition-colors hover:text-text-primary"
+            className="surface-control ui-radius-md flex items-center gap-1 border px-2 py-1 text-[10px] font-medium text-muted-foreground transition-colors hover:text-foreground"
             onClick={() => setActiveFilters(new Set(['all']))}
             title="Clear filters"
           >
@@ -355,7 +355,7 @@ export function MediaLibrary() {
                   'ui-radius-md flex items-center gap-1 px-2 py-1 text-[10px] font-medium transition-colors',
                   statusFilter === 'error'
                     ? 'bg-red-500/20 text-red-400'
-                    : 'surface-control border text-text-muted hover:text-red-400',
+                    : 'surface-control border text-muted-foreground hover:text-red-400',
                 )}
                 onClick={() => setStatusFilter(statusFilter === 'error' ? 'all' : 'error')}
                 title="Show failed files"
@@ -370,7 +370,7 @@ export function MediaLibrary() {
                   'ui-radius-md flex items-center gap-1 px-2 py-1 text-[10px] font-medium transition-colors',
                   statusFilter === 'processing'
                     ? 'bg-blue-500/20 text-blue-400'
-                    : 'surface-control border text-text-muted hover:text-blue-400',
+                    : 'surface-control border text-muted-foreground hover:text-blue-400',
                 )}
                 onClick={() =>
                   setStatusFilter(statusFilter === 'processing' ? 'all' : 'processing')
@@ -387,7 +387,7 @@ export function MediaLibrary() {
                   'ui-radius-md flex items-center gap-1 px-2 py-1 text-[10px] font-medium transition-colors',
                   statusFilter === 'pending'
                     ? 'bg-amber-500/20 text-amber-400'
-                    : 'surface-control border text-text-muted hover:text-amber-400',
+                    : 'surface-control border text-muted-foreground hover:text-amber-400',
                 )}
                 onClick={() => setStatusFilter(statusFilter === 'pending' ? 'all' : 'pending')}
                 title="Show pending files"
@@ -404,10 +404,10 @@ export function MediaLibrary() {
       {showFilterEmptyState && (
         <ElevatedSurface
           offset={1}
-          className="ui-radius-lg space-y-2 border border-border py-6 text-center text-text-muted"
+          className="ui-radius-lg space-y-2 border border-border py-6 text-center text-muted-foreground"
         >
           <Search className="w-8 h-8 mx-auto opacity-30" />
-          <p className="text-sm font-medium text-text-secondary">No matching media</p>
+          <p className="text-sm font-medium text-muted-foreground">No matching media</p>
           <p className="text-xs">
             {hasActiveSearch && hasActiveFilter
               ? `No ${Array.from(activeFilters)
@@ -420,7 +420,7 @@ export function MediaLibrary() {
                     .join(' or ')} files found`}
           </p>
           <button
-            className="text-xs text-accent hover:underline"
+            className="text-xs text-primary hover:underline"
             onClick={() => {
               setSearchQuery('')
               setActiveFilters(new Set(['all']))
@@ -473,7 +473,7 @@ export function MediaLibrary() {
             className={cn(
               'surface-interactive ui-radius-lg group relative overflow-hidden border transition-colors',
               canDrag ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer',
-              isSelected ? 'border-accent' : 'surface-border-hover border-transparent',
+              isSelected ? 'border-primary' : 'surface-border-hover border-transparent',
             )}
             onClick={() => (isSelected ? deselectFile(file.id) : selectFile(file.id))}
           >
@@ -492,7 +492,7 @@ export function MediaLibrary() {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="text-text-muted">
+                  <div className="text-muted-foreground">
                     {file.type === 'video' && <Film className="w-5 h-5" />}
                     {file.type === 'image' && <Image className="w-5 h-5" />}
                   </div>
@@ -508,7 +508,7 @@ export function MediaLibrary() {
               {/* Info */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <p className="text-xs font-medium text-text-primary truncate flex-1">
+                  <p className="text-xs font-medium text-foreground truncate flex-1">
                     {highlightMatch(file.name, searchQuery)}
                   </p>
                   {/* MEDIA-012: Status indicator */}
@@ -518,7 +518,7 @@ export function MediaLibrary() {
                     onRetry={file.status === 'error' ? () => retryProcessing(file.id) : undefined}
                   />
                 </div>
-                <div className="flex items-center gap-2 text-[10px] text-text-muted mt-0.5">
+                <div className="flex items-center gap-2 text-[10px] text-muted-foreground mt-0.5">
                   <span className="capitalize">{file.type}</span>
                   {file.duration && <span>{formatTime(file.duration)}</span>}
                   {file.width && file.height && (
@@ -555,7 +555,7 @@ export function MediaLibrary() {
                   <Plus
                     className={cn(
                       'w-3 h-3',
-                      canAddToTrack(file.type, 'a') ? 'text-orange-500' : 'text-text-muted',
+                      canAddToTrack(file.type, 'a') ? 'text-compare-a' : 'text-muted-foreground',
                     )}
                   />
                 </Button>
@@ -577,7 +577,7 @@ export function MediaLibrary() {
                   <Plus
                     className={cn(
                       'w-3 h-3',
-                      canAddToTrack(file.type, 'b') ? 'text-lime-400' : 'text-text-muted',
+                      canAddToTrack(file.type, 'b') ? 'text-compare-b' : 'text-muted-foreground',
                     )}
                   />
                 </Button>
@@ -591,7 +591,7 @@ export function MediaLibrary() {
                   }}
                   title="Remove"
                 >
-                  <Trash2 className="w-3 h-3 text-error" />
+                  <Trash2 className="w-3 h-3 text-destructive" />
                 </Button>
               </div>
             </div>

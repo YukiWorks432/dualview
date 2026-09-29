@@ -238,12 +238,12 @@ export function ClipContextMenu({ x, y, clipId, trackId, onClose }: ClipContextM
             onMouseLeave={() => setShowReplaceSubmenu(false)}
           >
             <button
-              className={`w-full ui-radius-sm px-3 py-2 flex items-center gap-2 text-sm text-text-primary hover:bg-surface-hover ${isLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
+              className={`w-full ui-radius-sm px-3 py-2 flex items-center gap-2 text-sm text-foreground hover:bg-surface-hover ${isLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
               disabled={isLocked}
             >
               <Replace className="w-4 h-4" />
               <span className="flex-1 text-left">Replace Media</span>
-              <ChevronRight className="w-3 h-3 text-text-muted" />
+              <ChevronRight className="w-3 h-3 text-muted-foreground" />
             </button>
 
             {/* Replace Media Submenu */}
@@ -253,7 +253,7 @@ export function ClipContextMenu({ x, y, clipId, trackId, onClose }: ClipContextM
                   {compatibleMedia.map((media) => (
                     <button
                       key={media.id}
-                      className="w-full ui-radius-sm px-3 py-1.5 flex items-center gap-2 text-sm text-text-primary hover:bg-surface-hover"
+                      className="w-full ui-radius-sm px-3 py-1.5 flex items-center gap-2 text-sm text-foreground hover:bg-surface-hover"
                       onClick={() => {
                         pushState()
                         replaceClipMedia(clipId, media.id, media.duration)
@@ -300,13 +300,13 @@ export function ClipContextMenu({ x, y, clipId, trackId, onClose }: ClipContextM
           onMouseLeave={() => setShowSpeedSubmenu(false)}
         >
           <button
-            className={`w-full ui-radius-sm px-3 py-2 flex items-center gap-2 text-sm text-text-primary hover:bg-surface-hover ${isLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
+            className={`w-full ui-radius-sm px-3 py-2 flex items-center gap-2 text-sm text-foreground hover:bg-surface-hover ${isLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
             disabled={isLocked}
           >
             <Gauge className="w-4 h-4" />
             <span className="flex-1 text-left">Speed</span>
-            <span className="text-xs text-accent font-mono">{currentSpeed}x</span>
-            <ChevronRight className="w-3 h-3 text-text-muted" />
+            <span className="text-xs text-primary font-mono">{currentSpeed}x</span>
+            <ChevronRight className="w-3 h-3 text-muted-foreground" />
           </button>
 
           {/* Speed Submenu */}
@@ -317,13 +317,13 @@ export function ClipContextMenu({ x, y, clipId, trackId, onClose }: ClipContextM
                   <button
                     key={opt.value}
                     className={`w-full ui-radius-sm px-3 py-1.5 flex items-center justify-between text-sm hover:bg-surface-hover ${
-                      currentSpeed === opt.value ? 'text-accent bg-accent/10' : 'text-text-primary'
+                      currentSpeed === opt.value ? 'text-primary bg-primary/10' : 'text-foreground'
                     }`}
                     onClick={() => setSpeed(opt.value)}
                   >
                     <span>{opt.label}</span>
                     {currentSpeed === opt.value && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-accent" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-primary" />
                     )}
                   </button>
                 ))}
@@ -394,12 +394,12 @@ function MenuButton({
         w-full ui-radius-sm px-3 py-2 flex items-center gap-2 text-sm
         ${
           disabled
-            ? 'text-text-muted cursor-not-allowed'
+            ? 'text-muted-foreground cursor-not-allowed'
             : danger
-              ? 'text-error hover:bg-error/10'
+              ? 'text-destructive hover:bg-destructive/10'
               : active
-                ? 'text-accent bg-accent/10'
-                : 'text-text-primary hover:bg-surface-hover'
+                ? 'text-primary bg-primary/10'
+                : 'text-foreground hover:bg-surface-hover'
         }
       `}
       disabled={disabled}
@@ -407,7 +407,7 @@ function MenuButton({
     >
       <Icon className="w-4 h-4" />
       <span className="flex-1 text-left">{label}</span>
-      {shortcut && <span className="text-xs text-text-muted">{shortcut}</span>}
+      {shortcut && <span className="text-xs text-muted-foreground">{shortcut}</span>}
     </button>
   )
 }
