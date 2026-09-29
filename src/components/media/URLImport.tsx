@@ -131,13 +131,11 @@ export function URLImport({ isOpen, onClose }: URLImportProps) {
                 onKeyDown={(e) => e.key === 'Enter' && handleImport()}
               />
               <p className="text-xs text-text-muted mt-1">
-                Direct HTTP(S) media URLs only. The source must allow cross-origin browser access
-                (CORS).
+                Direct HTTP(S) media URLs only. Some sites may block direct browser access.
               </p>
               <div className="ui-radius-md mt-3 border border-border/60 p-3 text-xs leading-relaxed text-text-muted">
-                Importing from a URL connects your browser directly to the site you enter. That
-                destination, and any redirect destination, can receive your IP address and the
-                requested URL. The imported media is compared and analyzed locally on this device.
+                URL import connects directly to the site you enter to fetch that media. The
+                imported media is processed locally, and your other local files are not sent there.
                 <a
                   href="/privacy/#external-communication"
                   target="_blank"
@@ -145,7 +143,7 @@ export function URLImport({ isOpen, onClose }: URLImportProps) {
                   aria-label="URL import privacy details (opens in a new tab)"
                   className="mt-2 inline-flex items-center gap-1 text-accent hover:underline"
                 >
-                  Communication details
+                  Privacy details
                   <ExternalLink className="h-3 w-3" aria-hidden="true" />
                 </a>
               </div>
