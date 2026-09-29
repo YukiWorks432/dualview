@@ -28,7 +28,7 @@
     "deploy": "wrangler deploy",
     "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test:run && pnpm build",
     "format": "oxfmt .",
-    "format:check": "oxfmt src/components/comparison/WebGLComparison.tsx && git --no-pager diff -- src/components/comparison/WebGLComparison.tsx && exit 1",
+    "format:check": "oxfmt --check .",
     "lint": "oxlint .",
     "lint:fix": "oxlint . --fix",
     "typecheck": "tsc -b --pretty false",

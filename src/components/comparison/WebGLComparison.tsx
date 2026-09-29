@@ -951,9 +951,7 @@ export function WebGLComparison() {
 
           <p className="mt-3 text-[10px] text-muted-foreground">
             Current mode:{' '}
-            <span className="text-primary">
-              {modeInfo?.label || webglComparisonSettings.mode}
-            </span>
+            <span className="text-primary">{modeInfo?.label || webglComparisonSettings.mode}</span>
           </p>
         </div>
       </div>
@@ -1040,9 +1038,7 @@ export function WebGLComparison() {
         <span className="ml-2 font-medium text-primary">
           {modeInfo?.label || webglComparisonSettings.mode}
         </span>
-        {webglComparisonSettings.flipAB && (
-          <span className="ml-2 text-primary">(A/B Flipped)</span>
-        )}
+        {webglComparisonSettings.flipAB && <span className="ml-2 text-primary">(A/B Flipped)</span>}
       </div>
 
       {/* WEBGL-001: Metrics Overlay */}
