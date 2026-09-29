@@ -6,6 +6,10 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   worker: { format: 'es' },
+  // Worker-only imports must be discovered before the first analysis to avoid a dev reload.
+  optimizeDeps: {
+    include: ['mediabunny', '@mediabunny/prores', 'pixelmatch'],
+  },
   build: {
     license: {
       fileName: 'licenses/third-party.md',

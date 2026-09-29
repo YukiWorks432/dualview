@@ -12,6 +12,7 @@ jobs:
   prepare:
     if: github.repository == 'YukiWorks432/dualview' && github.ref == 'refs/heads/feat/timeline-difference-intervals'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
         with:
@@ -23,17 +24,18 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 24
-      - name: Apply verified integration points
+          cache: pnpm
+      - name: Apply source corrections
         run: node scripts/prepare-difference-branch.mjs
-      - name: Resolve added dependencies
-        run: pnpm install --no-frozen-lockfile
-      - name: Format feature files and publish source changes only
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Format and publish source changes only
         shell: bash
         run: |
-          pnpm exec oxfmt src/lib/difference src/stores/differenceStore.ts src/stores/differenceStore.test.ts src/workers/difference.worker.ts src/hooks/useDifferenceLifecycle.ts src/components/timeline/DifferenceControls.tsx src/components/timeline/DifferencePlot.tsx src/components/comparison/TemporalDiffGraph.tsx src/App.tsx src/components/timeline/Timeline.tsx tests/browser/difference.e2e.ts playwright.config.ts scripts/create-difference-fixtures.mjs scripts/prepare-difference-branch.mjs docs/timeline-differences.md package.json vite.config.ts public/licenses/additional-notices.md README.md .github/workflows/ci.yml .github/workflows/prepare-difference.yml
-          git add src/lib/difference src/stores/differenceStore.ts src/stores/differenceStore.test.ts src/workers/difference.worker.ts src/hooks/useDifferenceLifecycle.ts src/components/timeline/DifferenceControls.tsx src/components/timeline/DifferencePlot.tsx src/components/comparison/TemporalDiffGraph.tsx src/App.tsx src/components/timeline/Timeline.tsx tests/browser/difference.e2e.ts playwright.config.ts scripts/create-difference-fixtures.mjs scripts/prepare-difference-branch.mjs docs/timeline-differences.md package.json pnpm-lock.yaml vite.config.ts public/licenses/additional-notices.md README.md .gitignore
+          pnpm exec oxfmt src/lib/difference src/stores/differenceStore.test.ts src/components/timeline/DifferenceControls.tsx tests/browser/difference.e2e.ts scripts/prepare-difference-branch.mjs vite.config.ts .github/workflows/prepare-difference.yml
+          git add src/lib/difference src/stores/differenceStore.test.ts src/components/timeline/DifferenceControls.tsx tests/browser/difference.e2e.ts scripts/prepare-difference-branch.mjs vite.config.ts
           if ! git diff --cached --quiet; then
-            git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'chore: integrate and format timeline difference analysis'
+            git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'fix: validate comparison timing and keep initial analysis stable'
             git push origin HEAD:refs/heads/feat/timeline-difference-intervals
           fi
           echo "VALIDATED_SOURCE_HEAD=$(git rev-parse HEAD)"
@@ -41,7 +43,15 @@ jobs:
         run: pnpm check
       - name: Set up browser validation
         run: |
-          sudo apt-get update && sudo apt-get install -y ffmpeg
+          sudo apt-get -qq update && sudo apt-get -qq install -y ffmpeg
           pnpm exec playwright install --with-deps chromium
       - name: Run actual video tests
         run: pnpm test:browser
+      - name: Preserve browser failure evidence
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: difference-browser-failure
+          path: test-results/
+          if-no-files-found: ignore
+          retention-days: 7
