@@ -12,6 +12,18 @@ export function getFrameObservationAnchor(
   observations: readonly FrameTimeObservation[],
   fallbackTime: number,
 ): number {
+  const intervalRanges = observations.flatMap((observation) =>
+    observation.kind === 'interval' ? [observation.range] : [],
+  )
+  if (intervalRanges.length > 1) {
+    const commonStart = Math.max(...intervalRanges.map(({ startTime }) => startTime))
+    const commonEnd = Math.min(...intervalRanges.map(({ endTime }) => endTime))
+    if (commonEnd > commonStart) {
+      if (fallbackTime >= commonStart && fallbackTime < commonEnd) return fallbackTime
+      return (commonStart + commonEnd) / 2
+    }
+  }
+
   const observation = observations.find(({ kind }) => kind !== 'unknown')
   if (!observation) return fallbackTime
 

@@ -68,15 +68,17 @@ describe('difference frame synchronization', () => {
   })
 
   it('accepts overlapping frames from different frame rates at the requested time', () => {
-    expect(
-      areFrameObservationsSynchronized(
-        [intervalObservation(5, 5.0417), intervalObservation(5.0333, 5.0667)],
-        5.037,
-        0.02,
-        0,
-        0.001,
-      ),
-    ).toBe(true)
+    const observations = [
+      intervalObservation(5, 5.0417),
+      intervalObservation(5.0333, 5.0667),
+    ] as const
+
+    for (const pair of [observations, [...observations].reverse()]) {
+      const anchor = getFrameObservationAnchor(pair, 5.037)
+
+      expect(anchor).toBe(5.037)
+      expect(areFrameObservationsSynchronized(pair, anchor, 0.02, 0, 0.001)).toBe(true)
+    }
   })
 
   it('accepts a video timestamp that falls inside a decoded frame interval', () => {
