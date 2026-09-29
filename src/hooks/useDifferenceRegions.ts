@@ -199,6 +199,10 @@ export function useDifferenceRegions({
   ].join('|')
   signatureRef.current = signature
 
+  useEffect(() => {
+    setRegions([])
+  }, [signature])
+
   const notifyFrameReady = useCallback(() => {
     setFrameRevision((revision) => revision + 1)
   }, [])
