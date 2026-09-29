@@ -79,17 +79,79 @@ test('calibrates compression-only differences on the default thresholds', async 
   const laneWidth = await lane.evaluate((canvas) =>
     Number.parseFloat(canvas.parentElement?.style.width ?? '0'),
   )
-  const titles: string[] = []
-  for (let index = 0; index < 12; index++) {
-    await lane.hover({ position: { x: (index + 0.5) * (laneWidth / 12), y: 16 } })
-    titles.push((await lane.getAttribute('title')) ?? '')
-  }
-  expect(titles).toHaveLength(12)
+  const frameCount = 45
+  const titles = await lane.evaluate(
+    async (canvas, { frameCount, laneWidth }) => {
+      const rect = canvas.getBoundingClientRect()
+      const sampledTitles: string[] = []
+      for (let index = 0; index < frameCount; index++) {
+        const clientX = rect.left + (index + 0.5) * (laneWidth / frameCount)
+        canvas.dispatchEvent(
+          new MouseEvent('mousemove', { bubbles: true, clientX, clientY: rect.top + 16 }),
+        )
+        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
+        sampledTitles.push(canvas.title)
+      }
+      return sampledTitles
+    },
+    { frameCount, laneWidth },
+  )
+  expect(titles).toHaveLength(frameCount)
   const measuredRates = titles.map((title) => {
     const match = /Frame difference: ([\d.]+)%/.exec(title)
     expect(match, title).not.toBeNull()
     return Number(match?.[1] ?? 0)
   })
-  expect(Math.max(...measuredRates)).toBeLessThan(2)
+  const peakRate = Math.max(...measuredRates)
+  console.log(
+    `Compression calibration peak across ${frameCount} source frames: ${peakRate.toFixed(2)}%`,
+  )
+  expect(peakRate).toBeLessThan(2)
   await expect(page.getByRole('button', { name: 'Next highlighted interval' })).toBeDisabled()
+})
+
+test('recomputes compression-only highlights when the area threshold changes', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Hide filmstrip' }).click()
+
+  await uploadToTrack(page, 'Media A', 'pattern-quality-high.webm')
+  await uploadToTrack(page, 'Media B', 'pattern-quality-low.webm')
+  await page.getByRole('button', { name: 'Analyze', exact: true }).click()
+  await expect(page.getByText('Complete', { exact: true }).first()).toBeVisible({ timeout: 60_000 })
+
+  const lane = page.getByRole('img', { name: /Read-only A\/B difference lane/ })
+  const laneWidth = await lane.evaluate((canvas) =>
+    Number.parseFloat(canvas.parentElement?.style.width ?? '0'),
+  )
+  const titles = await lane.evaluate(async (canvas, laneWidth) => {
+    const rect = canvas.getBoundingClientRect()
+    const sampledTitles: string[] = []
+    for (let index = 0; index < 12; index++) {
+      const clientX = rect.left + (index + 0.5) * (laneWidth / 12)
+      canvas.dispatchEvent(
+        new MouseEvent('mousemove', { bubbles: true, clientX, clientY: rect.top + 16 }),
+      )
+      await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
+      sampledTitles.push(canvas.title)
+    }
+    return sampledTitles
+  }, laneWidth)
+  const measuredRates = titles.map((title) => {
+    const match = /Frame difference: ([\d.]+)%/.exec(title)
+    expect(match, title).not.toBeNull()
+    return Number(match?.[1] ?? 0)
+  })
+  const peakRate = Math.max(...measuredRates)
+  console.log(`Generated-pattern compression calibration peak: ${peakRate.toFixed(2)}%`)
+  expect(peakRate).toBeGreaterThan(2)
+  const nextInterval = page.getByRole('button', { name: 'Next highlighted interval' })
+  await expect(nextInterval).toBeEnabled()
+
+  const areaThreshold = page.getByRole('slider', { name: 'Highlight area threshold' })
+  await areaThreshold.focus()
+  for (let step = 0; step < 6; step++) await areaThreshold.press('ArrowRight')
+  await expect(areaThreshold).toHaveValue('0.05')
+  await expect(page.getByText('Complete', { exact: true }).first()).toBeVisible()
+  await expect(nextInterval).toBeDisabled()
 })
