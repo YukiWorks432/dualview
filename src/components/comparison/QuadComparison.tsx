@@ -48,13 +48,8 @@ function Quadrant({
   const { getFile } = useMediaStore()
   const { tracks } = useTimelineStore()
   const { currentTime } = usePlaybackStore()
-  const {
-    isDragOver,
-    fileInputRef,
-    openFileDialog,
-    handleFileInputChange,
-    dropZoneProps,
-  } = useDropZone({ trackType: index < 2 ? 'a' : 'b' })
+  const { isDragOver, fileInputRef, openFileDialog, handleFileInputChange, dropZoneProps } =
+    useDropZone({ trackType: index < 2 ? 'a' : 'b' })
 
   // Get media file
   const media = mediaId ? getFile(mediaId) : null
