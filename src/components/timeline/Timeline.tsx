@@ -600,54 +600,49 @@ export function Timeline() {
           <div className="flex items-center gap-1">
             {/* Core transport - most used actions grouped together */}
             <div className="flex items-center ui-radius-md bg-surface p-0.5 gap-0.5">
-              <Button
+              <IconButton
                 variant="secondary"
-                size="icon"
                 onClick={() => seek(0)}
                 title="Go to start (Home)"
                 className="h-7 w-7"
               >
                 <SkipBack className="w-3.5 h-3.5" />
-              </Button>
-              <Button
+              </IconButton>
+              <IconButton
                 variant="secondary"
-                size="icon"
                 onClick={() => stepFrame(-1)}
                 disabled={isPlaying}
                 title="Previous frame (←)"
                 className="h-7 w-7"
               >
                 <ChevronLeft className="w-3.5 h-3.5" />
-              </Button>
+              </IconButton>
               {/* Primary action - Von Restorff Effect */}
-              <Button
+              <IconButton
                 variant="secondary"
-                size="icon"
                 onClick={togglePlay}
                 title="Play/Pause (Space)"
                 className={`h-8 w-8 ${isPlaying ? 'bg-primary/20 text-primary' : ''}`}
               >
                 {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-              </Button>
-              <Button
+              </IconButton>
+              <IconButton
                 variant="secondary"
-                size="icon"
                 onClick={() => stepFrame(1)}
                 disabled={isPlaying}
                 title="Next frame (→)"
                 className="h-7 w-7"
               >
                 <ChevronRight className="w-3.5 h-3.5" />
-              </Button>
-              <Button
+              </IconButton>
+              <IconButton
                 variant="secondary"
-                size="icon"
                 onClick={() => seek(duration)}
                 title="Go to end (End)"
                 className="h-7 w-7"
               >
                 <SkipForward className="w-3.5 h-3.5" />
-              </Button>
+              </IconButton>
             </div>
 
             {/* Time display - Goal-Gradient Effect: Show progress */}
@@ -711,15 +706,14 @@ export function Timeline() {
           {/* Right: Tools and zoom - Simplified by default */}
           <div className="flex items-center gap-1">
             {/* FILMSTRIP-002: Toggle filmstrip view */}
-            <Button
+            <IconButton
               variant="secondary"
-              size="icon"
               onClick={() => setShowFilmstrip(!showFilmstrip)}
               title={showFilmstrip ? 'Hide filmstrip' : 'Show filmstrip'}
               className={`hidden md:flex h-7 w-7 ${showFilmstrip ? 'bg-primary/10 text-primary' : ''}`}
             >
               <Video className="w-3.5 h-3.5" />
-            </Button>
+            </IconButton>
 
             {/* Advanced tools toggle - Cognitive Load reduction (hidden on mobile) */}
             <Button
@@ -738,15 +732,14 @@ export function Timeline() {
               <>
                 {/* Loop controls */}
                 <div className="flex items-center gap-0.5 ui-radius-md bg-surface p-0.5 ml-1">
-                  <Button
+                  <IconButton
                     variant="secondary"
-                    size="icon"
                     onClick={() => (loopRegion ? clearLoop() : setLoopIn())}
                     title={loopRegion ? 'Clear loop (Esc)' : 'Set loop in (I/O)'}
                     className={`h-7 w-7 ${loopRegion ? 'bg-primary/20 text-primary' : ''}`}
                   >
                     <Repeat className="w-3.5 h-3.5" />
-                  </Button>
+                  </IconButton>
                   {loopRegion && (
                     <span className="text-[10px] text-primary font-mono px-1">
                       {formatTime(loopRegion.inPoint)}→{formatTime(loopRegion.outPoint)}
@@ -761,9 +754,8 @@ export function Timeline() {
                     !selectedClipId && 'opacity-40',
                   )}
                 >
-                  <Button
+                  <IconButton
                     variant="secondary"
-                    size="icon"
                     onClick={() => {
                       if (selectedClipId) {
                         const track = tracks.find((t) =>
@@ -780,10 +772,9 @@ export function Timeline() {
                     className="h-7 w-7"
                   >
                     <Scissors className="w-3.5 h-3.5" />
-                  </Button>
-                  <Button
+                  </IconButton>
+                  <IconButton
                     variant="secondary"
-                    size="icon"
                     onClick={() => {
                       if (selectedClipId) {
                         const track = tracks.find((t) =>
@@ -800,14 +791,13 @@ export function Timeline() {
                     className="h-7 w-7"
                   >
                     <Copy className="w-3.5 h-3.5" />
-                  </Button>
+                  </IconButton>
                 </div>
 
                 {/* Toggle tools */}
                 <div className="flex items-center gap-0.5">
-                  <Button
+                  <IconButton
                     variant="secondary"
-                    size="icon"
                     onClick={() => addMarker()}
                     title="Add marker (M)"
                     className="h-7 w-7 relative"
@@ -818,40 +808,38 @@ export function Timeline() {
                         {markers.length}
                       </span>
                     )}
-                  </Button>
-                  <Button
+                  </IconButton>
+                  <IconButton
                     variant="secondary"
-                    size="icon"
                     onClick={toggleSnap}
                     title="Snap to edges (N)"
                     className={`h-7 w-7 ${snapEnabled ? 'bg-primary/20 text-primary' : ''}`}
                   >
                     <Magnet className="w-3.5 h-3.5" />
-                  </Button>
-                  <Button
+                  </IconButton>
+                  <IconButton
                     variant="secondary"
-                    size="icon"
                     onClick={toggleRipple}
                     title="Ripple edit (R)"
                     className={`h-7 w-7 ${rippleEnabled ? 'bg-primary/20 text-primary' : ''}`}
                   >
                     <ArrowRightLeft className="w-3.5 h-3.5" />
-                  </Button>
+                  </IconButton>
                 </div>
               </>
             )}
 
             {/* Zoom controls - always visible */}
             <div className="flex items-center gap-0.5 ui-radius-md bg-surface p-0.5 ml-1 md:ml-2">
-              <Button variant="secondary" size="icon" onClick={zoomOut} className="h-7 w-7">
+              <IconButton variant="secondary" onClick={zoomOut} className="h-7 w-7">
                 <ZoomOut className="w-3.5 h-3.5" />
-              </Button>
+              </IconButton>
               <span className="hidden sm:inline text-[10px] text-muted-foreground w-10 text-center font-mono">
                 {Math.round(zoom * 100)}%
               </span>
-              <Button variant="secondary" size="icon" onClick={zoomIn} className="h-7 w-7">
+              <IconButton variant="secondary" onClick={zoomIn} className="h-7 w-7">
                 <ZoomIn className="w-3.5 h-3.5" />
-              </Button>
+              </IconButton>
             </div>
           </div>
         </div>
