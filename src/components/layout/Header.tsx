@@ -30,24 +30,22 @@ export function Header({ onExport, onShowShortcuts, onToggleSidebar }: HeaderPro
   return (
     <header className="surface-wash flex h-12 items-center justify-between border-b border-border px-2 min-[769px]:h-10 md:px-3">
       <div className="flex items-center gap-1.5 md:gap-2">
-        <Button
+        <IconButton
           variant="secondary"
-          size="icon"
           onClick={onToggleSidebar}
           className="show-mobile -ml-1 h-8 w-8 text-muted-foreground"
           aria-label="Toggle sidebar"
         >
           <Menu className="h-4 w-4" aria-hidden="true" />
-        </Button>
+        </IconButton>
 
         <h1 className="text-sm font-semibold text-foreground">DualView</h1>
 
         <div className="hide-mobile h-4 w-px bg-border" />
 
         <div className="hide-mobile flex items-center gap-0.5">
-          <Button
+          <IconButton
             variant="secondary"
-            size="icon"
             aria-label="Undo"
             title="Undo (Ctrl+Z)"
             onClick={undo}
@@ -55,10 +53,9 @@ export function Header({ onExport, onShowShortcuts, onToggleSidebar }: HeaderPro
             className="h-7 w-7"
           >
             <Undo2 className="h-3.5 w-3.5" aria-hidden="true" />
-          </Button>
-          <Button
+          </IconButton>
+          <IconButton
             variant="secondary"
-            size="icon"
             aria-label="Redo"
             title="Redo (Ctrl+Shift+Z)"
             onClick={redo}
@@ -66,7 +63,7 @@ export function Header({ onExport, onShowShortcuts, onToggleSidebar }: HeaderPro
             className="h-7 w-7"
           >
             <Redo2 className="h-3.5 w-3.5" aria-hidden="true" />
-          </Button>
+          </IconButton>
         </div>
       </div>
 
@@ -90,16 +87,15 @@ export function Header({ onExport, onShowShortcuts, onToggleSidebar }: HeaderPro
           <ExternalLink className="h-2.5 w-2.5" aria-hidden="true" />
         </a>
 
-        <Button
+        <IconButton
           variant="secondary"
-          size="icon"
           aria-label="Keyboard shortcuts"
           title="Keyboard Shortcuts (?)"
           onClick={onShowShortcuts}
           className="hide-mobile h-7 w-7"
         >
           <Keyboard className="h-3.5 w-3.5" aria-hidden="true" />
-        </Button>
+        </IconButton>
 
         <div className="hide-mobile mx-0.5 h-4 w-px bg-border" />
 
