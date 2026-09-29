@@ -139,9 +139,7 @@ function getAutoAnalysisReadiness(): AutoAnalysisReadiness {
   if (!trackA?.clips.length || !trackB?.clips.length) return 'empty'
 
   const mediaFiles = useMediaStore.getState().files
-  if (
-    mediaFiles.some((media) => media.status === 'pending' || media.status === 'processing')
-  ) {
+  if (mediaFiles.some((media) => media.status === 'pending' || media.status === 'processing')) {
     return 'blocked'
   }
 
