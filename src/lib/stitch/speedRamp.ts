@@ -1,5 +1,5 @@
-import { EASE_PRESETS, evaluateEaseCurve } from './easeCurve'
 import type { SpeedRamp } from '../../types'
+import { EASE_PRESETS, evaluateEaseCurve } from './easeCurve'
 
 // Default speed ramp (no ramping)
 export const DEFAULT_SPEED_RAMP: SpeedRamp = {

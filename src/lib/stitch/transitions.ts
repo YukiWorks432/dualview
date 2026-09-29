@@ -1,5 +1,5 @@
-import { EASE_PRESETS } from './easeCurve'
 import type { ClipTransition } from '../../types'
+import { EASE_PRESETS } from './easeCurve'
 
 // Transition effect definition
 export interface TransitionEffect {

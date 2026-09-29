@@ -29,13 +29,7 @@ function useStableFilmstripConfig(options: UseFilmstripOptions): {
   enabled: boolean
   config: FilmstripConfig
 } {
-  const {
-    enabled = true,
-    frameInterval,
-    thumbnailWidth,
-    thumbnailHeight,
-    maxFrames,
-  } = options
+  const { enabled = true, frameInterval, thumbnailWidth, thumbnailHeight, maxFrames } = options
   const config = useMemo(
     () => ({ frameInterval, thumbnailWidth, thumbnailHeight, maxFrames }),
     [frameInterval, thumbnailWidth, thumbnailHeight, maxFrames],
