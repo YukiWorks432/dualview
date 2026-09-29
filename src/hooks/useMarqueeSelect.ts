@@ -40,7 +40,7 @@ export function useMarqueeSelect({
 
       // Check if clicking on a clip (don't start selection)
       const target = e.target as HTMLElement
-      if (target.closest('[data-clip]')) return
+      if (target.closest('[data-clip]') || target.closest('[data-marquee-ignore]')) return
 
       const container = containerRef.current
       if (!container) return

@@ -10,6 +10,7 @@ import { SurfaceProvider } from './components/ui'
 import { KeyboardShortcutsHelp } from './components/ui/KeyboardShortcutsHelp'
 import { getComparisonModeByKeyboardCode } from './config/comparisonModes'
 import { useKeyboardShortcutsHelp } from './hooks/useKeyboardShortcutsHelp'
+import { useTimelineDiffLifecycle } from './hooks/useTimelineDiff'
 import { isSupportedMediaFile } from './lib/media/fileTypes'
 import { captureCanvasScreenshot, downloadBlob } from './lib/screenshotExport'
 import { useHistoryStore } from './stores/historyStore'
@@ -24,6 +25,8 @@ const ExportDialog = lazy(() =>
 )
 
 export default function App() {
+  useTimelineDiffLifecycle()
+
   const [isExportOpen, setIsExportOpen] = useState(false)
   const [isTimelineVisible, setIsTimelineVisible] = useState(true)
   const [isSidebarVisible, setIsSidebarVisible] = useState(true)
