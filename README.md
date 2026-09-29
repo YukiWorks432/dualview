@@ -71,7 +71,7 @@
 > [!NOTE]
 > **DualView was originally created by [Gökay Aydoğan](https://github.com/gokayfem) in
 > [gokayfem/dualview](https://github.com/gokayfem/dualview).**
-> This repository is a maintained fork by [YukiWorks432](https://github.com/YukiWorks432),
+> This repository is a maintained fork by [花雪 / HanaYuki](https://github.com/YukiWorks432),
 > continuing that work with modernization, maintenance, and ongoing development while preserving
 > attribution to the original project.
 
@@ -80,7 +80,7 @@
 | **Original project** | [gokayfem/dualview](https://github.com/gokayfem/dualview) · [dualview.ai](https://dualview.ai)                                                     |
 | **Original creator** | [Gökay Aydoğan](https://github.com/gokayfem) · [@gokayfem](https://x.com/gokayfem)                                                                 |
 | **Maintained fork**  | [dualview.yukiworks432.workers.dev](https://dualview.yukiworks432.workers.dev) · [YukiWorks432/dualview](https://github.com/YukiWorks432/dualview) |
-| **Fork maintainer**  | [YukiWorks432](https://github.com/YukiWorks432) · [@YuK1_Works](https://x.com/YuK1_Works) · [hanayuki.xyz](https://hanayuki.xyz)                   |
+| **Fork maintainer**  | [花雪 / HanaYuki](https://github.com/YukiWorks432) · [@YuK1_Works](https://x.com/YuK1_Works) · [hanayuki.xyz](https://hanayuki.xyz)                |
 
 ---
 
@@ -502,6 +502,21 @@ Toggle with `G` key.
 - **Templates:** Built-in presets + custom templates
 - **Metadata:** Title, description, tags
 
+Local files added to DualView are processed in the browser and are not uploaded to the operator.
+Projects and media are saved in this browser so you can continue later.
+
+URL import connects directly to the URL you enter to fetch that media. Other local files already
+loaded in DualView are not sent to that destination.
+
+A downloaded `.dualview` project includes the media itself, so share it with the same care as the
+source files.
+
+Published site information:
+[Privacy](https://dualview.yukiworks432.workers.dev/privacy/) ·
+[Terms](https://dualview.yukiworks432.workers.dev/terms/) ·
+[About](https://dualview.yukiworks432.workers.dev/about/) ·
+[Licenses](https://dualview.yukiworks432.workers.dev/licenses/)
+
 ---
 
 ## 🛠️ Tech Stack
@@ -707,7 +722,7 @@ disabled, while current-frame Image and PDF export remain available.
 
 This repository is a maintained fork of the original
 [gokayfem/dualview](https://github.com/gokayfem/dualview) project. The citation metadata keeps
-credit to original creator Gökay Aydoğan while identifying YukiWorks432 as the maintainer of this
+credit to original creator Gökay Aydoğan while identifying 花雪 / HanaYuki as the maintainer of this
 fork.
 
 If your work depends on this maintained fork, GitHub's **Cite this repository** action uses
@@ -715,7 +730,7 @@ If your work depends on this maintained fork, GitHub's **Cite this repository** 
 
 ```bibtex
 @software{Aydogan_YukiWorks432_DualView_2026,
-  author  = {Aydoğan, Gökay and {YukiWorks432}},
+  author  = {Aydoğan, Gökay and {花雪 / HanaYuki}},
   title   = {DualView},
   version = {1.0.0},
   year    = {2026},
@@ -734,16 +749,17 @@ If your work depends on this maintained fork, GitHub's **Cite this repository** 
 
 DualView's original work remains credited to **Gökay Aydoğan** and the
 [gokayfem/dualview](https://github.com/gokayfem/dualview) project. This fork is maintained by
-**YukiWorks432**.
+**花雪 / HanaYuki**.
 
-|                      | GitHub                                          | X                                       | Website                              |
-| -------------------- | ----------------------------------------------- | --------------------------------------- | ------------------------------------ |
-| **Original creator** | [gokayfem](https://github.com/gokayfem)         | [@gokayfem](https://x.com/gokayfem)     | [dualview.ai](https://dualview.ai)   |
-| **Fork maintainer**  | [YukiWorks432](https://github.com/YukiWorks432) | [@YuK1_Works](https://x.com/YuK1_Works) | [hanayuki.xyz](https://hanayuki.xyz) |
+|                      | GitHub                                             | X                                       | Website                              |
+| -------------------- | -------------------------------------------------- | --------------------------------------- | ------------------------------------ |
+| **Original creator** | [gokayfem](https://github.com/gokayfem)            | [@gokayfem](https://x.com/gokayfem)     | [dualview.ai](https://dualview.ai)   |
+| **Fork maintainer**  | [花雪 / HanaYuki](https://github.com/YukiWorks432) | [@YuK1_Works](https://x.com/YuK1_Works) | [hanayuki.xyz](https://hanayuki.xyz) |
 
 ## 📄 License
 
-MIT License - see [LICENSE](LICENSE) for details.
+MIT License - see [LICENSE](LICENSE) for details. Browser-distributed dependency notices and
+source links are published on the [Licenses page](https://dualview.yukiworks432.workers.dev/licenses/).
 
 Contributions are welcome on this fork. Feel free to [open an issue](https://github.com/YukiWorks432/dualview/issues) or [submit a pull request](https://github.com/YukiWorks432/dualview/pulls).
 

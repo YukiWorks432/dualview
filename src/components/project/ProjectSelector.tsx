@@ -8,6 +8,7 @@ import {
   Calendar,
   Copy,
   Download,
+  ExternalLink,
   FileImage,
   FolderOpen,
   Loader2,
@@ -193,6 +194,29 @@ export function ProjectSelector({ isOpen, onClose }: ProjectSelectorProps) {
               className="pl-9"
             />
           </div>
+        </div>
+
+        <div className="border-b border-border px-6 py-3 text-xs leading-relaxed text-text-muted">
+          <p>
+            Projects and media are saved in this browser so you can continue later. Deleting a
+            project here removes its saved DualView copy, not your original files.
+          </p>
+          <p className="mt-2">
+            <strong className="font-semibold text-text-secondary">
+              .dualview files include the media.
+            </strong>{' '}
+            Share them with the same care as the original files.
+          </p>
+          <a
+            href="/privacy/#local-storage"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Storage and deletion details (opens in a new tab)"
+            className="mt-2 inline-flex items-center gap-1 text-accent hover:underline"
+          >
+            Privacy &amp; storage
+            <ExternalLink className="h-3 w-3" aria-hidden="true" />
+          </a>
         </div>
 
         <div className="flex-1 overflow-auto p-4">

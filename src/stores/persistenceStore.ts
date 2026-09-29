@@ -14,11 +14,10 @@ import { create } from 'zustand'
 import { comparisonModeDefinitions } from '../config/comparisonModes'
 import {
   initDB,
-  saveProject,
+  saveProjectWithMedia,
   getProject,
   getAllProjects,
   deleteProject as deleteProjectFromDB,
-  saveMediaBlob,
   getProjectMediaBlobs,
   estimateStorageUsage,
   isIndexedDBAvailable,
@@ -59,6 +58,7 @@ interface PersistenceStore {
   // Auto-save timer
   _autoSaveTimeoutId: ReturnType<typeof setTimeout> | null
   _autoSaveDelay: number // ms
+  _changeRevision: number
 
   // Actions
   init: () => Promise<void>
@@ -157,8 +157,7 @@ function deserializeKeyframeData(json: string): Map<string, ClipKeyframes> {
 }
 
 // Get media manifest (metadata without blobs)
-function getMediaManifest(): MediaManifestEntry[] {
-  const files = useMediaStore.getState().files
+function getMediaManifest(files = useMediaStore.getState().files): MediaManifestEntry[] {
   return files.map((f) => ({
     id: f.id,
     name: f.name,
@@ -170,6 +169,27 @@ function getMediaManifest(): MediaManifestEntry[] {
     // MEDIA-012: Include status (stored files should always be 'ready')
     status: f.status || 'ready',
   }))
+}
+
+let persistenceWriteQueue = Promise.resolve()
+const deletingProjectIds = new Set<string>()
+const projectWriteEpochs = new Map<string, number>()
+
+function getProjectWriteEpoch(projectId: string): number {
+  return projectWriteEpochs.get(projectId) ?? 0
+}
+
+function invalidateProjectWrites(projectId: string): void {
+  projectWriteEpochs.set(projectId, getProjectWriteEpoch(projectId) + 1)
+}
+
+function enqueuePersistenceWrite<T>(operation: () => Promise<T>): Promise<T> {
+  const result = persistenceWriteQueue.then(operation, operation)
+  persistenceWriteQueue = result.then(
+    () => undefined,
+    () => undefined,
+  )
+  return result
 }
 
 export const usePersistenceStore = create<PersistenceStore>((set, get) => ({
@@ -184,6 +204,7 @@ export const usePersistenceStore = create<PersistenceStore>((set, get) => ({
   isIndexedDBSupported: isIndexedDBAvailable(),
   _autoSaveTimeoutId: null,
   _autoSaveDelay: 500, // 500ms debounce
+  _changeRevision: 0,
 
   init: async () => {
     if (!isIndexedDBAvailable()) {
@@ -272,56 +293,82 @@ export const usePersistenceStore = create<PersistenceStore>((set, get) => ({
       return
     }
 
-    set({ saveStatus: 'saving' })
+    const projectId = state.currentProjectId
+    if (deletingProjectIds.has(projectId)) return
+
+    state.cancelAutoSave()
+
+    const projectWriteEpoch = getProjectWriteEpoch(projectId)
+    const changeRevision = state._changeRevision
+    const metadata = { ...state.projectMetadata }
+    const timelineState = serializeTimelineState()
+    const projectSettings = serializeProjectSettings()
+    const keyframeData = serializeKeyframeData()
+    const mediaFiles = [...useMediaStore.getState().files]
+    const mediaManifest = getMediaManifest(mediaFiles)
+    const mediaBlobs = new Map<string, Blob>()
+
+    for (const file of mediaFiles) {
+      if (file.file) {
+        mediaBlobs.set(file.id, file.file)
+      }
+    }
+
+    set({ saveStatus: 'saving', error: null })
 
     try {
-      // Capture thumbnail
       const thumbnail = await state._captureProjectThumbnail()
-
-      // Build project record
       const projectRecord: ProjectRecord = {
-        id: state.currentProjectId,
-        name: state.projectMetadata.name,
-        description: state.projectMetadata.description,
-        tags: state.projectMetadata.tags,
-        createdAt: state.projectMetadata.createdAt.getTime(),
+        id: projectId,
+        name: metadata.name,
+        description: metadata.description,
+        tags: metadata.tags,
+        createdAt: metadata.createdAt.getTime(),
         updatedAt: Date.now(),
         thumbnail,
-        timelineState: serializeTimelineState(),
-        projectSettings: serializeProjectSettings(),
-        mediaManifest: getMediaManifest(),
-        // KEYFRAME-001: Include keyframe data
-        keyframeData: serializeKeyframeData(),
+        timelineState,
+        projectSettings,
+        mediaManifest,
+        keyframeData,
       }
 
-      // Save project record
-      await saveProject(projectRecord)
-
-      // Save media blobs
-      const mediaFiles = useMediaStore.getState().files
-      for (const file of mediaFiles) {
-        if (file.file) {
-          await saveMediaBlob(state.currentProjectId, file.id, file.file)
+      const persisted = await enqueuePersistenceWrite(async () => {
+        if (
+          deletingProjectIds.has(projectId) ||
+          getProjectWriteEpoch(projectId) !== projectWriteEpoch
+        ) {
+          return false
         }
-      }
-
-      const now = new Date()
-      set({
-        saveStatus: 'saved',
-        lastSavedAt: now,
-        projectMetadata: {
-          ...state.projectMetadata,
-          updatedAt: now,
-          thumbnail,
-        },
+        await saveProjectWithMedia(projectRecord, mediaBlobs)
+        return true
       })
 
-      // Refresh project list
+      if (!persisted) return
+
+      const currentState = get()
+      if (currentState.currentProjectId !== projectId || deletingProjectIds.has(projectId)) return
+
+      const savedAt = new Date(projectRecord.updatedAt)
+      const hasNewerChanges = currentState._changeRevision !== changeRevision
+      set({
+        saveStatus: hasNewerChanges ? 'unsaved' : 'saved',
+        lastSavedAt: savedAt,
+        projectMetadata: currentState.projectMetadata
+          ? {
+              ...currentState.projectMetadata,
+              updatedAt: savedAt,
+              thumbnail,
+            }
+          : null,
+      })
+
       await get().refreshProjectList()
       await get().updateStorageUsage()
     } catch (error) {
       console.error('Failed to save project:', error)
-      set({ saveStatus: 'error', error: 'Failed to save project' })
+      if (get().currentProjectId === projectId && !deletingProjectIds.has(projectId)) {
+        set({ saveStatus: 'error', error: 'Failed to save project' })
+      }
     }
   },
 
@@ -331,6 +378,7 @@ export const usePersistenceStore = create<PersistenceStore>((set, get) => ({
       return
     }
 
+    get().cancelAutoSave()
     set({ isLoading: true, error: null })
 
     try {
@@ -467,16 +515,24 @@ export const usePersistenceStore = create<PersistenceStore>((set, get) => ({
       return
     }
 
-    try {
-      await deleteProjectFromDB(projectId)
+    if (get().currentProjectId === projectId) {
+      get().cancelAutoSave()
+    }
 
-      // If deleting current project, clear state
+    deletingProjectIds.add(projectId)
+    invalidateProjectWrites(projectId)
+
+    try {
+      await enqueuePersistenceWrite(() => deleteProjectFromDB(projectId))
+
+      // If deleting current project, clear state only after the queued delete has committed.
       if (get().currentProjectId === projectId) {
         set({
           currentProjectId: null,
           projectMetadata: null,
           saveStatus: 'saved',
           lastSavedAt: null,
+          error: null,
         })
         useMediaStore.getState().clearFiles()
       }
@@ -485,7 +541,12 @@ export const usePersistenceStore = create<PersistenceStore>((set, get) => ({
       await get().updateStorageUsage()
     } catch (error) {
       console.error('Failed to delete project:', error)
-      set({ error: 'Failed to delete project' })
+      set({
+        error: 'Failed to delete project',
+        ...(get().currentProjectId === projectId ? { saveStatus: 'unsaved' as const } : {}),
+      })
+    } finally {
+      deletingProjectIds.delete(projectId)
     }
   },
 
@@ -512,13 +573,8 @@ export const usePersistenceStore = create<PersistenceStore>((set, get) => ({
       updatedAt: now,
     }
 
-    await saveProject(duplicateRecord)
-
-    // Duplicate media blobs
     const mediaBlobs = await getProjectMediaBlobs(projectId)
-    for (const [mediaId, blob] of mediaBlobs) {
-      await saveMediaBlob(newId, mediaId, blob)
-    }
+    await enqueuePersistenceWrite(() => saveProjectWithMedia(duplicateRecord, mediaBlobs))
 
     await get().refreshProjectList()
     return newId
@@ -623,13 +679,11 @@ export const usePersistenceStore = create<PersistenceStore>((set, get) => ({
       updatedAt: now,
     }
 
-    await saveProject(projectRecord)
-
-    // Restore media blobs
+    const mediaBlobs = new Map<string, Blob>()
     for (const mediaFile of exportData.mediaFiles) {
-      const blob = base64ToBlob(mediaFile.data, mediaFile.type)
-      await saveMediaBlob(newId, mediaFile.id, blob)
+      mediaBlobs.set(mediaFile.id, base64ToBlob(mediaFile.data, mediaFile.type))
     }
+    await enqueuePersistenceWrite(() => saveProjectWithMedia(projectRecord, mediaBlobs))
 
     await get().refreshProjectList()
     return newId
@@ -670,17 +724,18 @@ export const usePersistenceStore = create<PersistenceStore>((set, get) => ({
   triggerAutoSave: () => {
     const state = get()
 
-    // Cancel existing timeout
     if (state._autoSaveTimeoutId) {
       clearTimeout(state._autoSaveTimeoutId)
     }
 
-    // Mark as unsaved
-    set({ saveStatus: 'unsaved' })
+    set({
+      saveStatus: 'unsaved',
+      _changeRevision: state._changeRevision + 1,
+    })
 
-    // Schedule auto-save
     const timeoutId = setTimeout(() => {
-      get().saveCurrentProject()
+      set({ _autoSaveTimeoutId: null })
+      void get().saveCurrentProject()
     }, state._autoSaveDelay)
 
     set({ _autoSaveTimeoutId: timeoutId })
@@ -695,7 +750,6 @@ export const usePersistenceStore = create<PersistenceStore>((set, get) => ({
   },
 
   _markUnsaved: () => {
-    set({ saveStatus: 'unsaved' })
     get().triggerAutoSave()
   },
 
@@ -750,7 +804,7 @@ function base64ToBlob(base64: string, mimeType: string): Blob {
 // Timeline changes
 useTimelineStore.subscribe((state, prevState) => {
   const persistence = usePersistenceStore.getState()
-  if (!persistence.currentProjectId) return
+  if (!persistence.currentProjectId || persistence.isLoading) return
 
   // Check for meaningful changes
   if (
@@ -765,7 +819,7 @@ useTimelineStore.subscribe((state, prevState) => {
 // Project settings changes
 useProjectStore.subscribe((state, prevState) => {
   const persistence = usePersistenceStore.getState()
-  if (!persistence.currentProjectId) return
+  if (!persistence.currentProjectId || persistence.isLoading) return
 
   // Check for meaningful changes (excluding transient state)
   if (
@@ -782,7 +836,7 @@ useProjectStore.subscribe((state, prevState) => {
 // Media library changes
 useMediaStore.subscribe((state, prevState) => {
   const persistence = usePersistenceStore.getState()
-  if (!persistence.currentProjectId) return
+  if (!persistence.currentProjectId || persistence.isLoading) return
 
   if (state.files.length !== prevState.files.length) {
     persistence._markUnsaved()

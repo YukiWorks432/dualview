@@ -1,4 +1,13 @@
-import { Upload, Film, Image, AlertCircle, Link, Clipboard, Monitor } from 'lucide-react'
+import {
+  AlertCircle,
+  Clipboard,
+  ExternalLink,
+  FilePlus2,
+  Film,
+  Image,
+  Link,
+  Monitor,
+} from 'lucide-react'
 import { useCallback, useState, useEffect } from 'react'
 
 import { SUPPORTED_MEDIA_ACCEPT, isSupportedMediaFile } from '../../lib/media/fileTypes'
@@ -311,7 +320,7 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
                 isDragOverA ? 'bg-orange-500/30' : 'bg-orange-500/10 group-hover:bg-orange-500/20',
               )}
             >
-              <Upload
+              <FilePlus2
                 className={cn(
                   'h-5 w-5',
                   isDragOverA
@@ -354,7 +363,7 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
                 isDragOverB ? 'bg-lime-400/30' : 'bg-lime-400/10 group-hover:bg-lime-400/20',
               )}
             >
-              <Upload
+              <FilePlus2
                 className={cn(
                   'h-5 w-5',
                   isDragOverB ? 'text-lime-400' : 'text-lime-400/70 group-hover:text-lime-400',
@@ -397,7 +406,7 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
             )}
           >
             {isUploading
-              ? `Uploading ${uploadProgress.current}/${uploadProgress.total}...`
+              ? `Importing ${uploadProgress.current}/${uploadProgress.total}...`
               : isDragOverGeneral
                 ? 'Drop to add to both tracks'
                 : 'Drop multiple files (auto A/B)'}
@@ -408,6 +417,24 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
           </div>
         </div>
       </ElevatedSurface>
+
+      <div className="ui-radius-md border border-border/60 px-2.5 py-2 text-[10px] leading-relaxed text-text-muted">
+        <p>
+          <strong className="font-semibold text-text-secondary">Files are not uploaded.</strong>{' '}
+          Comparison and analysis happen in your browser. Projects and media are saved in this
+          browser so you can continue later.
+        </p>
+        <a
+          href="/privacy/#local-processing"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Privacy and storage information (opens in a new tab)"
+          className="mt-1 inline-flex items-center gap-1 text-accent hover:underline"
+        >
+          Privacy &amp; storage
+          <ExternalLink className="h-2.5 w-2.5" aria-hidden="true" />
+        </a>
+      </div>
 
       {/* Import options */}
       <div className="grid grid-cols-3 gap-2">

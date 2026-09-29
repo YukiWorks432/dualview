@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>プライバシーとデータの取り扱い | DualView</title>
+    <meta
+      name="description"
+      content="DualViewで読み込んだ素材の処理、ブラウザー内の保存、必要な通信について説明します。"
+    />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="stylesheet" href="/site-info.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="site-header__inner">
+        <a class="brand" href="/">DualView</a>
+        <nav class="site-nav" aria-label="Site information">
+          <a href="/privacy/" aria-current="page">Privacy</a>
+          <a href="/terms/">Terms</a>
+          <a href="/about/">About</a>
+          <a href="/licenses/">Licenses</a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <div class="hero">
+        <p class="eyebrow">Privacy &amp; data handling</p>
+        <h1>プライバシーとデータの取り扱い</h1>
+        <p>
+          DualViewは、安心して素材を比較できるよう、読み込んだファイルをサーバーへアップロードせず、
+          ブラウザー内で処理します。ここでは、保存と通信について必要な範囲で説明します。
+        </p>
+        <p class="meta">施行日・最終更新日: 2026年9月29日</p>
+      </div>
+
+      <section class="language-block" lang="ja">
+        <span class="language-label">日本語</span>
+
+        <section class="card notice" id="local-processing">
+          <h2>読み込んだ素材について</h2>
+          <p>
+            ファイル選択、ドラッグ＆ドロップ、画像貼り付け、画面キャプチャで読み込んだ画像・動画は、
+            比較・解析・書き出しのために、この端末のブラウザー内で処理されます。
+            これらの素材を運営者へアップロードする機能はありません。
+          </p>
+        </section>
+
+        <section class="card" id="local-storage">
+          <h2>保存について</h2>
+          <p>
+            プロジェクトと素材は、作業を続きから再開できるよう、このブラウザー内に自動保存されます。
+            タブを閉じても保存済みデータは残ります。
+          </p>
+          <p>
+            プロジェクトはProjects画面から削除できます。サイトに保存されたデータ全体を消したい場合は、
+            ブラウザーのサイトデータ削除機能を利用してください。
+            重要な素材やプロジェクトは、必要に応じて別途バックアップしてください。
+          </p>
+          <p>
+            書き出した<code>.dualview</code>ファイルには素材も含まれます。
+            第三者へ送る場合は、元の素材と同様に取り扱ってください。
+          </p>
+        </section>
+
+        <section class="card" id="external-communication">
+          <h2>サイト利用時の通信について</h2>
+          <p>
+            サイトの表示や安全な配信のため、配信基盤であるCloudflareとの通常の通信が発生します。
+            その際、IPアドレスなど、ウェブサイトの利用に伴う一般的な通信情報が取り扱われる場合があります。
+          </p>
+          <p>
+            URLから素材を取り込む機能を使った場合は、入力したURLのサイトへブラウザーから直接接続します。
+            取得した素材の比較・解析はこの端末内で行い、別に読み込んでいるローカル素材を取得先へ送信することはありません。
+          </p>
+          <div class="link-list">
+            <a
+              href="https://www.cloudflare.com/privacypolicy/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Cloudflare Privacy Policy ↗
+            </a>
+          </div>
+        </section>
+
+        <section class="card" id="contact">
+          <h2>運営・問い合わせ</h2>
+          <p>
+            この公開サイトは <strong>花雪 / HanaYuki</strong> が運営しています。 通常の不具合報告は
+            <a
+              href="https://github.com/YukiWorks432/dualview/issues"
+              target="_blank"
+              rel="noopener noreferrer"
+              >GitHub Issues ↗</a
+            >
+            へ、個人情報を含む相談や公開に適さない問い合わせは
+            <a href="https://hanayuki.xyz/contact/" target="_blank" rel="noopener noreferrer"
+              >hanayuki.xyz の問い合わせ窓口 ↗</a
+            >
+            へ連絡してください。
+          </p>
+          <p>
+            問い合わせで受け取った情報は、問い合わせへの回答、必要な調査、
+            法令に基づく対応のために利用します。
+          </p>
+        </section>
+
+        <section class="card">
+          <h2>この説明の対象</h2>
+          <p>
+            この説明は、花雪 / HanaYuki が公開しているDualViewを対象とします。
+            データの取り扱いに重要な変更がある場合は、このページを更新します。
+          </p>
+        </section>
+      </section>
+
+      <section class="language-block" lang="en">
+        <span class="language-label">English</span>
+
+        <section class="card notice">
+          <h2>Your media stays on your device</h2>
+          <p>
+            Images and videos added through file selection, drag and drop, image paste, or screen
+            capture are processed in this browser for comparison, analysis, and export. DualView
+            does not provide a feature that uploads those local media files to the operator.
+          </p>
+        </section>
+
+        <section class="card">
+          <h2>Storage</h2>
+          <p>
+            Projects and media are saved automatically in this browser so you can continue your work
+            later. Closing the tab does not remove saved data. You can delete individual projects
+            from the Projects screen or clear this site's data through your browser.
+          </p>
+          <p>
+            Exported <code>.dualview</code> files include the media itself. Treat them with the same
+            care as the original media when sharing them.
+          </p>
+        </section>
+
+        <section class="card">
+          <h2>Network connections</h2>
+          <p>
+            Normal connections to Cloudflare, the site's delivery provider, are required to load and
+            securely deliver the site. Standard connection information such as an IP address may be
+            processed as part of that service.
+          </p>
+          <p>
+            URL import connects your browser directly to the URL you enter. The imported media is
+            then compared and analyzed on this device. Other local media already loaded in DualView
+            is not sent to that destination.
+          </p>
+        </section>
+
+        <section class="card">
+          <h2>Operator and contact</h2>
+          <p>
+            This public site is operated by <strong>花雪 / HanaYuki</strong>. Use GitHub Issues for
+            ordinary bug reports and the contact page at hanayuki.xyz for inquiries that include
+            personal information or should not be public. Information sent through an inquiry is
+            used to respond, investigate where necessary, and meet applicable legal obligations.
+          </p>
+          <p class="meta">Effective and last updated: September 29, 2026</p>
+        </section>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <a href="/">Open DualView</a> ·
+      <a href="https://github.com/YukiWorks432/dualview" target="_blank" rel="noopener noreferrer"
+        >Source ↗</a
+      >
+    </footer>
+  </body>
+</html>
