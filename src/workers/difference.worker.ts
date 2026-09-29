@@ -12,11 +12,23 @@ scope.onmessage = (event) => {
   const { jobId, request } = event.data
   void (async () => {
     try {
-      if (typeof OffscreenCanvas === 'undefined') throw new Error('OffscreenCanvas is unavailable in this worker')
-      await analyzeDifferences(request, (batch) => scope.postMessage({ type: 'progress', jobId, batch }), (descriptions) => scope.postMessage({ type: 'metadata', jobId, descriptions }), new AbortController().signal)
+      if (typeof OffscreenCanvas === 'undefined')
+        throw new Error('OffscreenCanvas is unavailable in this worker')
+      await analyzeDifferences(
+        request,
+        (batch) => scope.postMessage({ type: 'progress', jobId, batch }),
+        (descriptions) => scope.postMessage({ type: 'metadata', jobId, descriptions }),
+        new AbortController().signal,
+      )
       scope.postMessage({ type: 'complete', jobId })
     } catch (error) {
-      scope.postMessage({ type: 'error', jobId, message: error instanceof Error ? error.message : String(error) })
-    } finally { scope.close() }
+      scope.postMessage({
+        type: 'error',
+        jobId,
+        message: error instanceof Error ? error.message : String(error),
+      })
+    } finally {
+      scope.close()
+    }
   })()
 }

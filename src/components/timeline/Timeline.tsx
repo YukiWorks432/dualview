@@ -47,6 +47,8 @@ import { MEDIA_DRAG_TYPE, type MediaDragData } from '../media/MediaLibrary'
 import { ElevatedSurface } from '../ui'
 import { Button } from '../ui'
 import { ClipContextMenu } from './ClipContextMenu'
+import { DifferenceControls } from './DifferenceControls'
+import { DifferencePlot } from './DifferencePlot'
 import { TimelineClip } from './TimelineClip'
 
 export function Timeline() {
@@ -253,7 +255,7 @@ export function Timeline() {
     containerRef,
     pixelsPerSecond,
     trackHeight: 64,
-    rulerHeight: 24,
+    rulerHeight: 44,
   })
 
   // Loop back to start when reaching end
@@ -592,7 +594,7 @@ export function Timeline() {
   )
 
   return (
-    <div className="h-40 md:h-64 bg-surface border-t border-border flex flex-col">
+    <div className="h-64 md:h-84 bg-surface border-t border-border flex flex-col">
       {/* Transport controls - Miller's Law: Grouped into logical chunks */}
       <ElevatedSurface asChild offset={1}>
         <div className="h-10 px-2 md:px-4 flex items-center justify-between border-b border-border">
@@ -857,11 +859,14 @@ export function Timeline() {
         </div>
       </ElevatedSurface>
 
+      <DifferenceControls containerRef={containerRef} pixelsPerSecond={pixelsPerSecond} />
+
       {/* Timeline area */}
       <div className="flex-1 flex overflow-hidden">
         {/* Track labels - hidden on mobile */}
         <div className="hidden md:block w-40 flex-shrink-0 border-r border-border">
           <div className="h-6 border-b border-border" /> {/* Ruler spacer */}
+          <div className="h-5 border-b border-border px-2 text-[10px] text-text-muted">Diff</div>
           {tracks.map((track) => (
             <div
               key={track.id}
@@ -1116,6 +1121,12 @@ export function Timeline() {
                 </div>
               ))}
             </div>
+
+            <DifferencePlot
+              duration={duration}
+              pixelsPerSecond={pixelsPerSecond}
+              containerRef={containerRef}
+            />
 
             {/* Tracks */}
             {tracks.map((track) => (

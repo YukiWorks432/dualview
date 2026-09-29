@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+
 import { createDifferenceRequest } from '../lib/difference/request'
 import { useDifferenceStore } from '../stores/differenceStore'
 import { useMediaStore } from '../stores/mediaStore'
@@ -15,11 +16,17 @@ export function useDifferenceLifecycle(): void {
     const unsubscribeTimeline = useTimelineStore.subscribe((state, previous) => {
       if (state.tracks !== previous.tracks || state.duration !== previous.duration) check()
     })
-    const unsubscribeMedia = useMediaStore.subscribe((state, previous) => { if (state.files !== previous.files) check() })
-    const unsubscribeProject = usePersistenceStore.subscribe((state, previous) => { if (state.currentProjectId !== previous.currentProjectId) check() })
+    const unsubscribeMedia = useMediaStore.subscribe((state, previous) => {
+      if (state.files !== previous.files) check()
+    })
+    const unsubscribeProject = usePersistenceStore.subscribe((state, previous) => {
+      if (state.currentProjectId !== previous.currentProjectId) check()
+    })
     check()
     return () => {
-      unsubscribeTimeline(); unsubscribeMedia(); unsubscribeProject()
+      unsubscribeTimeline()
+      unsubscribeMedia()
+      unsubscribeProject()
       useDifferenceStore.getState().cancel()
     }
   }, [])

@@ -16,7 +16,8 @@ export class PixelComparator {
     this.mask = new Uint8ClampedArray(size)
   }
   compare(a: Uint8ClampedArray, b: Uint8ClampedArray, threshold: number): number {
-    if (a.length !== this.a.length || b.length !== this.b.length) throw new Error('Comparison buffers must have identical dimensions')
+    if (a.length !== this.a.length || b.length !== this.b.length)
+      throw new Error('Comparison buffers must have identical dimensions')
     // Compare the visible colour over black. Hidden RGB under zero alpha is irrelevant.
     for (let index = 0; index < a.length; index += 4) {
       for (let channel = 0; channel < 3; channel++) {
@@ -27,7 +28,11 @@ export class PixelComparator {
       this.b[index + 3] = 255
     }
     this.mask.fill(0)
-    let changed = pixelmatch(this.a, this.b, this.mask, this.width, this.height, { threshold, includeAA: true, diffMask: true })
+    let changed = pixelmatch(this.a, this.b, this.mask, this.width, this.height, {
+      threshold,
+      includeAA: true,
+      diffMask: true,
+    })
     // Count the UNION of visible-colour and alpha changes, never the sum of both counts.
     for (let index = 3; index < a.length; index += 4) {
       if (Math.abs(a[index] - b[index]) > threshold * 255 && this.mask[index] === 0) changed++

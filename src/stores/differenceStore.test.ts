@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+
 import type { DifferenceRequest, DifferenceWorkerMessage } from '../lib/difference/model'
 import { useDifferenceStore } from './differenceStore'
 class FakeWorker {
@@ -8,11 +9,25 @@ class FakeWorker {
   onmessageerror: (() => void) | null = null
   terminate = vi.fn()
   postMessage = vi.fn()
-  constructor() { FakeWorker.instances.push(this) }
-  emit(message: DifferenceWorkerMessage) { this.onmessage?.({ data: message } as MessageEvent<DifferenceWorkerMessage>) }
+  constructor() {
+    FakeWorker.instances.push(this)
+  }
+  emit(message: DifferenceWorkerMessage) {
+    this.onmessage?.({ data: message } as MessageEvent<DifferenceWorkerMessage>)
+  }
 }
-const request: DifferenceRequest = { key: 'project-a', duration: 1, clipsA: [], clipsB: [], media: [], options: { pixelThreshold: 0.1, resolution: 'standard' } }
-const batch = { samples: [{ start: 0, end: 0.5, ratio: 0.05, state: 'compared' as const }], processedUntil: 0.5 }
+const request: DifferenceRequest = {
+  key: 'project-a',
+  duration: 1,
+  clipsA: [],
+  clipsB: [],
+  media: [],
+  options: { pixelThreshold: 0.1, resolution: 'standard' },
+}
+const batch = {
+  samples: [{ start: 0, end: 0.5, ratio: 0.05, state: 'compared' as const }],
+  processedUntil: 0.5,
+}
 beforeEach(() => {
   useDifferenceStore.getState().cancel()
   useDifferenceStore.setState(useDifferenceStore.getInitialState())
@@ -20,7 +35,10 @@ beforeEach(() => {
   vi.stubGlobal('Worker', FakeWorker)
   vi.stubGlobal('OffscreenCanvas', class {})
 })
-afterEach(() => { useDifferenceStore.getState().cancel(); vi.unstubAllGlobals() })
+afterEach(() => {
+  useDifferenceStore.getState().cancel()
+  vi.unstubAllGlobals()
+})
 describe('difference analysis lifecycle', () => {
   it('changes the area threshold from stored scores without starting another decoder', () => {
     useDifferenceStore.getState().start(request)

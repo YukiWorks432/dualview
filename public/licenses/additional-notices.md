@@ -45,3 +45,7 @@ DualView uses the ProRes decoder package distributed with the browser applicatio
 The MPL-covered ProRes component remains under MPL-2.0. Its inclusion does not change the overall
 DualView application license from MIT; the applicable license follows each covered component and
 file.
+
+## pixelmatch
+
+The timeline analysis worker includes pixelmatch (ISC, Copyright (c) 2025, Mapbox). See [the full license](pixelmatch-license.txt) and [the upstream source](https://github.com/mapbox/pixelmatch/tree/v7.2.0). This notice is included explicitly for the separately bundled worker.

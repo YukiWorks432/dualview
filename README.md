@@ -768,3 +768,7 @@ Contributions are welcome on this fork. Feel free to [open an issue](https://git
 <p align="center">
   <sub>Built with love for creators who care about every pixel</sub>
 </p>
+
+### Timeline difference intervals
+
+Use **Analyze differences** above the timeline to inspect A/B video changes without seeking the preview. Colour tolerance and changed-area thresholds are separate; standard analysis reduces spatial detail, and results stay in the current session. See [analysis conditions and testing](docs/timeline-differences.md).

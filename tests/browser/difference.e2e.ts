@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
+
 import { expect, test } from '@playwright/test'
 import type { Page } from '@playwright/test'
 async function seed(page: Page, names: [string, string]) {
@@ -8,7 +9,14 @@ async function seed(page: Page, names: [string, string]) {
     const path = '/src/stores/persistenceStore.ts'
     return Boolean((await import(path)).usePersistenceStore.getState().currentProjectId)
   })
-  const inputs = await Promise.all(names.map(async (name) => ({ name, base64: (await readFile(fileURLToPath(new URL(`./fixtures/${name}`, import.meta.url)))).toString('base64') })))
+  const inputs = await Promise.all(
+    names.map(async (name) => ({
+      name,
+      base64: (
+        await readFile(fileURLToPath(new URL(`./fixtures/${name}`, import.meta.url)))
+      ).toString('base64'),
+    })),
+  )
   await page.evaluate(async (files) => {
     const mediaPath = '/src/stores/mediaStore.ts'
     const timelinePath = '/src/stores/timelineStore.ts'
@@ -20,7 +28,9 @@ async function seed(page: Page, names: [string, string]) {
     for (let index = 0; index < files.length; index++) {
       const input = files[index]
       const data = Uint8Array.from(atob(input.base64), (character) => character.charCodeAt(0))
-      const file = new File([data], input.name, { type: input.name.endsWith('.mov') ? 'video/quicktime' : 'video/mp4' })
+      const file = new File([data], input.name, {
+        type: input.name.endsWith('.mov') ? 'video/quicktime' : 'video/mp4',
+      })
       const media = await useMediaStore.getState().addFile(file)
       const track = tracks.find((item: { type: string }) => item.type === (index === 0 ? 'a' : 'b'))
       useTimelineStore.getState().addClip(track.id, media.id, 0, media.duration)
@@ -32,15 +42,26 @@ async function result(page: Page) {
   return page.evaluate(async () => {
     const path = '/src/stores/differenceStore.ts'
     const state = (await import(path)).useDifferenceStore.getState()
-    return { status: state.status, regions: state.regions as { start: number; end: number }[], jobId: state.jobId, unavailable: state.unavailable, options: state.options }
+    return {
+      status: state.status,
+      regions: state.regions as { start: number; end: number }[],
+      jobId: state.jobId,
+      unavailable: state.unavailable,
+      options: state.options,
+    }
   })
 }
 async function analyze(page: Page) {
   await page.getByRole('button', { name: 'Analyze differences', exact: true }).first().click()
-  await expect(page.getByTestId('difference-status').first()).toHaveAttribute('data-status', 'complete')
+  await expect(page.getByTestId('difference-status').first()).toHaveAttribute(
+    'data-status',
+    'complete',
+  )
   return result(page)
 }
-test('identical videos remain unchanged and analysis does not seek the preview', async ({ page }) => {
+test('identical videos remain unchanged and analysis does not seek the preview', async ({
+  page,
+}) => {
   await seed(page, ['base.mp4', 'base.mp4'])
   expect((await analyze(page)).regions).toHaveLength(0)
   const time = await page.evaluate(async () => {
@@ -88,7 +109,10 @@ test('area changes reuse scores; source edits invalidate them', async ({ page })
     const track = store.getState().tracks.find((item: { type: string }) => item.type === 'b')
     store.getState().updateClip(track.clips[0].id, { startTime: 0.1 })
   })
-  await expect(page.getByTestId('difference-status').first()).toHaveAttribute('data-status', 'stale')
+  await expect(page.getByTestId('difference-status').first()).toHaveAttribute(
+    'data-status',
+    'stale',
+  )
 })
 test('reports missing footage rather than reporting a matching tail', async ({ page }) => {
   await seed(page, ['base.mp4', 'short.mp4'])

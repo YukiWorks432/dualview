@@ -27,3 +27,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Difference browser tests
+tests/browser/fixtures/
+playwright-report/
+test-results/

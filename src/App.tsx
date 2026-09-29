@@ -9,6 +9,7 @@ import { Timeline } from './components/timeline/Timeline'
 import { SurfaceProvider } from './components/ui'
 import { KeyboardShortcutsHelp } from './components/ui/KeyboardShortcutsHelp'
 import { getComparisonModeByKeyboardCode } from './config/comparisonModes'
+import { useDifferenceLifecycle } from './hooks/useDifferenceLifecycle'
 import { useKeyboardShortcutsHelp } from './hooks/useKeyboardShortcutsHelp'
 import { isSupportedMediaFile } from './lib/media/fileTypes'
 import { captureCanvasScreenshot, downloadBlob } from './lib/screenshotExport'
@@ -24,6 +25,7 @@ const ExportDialog = lazy(() =>
 )
 
 export default function App() {
+  useDifferenceLifecycle()
   const [isExportOpen, setIsExportOpen] = useState(false)
   const [isTimelineVisible, setIsTimelineVisible] = useState(true)
   const [isSidebarVisible, setIsSidebarVisible] = useState(true)
