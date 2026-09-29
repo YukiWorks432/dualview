@@ -238,7 +238,7 @@ export function useDifferenceRegions({
       return
     }
 
-    const worker = new Worker(new URL('../workers/difference.worker.ts', import.meta.url), {
+    const worker = new Worker(new URL('../workers/frameDifference.worker.ts', import.meta.url), {
       type: 'module',
     })
     workerRef.current = worker
