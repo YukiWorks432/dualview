@@ -19,11 +19,24 @@ ffmpeg -ss 4.5 -i source.mp4 -t 1.5 -an -c:v libvpx-vp9 -deadline realtime -cpu-
 128 × 72, 8 fps `testsrc2` pattern using those VP9 quality settings. They exercise a detailed,
 synthetic case where compression artifacts were more pronounced.
 
+`long-quality-high.webm` and `long-quality-low.webm` are generated from the same 1280 × 720,
+24 fps, 4-second `testsrc2` pattern. They contain 96 frame intervals and exercise the standard
+640-pixel resize, full-resolution comparison, analysis cancellation, and zoomed or scrolled lane.
+Their generation commands are:
+
+```text
+ffmpeg -f lavfi -i "testsrc2=size=1280x720:rate=24:duration=4" -an -c:v libvpx-vp9 -deadline good -cpu-used 4 -crf 4 -b:v 0 -fps_mode passthrough long-quality-high.webm
+ffmpeg -f lavfi -i "testsrc2=size=1280x720:rate=24:duration=4" -an -c:v libvpx-vp9 -deadline realtime -cpu-used 8 -crf 40 -b:v 0 -fps_mode passthrough long-quality-low.webm
+```
+
 At the default pixel threshold (0.10) and area threshold (2%), Chromium measured a maximum frame
 difference of 0.01% across all 45 NASA frames. The generated pattern measured 2.73% at its peak and
 is highlighted at the default area threshold; raising the area threshold to 5% removes that segment
 without decoding again. This tests both a real-footage baseline and the threshold's noise trade-off;
 footage with different content or compression may need different values.
+The end-to-end suite also logs comparison time from **Analyze** to completion for both resolutions
+on the 96-frame 1280 × 720 pattern. In one local Chromium run, standard resolution took 7.48 seconds
+and full resolution took 7.47 seconds. These timings depend on the browser and machine.
 
 The other tiny fixtures are generated black, white, or single-frame-change clips for deterministic
 browser tests.

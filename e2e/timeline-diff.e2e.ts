@@ -155,3 +155,140 @@ test('recomputes compression-only highlights when the area threshold changes', a
   await expect(page.getByText('Complete', { exact: true }).first()).toBeVisible()
   await expect(nextInterval).toBeDisabled()
 })
+
+test('cancels a high-resolution analysis and keeps partial results', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Hide filmstrip' }).click()
+
+  await uploadToTrack(page, 'Media A', 'long-quality-high.webm')
+  await uploadToTrack(page, 'Media B', 'long-quality-low.webm')
+  await page.getByLabel('Analysis resolution').selectOption('detailed')
+  await page.getByRole('button', { name: 'Analyze', exact: true }).click()
+
+  const cancelButton = page.getByRole('button', { name: 'Cancel' })
+  await expect(cancelButton).toBeVisible()
+  await cancelButton.click()
+  await expect(page.getByText('Partial results', { exact: true }).first()).toBeVisible({
+    timeout: 60_000,
+  })
+  await expect(page.getByRole('button', { name: 'Analyze', exact: true })).toBeEnabled()
+})
+
+test('marks results outdated when clip media is replaced', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Hide filmstrip' }).click()
+
+  await uploadToTrack(page, 'Media A', 'difference-a.webm')
+  await uploadToTrack(page, 'Media B', 'difference-b.mov')
+  await page.getByRole('button', { name: 'Analyze', exact: true }).click()
+  await expect(page.getByText('Complete', { exact: true }).first()).toBeVisible({ timeout: 60_000 })
+
+  await page.locator('[data-clip]').first().click({ button: 'right' })
+  await page.getByText('Replace Media', { exact: true }).hover()
+  await page.getByRole('button', { name: 'difference-b.mov', exact: true }).click()
+  await expect(page.getByText('Outdated', { exact: true }).first()).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Next highlighted interval' })).toBeDisabled()
+})
+
+test('clears session results after switching projects', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Hide filmstrip' }).click()
+
+  await uploadToTrack(page, 'Media A', 'difference-a.webm')
+  await uploadToTrack(page, 'Media B', 'difference-b.mov')
+  await page.getByRole('button', { name: 'Analyze', exact: true }).click()
+  await expect(page.getByText('Complete', { exact: true }).first()).toBeVisible({ timeout: 60_000 })
+
+  await page.getByRole('button', { name: 'Projects', exact: true }).click()
+  const projectDialog = page.getByRole('dialog')
+  await expect(projectDialog).toBeVisible()
+  await projectDialog.getByRole('button', { name: 'New Project' }).click()
+  await expect(page.getByText('Outdated', { exact: true }).first()).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Next highlighted interval' })).toBeDisabled()
+})
+
+test('measures both resolutions on long high-resolution video and preserves lane interactions', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Hide filmstrip' }).click()
+
+  await uploadToTrack(page, 'Media A', 'long-quality-high.webm')
+  await uploadToTrack(page, 'Media B', 'long-quality-low.webm')
+  const areaThreshold = page.getByRole('slider', { name: 'Highlight area threshold' })
+  await areaThreshold.focus()
+  for (let step = 0; step < 4; step++) await areaThreshold.press('ArrowLeft')
+  await expect(areaThreshold).toHaveValue('0')
+
+  const resolution = page.getByLabel('Analysis resolution')
+  const analyze = page.getByRole('button', { name: 'Analyze', exact: true })
+  const timings: Record<'standard' | 'detailed', number> = { standard: 0, detailed: 0 }
+
+  for (const mode of ['standard', 'detailed'] as const) {
+    await resolution.selectOption(mode)
+    const startedAt = Date.now()
+    await analyze.click()
+    await expect(page.getByText('Complete', { exact: true }).first()).toBeVisible({
+      timeout: 60_000,
+    })
+    timings[mode] = Date.now() - startedAt
+  }
+
+  console.log(
+    `1280x720, 24 fps, 4 s (96 frames): standard=${timings.standard} ms; detailed=${timings.detailed} ms`,
+  )
+
+  const nextInterval = page.getByRole('button', { name: 'Next highlighted interval' })
+  await expect(nextInterval).toBeEnabled()
+  const secondMode = page.getByRole('tablist', { name: 'Comparison modes' }).getByRole('tab').nth(1)
+  await secondMode.click()
+  await expect(secondMode).toHaveAttribute('aria-selected', 'true')
+  await expect(page.getByText('Complete', { exact: true }).first()).toBeVisible()
+
+  const lane = page.getByRole('img', { name: /Read-only A\/B difference lane/ })
+  const zoomIn = page.locator('button:has(svg.lucide-zoom-in)')
+  for (let step = 0; step < 14; step++) await zoomIn.click()
+
+  const scrollContainer = lane.locator('xpath=../../..')
+  const scrollState = await scrollContainer.evaluate((element) => {
+    const container = element as HTMLDivElement
+    container.scrollLeft = container.scrollWidth
+    return { scrollLeft: container.scrollLeft, clientWidth: container.clientWidth }
+  })
+  expect(scrollState.scrollLeft).toBeGreaterThan(0)
+
+  await lane.evaluate((canvas) => {
+    const laneWidth = Number.parseFloat(canvas.parentElement?.style.width ?? '0')
+    const pixelsPerSecond = laneWidth / 4
+    const rect = canvas.getBoundingClientRect()
+    canvas.dispatchEvent(
+      new MouseEvent('mousemove', {
+        bubbles: true,
+        clientX: rect.left + 3.75 * pixelsPerSecond,
+        clientY: rect.top + 16,
+      }),
+    )
+  })
+  await expect(lane).toHaveAttribute('title', /3\.\d{3}–3\.\d{3}s/)
+
+  const zoomOut = page.locator('button:has(svg.lucide-zoom-out)')
+  for (let step = 0; step < 30; step++) await zoomOut.click()
+  await expect
+    .poll(() =>
+      lane.evaluate((canvas) => {
+        const context = canvas.getContext('2d')
+        if (!context) return 0
+        const { data, width } = context.getImageData(0, 0, canvas.width, 1)
+        let highlightedPixels = 0
+        for (let offset = 0; offset < width * 4; offset += 4) {
+          if (data[offset] > 120 && data[offset] > data[offset + 1] * 1.5) highlightedPixels++
+        }
+        return highlightedPixels
+      }),
+    )
+    .toBeGreaterThan(0)
+})

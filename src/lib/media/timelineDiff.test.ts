@@ -10,7 +10,9 @@ import {
   findNextTimelineDiffSegment,
   findTimelineDiffFrameAtTime,
   findTimelineDiffSegmentAtTime,
+  mapTimelineDiffIntervalToRaster,
   mapFrameIntervalToTimeline,
+  mergeTimelineDiffRasterInterval,
   type TimelineDiffFrameScore,
 } from './timelineDiff'
 
@@ -119,6 +121,12 @@ describe('pixel difference rate', () => {
     expect(calculatePixelDifferenceRate(transparentBlack, visibleBlack, 1, 1, 0.1)).toBe(1)
   })
 
+  it('counts alpha-only changes even when the visible RGB values match', () => {
+    const transparentGray = new Uint8ClampedArray([48, 48, 48, 0])
+    const opaqueGray = new Uint8ClampedArray([48, 48, 48, 255])
+    expect(calculatePixelDifferenceRate(transparentGray, opaqueGray, 1, 1, 0.1)).toBe(1)
+  })
+
   it('rejects image buffers whose length does not match the comparison dimensions', () => {
     expect(() =>
       calculatePixelDifferenceRate(new Uint8Array(3), new Uint8Array(4), 1, 1, 0.1),
@@ -171,11 +179,13 @@ describe('highlighted interval grouping', () => {
     ])
   })
 
-  it('wraps previous and next navigation to an available highlight', () => {
+  it('skips the active interval and wraps previous and next navigation', () => {
     const segments = buildTimelineDiffSegments(
       [score(), score({ startTime: 2, endTime: 2.5, sampleTime: 2.25 })],
       0.1,
     )
+    expect(findNextTimelineDiffSegment(segments, 0.25, 'previous')?.startTime).toBe(2)
+    expect(findNextTimelineDiffSegment(segments, 2.25, 'previous')?.startTime).toBe(0)
     expect(findNextTimelineDiffSegment(segments, 0, 'previous')?.startTime).toBe(2)
     expect(findNextTimelineDiffSegment(segments, 0.5, 'next')?.startTime).toBe(2)
     expect(findNextTimelineDiffSegment(segments, 2.5, 'next')?.startTime).toBe(0)
@@ -218,5 +228,22 @@ describe('highlighted interval grouping', () => {
     )
 
     expect(appendedSegments).toEqual(buildTimelineDiffSegments(frames, 0.1))
+  })
+})
+
+describe('difference lane rasterization', () => {
+  it('maps short intervals to the available backing pixel on a long timeline', () => {
+    const first = mapTimelineDiffIntervalToRaster(4, 4.01, 1, 100_000, 32_768)
+    const second = mapTimelineDiffIntervalToRaster(4.02, 4.03, 1, 100_000, 32_768)
+    expect(first).toEqual({ startPixel: 1, endPixel: 2 })
+    expect(second).toEqual(first)
+    if (!first || !second) throw new Error('Expected both intervals to map to a backing pixel')
+
+    const raster = new Uint8Array(32_768)
+    expect(mergeTimelineDiffRasterInterval(raster, first.startPixel, first.endPixel, 2)).toBe(true)
+    expect(mergeTimelineDiffRasterInterval(raster, second.startPixel, second.endPixel, 0)).toBe(
+      false,
+    )
+    expect(raster[1]).toBe(2)
   })
 })

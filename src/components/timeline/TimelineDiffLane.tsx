@@ -3,6 +3,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   findTimelineDiffFrameAtTime,
   findTimelineDiffSegmentAtTime,
+  mapTimelineDiffIntervalToRaster,
+  mergeTimelineDiffRasterInterval,
+  type TimelineDiffFrameScore,
 } from '../../lib/media/timelineDiff'
 import { usePlaybackStore } from '../../stores/playbackStore'
 import { useTimelineDiffStore } from '../../stores/timelineDiffStore'
@@ -17,6 +20,33 @@ const STATUS_COLORS = {
   unsupported: '#a78bfa',
   error: '#f87171',
 } as const
+
+const RASTER_COLORS = [
+  '#35434d',
+  '#bc3944',
+  '#f04452',
+  STATUS_COLORS.missing,
+  STATUS_COLORS.unsupported,
+  STATUS_COLORS.error,
+] as const
+
+function frameRasterValue(frame: TimelineDiffFrameScore, areaThreshold: number): number {
+  if (frame.status === 'compared') {
+    const rate = frame.differenceRate ?? 0
+    if (rate <= 0 || rate < areaThreshold) return 0
+    return rate >= Math.max(areaThreshold * 3, 0.2) ? 2 : 1
+  }
+
+  switch (frame.status) {
+    case 'missing':
+      return 3
+    case 'unsupported':
+      return 4
+    case 'error':
+      return 5
+  }
+  return 0
+}
 
 function statusLabel(status: string): string {
   switch (status) {
@@ -42,6 +72,7 @@ function statusLabel(status: string): string {
 export function TimelineDiffLane({ duration, pixelsPerSecond }: TimelineDiffLaneProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const lastDrawRef = useRef({ key: '', frameCount: 0 })
+  const pixelKindsRef = useRef(new Uint8Array(0))
   const currentTime = usePlaybackStore((state) => state.currentTime)
   const seek = usePlaybackStore((state) => state.seek)
   const [hoveredTime, setHoveredTime] = useState<number | null>(null)
@@ -111,36 +142,46 @@ export function TimelineDiffLane({ duration, pixelsPerSecond }: TimelineDiffLane
       if (needsFullDraw) {
         canvas.width = pixelWidth
         canvas.height = Math.ceil(height * dpr)
+        pixelKindsRef.current = new Uint8Array(pixelWidth)
       }
       const context = canvas.getContext('2d')
       if (!context) return
-      context.setTransform(pixelWidth / width, 0, 0, dpr, 0, 0)
+      context.setTransform(1, 0, 0, dpr, 0, 0)
 
       if (needsFullDraw) {
-        context.fillStyle = '#18212a'
-        context.fillRect(0, 0, width, height)
+        context.fillStyle = frames.length > 0 ? RASTER_COLORS[0] : '#18212a'
+        context.fillRect(0, 0, pixelWidth, height)
       }
 
       const firstFrame = needsFullDraw ? 0 : previous.frameCount
+      const pixelKinds = pixelKindsRef.current
       for (let index = firstFrame; index < frames.length; index++) {
         const frame = frames[index]
-        const left = Math.max(0, frame.startTime * pixelsPerSecond)
-        const right = Math.min(width, frame.endTime * pixelsPerSecond)
-        if (right <= left) continue
+        const range = mapTimelineDiffIntervalToRaster(
+          frame.startTime,
+          frame.endTime,
+          pixelsPerSecond,
+          width,
+          pixelWidth,
+        )
+        if (!range) continue
+
+        const value = frameRasterValue(frame, areaThreshold)
+        if (!mergeTimelineDiffRasterInterval(pixelKinds, range.startPixel, range.endPixel, value)) {
+          continue
+        }
 
         context.globalAlpha = 0.95
-        if (frame.status === 'compared') {
-          const rate = frame.differenceRate ?? 0
-          context.fillStyle =
-            rate > 0 && rate >= areaThreshold
-              ? rate >= Math.max(areaThreshold * 3, 0.2)
-                ? '#f04452'
-                : '#bc3944'
-              : '#35434d'
-        } else {
-          context.fillStyle = STATUS_COLORS[frame.status]
+        let runStart = range.startPixel
+        let runValue = pixelKinds[runStart]
+        for (let pixel = range.startPixel + 1; pixel <= range.endPixel; pixel++) {
+          const nextValue = pixel < range.endPixel ? pixelKinds[pixel] : -1
+          if (nextValue === runValue) continue
+          context.fillStyle = RASTER_COLORS[runValue] ?? RASTER_COLORS[0]
+          context.fillRect(runStart, 0, pixel - runStart, height)
+          runStart = pixel
+          runValue = nextValue
         }
-        context.fillRect(left, 0, Math.max(1, right - left), height)
       }
       context.globalAlpha = 1
 
@@ -152,7 +193,7 @@ export function TimelineDiffLane({ duration, pixelsPerSecond }: TimelineDiffLane
           status === 'idle'
             ? 'Run A/B analysis to mark differences, gaps, and unsupported intervals'
             : statusLabel(status)
-        context.fillText(emptyMessage, width / 2, 21)
+        context.fillText(emptyMessage, pixelWidth / 2, 21)
       }
 
       lastDrawRef.current = { key, frameCount: frames.length }

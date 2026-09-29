@@ -27,6 +27,11 @@ export interface TimelineDiffSegment {
   maxDifferenceTime: number
 }
 
+export interface TimelineDiffRasterRange {
+  startPixel: number
+  endPixel: number
+}
+
 export function findTimelineDiffFrameAtTime(
   frames: readonly TimelineDiffFrameScore[],
   timelineTime: number,
@@ -161,11 +166,69 @@ export function calculatePixelDifferenceRate(
     throw new RangeError('Comparison image data must contain one RGBA value per pixel')
   }
 
-  const differentPixels = pixelmatch(imageA, imageB, undefined, width, height, {
+  const differenceMask = new Uint8Array(expectedLength)
+  pixelmatch(imageA, imageB, differenceMask, width, height, {
     threshold: colorThreshold,
     includeAA: true,
+    diffMask: true,
   })
+
+  let differentPixels = 0
+  for (let offset = 0; offset < expectedLength; offset += 4) {
+    const colorChanged = differenceMask[offset + 3] !== 0
+    const alphaChanged = Math.abs(imageA[offset + 3] - imageB[offset + 3]) / 255 > colorThreshold
+    if (colorChanged || alphaChanged) differentPixels++
+  }
   return differentPixels / (width * height)
+}
+
+/** Maps a timeline interval to the backing pixels available to the difference lane. */
+export function mapTimelineDiffIntervalToRaster(
+  startTime: number,
+  endTime: number,
+  pixelsPerSecond: number,
+  canvasWidth: number,
+  pixelWidth: number,
+): TimelineDiffRasterRange | null {
+  if (
+    !Number.isFinite(startTime) ||
+    !Number.isFinite(endTime) ||
+    !Number.isFinite(pixelsPerSecond) ||
+    !Number.isFinite(canvasWidth) ||
+    !Number.isInteger(pixelWidth) ||
+    pixelsPerSecond <= 0 ||
+    canvasWidth <= 0 ||
+    pixelWidth <= 0
+  ) {
+    return null
+  }
+
+  const left = Math.max(0, Math.min(canvasWidth, startTime * pixelsPerSecond))
+  const right = Math.max(0, Math.min(canvasWidth, endTime * pixelsPerSecond))
+  if (right <= left) return null
+
+  const scale = pixelWidth / canvasWidth
+  const startPixel = Math.max(0, Math.min(pixelWidth - 1, Math.floor(left * scale)))
+  const endPixel = Math.max(startPixel + 1, Math.min(pixelWidth, Math.ceil(right * scale)))
+  return { startPixel, endPixel }
+}
+
+/** Keeps the strongest frame state when multiple intervals share a backing pixel. */
+export function mergeTimelineDiffRasterInterval(
+  raster: Uint8Array,
+  startPixel: number,
+  endPixel: number,
+  value: number,
+): boolean {
+  let changed = false
+  const start = Math.max(0, Math.min(raster.length, startPixel))
+  const end = Math.max(start, Math.min(raster.length, endPixel))
+  for (let pixel = start; pixel < end; pixel++) {
+    if (raster[pixel] >= value) continue
+    raster[pixel] = value
+    changed = true
+  }
+  return changed
 }
 
 export function buildTimelineDiffSegments(
@@ -268,7 +331,7 @@ export function findNextTimelineDiffSegment(
   }
 
   for (let index = segments.length - 1; index >= 0; index--) {
-    if (segments[index].startTime < currentTime - TIME_EPSILON) return segments[index]
+    if (segments[index].endTime <= currentTime + TIME_EPSILON) return segments[index]
   }
   return segments[segments.length - 1]
 }

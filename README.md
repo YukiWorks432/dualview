@@ -524,8 +524,8 @@ The default comparison size is at most 640 pixels on the longest image edge. **F
 the source display dimensions and can use substantially more memory. Pixel threshold controls how
 different an individual pixel must be; area threshold controls the share of changed pixels needed to
 highlight an interval. The default values are 0.10 and 2%, respectively. Transparent pixels are
-compared by their visible color, so hidden RGB values under fully transparent pixels do not create a
-difference.
+compared by their visible color and opacity, while hidden RGB values under two fully transparent
+pixels do not create a difference.
 
 The lane marks missing frames or A/B gaps, unsupported media, and decode errors separately from
 frames with no detected difference. Image clips are unsupported by this video-frame analysis.
