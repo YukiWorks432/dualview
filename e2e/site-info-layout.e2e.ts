@@ -16,10 +16,13 @@ async function expectHeaderHasNoOverflow(page: import('@playwright/test').Page) 
     expect(textLineCount).toBe(1)
   }
 
-  const horizontalOverflow = await page.evaluate(
-    () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
-  )
-  expect(horizontalOverflow).toBeLessThanOrEqual(1)
+  const header = page.locator('.site-header__inner')
+  const [headerOverflow, navOverflow] = await Promise.all([
+    header.evaluate((element) => element.scrollWidth - element.clientWidth),
+    nav.evaluate((element) => element.scrollWidth - element.clientWidth),
+  ])
+  expect(headerOverflow).toBeLessThanOrEqual(1)
+  expect(navOverflow).toBeLessThanOrEqual(1)
 }
 
 test('keeps site information header wrapping deterministic across responsive widths', async ({
