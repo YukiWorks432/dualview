@@ -1,4 +1,6 @@
 export { Button, type ButtonProps } from './button'
+export { ButtonWithIcon, type ButtonWithIconProps } from './button-with-icon'
+export { IconButton, type IconButtonProps } from './icon-button'
 export { Checkbox, type CheckboxProps } from './checkbox'
 export { buttonVariants, type ButtonVariantProps } from './button-variants'
 export {
