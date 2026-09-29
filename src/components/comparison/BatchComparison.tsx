@@ -38,6 +38,78 @@ interface BatchComparisonProps {
   onClose: () => void
 }
 
+// Load image as HTMLImageElement
+function loadImage(url: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    img.onload = () => resolve(img)
+    img.onerror = reject
+    img.src = url
+  })
+}
+
+// Compute metrics using 2D canvas
+function computeMetricsFromCanvas(
+  ctx: CanvasRenderingContext2D,
+  canvas: HTMLCanvasElement,
+  imgA: HTMLImageElement,
+  imgB: HTMLImageElement,
+) {
+  const width = canvas.width
+  const height = canvas.height
+
+  // Draw image A
+  ctx.clearRect(0, 0, width, height)
+  ctx.drawImage(imgA, 0, 0, width, height)
+  const dataA = ctx.getImageData(0, 0, width, height).data
+
+  // Draw image B
+  ctx.clearRect(0, 0, width, height)
+  ctx.drawImage(imgB, 0, 0, width, height)
+  const dataB = ctx.getImageData(0, 0, width, height).data
+
+  // Compute metrics
+  let sumDiff = 0
+  let maxDiff = 0
+  let diffPixels = 0
+  let sumSquaredDiff = 0
+  const threshold = 10 // Default threshold
+
+  for (let i = 0; i < dataA.length; i += 4) {
+    const dr = Math.abs(dataA[i] - dataB[i])
+    const dg = Math.abs(dataA[i + 1] - dataB[i + 1])
+    const db = Math.abs(dataA[i + 2] - dataB[i + 2])
+    const diff = (dr + dg + db) / 3
+
+    sumDiff += diff
+    maxDiff = Math.max(maxDiff, diff)
+    sumSquaredDiff += diff * diff
+
+    if (diff > threshold) {
+      diffPixels++
+    }
+  }
+
+  const pixelCount = dataA.length / 4
+  const meanDiff = sumDiff / pixelCount
+  const variance = sumSquaredDiff / pixelCount - meanDiff * meanDiff
+
+  // Simplified SSIM approximation
+  const ssim = 1 - (variance / (255 * 255)) * 0.5 - (meanDiff / 255) * 0.5
+
+  // Simplified Delta E (using RGB difference as approximation)
+  const deltaE = meanDiff * 0.4 // Rough approximation
+
+  return {
+    ssim: Math.max(0, Math.min(1, ssim)),
+    deltaE: deltaE,
+    diffPixelPercent: (diffPixels / pixelCount) * 100,
+    peakDifference: maxDiff,
+    meanDifference: meanDiff,
+  }
+}
+
+
 export function BatchComparison({ isOpen, onClose }: BatchComparisonProps) {
   const { files } = useMediaStore()
   const [selectedFiles, setSelectedFiles] = useState<string[]>([])
@@ -141,77 +213,6 @@ export function BatchComparison({ isOpen, onClose }: BatchComparisonProps) {
   const stopProcessing = useCallback(() => {
     abortRef.current = true
   }, [])
-
-  // Load image as HTMLImageElement
-  function loadImage(url: string): Promise<HTMLImageElement> {
-    return new Promise((resolve, reject) => {
-      const img = new Image()
-      img.onload = () => resolve(img)
-      img.onerror = reject
-      img.src = url
-    })
-  }
-
-  // Compute metrics using 2D canvas
-  function computeMetricsFromCanvas(
-    ctx: CanvasRenderingContext2D,
-    canvas: HTMLCanvasElement,
-    imgA: HTMLImageElement,
-    imgB: HTMLImageElement,
-  ) {
-    const width = canvas.width
-    const height = canvas.height
-
-    // Draw image A
-    ctx.clearRect(0, 0, width, height)
-    ctx.drawImage(imgA, 0, 0, width, height)
-    const dataA = ctx.getImageData(0, 0, width, height).data
-
-    // Draw image B
-    ctx.clearRect(0, 0, width, height)
-    ctx.drawImage(imgB, 0, 0, width, height)
-    const dataB = ctx.getImageData(0, 0, width, height).data
-
-    // Compute metrics
-    let sumDiff = 0
-    let maxDiff = 0
-    let diffPixels = 0
-    let sumSquaredDiff = 0
-    const threshold = 10 // Default threshold
-
-    for (let i = 0; i < dataA.length; i += 4) {
-      const dr = Math.abs(dataA[i] - dataB[i])
-      const dg = Math.abs(dataA[i + 1] - dataB[i + 1])
-      const db = Math.abs(dataA[i + 2] - dataB[i + 2])
-      const diff = (dr + dg + db) / 3
-
-      sumDiff += diff
-      maxDiff = Math.max(maxDiff, diff)
-      sumSquaredDiff += diff * diff
-
-      if (diff > threshold) {
-        diffPixels++
-      }
-    }
-
-    const pixelCount = dataA.length / 4
-    const meanDiff = sumDiff / pixelCount
-    const variance = sumSquaredDiff / pixelCount - meanDiff * meanDiff
-
-    // Simplified SSIM approximation
-    const ssim = 1 - (variance / (255 * 255)) * 0.5 - (meanDiff / 255) * 0.5
-
-    // Simplified Delta E (using RGB difference as approximation)
-    const deltaE = meanDiff * 0.4 // Rough approximation
-
-    return {
-      ssim: Math.max(0, Math.min(1, ssim)),
-      deltaE: deltaE,
-      diffPixelPercent: (diffPixels / pixelCount) * 100,
-      peakDifference: maxDiff,
-      meanDifference: meanDiff,
-    }
-  }
 
   // Sort results
   const sortedResults = [...results].sort((a, b) => {

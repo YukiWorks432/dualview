@@ -150,19 +150,5 @@ export function useProResClipSync(
       window.removeEventListener('playback-seek', handlePlaybackSeek as EventListener)
       input?.dispose()
     }
-  }, [
-    canvasRef,
-    media?.id,
-    media?.file,
-    media?.playbackBackend,
-    media?.hasAlpha,
-    clip?.id,
-    clip?.startTime,
-    clip?.endTime,
-    clip?.inPoint,
-    clip?.outPoint,
-    clip?.speed,
-    clip?.reverse,
-    onFrameReady,
-  ])
+  }, [canvasRef, media, clip, onFrameReady])
 }
