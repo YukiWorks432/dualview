@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import type { TimelineClip } from '../../types'
 import {
   calculateMediaTime,
+  calculateTimelineFrameRange,
   calculateTimelineTime,
   findActiveClip,
   findDisplayedClip,
@@ -38,6 +39,25 @@ describe('timeline media mapping', () => {
     expect(calculateTimelineTime(12, clip())).toBe(7)
     expect(calculateTimelineTime(14, clip({ speed: 2 }))).toBe(7)
     expect(calculateTimelineTime(28, clip({ reverse: true }))).toBe(7)
+  })
+
+  it('maps decoded frame intervals through speed and reverse playback', () => {
+    expect(calculateTimelineFrameRange(12, 0.04, clip({ speed: 2 }))).toEqual({
+      startTime: 6,
+      endTime: 6.02,
+    })
+    const reverseRange = calculateTimelineFrameRange(28, 0.04, clip({ reverse: true }))
+    expect(reverseRange?.startTime).toBeCloseTo(6.96, 8)
+    expect(reverseRange?.endTime).toBe(7)
+  })
+
+  it('clips decoded frame intervals to the clip in/out points', () => {
+    expect(calculateTimelineFrameRange(9.98, 0.04, clip())).toEqual({
+      startTime: 5,
+      endTime: 5.02,
+    })
+    expect(calculateTimelineFrameRange(30, 0.04, clip())).toBeNull()
+    expect(calculateTimelineFrameRange(10, 0, clip())).toBeNull()
   })
 
   it('returns null outside the clip and finds the active clip', () => {

@@ -1,5 +1,10 @@
 import type { TimelineClip } from '../../types'
 
+export interface TimelineFrameRange {
+  startTime: number
+  endTime: number
+}
+
 export function findActiveClip(
   clips: readonly TimelineClip[],
   timelineTime: number,
@@ -55,4 +60,30 @@ export function calculateTimelineTime(mediaTime: number, clip: TimelineClip): nu
   }
 
   return timelineTime
+}
+
+/**
+ * Map a decoded media-frame interval to the timeline interval where that frame is shown.
+ */
+export function calculateTimelineFrameRange(
+  mediaTimestamp: number,
+  mediaDuration: number,
+  clip: TimelineClip,
+): TimelineFrameRange | null {
+  if (!Number.isFinite(mediaTimestamp) || !Number.isFinite(mediaDuration) || mediaDuration <= 0) {
+    return null
+  }
+
+  const mediaStart = Math.max(mediaTimestamp, clip.inPoint)
+  const mediaEnd = Math.min(mediaTimestamp + mediaDuration, clip.outPoint)
+  if (mediaStart >= mediaEnd) return null
+
+  const timelineStart = calculateTimelineTime(mediaStart, clip)
+  const timelineEnd = calculateTimelineTime(mediaEnd, clip)
+  if (timelineStart === null || timelineEnd === null) return null
+
+  return {
+    startTime: Math.min(timelineStart, timelineEnd),
+    endTime: Math.max(timelineStart, timelineEnd),
+  }
 }

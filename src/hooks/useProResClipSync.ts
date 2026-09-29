@@ -3,7 +3,7 @@ import { useEffect } from 'react'
 
 import { ensureProResDecoder } from '../lib/media/prores'
 import { LatestRequestGate } from '../lib/media/requestGate'
-import { calculateMediaTime } from '../lib/media/timeline'
+import { calculateMediaTime, calculateTimelineFrameRange } from '../lib/media/timeline'
 import { usePlaybackStore } from '../stores/playbackStore'
 import type { MediaFile, TimelineClip } from '../types'
 
@@ -30,6 +30,7 @@ export function useProResClipSync(
       if (canvas) {
         canvas.dataset.frameReady = 'false'
         delete canvas.dataset.frameTimelineTime
+        delete canvas.dataset.frameTimelineEndTime
       }
       if (canvas && context) {
         context.clearRect(0, 0, canvas.width, canvas.height)
@@ -57,6 +58,16 @@ export function useProResClipSync(
           const frame = await sink.getCanvas(mediaTime)
           if (disposed || !frame || !requestGate.isCurrent(request.generation)) continue
 
+          const timelineRange = calculateTimelineFrameRange(frame.timestamp, frame.duration, clip)
+          if (
+            !timelineRange ||
+            request.timelineTime < timelineRange.startTime - 0.000001 ||
+            request.timelineTime > timelineRange.endTime + 0.000001
+          ) {
+            clearFrame()
+            continue
+          }
+
           const canvas = canvasRef.current
           if (!canvas) continue
 
@@ -72,7 +83,8 @@ export function useProResClipSync(
           context.clearRect(0, 0, canvas.width, canvas.height)
           context.drawImage(source, 0, 0, canvas.width, canvas.height)
           canvas.dataset.frameReady = 'true'
-          canvas.dataset.frameTimelineTime = String(request.timelineTime)
+          canvas.dataset.frameTimelineTime = String(timelineRange.startTime)
+          canvas.dataset.frameTimelineEndTime = String(timelineRange.endTime)
 
           if (!usePlaybackStore.getState().isPlaying) {
             onFrameReady?.()

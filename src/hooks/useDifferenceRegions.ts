@@ -8,7 +8,7 @@ import {
   sensitivityToPixelmatchThreshold,
 } from '../lib/difference/settings'
 import {
-  areFrameTimesSynchronized,
+  areFrameRangesSynchronized,
   getPlaybackDifferenceExpiryDelay,
 } from '../lib/difference/synchronization'
 import type {
@@ -20,13 +20,19 @@ import {
   isVisualFrameReady,
   type VisualFrameElement,
 } from '../lib/media/frameSource'
-import { calculateMediaTime, calculateTimelineTime } from '../lib/media/timeline'
+import {
+  calculateMediaTime,
+  calculateTimelineTime,
+  type TimelineFrameRange,
+} from '../lib/media/timeline'
 import { useDifferenceHighlightStore } from '../stores/differenceHighlightStore'
 import { usePlaybackStore } from '../stores/playbackStore'
 import type { TimelineClip } from '../types'
 
 const PLAYBACK_ANALYSIS_INTERVAL_MS = 200
 const PLAYBACK_SYNC_TOLERANCE_SECONDS = 0.08
+const PLAYBACK_FRAME_PAIR_TOLERANCE_SECONDS = 0.001
+const PLAYBACK_MIN_FRAME_OVERLAP_SECONDS = 0.001
 const PAUSED_SYNC_TOLERANCE_SECONDS = 0.02
 const PLAYBACK_RESULT_TTL_MS = 500
 const FULL_RESOLUTION_MAX_PIXELS = 12_000_000
@@ -34,7 +40,7 @@ const MAX_REGIONS = 80
 
 interface CapturedSource {
   imageData: ImageData
-  timelineTime: number | null
+  timelineRange: TimelineFrameRange | null
 }
 
 interface DifferenceResult {
@@ -85,6 +91,23 @@ function nextAnimationFrame(): Promise<void> {
   return new Promise((resolve) => requestAnimationFrame(() => resolve()))
 }
 
+function readCanvasTimelineRange(source: HTMLCanvasElement): TimelineFrameRange | null {
+  const startTime = Number(source.dataset.frameTimelineTime)
+  const endValue = source.dataset.frameTimelineEndTime
+  const endTime = endValue === undefined ? startTime : Number(endValue)
+  if (!Number.isFinite(startTime) || !Number.isFinite(endTime) || startTime > endTime) {
+    return null
+  }
+
+  return { startTime, endTime }
+}
+
+function distanceFromTimeToRange(time: number, range: TimelineFrameRange): number {
+  if (time < range.startTime) return range.startTime - time
+  if (time > range.endTime) return time - range.endTime
+  return 0
+}
+
 function waitForPresentedVideoSnapshot(
   video: HTMLVideoElement,
   clip: TimelineClip,
@@ -100,6 +123,7 @@ function waitForPresentedVideoSnapshot(
     let settled = false
     let callbackId: number | undefined
     let timeoutId: number | undefined
+    let capturedSnapshot: { imageData: ImageData; timelineTime: number } | null = null
 
     const finish = (snapshot: CapturedSource | null) => {
       if (settled) return
@@ -123,6 +147,22 @@ function waitForPresentedVideoSnapshot(
         }
 
         const presentedTimelineTime = calculateTimelineTime(metadata.mediaTime, clip)
+        if (capturedSnapshot && !video.seeking && presentedTimelineTime !== null) {
+          if (Math.abs(presentedTimelineTime - capturedSnapshot.timelineTime) > 0.000001) {
+            finish({
+              imageData: capturedSnapshot.imageData,
+              timelineRange: {
+                startTime: Math.min(capturedSnapshot.timelineTime, presentedTimelineTime),
+                endTime: Math.max(capturedSnapshot.timelineTime, presentedTimelineTime),
+              },
+            })
+            return
+          }
+
+          requestNextFrame()
+          return
+        }
+
         if (
           isVisualFrameReady(video) &&
           !video.seeking &&
@@ -131,7 +171,8 @@ function waitForPresentedVideoSnapshot(
         ) {
           const imageData = captureSource(video, canvas, width, height)
           if (imageData) {
-            finish({ imageData, timelineTime: presentedTimelineTime })
+            capturedSnapshot = { imageData, timelineTime: presentedTimelineTime }
+            requestNextFrame()
             return
           }
         }
@@ -140,7 +181,22 @@ function waitForPresentedVideoSnapshot(
       })
     }
 
-    timeoutId = window.setTimeout(() => finish(null), Math.max(0, deadline - performance.now()))
+    timeoutId = window.setTimeout(
+      () => {
+        finish(
+          isCurrent() && capturedSnapshot
+            ? {
+                imageData: capturedSnapshot.imageData,
+                timelineRange: {
+                  startTime: capturedSnapshot.timelineTime,
+                  endTime: capturedSnapshot.timelineTime,
+                },
+              }
+            : null,
+        )
+      },
+      Math.max(0, deadline - performance.now()),
+    )
     requestNextFrame()
   })
 }
@@ -160,13 +216,12 @@ async function captureSourceAtTime(
   if (source instanceof HTMLImageElement) {
     if (!isVisualFrameReady(source)) return null
     const imageData = captureSource(source, canvas, width, height)
-    return imageData ? { imageData, timelineTime: null } : null
+    return imageData ? { imageData, timelineRange: null } : null
   }
 
   if (
     source instanceof HTMLVideoElement &&
     isPlaying &&
-    !source.paused &&
     typeof source.requestVideoFrameCallback === 'function' &&
     typeof source.cancelVideoFrameCallback === 'function'
   ) {
@@ -202,20 +257,27 @@ async function captureSourceAtTime(
               afterCaptureTimelineTime !== null &&
               Math.abs(afterCaptureTimelineTime - observedTimelineTime) <= tolerance / 2
             ) {
-              return { imageData, timelineTime: observedTimelineTime }
+              return {
+                imageData,
+                timelineRange: {
+                  startTime: observedTimelineTime,
+                  endTime: observedTimelineTime,
+                },
+              }
             }
           }
         }
       } else {
-        const observedTimelineTime = Number(source.dataset.frameTimelineTime)
-        if (
-          Number.isFinite(observedTimelineTime) &&
-          Math.abs(observedTimelineTime - timelineTime) <= tolerance
-        ) {
+        const observedRange = readCanvasTimelineRange(source)
+        if (observedRange && distanceFromTimeToRange(timelineTime, observedRange) <= tolerance) {
           const imageData = captureSource(source, canvas, width, height)
-          const afterCaptureTimelineTime = Number(source.dataset.frameTimelineTime)
-          if (imageData && afterCaptureTimelineTime === observedTimelineTime) {
-            return { imageData, timelineTime: observedTimelineTime }
+          const afterCaptureRange = readCanvasTimelineRange(source)
+          if (
+            imageData &&
+            afterCaptureRange?.startTime === observedRange.startTime &&
+            afterCaptureRange.endTime === observedRange.endTime
+          ) {
+            return { imageData, timelineRange: observedRange }
           }
         }
       }
@@ -547,16 +609,18 @@ export function useDifferenceRegions({
 
         if (!isCurrent()) return
 
-        const frameTolerance = isPlaying
+        const expectedFrameTolerance = isPlaying
           ? PLAYBACK_SYNC_TOLERANCE_SECONDS
           : PAUSED_SYNC_TOLERANCE_SECONDS
         if (
           !capturedA ||
           !capturedB ||
-          !areFrameTimesSynchronized(
-            [capturedA.timelineTime, capturedB.timelineTime],
+          !areFrameRangesSynchronized(
+            [capturedA.timelineRange, capturedB.timelineRange],
             sampleTime,
-            frameTolerance,
+            expectedFrameTolerance,
+            isPlaying ? PLAYBACK_FRAME_PAIR_TOLERANCE_SECONDS : PAUSED_SYNC_TOLERANCE_SECONDS,
+            isPlaying ? PLAYBACK_MIN_FRAME_OVERLAP_SECONDS : 0,
           )
         ) {
           setResult(createEmptyResult(runSignature))
