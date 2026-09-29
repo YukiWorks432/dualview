@@ -82,10 +82,10 @@ export function SliderComparison() {
   const rawMediaB = displayClipB ? getFile(displayClipB.mediaId) : null
   const mediaA = rawMediaA?.type === 'video' || rawMediaA?.type === 'image' ? rawMediaA : null
   const mediaB = rawMediaB?.type === 'video' || rawMediaB?.type === 'image' ? rawMediaB : null
-  const mediaAWidth = mediaAWidth
-  const mediaAHeight = mediaAHeight
-  const mediaBWidth = mediaBWidth
-  const mediaBHeight = mediaBHeight
+  const mediaAWidth = mediaA?.width
+  const mediaAHeight = mediaA?.height
+  const mediaBWidth = mediaB?.width
+  const mediaBHeight = mediaB?.height
 
   // Calculate video bounds within container (accounting for object-contain)
   const calculateVideoBounds = useCallback(() => {
@@ -103,11 +103,11 @@ export function SliderComparison() {
 
     // Import probing provides display dimensions for both native video and ProRes.
     if (mediaAWidth && mediaAHeight) {
-      videoWidth = mediaA.width
-      videoHeight = mediaA.height
+      videoWidth = mediaAWidth
+      videoHeight = mediaAHeight
     } else if (mediaBWidth && mediaBHeight) {
-      videoWidth = mediaB.width
-      videoHeight = mediaB.height
+      videoWidth = mediaBWidth
+      videoHeight = mediaBHeight
     }
 
     // If still no dimensions, use container aspect (neutral fallback)
