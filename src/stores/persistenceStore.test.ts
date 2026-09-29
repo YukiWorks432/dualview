@@ -1,13 +1,21 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import type { ProjectRecord } from '../lib/indexedDB'
+
 const dbMocks = vi.hoisted(() => ({
-  initDB: vi.fn(async () => undefined),
-  saveProjectWithMedia: vi.fn(async () => undefined),
-  getProject: vi.fn(async () => null),
-  getAllProjects: vi.fn(async () => []),
-  deleteProject: vi.fn(async () => undefined),
-  getProjectMediaBlobs: vi.fn(async () => new Map<string, Blob>()),
-  estimateStorageUsage: vi.fn(async () => ({ used: 0, quota: 0, percentUsed: 0 })),
+  initDB: vi.fn<() => Promise<IDBDatabase>>(async () => ({}) as IDBDatabase),
+  saveProjectWithMedia: vi.fn<
+    (project: ProjectRecord, mediaBlobs: ReadonlyMap<string, Blob>) => Promise<void>
+  >(async () => undefined),
+  getProject: vi.fn<(id: string) => Promise<ProjectRecord | null>>(async () => null),
+  getAllProjects: vi.fn<() => Promise<ProjectRecord[]>>(async () => []),
+  deleteProject: vi.fn<(id: string) => Promise<void>>(async () => undefined),
+  getProjectMediaBlobs: vi.fn<(projectId: string) => Promise<Map<string, Blob>>>(
+    async () => new Map<string, Blob>(),
+  ),
+  estimateStorageUsage: vi.fn<() => Promise<{ used: number; quota: number; percentUsed: number }>>(
+    async () => ({ used: 0, quota: 0, percentUsed: 0 }),
+  ),
 }))
 
 vi.mock('../lib/indexedDB', () => ({

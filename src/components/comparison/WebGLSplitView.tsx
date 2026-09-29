@@ -78,7 +78,6 @@ export function WebGLSplitView({ isVisible, onToggle }: WebGLSplitViewProps) {
 
     const renderer = new WebGLComparisonRenderer(canvasRef.current)
     rendererRef.current = renderer
-    renderer.setMode(webglComparisonSettings.mode)
 
     return () => {
       renderer.dispose()
@@ -94,44 +93,47 @@ export function WebGLSplitView({ isVisible, onToggle }: WebGLSplitViewProps) {
   }, [webglComparisonSettings.mode])
 
   // Render loop for center panel
-  const render = useCallback(() => {
-    if (!isVisible) return
+  const render = useCallback(
+    function renderLoop() {
+      if (!isVisible) return
 
-    const renderer = rendererRef.current
-    if (!renderer) {
-      animationRef.current = requestAnimationFrame(render)
-      return
-    }
+      const renderer = rendererRef.current
+      if (!renderer) {
+        animationRef.current = requestAnimationFrame(renderLoop)
+        return
+      }
 
-    // Update texture A
-    if (mediaA?.type === 'video' && videoARef.current && videoARef.current.readyState >= 2) {
-      renderer.updateTexture('A', videoARef.current)
-    } else if (mediaA?.type === 'image' && imgARef.current && imagesLoaded.a) {
-      renderer.updateTexture('A', imgARef.current)
-    }
+      // Update texture A
+      if (mediaA?.type === 'video' && videoARef.current && videoARef.current.readyState >= 2) {
+        renderer.updateTexture('A', videoARef.current)
+      } else if (mediaA?.type === 'image' && imgARef.current && imagesLoaded.a) {
+        renderer.updateTexture('A', imgARef.current)
+      }
 
-    // Update texture B
-    if (mediaB?.type === 'video' && videoBRef.current && videoBRef.current.readyState >= 2) {
-      renderer.updateTexture('B', videoBRef.current)
-    } else if (mediaB?.type === 'image' && imgBRef.current && imagesLoaded.b) {
-      renderer.updateTexture('B', imgBRef.current)
-    }
+      // Update texture B
+      if (mediaB?.type === 'video' && videoBRef.current && videoBRef.current.readyState >= 2) {
+        renderer.updateTexture('B', videoBRef.current)
+      } else if (mediaB?.type === 'image' && imgBRef.current && imagesLoaded.b) {
+        renderer.updateTexture('B', imgBRef.current)
+      }
 
-    // Render
-    renderer.render({
-      amplification: webglComparisonSettings.amplification,
-      threshold: webglComparisonSettings.threshold,
-      opacity: webglComparisonSettings.opacity,
-      blockSize: webglComparisonSettings.blockSize,
-      loupeSize: webglComparisonSettings.loupeSize,
-      loupeZoom: webglComparisonSettings.loupeZoom,
-      checkerSize: webglComparisonSettings.checkerSize,
-      mouseX: 0.5,
-      mouseY: 0.5,
-    })
+      // Render
+      renderer.render({
+        amplification: webglComparisonSettings.amplification,
+        threshold: webglComparisonSettings.threshold,
+        opacity: webglComparisonSettings.opacity,
+        blockSize: webglComparisonSettings.blockSize,
+        loupeSize: webglComparisonSettings.loupeSize,
+        loupeZoom: webglComparisonSettings.loupeZoom,
+        checkerSize: webglComparisonSettings.checkerSize,
+        mouseX: 0.5,
+        mouseY: 0.5,
+      })
 
-    animationRef.current = requestAnimationFrame(render)
-  }, [mediaA, mediaB, webglComparisonSettings, imagesLoaded, isVisible])
+      animationRef.current = requestAnimationFrame(renderLoop)
+    },
+    [mediaA, mediaB, webglComparisonSettings, imagesLoaded, isVisible],
+  )
 
   // Start render loop
   useEffect(() => {

@@ -268,8 +268,6 @@ export function MorphologicalView() {
       return
     }
 
-    setProcessing(true)
-
     // Create temporary canvas for processing
     const tempCanvas = document.createElement('canvas')
     const { width: srcWidth, height: srcHeight } = getVisualFrameDimensions(source)
@@ -281,126 +279,139 @@ export function MorphologicalView() {
     tempCanvas.height = srcHeight * scale
 
     const tempCtx = tempCanvas.getContext('2d')
-    if (!tempCtx) {
-      setProcessing(false)
-      return
-    }
+    if (!tempCtx) return
+
+    let cancelled = false
+    queueMicrotask(() => {
+      if (!cancelled) setProcessing(true)
+    })
 
     tempCtx.drawImage(source, 0, 0, tempCanvas.width, tempCanvas.height)
     const imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height)
 
-    // Apply operations (in a setTimeout to not block UI)
-    setTimeout(() => {
+    // Apply operations in a separate task so React can paint the processing state first.
+    const timeoutId = window.setTimeout(() => {
+      if (cancelled) return
+
       const result = applyOperations(imageData, morphologicalSettings.operations)
       processedImageRef.current = result
       setProcessing(false)
     }, 0)
+
+    return () => {
+      cancelled = true
+      window.clearTimeout(timeoutId)
+      queueMicrotask(() => setProcessing(false))
+    }
   }, [mediaA, morphologicalSettings.operations, applyOperations, imagesLoaded])
 
   // Render function
-  const render = useCallback(() => {
-    const canvas = canvasRef.current
-    const container = containerRef.current
-    if (!canvas || !container) {
-      animationRef.current = requestAnimationFrame(render)
-      return
-    }
-
-    const ctx = canvas.getContext('2d')
-    if (!ctx) {
-      animationRef.current = requestAnimationFrame(render)
-      return
-    }
-
-    // Get container dimensions
-    const rect = container.getBoundingClientRect()
-    if (canvas.width !== rect.width || canvas.height !== rect.height) {
-      canvas.width = rect.width
-      canvas.height = rect.height
-    }
-
-    const width = canvas.width
-    const height = canvas.height
-
-    // Clear canvas
-    ctx.clearRect(0, 0, width, height)
-
-    // Get source
-    const sourceA =
-      mediaA?.type === 'video'
-        ? videoARef.current
-        : mediaA?.type === 'image'
-          ? imgARef.current
-          : null
-
-    const sourceAReady =
-      sourceA &&
-      (mediaA?.type === 'video'
-        ? isVideoFrameReady(videoARef.current)
-        : mediaA?.type === 'image' && imagesLoaded.a)
-
-    if (!sourceA || !sourceAReady) {
-      ctx.fillStyle = '#1a1a1a'
-      ctx.fillRect(0, 0, width, height)
-      animationRef.current = requestAnimationFrame(render)
-      return
-    }
-
-    // Draw side by side if showOriginal is enabled
-    if (morphologicalSettings.showOriginal && processedImageRef.current) {
-      // Left half: original
-      const halfWidth = width / 2
-      ctx.drawImage(sourceA, 0, 0, halfWidth, height)
-
-      // Right half: processed
-      const processedCanvas = document.createElement('canvas')
-      processedCanvas.width = processedImageRef.current.width
-      processedCanvas.height = processedImageRef.current.height
-      const processedCtx = processedCanvas.getContext('2d')
-      if (processedCtx) {
-        processedCtx.putImageData(processedImageRef.current, 0, 0)
-        ctx.drawImage(processedCanvas, halfWidth, 0, halfWidth, height)
+  const render = useCallback(
+    function renderLoop() {
+      const canvas = canvasRef.current
+      const container = containerRef.current
+      if (!canvas || !container) {
+        animationRef.current = requestAnimationFrame(renderLoop)
+        return
       }
 
-      // Draw divider
-      ctx.strokeStyle = '#ffff00'
-      ctx.lineWidth = 2
-      ctx.beginPath()
-      ctx.moveTo(halfWidth, 0)
-      ctx.lineTo(halfWidth, height)
-      ctx.stroke()
-
-      // Labels
-      ctx.fillStyle = 'rgba(0,0,0,0.7)'
-      ctx.fillRect(10, height - 30, 80, 20)
-      ctx.fillRect(halfWidth + 10, height - 30, 80, 20)
-
-      ctx.fillStyle = '#ffffff'
-      ctx.font = '12px sans-serif'
-      ctx.fillText('Original', 15, height - 15)
-      ctx.fillText('Processed', halfWidth + 15, height - 15)
-    } else if (processedImageRef.current && morphologicalSettings.operations.length > 0) {
-      // Full view: processed only
-      const processedCanvas = document.createElement('canvas')
-      processedCanvas.width = processedImageRef.current.width
-      processedCanvas.height = processedImageRef.current.height
-      const processedCtx = processedCanvas.getContext('2d')
-      if (processedCtx) {
-        processedCtx.putImageData(processedImageRef.current, 0, 0)
-        ctx.drawImage(processedCanvas, 0, 0, width, height)
+      const ctx = canvas.getContext('2d')
+      if (!ctx) {
+        animationRef.current = requestAnimationFrame(renderLoop)
+        return
       }
-    } else {
-      // No operations: show original
-      ctx.drawImage(sourceA, 0, 0, width, height)
-    }
 
-    animationRef.current = requestAnimationFrame(render)
-  }, [
-    mediaA,
-    morphologicalSettings.showOriginal,
-    morphologicalSettings.operations.length,
-    imagesLoaded,
-  ])
+      // Get container dimensions
+      const rect = container.getBoundingClientRect()
+      if (canvas.width !== rect.width || canvas.height !== rect.height) {
+        canvas.width = rect.width
+        canvas.height = rect.height
+      }
+
+      const width = canvas.width
+      const height = canvas.height
+
+      // Clear canvas
+      ctx.clearRect(0, 0, width, height)
+
+      // Get source
+      const sourceA =
+        mediaA?.type === 'video'
+          ? videoARef.current
+          : mediaA?.type === 'image'
+            ? imgARef.current
+            : null
+
+      const sourceAReady =
+        sourceA &&
+        (mediaA?.type === 'video'
+          ? isVideoFrameReady(videoARef.current)
+          : mediaA?.type === 'image' && imagesLoaded.a)
+
+      if (!sourceA || !sourceAReady) {
+        ctx.fillStyle = '#1a1a1a'
+        ctx.fillRect(0, 0, width, height)
+        animationRef.current = requestAnimationFrame(renderLoop)
+        return
+      }
+
+      // Draw side by side if showOriginal is enabled
+      if (morphologicalSettings.showOriginal && processedImageRef.current) {
+        // Left half: original
+        const halfWidth = width / 2
+        ctx.drawImage(sourceA, 0, 0, halfWidth, height)
+
+        // Right half: processed
+        const processedCanvas = document.createElement('canvas')
+        processedCanvas.width = processedImageRef.current.width
+        processedCanvas.height = processedImageRef.current.height
+        const processedCtx = processedCanvas.getContext('2d')
+        if (processedCtx) {
+          processedCtx.putImageData(processedImageRef.current, 0, 0)
+          ctx.drawImage(processedCanvas, halfWidth, 0, halfWidth, height)
+        }
+
+        // Draw divider
+        ctx.strokeStyle = '#ffff00'
+        ctx.lineWidth = 2
+        ctx.beginPath()
+        ctx.moveTo(halfWidth, 0)
+        ctx.lineTo(halfWidth, height)
+        ctx.stroke()
+
+        // Labels
+        ctx.fillStyle = 'rgba(0,0,0,0.7)'
+        ctx.fillRect(10, height - 30, 80, 20)
+        ctx.fillRect(halfWidth + 10, height - 30, 80, 20)
+
+        ctx.fillStyle = '#ffffff'
+        ctx.font = '12px sans-serif'
+        ctx.fillText('Original', 15, height - 15)
+        ctx.fillText('Processed', halfWidth + 15, height - 15)
+      } else if (processedImageRef.current && morphologicalSettings.operations.length > 0) {
+        // Full view: processed only
+        const processedCanvas = document.createElement('canvas')
+        processedCanvas.width = processedImageRef.current.width
+        processedCanvas.height = processedImageRef.current.height
+        const processedCtx = processedCanvas.getContext('2d')
+        if (processedCtx) {
+          processedCtx.putImageData(processedImageRef.current, 0, 0)
+          ctx.drawImage(processedCanvas, 0, 0, width, height)
+        }
+      } else {
+        // No operations: show original
+        ctx.drawImage(sourceA, 0, 0, width, height)
+      }
+
+      animationRef.current = requestAnimationFrame(renderLoop)
+    },
+    [
+      mediaA,
+      morphologicalSettings.showOriginal,
+      morphologicalSettings.operations.length,
+      imagesLoaded,
+    ],
+  )
 
   // Start render loop
   useEffect(() => {

@@ -56,58 +56,61 @@ export function BlendModes() {
   const mediaA = rawMediaA?.type === 'video' || rawMediaA?.type === 'image' ? rawMediaA : null
   const mediaB = rawMediaB?.type === 'video' || rawMediaB?.type === 'image' ? rawMediaB : null
 
-  const renderFrame = useCallback(() => {
-    const canvas = canvasRef.current
-    const ctx = canvas?.getContext('2d')
-    if (!canvas || !ctx) return
+  const renderFrame = useCallback(
+    function renderLoop() {
+      const canvas = canvasRef.current
+      const ctx = canvas?.getContext('2d')
+      if (!canvas || !ctx) return
 
-    const sourceA = mediaARef.current
-    const sourceB = mediaBRef.current
+      const sourceA = mediaARef.current
+      const sourceB = mediaBRef.current
 
-    canvas.dataset.frameReady = 'false'
+      canvas.dataset.frameReady = 'false'
 
-    // Clear canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
+      // Clear canvas
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-    if (!mediaA && !mediaB) return
+      if (!mediaA && !mediaB) return
 
-    const sourceAReady = !mediaA || isVisualFrameReady(sourceA)
-    const sourceBReady = !mediaB || isVisualFrameReady(sourceB)
-    if (!sourceAReady || !sourceBReady) {
-      if (isPlaying) {
-        animationRef.current = requestAnimationFrame(renderFrame)
+      const sourceAReady = !mediaA || isVisualFrameReady(sourceA)
+      const sourceBReady = !mediaB || isVisualFrameReady(sourceB)
+      if (!sourceAReady || !sourceBReady) {
+        if (isPlaying) {
+          animationRef.current = requestAnimationFrame(renderLoop)
+        }
+        return
       }
-      return
-    }
 
-    // Apply zoom and pan transforms (IMG-002)
-    ctx.save()
-    const centerX = canvas.width / 2
-    const centerY = canvas.height / 2
-    ctx.translate(centerX + panX, centerY + panY)
-    ctx.scale(zoom, zoom)
-    ctx.translate(-centerX, -centerY)
+      // Apply zoom and pan transforms (IMG-002)
+      ctx.save()
+      const centerX = canvas.width / 2
+      const centerY = canvas.height / 2
+      ctx.translate(centerX + panX, centerY + panY)
+      ctx.scale(zoom, zoom)
+      ctx.translate(-centerX, -centerY)
 
-    // Draw B first (base layer), then A with the selected blend mode.
-    if (isVisualFrameReady(sourceB) && mediaB) {
+      // Draw B first (base layer), then A with the selected blend mode.
+      if (isVisualFrameReady(sourceB) && mediaB) {
+        ctx.globalCompositeOperation = 'source-over'
+        ctx.drawImage(sourceB, 0, 0, canvas.width, canvas.height)
+      }
+
+      if (isVisualFrameReady(sourceA) && mediaA) {
+        ctx.globalCompositeOperation = blendModeMap[blendMode]
+        ctx.drawImage(sourceA, 0, 0, canvas.width, canvas.height)
+      }
+
+      // Reset composite operation and restore transform
       ctx.globalCompositeOperation = 'source-over'
-      ctx.drawImage(sourceB, 0, 0, canvas.width, canvas.height)
-    }
+      ctx.restore()
+      canvas.dataset.frameReady = 'true'
 
-    if (isVisualFrameReady(sourceA) && mediaA) {
-      ctx.globalCompositeOperation = blendModeMap[blendMode]
-      ctx.drawImage(sourceA, 0, 0, canvas.width, canvas.height)
-    }
-
-    // Reset composite operation and restore transform
-    ctx.globalCompositeOperation = 'source-over'
-    ctx.restore()
-    canvas.dataset.frameReady = 'true'
-
-    if (isPlaying) {
-      animationRef.current = requestAnimationFrame(renderFrame)
-    }
-  }, [blendMode, isPlaying, mediaA, mediaB, zoom, panX, panY])
+      if (isPlaying) {
+        animationRef.current = requestAnimationFrame(renderLoop)
+      }
+    },
+    [blendMode, isPlaying, mediaA, mediaB, zoom, panX, panY],
+  )
 
   const handleFrameReady = useCallback(() => {
     setFrameRevision((revision) => revision + 1)

@@ -1,11 +1,16 @@
 import * as React from 'react'
-import type { CSSProperties, HTMLAttributes, ReactNode } from 'react'
+import type { ComponentType, CSSProperties, HTMLAttributes, ReactNode } from 'react'
 
 import { Elevated } from '../../lib/elevated'
 import { SURFACE_BG, surfaceClasses } from '../../lib/surface-classes'
 import { useSurface } from '../../lib/surface-context'
 import { SurfaceProvider as UpstreamSurfaceProvider } from '../../lib/surface-provider'
 import { cn } from '../../lib/utils'
+
+const SurfaceProviderComponent = UpstreamSurfaceProvider as ComponentType<{
+  value: number
+  children?: ReactNode
+}>
 
 export const SURFACE_MIN_LEVEL = 1
 export const SURFACE_MAX_LEVEL = 8
@@ -24,7 +29,11 @@ export interface SurfaceProviderProps {
 }
 
 export function SurfaceProvider({ value = SURFACE_MIN_LEVEL, children }: SurfaceProviderProps) {
-  return React.createElement(UpstreamSurfaceProvider, { value: clampSurfaceLevel(value), children })
+  return React.createElement(
+    SurfaceProviderComponent,
+    { value: clampSurfaceLevel(value) },
+    children,
+  )
 }
 
 type SurfaceStyle = CSSProperties & {
@@ -96,7 +105,7 @@ export function ElevatedSurface({
       }),
     })
 
-    return React.createElement(UpstreamSurfaceProvider, { value: level, children: elevatedChild })
+    return React.createElement(SurfaceProviderComponent, { value: level }, elevatedChild)
   }
 
   return React.createElement(

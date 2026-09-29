@@ -76,17 +76,17 @@ export function GridTileComparison() {
 
   // Render function
   const render = useCallback(
-    (timestamp: number) => {
+    function renderLoop(timestamp: number) {
       const canvas = canvasRef.current
       const container = containerRef.current
       if (!canvas || !container) {
-        animationRef.current = requestAnimationFrame(render)
+        animationRef.current = requestAnimationFrame(renderLoop)
         return
       }
 
       const ctx = canvas.getContext('2d')
       if (!ctx) {
-        animationRef.current = requestAnimationFrame(render)
+        animationRef.current = requestAnimationFrame(renderLoop)
         return
       }
 
@@ -145,7 +145,7 @@ export function GridTileComparison() {
       if (!sourceAReady && !sourceBReady) {
         ctx.fillStyle = '#1a1a1a'
         ctx.fillRect(0, 0, width, height)
-        animationRef.current = requestAnimationFrame(render)
+        animationRef.current = requestAnimationFrame(renderLoop)
         return
       }
 
@@ -246,7 +246,7 @@ export function GridTileComparison() {
         }
       }
 
-      animationRef.current = requestAnimationFrame(render)
+      animationRef.current = requestAnimationFrame(renderLoop)
     },
     [mediaA, mediaB, gridTileSettings, imagesLoaded],
   )

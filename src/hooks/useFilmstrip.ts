@@ -4,7 +4,7 @@
  * Manages filmstrip extraction and caching for video clips.
  */
 
-import { useEffect, useState, useCallback } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import {
   extractFilmstrip,
@@ -25,6 +25,19 @@ interface UseFilmstripResult {
   reload: () => void
 }
 
+function useStableFilmstripConfig(options: UseFilmstripOptions): {
+  enabled: boolean
+  config: FilmstripConfig
+} {
+  const { enabled = true, frameInterval, thumbnailWidth, thumbnailHeight, maxFrames } = options
+  const config = useMemo(
+    () => ({ frameInterval, thumbnailWidth, thumbnailHeight, maxFrames }),
+    [frameInterval, thumbnailWidth, thumbnailHeight, maxFrames],
+  )
+
+  return { enabled, config }
+}
+
 /**
  * Hook to get filmstrip data for a video media item
  */
@@ -32,7 +45,7 @@ export function useFilmstrip(
   mediaId: string | undefined,
   options: UseFilmstripOptions = {},
 ): UseFilmstripResult {
-  const { enabled = true, ...config } = options
+  const { enabled, config } = useStableFilmstripConfig(options)
   const [filmstrip, setFilmstrip] = useState<FilmstripData | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -45,42 +58,64 @@ export function useFilmstrip(
   }, [])
 
   useEffect(() => {
-    if (!mediaId || !enabled) {
-      setFilmstrip(null)
-      return
-    }
+    let cancelled = false
 
-    const media = getFile(mediaId)
-    if (!media || media.type !== 'video') {
-      setFilmstrip(null)
-      return
-    }
+    const loadFilmstrip = async () => {
+      // Keep effect-driven state changes asynchronous so stale work can be cancelled
+      // before it reaches React state.
+      await Promise.resolve()
+      if (cancelled) return
 
-    // Check cache first
-    const cached = getCachedFilmstrip(mediaId)
-    if (cached) {
-      setFilmstrip(cached)
-      return
-    }
+      if (!mediaId || !enabled) {
+        setFilmstrip(null)
+        setIsLoading(false)
+        setError(null)
+        return
+      }
 
-    // Start extraction
-    setIsLoading(true)
-    setError(null)
+      const media = getFile(mediaId)
+      if (!media || media.type !== 'video') {
+        setFilmstrip(null)
+        setIsLoading(false)
+        setError(null)
+        return
+      }
 
-    extractFilmstrip(mediaId, media.url, media.duration || 10, config)
-      .then((result) => {
+      const cached = getCachedFilmstrip(mediaId)
+      if (cached) {
+        setFilmstrip(cached)
+        setIsLoading(false)
+        setError(null)
+        return
+      }
+
+      setIsLoading(true)
+      setError(null)
+
+      try {
+        const result = await extractFilmstrip(mediaId, media.url, media.duration || 10, config)
+        if (cancelled) return
+
         setFilmstrip(result)
         if (!result) {
           setError('Failed to extract frames')
         }
-      })
-      .catch((err) => {
+      } catch (err) {
+        if (cancelled) return
         console.error('Filmstrip extraction error:', err)
-        setError(err.message || 'Extraction failed')
-      })
-      .finally(() => {
-        setIsLoading(false)
-      })
+        setError(err instanceof Error ? err.message : 'Extraction failed')
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false)
+        }
+      }
+    }
+
+    void loadFilmstrip()
+
+    return () => {
+      cancelled = true
+    }
   }, [mediaId, enabled, getFile, reloadTrigger, config])
 
   return { filmstrip, isLoading, error, reload }
@@ -93,22 +128,28 @@ export function useFilmstrips(
   mediaIds: string[],
   options: UseFilmstripOptions = {},
 ): Map<string, FilmstripData | null> {
-  const { enabled = true, ...config } = options
+  const { enabled, config } = useStableFilmstripConfig(options)
   const [filmstrips, setFilmstrips] = useState<Map<string, FilmstripData | null>>(new Map())
+  const mediaIdsKey = JSON.stringify(mediaIds)
 
   const getFile = useMediaStore((state) => state.getFile)
 
   useEffect(() => {
-    if (!enabled || mediaIds.length === 0) {
-      setFilmstrips(new Map())
-      return
-    }
+    let cancelled = false
 
     const extractAll = async () => {
+      await Promise.resolve()
+      if (cancelled) return
+
+      const requestedMediaIds = JSON.parse(mediaIdsKey) as string[]
+      if (!enabled || requestedMediaIds.length === 0) {
+        setFilmstrips(new Map())
+        return
+      }
+
       const results = new Map<string, FilmstripData | null>()
 
-      for (const mediaId of mediaIds) {
-        // Check cache first
+      for (const mediaId of requestedMediaIds) {
         const cached = getCachedFilmstrip(mediaId)
         if (cached) {
           results.set(mediaId, cached)
@@ -123,17 +164,25 @@ export function useFilmstrips(
 
         try {
           const filmstrip = await extractFilmstrip(mediaId, media.url, media.duration || 10, config)
+          if (cancelled) return
           results.set(mediaId, filmstrip)
         } catch {
+          if (cancelled) return
           results.set(mediaId, null)
         }
       }
 
-      setFilmstrips(results)
+      if (!cancelled) {
+        setFilmstrips(results)
+      }
     }
 
-    extractAll()
-  }, [mediaIds.join(','), enabled, getFile])
+    void extractAll()
+
+    return () => {
+      cancelled = true
+    }
+  }, [mediaIdsKey, enabled, getFile, config])
 
   return filmstrips
 }

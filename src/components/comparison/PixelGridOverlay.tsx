@@ -29,7 +29,12 @@ export function PixelGridOverlay() {
   const imgARef = useRef<HTMLImageElement>(null)
   const animationRef = useRef<number>(0)
 
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
+  const [mousePos, setMousePos] = useState({
+    x: 0,
+    y: 0,
+    containerWidth: 400,
+    containerHeight: 300,
+  })
   const [hoveredPixel, setHoveredPixel] = useState<{
     x: number
     y: number
@@ -75,183 +80,186 @@ export function PixelGridOverlay() {
   }, [pixelGridSettings.enabled, pixelGridSettings.minZoomLevel, zoom])
 
   // Render function
-  const render = useCallback(() => {
-    const canvas = canvasRef.current
-    const container = containerRef.current
-    if (!canvas || !container) {
-      animationRef.current = requestAnimationFrame(render)
-      return
-    }
-
-    const ctx = canvas.getContext('2d')
-    if (!ctx) {
-      animationRef.current = requestAnimationFrame(render)
-      return
-    }
-
-    // Get container dimensions
-    const rect = container.getBoundingClientRect()
-    if (canvas.width !== rect.width || canvas.height !== rect.height) {
-      canvas.width = rect.width
-      canvas.height = rect.height
-    }
-
-    const width = canvas.width
-    const height = canvas.height
-
-    // Clear canvas
-    ctx.clearRect(0, 0, width, height)
-
-    // Get source
-    const sourceA =
-      mediaA?.type === 'video'
-        ? videoARef.current
-        : mediaA?.type === 'image'
-          ? imgARef.current
-          : null
-
-    const sourceAReady =
-      sourceA &&
-      (mediaA?.type === 'video'
-        ? (videoARef.current?.readyState || 0) >= 2
-        : mediaA?.type === 'image' && imagesLoaded.a)
-
-    if (!sourceA || !sourceAReady) {
-      ctx.fillStyle = '#1a1a1a'
-      ctx.fillRect(0, 0, width, height)
-      animationRef.current = requestAnimationFrame(render)
-      return
-    }
-
-    // Get source dimensions
-    const srcWidth = 'videoWidth' in sourceA ? sourceA.videoWidth : sourceA.naturalWidth
-    const srcHeight = 'videoHeight' in sourceA ? sourceA.videoHeight : sourceA.naturalHeight
-
-    // Draw the source image
-    ctx.drawImage(sourceA, 0, 0, width, height)
-
-    // Only draw pixel grid if zoom is high enough
-    if (!shouldShowGrid) {
-      animationRef.current = requestAnimationFrame(render)
-      return
-    }
-
-    // Calculate pixel size at current zoom
-    const pixelWidth = (width / srcWidth) * zoom
-    const pixelHeight = (height / srcHeight) * zoom
-
-    // Only draw if pixels are reasonably large
-    if (pixelWidth < 10 || pixelHeight < 10) {
-      animationRef.current = requestAnimationFrame(render)
-      return
-    }
-
-    // Determine grid color
-    let gridColor = '#ffffff'
-    if (pixelGridSettings.gridColor === 'black') {
-      gridColor = '#000000'
-    } else if (pixelGridSettings.gridColor === 'auto') {
-      // Sample center pixel to determine contrast
-      const centerData = ctx.getImageData(width / 2, height / 2, 1, 1).data
-      const brightness = (centerData[0] + centerData[1] + centerData[2]) / 3
-      gridColor = brightness > 128 ? '#000000' : '#ffffff'
-    }
-
-    // Draw grid lines
-    ctx.strokeStyle = gridColor
-    ctx.lineWidth = 1
-    ctx.globalAlpha = 0.5
-
-    // Calculate visible pixel range
-    const startX = 0
-    const startY = 0
-    const endX = srcWidth
-    const endY = srcHeight
-
-    // Vertical lines
-    for (let px = startX; px <= endX; px++) {
-      const x = (px / srcWidth) * width * zoom
-      if (x >= 0 && x <= width * zoom) {
-        ctx.beginPath()
-        ctx.moveTo(x, 0)
-        ctx.lineTo(x, height * zoom)
-        ctx.stroke()
+  const render = useCallback(
+    function renderLoop() {
+      const canvas = canvasRef.current
+      const container = containerRef.current
+      if (!canvas || !container) {
+        animationRef.current = requestAnimationFrame(renderLoop)
+        return
       }
-    }
 
-    // Horizontal lines
-    for (let py = startY; py <= endY; py++) {
-      const y = (py / srcHeight) * height * zoom
-      if (y >= 0 && y <= height * zoom) {
-        ctx.beginPath()
-        ctx.moveTo(0, y)
-        ctx.lineTo(width * zoom, y)
-        ctx.stroke()
+      const ctx = canvas.getContext('2d')
+      if (!ctx) {
+        animationRef.current = requestAnimationFrame(renderLoop)
+        return
       }
-    }
 
-    ctx.globalAlpha = 1
+      // Get container dimensions
+      const rect = container.getBoundingClientRect()
+      if (canvas.width !== rect.width || canvas.height !== rect.height) {
+        canvas.width = rect.width
+        canvas.height = rect.height
+      }
 
-    // Draw RGB values if enabled and pixels are large enough
-    if (pixelGridSettings.showRGBValues && pixelWidth > 40 && pixelHeight > 20) {
-      ctx.font = `${Math.min(10, pixelWidth / 6)}px monospace`
-      ctx.textAlign = 'center'
-      ctx.textBaseline = 'middle'
+      const width = canvas.width
+      const height = canvas.height
 
-      // Only draw for visible pixels
-      const visibleStartX = Math.floor(0)
-      const visibleEndX = Math.min(srcWidth, Math.ceil(width / pixelWidth) + 1)
-      const visibleStartY = Math.floor(0)
-      const visibleEndY = Math.min(srcHeight, Math.ceil(height / pixelHeight) + 1)
+      // Clear canvas
+      ctx.clearRect(0, 0, width, height)
 
-      // Limit to reasonable number of labels
-      const maxLabels = 100
-      let labelCount = 0
+      // Get source
+      const sourceA =
+        mediaA?.type === 'video'
+          ? videoARef.current
+          : mediaA?.type === 'image'
+            ? imgARef.current
+            : null
 
-      for (let py = visibleStartY; py < visibleEndY && labelCount < maxLabels; py++) {
-        for (let px = visibleStartX; px < visibleEndX && labelCount < maxLabels; px++) {
-          const x = (px + 0.5) * pixelWidth
-          const y = (py + 0.5) * pixelHeight
+      const sourceAReady =
+        sourceA &&
+        (mediaA?.type === 'video'
+          ? (videoARef.current?.readyState || 0) >= 2
+          : mediaA?.type === 'image' && imagesLoaded.a)
 
-          // Get pixel color from source
-          const tempCanvas = document.createElement('canvas')
-          tempCanvas.width = 1
-          tempCanvas.height = 1
-          const tempCtx = tempCanvas.getContext('2d')
-          if (tempCtx) {
-            tempCtx.drawImage(sourceA, px, py, 1, 1, 0, 0, 1, 1)
-            const data = tempCtx.getImageData(0, 0, 1, 1).data
-            const r = data[0]
-            const g = data[1]
-            const b = data[2]
+      if (!sourceA || !sourceAReady) {
+        ctx.fillStyle = '#1a1a1a'
+        ctx.fillRect(0, 0, width, height)
+        animationRef.current = requestAnimationFrame(renderLoop)
+        return
+      }
 
-            // Determine text color for contrast
-            const brightness = (r + g + b) / 3
-            ctx.fillStyle = brightness > 128 ? '#000000' : '#ffffff'
-            ctx.globalAlpha = 0.8
+      // Get source dimensions
+      const srcWidth = 'videoWidth' in sourceA ? sourceA.videoWidth : sourceA.naturalWidth
+      const srcHeight = 'videoHeight' in sourceA ? sourceA.videoHeight : sourceA.naturalHeight
 
-            // Draw RGB text
-            ctx.fillText(`${r}`, x, y - 5)
-            ctx.fillText(`${g}`, x, y + 5)
-            ctx.fillText(`${b}`, x, y + 15)
+      // Draw the source image
+      ctx.drawImage(sourceA, 0, 0, width, height)
 
-            labelCount++
-          }
+      // Only draw pixel grid if zoom is high enough
+      if (!shouldShowGrid) {
+        animationRef.current = requestAnimationFrame(renderLoop)
+        return
+      }
+
+      // Calculate pixel size at current zoom
+      const pixelWidth = (width / srcWidth) * zoom
+      const pixelHeight = (height / srcHeight) * zoom
+
+      // Only draw if pixels are reasonably large
+      if (pixelWidth < 10 || pixelHeight < 10) {
+        animationRef.current = requestAnimationFrame(renderLoop)
+        return
+      }
+
+      // Determine grid color
+      let gridColor = '#ffffff'
+      if (pixelGridSettings.gridColor === 'black') {
+        gridColor = '#000000'
+      } else if (pixelGridSettings.gridColor === 'auto') {
+        // Sample center pixel to determine contrast
+        const centerData = ctx.getImageData(width / 2, height / 2, 1, 1).data
+        const brightness = (centerData[0] + centerData[1] + centerData[2]) / 3
+        gridColor = brightness > 128 ? '#000000' : '#ffffff'
+      }
+
+      // Draw grid lines
+      ctx.strokeStyle = gridColor
+      ctx.lineWidth = 1
+      ctx.globalAlpha = 0.5
+
+      // Calculate visible pixel range
+      const startX = 0
+      const startY = 0
+      const endX = srcWidth
+      const endY = srcHeight
+
+      // Vertical lines
+      for (let px = startX; px <= endX; px++) {
+        const x = (px / srcWidth) * width * zoom
+        if (x >= 0 && x <= width * zoom) {
+          ctx.beginPath()
+          ctx.moveTo(x, 0)
+          ctx.lineTo(x, height * zoom)
+          ctx.stroke()
+        }
+      }
+
+      // Horizontal lines
+      for (let py = startY; py <= endY; py++) {
+        const y = (py / srcHeight) * height * zoom
+        if (y >= 0 && y <= height * zoom) {
+          ctx.beginPath()
+          ctx.moveTo(0, y)
+          ctx.lineTo(width * zoom, y)
+          ctx.stroke()
         }
       }
 
       ctx.globalAlpha = 1
-    }
 
-    animationRef.current = requestAnimationFrame(render)
-  }, [
-    mediaA,
-    shouldShowGrid,
-    zoom,
-    pixelGridSettings.gridColor,
-    pixelGridSettings.showRGBValues,
-    imagesLoaded,
-  ])
+      // Draw RGB values if enabled and pixels are large enough
+      if (pixelGridSettings.showRGBValues && pixelWidth > 40 && pixelHeight > 20) {
+        ctx.font = `${Math.min(10, pixelWidth / 6)}px monospace`
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
+
+        // Only draw for visible pixels
+        const visibleStartX = Math.floor(0)
+        const visibleEndX = Math.min(srcWidth, Math.ceil(width / pixelWidth) + 1)
+        const visibleStartY = Math.floor(0)
+        const visibleEndY = Math.min(srcHeight, Math.ceil(height / pixelHeight) + 1)
+
+        // Limit to reasonable number of labels
+        const maxLabels = 100
+        let labelCount = 0
+
+        for (let py = visibleStartY; py < visibleEndY && labelCount < maxLabels; py++) {
+          for (let px = visibleStartX; px < visibleEndX && labelCount < maxLabels; px++) {
+            const x = (px + 0.5) * pixelWidth
+            const y = (py + 0.5) * pixelHeight
+
+            // Get pixel color from source
+            const tempCanvas = document.createElement('canvas')
+            tempCanvas.width = 1
+            tempCanvas.height = 1
+            const tempCtx = tempCanvas.getContext('2d')
+            if (tempCtx) {
+              tempCtx.drawImage(sourceA, px, py, 1, 1, 0, 0, 1, 1)
+              const data = tempCtx.getImageData(0, 0, 1, 1).data
+              const r = data[0]
+              const g = data[1]
+              const b = data[2]
+
+              // Determine text color for contrast
+              const brightness = (r + g + b) / 3
+              ctx.fillStyle = brightness > 128 ? '#000000' : '#ffffff'
+              ctx.globalAlpha = 0.8
+
+              // Draw RGB text
+              ctx.fillText(`${r}`, x, y - 5)
+              ctx.fillText(`${g}`, x, y + 5)
+              ctx.fillText(`${b}`, x, y + 15)
+
+              labelCount++
+            }
+          }
+        }
+
+        ctx.globalAlpha = 1
+      }
+
+      animationRef.current = requestAnimationFrame(renderLoop)
+    },
+    [
+      mediaA,
+      shouldShowGrid,
+      zoom,
+      pixelGridSettings.gridColor,
+      pixelGridSettings.showRGBValues,
+      imagesLoaded,
+    ],
+  )
 
   // Start render loop
   useEffect(() => {
@@ -269,7 +277,7 @@ export function PixelGridOverlay() {
       const rect = e.currentTarget.getBoundingClientRect()
       const x = e.clientX - rect.left
       const y = e.clientY - rect.top
-      setMousePos({ x, y })
+      setMousePos({ x, y, containerWidth: rect.width, containerHeight: rect.height })
 
       // Get pixel info from source
       const sourceA =
@@ -455,8 +463,8 @@ export function PixelGridOverlay() {
         <div
           className="absolute pointer-events-none bg-black/90 px-3 py-2 rounded text-xs font-mono z-50"
           style={{
-            left: Math.min(mousePos.x + 15, (containerRef.current?.offsetWidth || 400) - 200),
-            top: Math.min(mousePos.y + 15, (containerRef.current?.offsetHeight || 300) - 100),
+            left: Math.min(mousePos.x + 15, mousePos.containerWidth - 200),
+            top: Math.min(mousePos.y + 15, mousePos.containerHeight - 100),
           }}
         >
           <div className="text-gray-300 font-semibold mb-1">Pixel Info</div>

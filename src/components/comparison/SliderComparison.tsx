@@ -38,8 +38,20 @@ export function SliderComparison() {
   const { currentTime } = usePlaybackStore()
   const { getFile } = useMediaStore()
   const { zoom, resetZoom, getTransformStyle, containerProps } = useSyncedZoom()
-  const dropZoneA = useDropZone({ trackType: 'a' })
-  const dropZoneB = useDropZone({ trackType: 'b' })
+  const {
+    isDragOver: isDragOverA,
+    fileInputRef: fileInputRefA,
+    openFileDialog: openFileDialogA,
+    handleFileInputChange: handleFileInputChangeA,
+    dropZoneProps: dropZonePropsA,
+  } = useDropZone({ trackType: 'a' })
+  const {
+    isDragOver: isDragOverB,
+    fileInputRef: fileInputRefB,
+    openFileDialog: openFileDialogB,
+    handleFileInputChange: handleFileInputChangeB,
+    dropZoneProps: dropZonePropsB,
+  } = useDropZone({ trackType: 'b' })
 
   const imgARef = useRef<HTMLImageElement>(null)
   const imgBRef = useRef<HTMLImageElement>(null)
@@ -70,6 +82,10 @@ export function SliderComparison() {
   const rawMediaB = displayClipB ? getFile(displayClipB.mediaId) : null
   const mediaA = rawMediaA?.type === 'video' || rawMediaA?.type === 'image' ? rawMediaA : null
   const mediaB = rawMediaB?.type === 'video' || rawMediaB?.type === 'image' ? rawMediaB : null
+  const mediaAWidth = mediaA?.width
+  const mediaAHeight = mediaA?.height
+  const mediaBWidth = mediaB?.width
+  const mediaBHeight = mediaB?.height
 
   // Calculate video bounds within container (accounting for object-contain)
   const calculateVideoBounds = useCallback(() => {
@@ -86,12 +102,12 @@ export function SliderComparison() {
     let videoHeight = 0
 
     // Import probing provides display dimensions for both native video and ProRes.
-    if (mediaA?.width && mediaA?.height) {
-      videoWidth = mediaA.width
-      videoHeight = mediaA.height
-    } else if (mediaB?.width && mediaB?.height) {
-      videoWidth = mediaB.width
-      videoHeight = mediaB.height
+    if (mediaAWidth && mediaAHeight) {
+      videoWidth = mediaAWidth
+      videoHeight = mediaAHeight
+    } else if (mediaBWidth && mediaBHeight) {
+      videoWidth = mediaBWidth
+      videoHeight = mediaBHeight
     }
 
     // If still no dimensions, use container aspect (neutral fallback)
@@ -120,7 +136,7 @@ export function SliderComparison() {
     const top = (containerHeight - renderedHeight) / 2
 
     setVideoBounds({ left, top, width: renderedWidth, height: renderedHeight })
-  }, [mediaA?.width, mediaA?.height, mediaB?.width, mediaB?.height])
+  }, [mediaAWidth, mediaAHeight, mediaBWidth, mediaBHeight])
 
   // Recalculate bounds on resize and when video loads
   useEffect(() => {
@@ -374,46 +390,46 @@ export function SliderComparison() {
 
       {/* Hidden file inputs for click-to-upload (supports multiple files) */}
       <input
-        ref={dropZoneA.fileInputRef}
+        ref={fileInputRefA}
         type="file"
         accept={SUPPORTED_MEDIA_ACCEPT}
         multiple
         className="hidden"
-        onChange={dropZoneA.handleFileInputChange}
+        onChange={handleFileInputChangeA}
       />
       <input
-        ref={dropZoneB.fileInputRef}
+        ref={fileInputRefB}
         type="file"
         accept={SUPPORTED_MEDIA_ACCEPT}
         multiple
         className="hidden"
-        onChange={dropZoneB.handleFileInputChange}
+        onChange={handleFileInputChangeB}
       />
 
       {/* Drop zones - shown when no media or dragging */}
-      {(!mediaA || !mediaB || dropZoneA.isDragOver || dropZoneB.isDragOver) && (
+      {(!mediaA || !mediaB || isDragOverA || isDragOverB) && (
         <div className="absolute inset-0 flex z-30 pointer-events-none">
           {/* Drop zone A (left half) - Bold empty state */}
           <div
             className={cn(
               'flex-1 flex flex-col items-center justify-center transition-all duration-300 pointer-events-auto relative overflow-hidden',
               !mediaA && 'bg-surface',
-              dropZoneA.isDragOver && 'bg-compare-a/15 ring-2 ring-inset ring-compare-a',
+              isDragOverA && 'bg-compare-a/15 ring-2 ring-inset ring-compare-a',
             )}
-            {...dropZoneA.dropZoneProps}
+            {...dropZonePropsA}
           >
-            {(!mediaA || dropZoneA.isDragOver) && (
+            {(!mediaA || isDragOverA) && (
               <div
                 className={cn(
                   'flex flex-col items-center gap-4 text-center relative z-10',
-                  dropZoneA.isDragOver ? 'text-compare-a scale-105' : 'text-muted-foreground',
+                  isDragOverA ? 'text-compare-a scale-105' : 'text-muted-foreground',
                 )}
               >
                 {/* Large A badge */}
                 <div
                   className={cn(
                     'w-16 h-16 ui-radius-lg flex items-center justify-center transition-all duration-300',
-                    dropZoneA.isDragOver
+                    isDragOverA
                       ? 'bg-compare-a text-compare-a-foreground'
                       : 'bg-compare-a/10 border border-compare-a/20',
                   )}
@@ -421,7 +437,7 @@ export function SliderComparison() {
                   <span
                     className={cn(
                       'text-2xl font-bold',
-                      dropZoneA.isDragOver ? 'text-compare-a-foreground' : 'text-compare-a',
+                      isDragOverA ? 'text-compare-a-foreground' : 'text-compare-a',
                     )}
                   >
                     A
@@ -430,11 +446,11 @@ export function SliderComparison() {
                 <button
                   onClick={(e) => {
                     e.stopPropagation()
-                    dropZoneA.openFileDialog()
+                    openFileDialogA()
                   }}
                   className={cn(
                     'surface-control surface-control-elevation ui-radius-lg border border-dashed p-4 transition-all duration-200 group',
-                    dropZoneA.isDragOver
+                    isDragOverA
                       ? 'border-compare-a bg-compare-a/10'
                       : 'border-muted-foreground/20 hover:border-compare-a/50',
                   )}
@@ -442,9 +458,7 @@ export function SliderComparison() {
                   <Upload
                     className={cn(
                       'w-8 h-8 transition-transform',
-                      dropZoneA.isDragOver
-                        ? 'animate-bounce text-compare-a'
-                        : 'group-hover:scale-105',
+                      isDragOverA ? 'animate-bounce text-compare-a' : 'group-hover:scale-105',
                     )}
                   />
                 </button>
@@ -481,22 +495,22 @@ export function SliderComparison() {
             className={cn(
               'flex-1 flex flex-col items-center justify-center transition-all duration-300 pointer-events-auto relative overflow-hidden',
               !mediaB && 'bg-surface/90',
-              dropZoneB.isDragOver && 'bg-compare-b/15 ring-2 ring-inset ring-compare-b',
+              isDragOverB && 'bg-compare-b/15 ring-2 ring-inset ring-compare-b',
             )}
-            {...dropZoneB.dropZoneProps}
+            {...dropZonePropsB}
           >
-            {(!mediaB || dropZoneB.isDragOver) && (
+            {(!mediaB || isDragOverB) && (
               <div
                 className={cn(
                   'flex flex-col items-center gap-4 text-center relative z-10',
-                  dropZoneB.isDragOver ? 'text-compare-b scale-105' : 'text-muted-foreground',
+                  isDragOverB ? 'text-compare-b scale-105' : 'text-muted-foreground',
                 )}
               >
                 {/* Large B badge */}
                 <div
                   className={cn(
                     'w-16 h-16 ui-radius-lg flex items-center justify-center transition-all duration-300',
-                    dropZoneB.isDragOver
+                    isDragOverB
                       ? 'bg-compare-b text-compare-b-foreground'
                       : 'bg-compare-b/10 border border-compare-b/20',
                   )}
@@ -504,7 +518,7 @@ export function SliderComparison() {
                   <span
                     className={cn(
                       'text-2xl font-bold',
-                      dropZoneB.isDragOver ? 'text-compare-b-foreground' : 'text-compare-b',
+                      isDragOverB ? 'text-compare-b-foreground' : 'text-compare-b',
                     )}
                   >
                     B
@@ -513,11 +527,11 @@ export function SliderComparison() {
                 <button
                   onClick={(e) => {
                     e.stopPropagation()
-                    dropZoneB.openFileDialog()
+                    openFileDialogB()
                   }}
                   className={cn(
                     'surface-control surface-control-elevation ui-radius-lg border border-dashed p-4 transition-all duration-200 group',
-                    dropZoneB.isDragOver
+                    isDragOverB
                       ? 'border-compare-b bg-compare-b/10'
                       : 'border-muted-foreground/20 hover:border-compare-b/50',
                   )}
@@ -525,9 +539,7 @@ export function SliderComparison() {
                   <Upload
                     className={cn(
                       'w-8 h-8 transition-transform',
-                      dropZoneB.isDragOver
-                        ? 'animate-bounce text-compare-b'
-                        : 'group-hover:scale-105',
+                      isDragOverB ? 'animate-bounce text-compare-b' : 'group-hover:scale-105',
                     )}
                   />
                 </button>
@@ -551,13 +563,13 @@ export function SliderComparison() {
       )}
 
       {/* Upload buttons when media exists (shown in corners) */}
-      {mediaA && mediaB && !dropZoneA.isDragOver && !dropZoneB.isDragOver && (
+      {mediaA && mediaB && !isDragOverA && !isDragOverB && (
         <>
           {/* Upload button A (top-left) */}
           <button
             onClick={(e) => {
               e.stopPropagation()
-              dropZoneA.openFileDialog()
+              openFileDialogA()
             }}
             className="surface-control ui-radius-lg absolute top-4 left-4 z-20 border p-2 text-compare-a-foreground transition-colors group hover:bg-compare-a/80"
             title="Replace Media A"
@@ -569,7 +581,7 @@ export function SliderComparison() {
           <button
             onClick={(e) => {
               e.stopPropagation()
-              dropZoneB.openFileDialog()
+              openFileDialogB()
             }}
             className="surface-control ui-radius-lg absolute top-4 right-4 z-20 border p-2 text-compare-b-foreground transition-colors group hover:bg-compare-b/80"
             title="Replace Media B"

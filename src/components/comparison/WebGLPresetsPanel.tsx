@@ -13,7 +13,7 @@ import {
   ChevronRight,
   X,
 } from 'lucide-react'
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef } from 'react'
 
 import {
   loadPresets,
@@ -34,7 +34,7 @@ interface WebGLPresetsPanelProps {
 }
 
 export function WebGLPresetsPanel({ isOpen, onClose }: WebGLPresetsPanelProps) {
-  const [presets, setPresets] = useState<WebGLPreset[]>([])
+  const [presets, setPresets] = useState<WebGLPreset[]>(loadPresets)
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
     new Set(['builtin', 'custom']),
   )
@@ -47,11 +47,6 @@ export function WebGLPresetsPanel({ isOpen, onClose }: WebGLPresetsPanelProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const { webglComparisonSettings, setWebGLComparisonSettings } = useProjectStore()
-
-  // Load presets on mount
-  useEffect(() => {
-    setPresets(loadPresets())
-  }, [])
 
   // Group presets by category
   const presetsByCategory = presets.reduce(

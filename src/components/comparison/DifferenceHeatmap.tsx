@@ -44,105 +44,108 @@ export function DifferenceHeatmap() {
   const mediaB = rawMediaB?.type === 'video' || rawMediaB?.type === 'image' ? rawMediaB : null
 
   // Render the difference heatmap
-  const renderFrame = useCallback(() => {
-    const canvas = canvasRef.current
-    const ctx = canvas?.getContext('2d', { willReadFrequently: true })
-    if (!canvas || !ctx) return
+  const renderFrame = useCallback(
+    function renderLoop() {
+      const canvas = canvasRef.current
+      const ctx = canvas?.getContext('2d', { willReadFrequently: true })
+      if (!canvas || !ctx) return
 
-    const sourceA = mediaARef.current
-    const sourceB = mediaBRef.current
+      const sourceA = mediaARef.current
+      const sourceB = mediaBRef.current
 
-    canvas.dataset.frameReady = 'false'
+      canvas.dataset.frameReady = 'false'
 
-    // Clear canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
+      // Clear canvas
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-    if (!isVisualFrameReady(sourceA) || !isVisualFrameReady(sourceB)) {
+      if (!isVisualFrameReady(sourceA) || !isVisualFrameReady(sourceB)) {
+        if (isPlaying) {
+          animationRef.current = requestAnimationFrame(renderLoop)
+        }
+        return
+      }
+
+      // Create temporary canvases to read pixel data
+      const tempCanvasA = document.createElement('canvas')
+      const tempCanvasB = document.createElement('canvas')
+      tempCanvasA.width = canvas.width
+      tempCanvasA.height = canvas.height
+      tempCanvasB.width = canvas.width
+      tempCanvasB.height = canvas.height
+
+      const ctxA = tempCanvasA.getContext('2d', { willReadFrequently: true })
+      const ctxB = tempCanvasB.getContext('2d', { willReadFrequently: true })
+      if (!ctxA || !ctxB) return
+
+      // Draw videos to temp canvases
+      ctxA.drawImage(sourceA, 0, 0, canvas.width, canvas.height)
+      ctxB.drawImage(sourceB, 0, 0, canvas.width, canvas.height)
+
+      // Get pixel data
+      const dataA = ctxA.getImageData(0, 0, canvas.width, canvas.height)
+      const dataB = ctxB.getImageData(0, 0, canvas.width, canvas.height)
+      const output = ctx.createImageData(canvas.width, canvas.height)
+
+      // Calculate difference for each pixel
+      for (let i = 0; i < dataA.data.length; i += 4) {
+        // Include alpha so transparent ProRes/image changes are not treated as identical.
+        const totalDiff = calculateAverageRgbaDifference(dataA.data, dataB.data, i)
+
+        let r = 0,
+          g = 0,
+          b = 0
+
+        switch (mode) {
+          case 'absolute':
+            // Direct grayscale representation
+            r = g = b = totalDiff
+            break
+
+          case 'amplified':
+            // Amplify differences with color gradient
+            const amplifiedDiff = Math.min(255, totalDiff * amplification)
+            // Blue (cold, similar) -> Red (hot, different)
+            if (amplifiedDiff < 128) {
+              r = 0
+              g = amplifiedDiff * 2
+              b = 255 - amplifiedDiff * 2
+            } else {
+              r = (amplifiedDiff - 128) * 2
+              g = 255 - (amplifiedDiff - 128) * 2
+              b = 0
+            }
+            break
+
+          case 'threshold':
+            // Binary threshold - show only differences above threshold
+            if (totalDiff > threshold) {
+              r = 255
+              g = 0
+              b = 0
+            } else {
+              // Show original image from A with reduced opacity
+              r = dataA.data[i]
+              g = dataA.data[i + 1]
+              b = dataA.data[i + 2]
+            }
+            break
+        }
+
+        output.data[i] = r
+        output.data[i + 1] = g
+        output.data[i + 2] = b
+        output.data[i + 3] = 255 // Full opacity
+      }
+
+      ctx.putImageData(output, 0, 0)
+      canvas.dataset.frameReady = 'true'
+
       if (isPlaying) {
-        animationRef.current = requestAnimationFrame(renderFrame)
+        animationRef.current = requestAnimationFrame(renderLoop)
       }
-      return
-    }
-
-    // Create temporary canvases to read pixel data
-    const tempCanvasA = document.createElement('canvas')
-    const tempCanvasB = document.createElement('canvas')
-    tempCanvasA.width = canvas.width
-    tempCanvasA.height = canvas.height
-    tempCanvasB.width = canvas.width
-    tempCanvasB.height = canvas.height
-
-    const ctxA = tempCanvasA.getContext('2d', { willReadFrequently: true })
-    const ctxB = tempCanvasB.getContext('2d', { willReadFrequently: true })
-    if (!ctxA || !ctxB) return
-
-    // Draw videos to temp canvases
-    ctxA.drawImage(sourceA, 0, 0, canvas.width, canvas.height)
-    ctxB.drawImage(sourceB, 0, 0, canvas.width, canvas.height)
-
-    // Get pixel data
-    const dataA = ctxA.getImageData(0, 0, canvas.width, canvas.height)
-    const dataB = ctxB.getImageData(0, 0, canvas.width, canvas.height)
-    const output = ctx.createImageData(canvas.width, canvas.height)
-
-    // Calculate difference for each pixel
-    for (let i = 0; i < dataA.data.length; i += 4) {
-      // Include alpha so transparent ProRes/image changes are not treated as identical.
-      const totalDiff = calculateAverageRgbaDifference(dataA.data, dataB.data, i)
-
-      let r = 0,
-        g = 0,
-        b = 0
-
-      switch (mode) {
-        case 'absolute':
-          // Direct grayscale representation
-          r = g = b = totalDiff
-          break
-
-        case 'amplified':
-          // Amplify differences with color gradient
-          const amplifiedDiff = Math.min(255, totalDiff * amplification)
-          // Blue (cold, similar) -> Red (hot, different)
-          if (amplifiedDiff < 128) {
-            r = 0
-            g = amplifiedDiff * 2
-            b = 255 - amplifiedDiff * 2
-          } else {
-            r = (amplifiedDiff - 128) * 2
-            g = 255 - (amplifiedDiff - 128) * 2
-            b = 0
-          }
-          break
-
-        case 'threshold':
-          // Binary threshold - show only differences above threshold
-          if (totalDiff > threshold) {
-            r = 255
-            g = 0
-            b = 0
-          } else {
-            // Show original image from A with reduced opacity
-            r = dataA.data[i]
-            g = dataA.data[i + 1]
-            b = dataA.data[i + 2]
-          }
-          break
-      }
-
-      output.data[i] = r
-      output.data[i + 1] = g
-      output.data[i + 2] = b
-      output.data[i + 3] = 255 // Full opacity
-    }
-
-    ctx.putImageData(output, 0, 0)
-    canvas.dataset.frameReady = 'true'
-
-    if (isPlaying) {
-      animationRef.current = requestAnimationFrame(renderFrame)
-    }
-  }, [isPlaying, mode, threshold, amplification])
+    },
+    [isPlaying, mode, threshold, amplification],
+  )
 
   const handleFrameReady = useCallback(() => {
     setFrameRevision((revision) => revision + 1)

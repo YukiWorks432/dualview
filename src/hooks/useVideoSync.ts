@@ -47,6 +47,13 @@ export function useClipAwareVideoSync(
     const video = videoRef.current
     if (!video) return
 
+    let cancelled = false
+    const updateVisibility = (visible: boolean) => {
+      queueMicrotask(() => {
+        if (!cancelled) setIsVisible(visible)
+      })
+    }
+
     // CRITICAL: Videos should NOT autoplay - we control currentTime directly
     video.pause()
     video.muted = true
@@ -59,14 +66,18 @@ export function useClipAwareVideoSync(
       const mediaTime = calculateMediaTime(currentTime, clip)
       if (mediaTime !== null) {
         video.currentTime = mediaTime
-        setIsVisible(true)
+        updateVisibility(true)
       } else {
-        setIsVisible(false)
+        updateVisibility(false)
       }
     } else {
-      setIsVisible(false)
+      updateVisibility(false)
     }
-  }, [videoRef, clip?.id]) // Re-run when clip changes
+
+    return () => {
+      cancelled = true
+    }
+  }, [videoRef, clip]) // Re-run when clip changes
 
   // Listen for playback-seek events - immediate response
   useEffect(() => {
@@ -331,9 +342,6 @@ export function useFrameAccurateVideoSync(
   options: UseVideoSyncOptions = {},
 ) {
   const { timeOffset = 0, muted = true } = options
-  const rafIdRef = useRef<number | null>(null)
-  const rvfcIdRef = useRef<number | null>(null)
-
   useEffect(() => {
     const video = videoRef.current
     if (!video) return
@@ -344,6 +352,7 @@ export function useFrameAccurateVideoSync(
 
     // Check for requestVideoFrameCallback support
     const hasRVFC = 'requestVideoFrameCallback' in HTMLVideoElement.prototype
+    let rvfcId: number | null = null
 
     if (hasRVFC) {
       // Use requestVideoFrameCallback for frame-accurate sync
@@ -358,18 +367,15 @@ export function useFrameAccurateVideoSync(
           }
         }
 
-        rvfcIdRef.current = video.requestVideoFrameCallback(onVideoFrame)
+        rvfcId = video.requestVideoFrameCallback(onVideoFrame)
       }
 
-      rvfcIdRef.current = video.requestVideoFrameCallback(onVideoFrame)
+      rvfcId = video.requestVideoFrameCallback(onVideoFrame)
     }
 
     return () => {
-      if (rvfcIdRef.current && hasRVFC) {
-        video.cancelVideoFrameCallback(rvfcIdRef.current)
-      }
-      if (rafIdRef.current) {
-        cancelAnimationFrame(rafIdRef.current)
+      if (rvfcId !== null && hasRVFC) {
+        video.cancelVideoFrameCallback(rvfcId)
       }
     }
   }, [videoRef, timeOffset, muted])
