@@ -21,7 +21,6 @@ import { useTimelineStore } from '../../stores/timelineStore'
 import type { MediaType, MediaStatus } from '../../types'
 import { ElevatedSurface, IconButton } from '../ui'
 
-
 // Filter type includes 'all' plus all media types
 type FilterType = 'all' | MediaType
 

@@ -6,9 +6,9 @@
 import { Gauge, Plus, Trash2, X, Play, Pause, ArrowRightLeft, RotateCcw } from 'lucide-react'
 import { useState, useCallback, useRef, useEffect } from 'react'
 
-import type { SpeedRamp, SpeedKeyframe } from '../../types'
 import { EASE_PRESETS } from '../../lib/stitch/easeCurve'
 import { DEFAULT_SPEED_RAMP, getSpeedAtTime } from '../../lib/stitch/speedRamp'
+import type { SpeedRamp, SpeedKeyframe } from '../../types'
 
 // Re-export types for convenience
 export type { SpeedRamp, SpeedKeyframe } from '../../types'
@@ -618,4 +618,3 @@ export function SpeedRampEditor({
     </div>
   )
 }
-
