@@ -6,17 +6,10 @@ import { labeledButtonGroupClasses, labeledButtonIconHoverScaleClasses } from '.
 
 export type ButtonWithIconProps = Omit<ButtonProps, 'children'> & {
   icon: ReactNode
-  iconPosition?: 'start' | 'end'
   children: ReactNode
 }
 
-export function ButtonWithIcon({
-  icon,
-  iconPosition = 'start',
-  children,
-  className,
-  ...props
-}: ButtonWithIconProps) {
+export function ButtonWithIcon({ icon, children, className, ...props }: ButtonWithIconProps) {
   const iconSlot = (
     <span
       data-slot="button-with-icon-icon"
@@ -31,17 +24,8 @@ export function ButtonWithIcon({
 
   return (
     <Button className={cn(labeledButtonGroupClasses, className)} {...props}>
-      {iconPosition === 'start' ? (
-        <>
-          {iconSlot}
-          {children}
-        </>
-      ) : (
-        <>
-          {children}
-          {iconSlot}
-        </>
-      )}
+      {iconSlot}
+      {children}
     </Button>
   )
 }
