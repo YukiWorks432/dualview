@@ -143,7 +143,7 @@ export function BatchComparison({ isOpen, onClose }: BatchComparisonProps) {
   }, [])
 
   // Load image as HTMLImageElement
-  const loadImage = (url: string): Promise<HTMLImageElement> => {
+  function loadImage(url: string): Promise<HTMLImageElement> {
     return new Promise((resolve, reject) => {
       const img = new Image()
       img.onload = () => resolve(img)
@@ -153,12 +153,12 @@ export function BatchComparison({ isOpen, onClose }: BatchComparisonProps) {
   }
 
   // Compute metrics using 2D canvas
-  const computeMetricsFromCanvas = (
+  function computeMetricsFromCanvas(
     ctx: CanvasRenderingContext2D,
     canvas: HTMLCanvasElement,
     imgA: HTMLImageElement,
     imgB: HTMLImageElement,
-  ) => {
+  ) {
     const width = canvas.width
     const height = canvas.height
 

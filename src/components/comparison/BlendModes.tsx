@@ -56,7 +56,7 @@ export function BlendModes() {
   const mediaA = rawMediaA?.type === 'video' || rawMediaA?.type === 'image' ? rawMediaA : null
   const mediaB = rawMediaB?.type === 'video' || rawMediaB?.type === 'image' ? rawMediaB : null
 
-  const renderFrame = useCallback(() => {
+  const renderFrame = useCallback(function renderLoop() {
     const canvas = canvasRef.current
     const ctx = canvas?.getContext('2d')
     if (!canvas || !ctx) return
@@ -75,7 +75,7 @@ export function BlendModes() {
     const sourceBReady = !mediaB || isVisualFrameReady(sourceB)
     if (!sourceAReady || !sourceBReady) {
       if (isPlaying) {
-        animationRef.current = requestAnimationFrame(renderFrame)
+        animationRef.current = requestAnimationFrame(renderLoop)
       }
       return
     }
@@ -105,7 +105,7 @@ export function BlendModes() {
     canvas.dataset.frameReady = 'true'
 
     if (isPlaying) {
-      animationRef.current = requestAnimationFrame(renderFrame)
+      animationRef.current = requestAnimationFrame(renderLoop)
     }
   }, [blendMode, isPlaying, mediaA, mediaB, zoom, panX, panY])
 

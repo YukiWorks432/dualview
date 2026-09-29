@@ -44,7 +44,7 @@ export function DifferenceHeatmap() {
   const mediaB = rawMediaB?.type === 'video' || rawMediaB?.type === 'image' ? rawMediaB : null
 
   // Render the difference heatmap
-  const renderFrame = useCallback(() => {
+  const renderFrame = useCallback(function renderLoop() {
     const canvas = canvasRef.current
     const ctx = canvas?.getContext('2d', { willReadFrequently: true })
     if (!canvas || !ctx) return
@@ -59,7 +59,7 @@ export function DifferenceHeatmap() {
 
     if (!isVisualFrameReady(sourceA) || !isVisualFrameReady(sourceB)) {
       if (isPlaying) {
-        animationRef.current = requestAnimationFrame(renderFrame)
+        animationRef.current = requestAnimationFrame(renderLoop)
       }
       return
     }
@@ -140,7 +140,7 @@ export function DifferenceHeatmap() {
     canvas.dataset.frameReady = 'true'
 
     if (isPlaying) {
-      animationRef.current = requestAnimationFrame(renderFrame)
+      animationRef.current = requestAnimationFrame(renderLoop)
     }
   }, [isPlaying, mode, threshold, amplification])
 
