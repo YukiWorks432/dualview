@@ -298,17 +298,17 @@ export function MorphologicalView() {
   }, [mediaA, morphologicalSettings.operations, applyOperations, imagesLoaded])
 
   // Render function
-  const render = useCallback(() => {
+  const render = useCallback(function renderLoop() {
     const canvas = canvasRef.current
     const container = containerRef.current
     if (!canvas || !container) {
-      animationRef.current = requestAnimationFrame(render)
+      animationRef.current = requestAnimationFrame(renderLoop)
       return
     }
 
     const ctx = canvas.getContext('2d')
     if (!ctx) {
-      animationRef.current = requestAnimationFrame(render)
+      animationRef.current = requestAnimationFrame(renderLoop)
       return
     }
 
@@ -342,7 +342,7 @@ export function MorphologicalView() {
     if (!sourceA || !sourceAReady) {
       ctx.fillStyle = '#1a1a1a'
       ctx.fillRect(0, 0, width, height)
-      animationRef.current = requestAnimationFrame(render)
+      animationRef.current = requestAnimationFrame(renderLoop)
       return
     }
 
@@ -394,7 +394,7 @@ export function MorphologicalView() {
       ctx.drawImage(sourceA, 0, 0, width, height)
     }
 
-    animationRef.current = requestAnimationFrame(render)
+    animationRef.current = requestAnimationFrame(renderLoop)
   }, [
     mediaA,
     morphologicalSettings.showOriginal,
@@ -404,7 +404,7 @@ export function MorphologicalView() {
 
   // Start render loop
   useEffect(() => {
-    animationRef.current = requestAnimationFrame(render)
+    animationRef.current = requestAnimationFrame(renderLoop)
     return () => {
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current)

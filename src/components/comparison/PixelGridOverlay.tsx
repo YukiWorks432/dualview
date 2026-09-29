@@ -75,17 +75,17 @@ export function PixelGridOverlay() {
   }, [pixelGridSettings.enabled, pixelGridSettings.minZoomLevel, zoom])
 
   // Render function
-  const render = useCallback(() => {
+  const render = useCallback(function renderLoop() {
     const canvas = canvasRef.current
     const container = containerRef.current
     if (!canvas || !container) {
-      animationRef.current = requestAnimationFrame(render)
+      animationRef.current = requestAnimationFrame(renderLoop)
       return
     }
 
     const ctx = canvas.getContext('2d')
     if (!ctx) {
-      animationRef.current = requestAnimationFrame(render)
+      animationRef.current = requestAnimationFrame(renderLoop)
       return
     }
 
@@ -119,7 +119,7 @@ export function PixelGridOverlay() {
     if (!sourceA || !sourceAReady) {
       ctx.fillStyle = '#1a1a1a'
       ctx.fillRect(0, 0, width, height)
-      animationRef.current = requestAnimationFrame(render)
+      animationRef.current = requestAnimationFrame(renderLoop)
       return
     }
 
@@ -132,7 +132,7 @@ export function PixelGridOverlay() {
 
     // Only draw pixel grid if zoom is high enough
     if (!shouldShowGrid) {
-      animationRef.current = requestAnimationFrame(render)
+      animationRef.current = requestAnimationFrame(renderLoop)
       return
     }
 
@@ -142,7 +142,7 @@ export function PixelGridOverlay() {
 
     // Only draw if pixels are reasonably large
     if (pixelWidth < 10 || pixelHeight < 10) {
-      animationRef.current = requestAnimationFrame(render)
+      animationRef.current = requestAnimationFrame(renderLoop)
       return
     }
 
@@ -243,7 +243,7 @@ export function PixelGridOverlay() {
       ctx.globalAlpha = 1
     }
 
-    animationRef.current = requestAnimationFrame(render)
+    animationRef.current = requestAnimationFrame(renderLoop)
   }, [
     mediaA,
     shouldShowGrid,
@@ -255,7 +255,7 @@ export function PixelGridOverlay() {
 
   // Start render loop
   useEffect(() => {
-    animationRef.current = requestAnimationFrame(render)
+    animationRef.current = requestAnimationFrame(renderLoop)
     return () => {
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current)

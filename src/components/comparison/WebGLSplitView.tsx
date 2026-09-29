@@ -78,7 +78,6 @@ export function WebGLSplitView({ isVisible, onToggle }: WebGLSplitViewProps) {
 
     const renderer = new WebGLComparisonRenderer(canvasRef.current)
     rendererRef.current = renderer
-    renderer.setMode(webglComparisonSettings.mode)
 
     return () => {
       renderer.dispose()
@@ -94,12 +93,12 @@ export function WebGLSplitView({ isVisible, onToggle }: WebGLSplitViewProps) {
   }, [webglComparisonSettings.mode])
 
   // Render loop for center panel
-  const render = useCallback(() => {
+  const render = useCallback(function renderLoop() {
     if (!isVisible) return
 
     const renderer = rendererRef.current
     if (!renderer) {
-      animationRef.current = requestAnimationFrame(render)
+      animationRef.current = requestAnimationFrame(renderLoop)
       return
     }
 
@@ -130,13 +129,13 @@ export function WebGLSplitView({ isVisible, onToggle }: WebGLSplitViewProps) {
       mouseY: 0.5,
     })
 
-    animationRef.current = requestAnimationFrame(render)
+    animationRef.current = requestAnimationFrame(renderLoop)
   }, [mediaA, mediaB, webglComparisonSettings, imagesLoaded, isVisible])
 
   // Start render loop
   useEffect(() => {
     if (!isVisible) return
-    animationRef.current = requestAnimationFrame(render)
+    animationRef.current = requestAnimationFrame(renderLoop)
     return () => {
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current)

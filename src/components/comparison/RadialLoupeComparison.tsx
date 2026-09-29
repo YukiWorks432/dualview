@@ -77,17 +77,17 @@ export function RadialLoupeComparison() {
   }, [])
 
   // Render function
-  const render = useCallback(() => {
+  const render = useCallback(function renderLoop() {
     const canvas = canvasRef.current
     const container = containerRef.current
     if (!canvas || !container) {
-      animationRef.current = requestAnimationFrame(render)
+      animationRef.current = requestAnimationFrame(renderLoop)
       return
     }
 
     const ctx = canvas.getContext('2d')
     if (!ctx) {
-      animationRef.current = requestAnimationFrame(render)
+      animationRef.current = requestAnimationFrame(renderLoop)
       return
     }
 
@@ -266,12 +266,12 @@ export function RadialLoupeComparison() {
       ctx.stroke()
     }
 
-    animationRef.current = requestAnimationFrame(render)
+    animationRef.current = requestAnimationFrame(renderLoop)
   }, [mediaA, mediaB, mousePos, radialLoupeSettings, imagesLoaded])
 
   // Start render loop
   useEffect(() => {
-    animationRef.current = requestAnimationFrame(render)
+    animationRef.current = requestAnimationFrame(renderLoop)
     return () => {
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current)
