@@ -863,12 +863,12 @@ export function WebGLComparison() {
       <div className="w-full h-full flex items-center justify-center bg-surface">
         <div className="text-center p-8">
           <div className="text-4xl mb-4">⚠️</div>
-          <h3 className="text-xl font-bold text-white mb-2">WebGL Not Supported</h3>
-          <p className="text-gray-400">
+          <h3 className="mb-2 text-xl font-bold text-foreground">WebGL Not Supported</h3>
+          <p className="text-muted-foreground">
             Your browser doesn't support WebGL, which is required for GPU-accelerated comparison
             modes.
           </p>
-          <p className="text-gray-500 mt-2 text-sm">
+          <p className="mt-2 text-sm text-muted-foreground/80">
             Try using a modern browser like Chrome, Firefox, or Edge.
           </p>
         </div>
@@ -889,71 +889,69 @@ export function WebGLComparison() {
             onChange={handleFileChange}
           />
 
-          <h2 className="text-lg font-semibold text-white mb-1">Difference Mode</h2>
-          <p className="text-xs text-gray-400 mb-4">
+          <h2 className="mb-1 text-lg font-semibold text-foreground">Difference Mode</h2>
+          <p className="mb-4 text-xs text-muted-foreground">
             Upload images or videos to compare with advanced analysis
           </p>
 
           {/* Upload sections for Track A and Track B */}
           <div className="grid grid-cols-2 gap-4">
             {/* Track A Upload */}
-            <div className="ui-radius-lg bg-surface-alt p-3 border border-orange-500/30">
+            <div className="surface-control-elevation ui-radius-lg border border-compare-a/30 bg-surface-alt p-3">
               <div className="flex items-center gap-2 mb-3">
-                <div className="w-6 h-6 ui-radius-sm bg-orange-500/20 flex items-center justify-center">
-                  <span className="text-orange-400 font-bold text-xs">A</span>
+                <div className="ui-radius-sm flex h-6 w-6 items-center justify-center bg-compare-a/20">
+                  <span className="text-xs font-bold text-compare-a">A</span>
                 </div>
-                <span className="text-sm font-medium text-orange-400">Media A</span>
+                <span className="text-sm font-medium text-compare-a">Media A</span>
               </div>
               <div className="grid grid-cols-2 gap-1.5">
                 <button
                   onClick={() => triggerUpload('a')}
-                  className="surface-control-elevation ui-radius-md flex flex-col items-center gap-1 border border-blue-500/30 bg-blue-500/10 p-3 transition-all hover:bg-blue-500/20"
+                  className="surface-control ui-radius-md flex flex-col items-center gap-1 border p-3 text-muted-foreground transition-all hover:text-foreground"
                 >
-                  <Image className="w-5 h-5 text-blue-400" />
-                  <span className="text-[10px] font-medium text-blue-400">Image</span>
+                  <Image className="h-5 w-5" />
+                  <span className="text-[10px] font-medium">Image</span>
                 </button>
                 <button
                   onClick={() => triggerUpload('a')}
-                  className="surface-control-elevation ui-radius-md flex flex-col items-center gap-1 border border-purple-500/30 bg-purple-500/10 p-3 transition-all hover:bg-purple-500/20"
+                  className="surface-control ui-radius-md flex flex-col items-center gap-1 border p-3 text-muted-foreground transition-all hover:text-foreground"
                 >
-                  <Video className="w-5 h-5 text-purple-400" />
-                  <span className="text-[10px] font-medium text-purple-400">Video</span>
+                  <Video className="h-5 w-5" />
+                  <span className="text-[10px] font-medium">Video</span>
                 </button>
               </div>
             </div>
 
             {/* Track B Upload */}
-            <div className="ui-radius-lg bg-surface-alt p-3 border border-lime-400/30">
+            <div className="surface-control-elevation ui-radius-lg border border-compare-b/30 bg-surface-alt p-3">
               <div className="flex items-center gap-2 mb-3">
-                <div className="w-6 h-6 ui-radius-sm bg-lime-400/20 flex items-center justify-center">
-                  <span className="text-lime-400 font-bold text-xs">B</span>
+                <div className="ui-radius-sm flex h-6 w-6 items-center justify-center bg-compare-b/20">
+                  <span className="text-xs font-bold text-compare-b">B</span>
                 </div>
-                <span className="text-sm font-medium text-lime-400">Media B</span>
+                <span className="text-sm font-medium text-compare-b">Media B</span>
               </div>
               <div className="grid grid-cols-2 gap-1.5">
                 <button
                   onClick={() => triggerUpload('b')}
-                  className="surface-control-elevation ui-radius-md flex flex-col items-center gap-1 border border-blue-500/30 bg-blue-500/10 p-3 transition-all hover:bg-blue-500/20"
+                  className="surface-control ui-radius-md flex flex-col items-center gap-1 border p-3 text-muted-foreground transition-all hover:text-foreground"
                 >
-                  <Image className="w-5 h-5 text-blue-400" />
-                  <span className="text-[10px] font-medium text-blue-400">Image</span>
+                  <Image className="h-5 w-5" />
+                  <span className="text-[10px] font-medium">Image</span>
                 </button>
                 <button
                   onClick={() => triggerUpload('b')}
-                  className="surface-control-elevation ui-radius-md flex flex-col items-center gap-1 border border-purple-500/30 bg-purple-500/10 p-3 transition-all hover:bg-purple-500/20"
+                  className="surface-control ui-radius-md flex flex-col items-center gap-1 border p-3 text-muted-foreground transition-all hover:text-foreground"
                 >
-                  <Video className="w-5 h-5 text-purple-400" />
-                  <span className="text-[10px] font-medium text-purple-400">Video</span>
+                  <Video className="h-5 w-5" />
+                  <span className="text-[10px] font-medium">Video</span>
                 </button>
               </div>
             </div>
           </div>
 
-          <p className="text-[10px] text-gray-500 mt-3">
+          <p className="mt-3 text-[10px] text-muted-foreground">
             Current mode:{' '}
-            <span className="text-[#cddc39]">
-              {modeInfo?.label || webglComparisonSettings.mode}
-            </span>
+            <span className="text-primary">{modeInfo?.label || webglComparisonSettings.mode}</span>
           </p>
         </div>
       </div>
@@ -1035,64 +1033,80 @@ export function WebGLComparison() {
       />
 
       {/* Mode indicator */}
-      <div className="absolute top-4 left-4 bg-black/70 px-3 py-1.5 rounded text-sm">
-        <span className="text-gray-400">Mode:</span>
-        <span className="text-[#cddc39] ml-2 font-medium">
+      <div className="surface-control-elevation ui-radius-md absolute top-4 left-4 border border-border/40 bg-surface-alt/85 px-3 py-1.5 text-sm backdrop-blur-sm">
+        <span className="text-muted-foreground">Mode:</span>
+        <span className="ml-2 font-medium text-primary">
           {modeInfo?.label || webglComparisonSettings.mode}
         </span>
-        {webglComparisonSettings.flipAB && (
-          <span className="text-orange-400 ml-2">(A/B Flipped)</span>
-        )}
+        {webglComparisonSettings.flipAB && <span className="ml-2 text-primary">(A/B Flipped)</span>}
       </div>
 
       {/* WEBGL-001: Metrics Overlay */}
       {webglComparisonSettings.showMetricsOverlay && webglAnalysisMetrics && (
-        <div className="absolute top-4 right-4 bg-black/80 px-4 py-3 rounded text-sm font-mono">
-          <div className="text-gray-300 font-semibold mb-2 text-xs uppercase tracking-wider">
+        <div className="surface-control-elevation ui-radius-md absolute top-4 right-4 border border-border/40 bg-surface-alt/90 px-4 py-3 text-sm font-mono backdrop-blur-sm">
+          <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-foreground">
             Analysis Metrics
           </div>
           <div className="space-y-1">
             <div className="flex justify-between gap-4">
-              <span className="text-gray-400">SSIM:</span>
+              <span className="text-muted-foreground">SSIM:</span>
               <span
-                className={`font-mono ${webglAnalysisMetrics.ssim > 0.95 ? 'text-green-400' : webglAnalysisMetrics.ssim > 0.8 ? 'text-yellow-400' : 'text-red-400'}`}
+                className={`font-mono ${
+                  webglAnalysisMetrics.ssim > 0.95
+                    ? 'text-success'
+                    : webglAnalysisMetrics.ssim > 0.8
+                      ? 'text-warning'
+                      : 'text-destructive'
+                }`}
               >
                 {webglAnalysisMetrics.ssim.toFixed(4)}
               </span>
             </div>
             <div className="flex justify-between gap-4">
-              <span className="text-gray-400">Delta E:</span>
+              <span className="text-muted-foreground">Delta E:</span>
               <span
-                className={`font-mono ${webglAnalysisMetrics.deltaE < 1 ? 'text-green-400' : webglAnalysisMetrics.deltaE < 5 ? 'text-yellow-400' : 'text-red-400'}`}
+                className={`font-mono ${
+                  webglAnalysisMetrics.deltaE < 1
+                    ? 'text-success'
+                    : webglAnalysisMetrics.deltaE < 5
+                      ? 'text-warning'
+                      : 'text-destructive'
+                }`}
               >
                 {webglAnalysisMetrics.deltaE.toFixed(2)}
               </span>
             </div>
             <div className="flex justify-between gap-4">
-              <span className="text-gray-400">Diff Pixels:</span>
+              <span className="text-muted-foreground">Diff Pixels:</span>
               <span
-                className={`font-mono ${webglAnalysisMetrics.diffPixelPercent < 1 ? 'text-green-400' : webglAnalysisMetrics.diffPixelPercent < 10 ? 'text-yellow-400' : 'text-red-400'}`}
+                className={`font-mono ${
+                  webglAnalysisMetrics.diffPixelPercent < 1
+                    ? 'text-success'
+                    : webglAnalysisMetrics.diffPixelPercent < 10
+                      ? 'text-warning'
+                      : 'text-destructive'
+                }`}
               >
                 {webglAnalysisMetrics.diffPixelPercent.toFixed(1)}%
               </span>
             </div>
             <div className="flex justify-between gap-4">
-              <span className="text-gray-400">Peak Diff:</span>
-              <span className="font-mono text-gray-200">
+              <span className="text-muted-foreground">Peak Diff:</span>
+              <span className="font-mono text-foreground">
                 {webglAnalysisMetrics.peakDifference.toFixed(0)}
               </span>
             </div>
             <div className="flex justify-between gap-4">
-              <span className="text-gray-400">Mean Diff:</span>
-              <span className="font-mono text-gray-200">
+              <span className="text-muted-foreground">Mean Diff:</span>
+              <span className="font-mono text-foreground">
                 {webglAnalysisMetrics.meanDifference.toFixed(1)}
               </span>
             </div>
             {/* WEBGL-006: Threshold Pass/Fail Stats */}
             <div className="border-t border-border mt-2 pt-2">
               <div className="flex justify-between gap-4">
-                <span className="text-gray-400">Pass:</span>
-                <span className="font-mono text-green-400">
+                <span className="text-muted-foreground">Pass:</span>
+                <span className="font-mono text-success">
                   {webglAnalysisMetrics.passPixelCount.toLocaleString()} (
                   {(
                     (webglAnalysisMetrics.passPixelCount / webglAnalysisMetrics.totalPixelCount) *
@@ -1102,8 +1116,8 @@ export function WebGLComparison() {
                 </span>
               </div>
               <div className="flex justify-between gap-4">
-                <span className="text-gray-400">Fail:</span>
-                <span className="font-mono text-red-400">
+                <span className="text-muted-foreground">Fail:</span>
+                <span className="font-mono text-destructive">
                   {webglAnalysisMetrics.failPixelCount.toLocaleString()} (
                   {(
                     (webglAnalysisMetrics.failPixelCount / webglAnalysisMetrics.totalPixelCount) *
@@ -1128,18 +1142,18 @@ export function WebGLComparison() {
                 : webglComparisonSettings.scaleBarPosition === 'left'
                   ? 'left-4 top-1/2 -translate-y-1/2'
                   : 'right-4 top-1/2 -translate-y-1/2'
-          } bg-black/70 p-2 rounded`}
+          } surface-control-elevation ui-radius-md border border-border/40 bg-surface-alt/85 p-2 backdrop-blur-sm`}
         >
           {webglComparisonSettings.scaleBarPosition === 'top' ||
           webglComparisonSettings.scaleBarPosition === 'bottom' ? (
             <div className="flex flex-col items-center">
               <div
-                className="w-48 h-4 rounded"
+                className="ui-radius-sm h-4 w-48"
                 style={{
                   background: 'linear-gradient(to right, #000000, #ff0000, #ffff00, #ffffff)',
                 }}
               />
-              <div className="flex justify-between w-48 text-xs text-gray-400 mt-1">
+              <div className="flex justify-between w-48 text-xs text-muted-foreground mt-1">
                 <span>0</span>
                 <span>Low</span>
                 <span>Mid</span>
@@ -1149,12 +1163,12 @@ export function WebGLComparison() {
           ) : (
             <div className="flex items-center gap-2">
               <div
-                className="w-4 h-48 rounded"
+                className="ui-radius-sm h-48 w-4"
                 style={{
                   background: 'linear-gradient(to top, #000000, #ff0000, #ffff00, #ffffff)',
                 }}
               />
-              <div className="flex flex-col justify-between h-48 text-xs text-gray-400">
+              <div className="flex flex-col justify-between h-48 text-xs text-muted-foreground">
                 <span>High</span>
                 <span>Mid</span>
                 <span>Low</span>
@@ -1167,7 +1181,7 @@ export function WebGLComparison() {
 
       {/* WEBGL-007: Zoom indicator */}
       {webglComparisonSettings.webglZoom > 1 && (
-        <div className="absolute top-14 left-4 bg-black/70 px-2 py-1 rounded text-xs text-gray-400">
+        <div className="surface-control-elevation ui-radius-sm absolute top-14 left-4 border border-border/40 bg-surface-alt/85 px-2 py-1 text-xs text-muted-foreground backdrop-blur-sm">
           Zoom: {webglComparisonSettings.webglZoom.toFixed(1)}x • Double-click to reset
         </div>
       )}
@@ -1175,15 +1189,15 @@ export function WebGLComparison() {
       {/* WEBGL-003: Cursor Value Inspector */}
       {webglComparisonSettings.showCursorInspector && cursorPixelInfo.a && cursorPixelInfo.b && (
         <div
-          className="absolute pointer-events-none bg-black/90 px-3 py-2 rounded text-xs font-mono z-50"
+          className="surface-control-elevation ui-radius-md pointer-events-none absolute z-50 border border-border/40 bg-surface-alt/90 px-3 py-2 text-xs font-mono backdrop-blur-sm"
           style={{
             left: Math.min(screenMousePos.x + 20, (containerRef.current?.offsetWidth || 400) - 180),
             top: Math.min(screenMousePos.y + 20, (containerRef.current?.offsetHeight || 300) - 120),
           }}
         >
-          <div className="text-gray-300 font-semibold mb-1">Pixel Inspector</div>
+          <div className="mb-1 font-semibold text-foreground">Pixel Inspector</div>
           <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
-            <div className="text-gray-500">Source A:</div>
+            <div className="text-muted-foreground">Source A:</div>
             <div className="flex items-center gap-1">
               <span style={{ color: `rgb(${cursorPixelInfo.a.r}, 100, 100)` }}>
                 {cursorPixelInfo.a.r}
@@ -1195,13 +1209,13 @@ export function WebGLComparison() {
                 {cursorPixelInfo.a.b}
               </span>
               <span
-                className="w-3 h-3 rounded-sm ml-1"
+                className="ui-radius-sm ml-1 h-3 w-3"
                 style={{
                   backgroundColor: `rgb(${cursorPixelInfo.a.r}, ${cursorPixelInfo.a.g}, ${cursorPixelInfo.a.b})`,
                 }}
               />
             </div>
-            <div className="text-gray-500">Source B:</div>
+            <div className="text-muted-foreground">Source B:</div>
             <div className="flex items-center gap-1">
               <span style={{ color: `rgb(${cursorPixelInfo.b.r}, 100, 100)` }}>
                 {cursorPixelInfo.b.r}
@@ -1213,14 +1227,14 @@ export function WebGLComparison() {
                 {cursorPixelInfo.b.b}
               </span>
               <span
-                className="w-3 h-3 rounded-sm ml-1"
+                className="ui-radius-sm ml-1 h-3 w-3"
                 style={{
                   backgroundColor: `rgb(${cursorPixelInfo.b.r}, ${cursorPixelInfo.b.g}, ${cursorPixelInfo.b.b})`,
                 }}
               />
             </div>
-            <div className="text-gray-500">Diff:</div>
-            <div className="text-orange-400">
+            <div className="text-muted-foreground">Diff:</div>
+            <div className="text-primary">
               {Math.abs(cursorPixelInfo.a.r - cursorPixelInfo.b.r)}{' '}
               {Math.abs(cursorPixelInfo.a.g - cursorPixelInfo.b.g)}{' '}
               {Math.abs(cursorPixelInfo.a.b - cursorPixelInfo.b.b)}
@@ -1232,7 +1246,7 @@ export function WebGLComparison() {
       {/* WEBGL-004: ROI Overlay */}
       {(webglComparisonSettings.roi || tempROI) && (
         <div
-          className="absolute border-2 border-[#ff5722] pointer-events-none"
+          className="pointer-events-none absolute border-2 border-primary"
           style={{
             left: `${(tempROI || webglComparisonSettings.roi)!.x * 100}%`,
             top: `${(tempROI || webglComparisonSettings.roi)!.y * 100}%`,
@@ -1242,13 +1256,13 @@ export function WebGLComparison() {
           }}
         >
           {/* ROI corner handles */}
-          <div className="absolute -top-1 -left-1 w-3 h-3 bg-[#ff5722] rounded-sm" />
-          <div className="absolute -top-1 -right-1 w-3 h-3 bg-[#ff5722] rounded-sm" />
-          <div className="absolute -bottom-1 -left-1 w-3 h-3 bg-[#ff5722] rounded-sm" />
-          <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-[#ff5722] rounded-sm" />
+          <div className="absolute -top-1 -left-1 w-3 h-3 ui-radius-sm bg-primary" />
+          <div className="absolute -top-1 -right-1 w-3 h-3 ui-radius-sm bg-primary" />
+          <div className="absolute -bottom-1 -left-1 w-3 h-3 ui-radius-sm bg-primary" />
+          <div className="absolute -bottom-1 -right-1 w-3 h-3 ui-radius-sm bg-primary" />
           {/* ROI label */}
           {!tempROI && (
-            <div className="absolute -top-6 left-0 bg-[#ff5722] text-white text-xs px-2 py-0.5 rounded whitespace-nowrap">
+            <div className="ui-radius-sm absolute -top-6 left-0 whitespace-nowrap bg-primary px-2 py-0.5 text-xs text-primary-foreground">
               ROI: {(webglComparisonSettings.roi!.width * 100).toFixed(0)}% ×{' '}
               {(webglComparisonSettings.roi!.height * 100).toFixed(0)}%
             </div>
@@ -1259,7 +1273,7 @@ export function WebGLComparison() {
       {/* WEBGL-004: ROI Drawing Mode Indicator */}
       {webglComparisonSettings.showROIControls && !webglComparisonSettings.roi && !tempROI && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="bg-black/70 px-4 py-2 rounded text-white text-sm">
+          <div className="surface-control-elevation ui-radius-md border border-border/40 bg-surface-alt/85 px-4 py-2 text-sm text-foreground backdrop-blur-sm">
             Click and drag to select a region of interest
           </div>
         </div>
@@ -1274,7 +1288,11 @@ export function WebGLComparison() {
         {/* WEBGL-001: Toggle Metrics */}
         <button
           onClick={toggleWebGLMetricsOverlay}
-          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${webglComparisonSettings.showMetricsOverlay ? 'border-accent bg-accent text-white' : 'surface-control text-text-secondary hover:text-text-primary'}`}
+          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${
+            webglComparisonSettings.showMetricsOverlay
+              ? 'border-accent bg-accent text-primary-foreground'
+              : 'surface-control text-text-secondary hover:text-text-primary'
+          }`}
           title="Toggle Metrics Overlay (WEBGL-001)"
         >
           <BarChart3 size={16} />
@@ -1283,7 +1301,11 @@ export function WebGLComparison() {
         {/* WEBGL-002: Toggle Scale Bar */}
         <button
           onClick={toggleWebGLScaleBar}
-          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${webglComparisonSettings.showScaleBar ? 'border-accent bg-accent text-white' : 'surface-control text-text-secondary hover:text-text-primary'}`}
+          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${
+            webglComparisonSettings.showScaleBar
+              ? 'border-accent bg-accent text-primary-foreground'
+              : 'surface-control text-text-secondary hover:text-text-primary'
+          }`}
           title="Toggle Scale Bar (WEBGL-002)"
         >
           <Ruler size={16} />
@@ -1292,7 +1314,11 @@ export function WebGLComparison() {
         {/* WEBGL-003: Toggle Cursor Inspector */}
         <button
           onClick={toggleWebGLCursorInspector}
-          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${webglComparisonSettings.showCursorInspector ? 'border-accent bg-accent text-white' : 'surface-control text-text-secondary hover:text-text-primary'}`}
+          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${
+            webglComparisonSettings.showCursorInspector
+              ? 'border-accent bg-accent text-primary-foreground'
+              : 'surface-control text-text-secondary hover:text-text-primary'
+          }`}
           title="Toggle Cursor Inspector (WEBGL-003)"
         >
           <Crosshair size={16} />
@@ -1301,7 +1327,11 @@ export function WebGLComparison() {
         {/* WEBGL-004: ROI Selection */}
         <button
           onClick={toggleROIControls}
-          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${webglComparisonSettings.showROIControls ? 'border-accent bg-accent text-white' : 'surface-control text-text-secondary hover:text-text-primary'}`}
+          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${
+            webglComparisonSettings.showROIControls
+              ? 'border-accent bg-accent text-primary-foreground'
+              : 'surface-control text-text-secondary hover:text-text-primary'
+          }`}
           title="Draw ROI Selection (WEBGL-004)"
         >
           <Scan size={16} />
@@ -1309,7 +1339,7 @@ export function WebGLComparison() {
         {webglComparisonSettings.roi && (
           <button
             onClick={clearROI}
-            className="surface-control ui-radius-md border p-2 text-error hover:text-red-300 transition-colors"
+            className="surface-control ui-radius-md border p-2 text-destructive hover:text-destructive/80 transition-colors"
             title="Clear ROI Selection"
           >
             <X size={16} />
@@ -1319,7 +1349,11 @@ export function WebGLComparison() {
         {/* WEBGL-008: Flip A/B */}
         <button
           onClick={toggleWebGLFlipAB}
-          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${webglComparisonSettings.flipAB ? 'border-accent bg-accent text-white' : 'surface-control text-text-secondary hover:text-text-primary'}`}
+          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${
+            webglComparisonSettings.flipAB
+              ? 'border-accent bg-accent text-primary-foreground'
+              : 'surface-control text-text-secondary hover:text-text-primary'
+          }`}
           title="Flip A/B Sources (F)"
         >
           <FlipHorizontal size={16} />
@@ -1401,7 +1435,11 @@ export function WebGLComparison() {
             <div className="w-px h-6 bg-border mx-1" />
             <button
               onClick={() => setShowTemporalGraph(!showTemporalGraph)}
-              className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${showTemporalGraph ? 'border-accent bg-accent text-white' : 'surface-control text-text-secondary hover:text-text-primary'}`}
+              className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${
+                showTemporalGraph
+                  ? 'border-accent bg-accent text-primary-foreground'
+                  : 'surface-control text-text-secondary hover:text-text-primary'
+              }`}
               title="Temporal Difference Graph (WEBGL-009)"
             >
               <LineChart size={16} />
@@ -1415,7 +1453,11 @@ export function WebGLComparison() {
         {/* SCOPE-008: Histogram Panel Toggle */}
         <button
           onClick={() => setShowHistogramPanel(!showHistogramPanel)}
-          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${showHistogramPanel ? 'border-accent bg-accent text-white' : 'surface-control text-text-secondary hover:text-text-primary'}`}
+          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${
+            showHistogramPanel
+              ? 'border-accent bg-accent text-primary-foreground'
+              : 'surface-control text-text-secondary hover:text-text-primary'
+          }`}
           title="Histogram Panel (SCOPE-008)"
         >
           <Activity size={16} />
@@ -1424,7 +1466,11 @@ export function WebGLComparison() {
         {/* SCOPE-009: Color Wheel Panel Toggle */}
         <button
           onClick={() => setShowColorWheelPanel(!showColorWheelPanel)}
-          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${showColorWheelPanel ? 'border-accent bg-accent text-white' : 'surface-control text-text-secondary hover:text-text-primary'}`}
+          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${
+            showColorWheelPanel
+              ? 'border-accent bg-accent text-primary-foreground'
+              : 'surface-control text-text-secondary hover:text-text-primary'
+          }`}
           title="Color Wheel Distribution (SCOPE-009)"
         >
           <Palette size={16} />
@@ -1433,7 +1479,11 @@ export function WebGLComparison() {
         {/* SCOPE-010: Gamut Warning Toggle */}
         <button
           onClick={() => setShowGamutWarning(!showGamutWarning)}
-          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${showGamutWarning ? 'border-accent bg-accent text-white' : 'surface-control text-text-secondary hover:text-text-primary'}`}
+          className={`surface-control-elevation ui-radius-md border p-2 transition-colors ${
+            showGamutWarning
+              ? 'border-accent bg-accent text-primary-foreground'
+              : 'surface-control text-text-secondary hover:text-text-primary'
+          }`}
           title="Gamut Warning Overlay (SCOPE-010, G)"
         >
           <AlertTriangle size={16} />
@@ -1441,7 +1491,7 @@ export function WebGLComparison() {
       </ElevatedSurface>
 
       {/* Settings indicator */}
-      <div className="absolute bottom-4 left-4 bg-black/70 px-3 py-1.5 rounded text-xs text-gray-400">
+      <div className="surface-control-elevation ui-radius-md absolute bottom-4 left-4 border border-border/40 bg-surface-alt/85 px-3 py-1.5 text-xs text-muted-foreground backdrop-blur-sm">
         Amp: {webglComparisonSettings.amplification}x | Threshold:{' '}
         {(webglComparisonSettings.threshold * 100).toFixed(0)}% | Opacity:{' '}
         {(webglComparisonSettings.opacity * 100).toFixed(0)}%
@@ -1449,7 +1499,7 @@ export function WebGLComparison() {
 
       {/* Help text for interactive modes */}
       {webglComparisonSettings.mode === 'pro-loupe' && (
-        <div className="absolute bottom-4 right-4 bg-black/70 px-3 py-1.5 rounded text-xs text-gray-400">
+        <div className="surface-control-elevation ui-radius-md absolute bottom-4 right-4 border border-border/40 bg-surface-alt/85 px-3 py-1.5 text-xs text-muted-foreground backdrop-blur-sm">
           Move cursor to inspect • Left = A, Right = B
         </div>
       )}

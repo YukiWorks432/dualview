@@ -6,6 +6,7 @@ import { findNextTimelineDiffSegment } from '../../lib/media/timelineDiff'
 import { usePlaybackStore } from '../../stores/playbackStore'
 import { useTimelineDiffStore } from '../../stores/timelineDiffStore'
 import { useTimelineStore } from '../../stores/timelineStore'
+import { Slider } from '../ui'
 
 function statusLabel(status: string): string {
   switch (status) {
@@ -94,15 +95,14 @@ export function TimelineDiffControls() {
         title="Pixelmatch color threshold from 0 to 1"
       >
         Pixel{' '}
-        <input
+        <Slider
           aria-label="Pixel difference threshold"
-          type="range"
-          min="0"
-          max="1"
-          step="0.01"
+          min={0}
+          max={1}
+          step={0.01}
           value={colorThreshold}
           onChange={(event) => setColorThreshold(Number(event.target.value))}
-          className="w-14 accent-accent"
+          className="w-14 shrink-0"
         />
         <span className="w-7 text-text-secondary">{colorThreshold.toFixed(2)}</span>
       </label>
@@ -111,15 +111,14 @@ export function TimelineDiffControls() {
         title="Minimum differing pixel area to highlight"
       >
         Area{' '}
-        <input
+        <Slider
           aria-label="Highlight area threshold"
-          type="range"
-          min="0"
-          max="0.25"
-          step="0.005"
+          min={0}
+          max={0.25}
+          step={0.005}
           value={areaThreshold}
           onChange={(event) => setAreaThreshold(Number(event.target.value))}
-          className="w-14 accent-accent"
+          className="w-14 shrink-0"
         />
         <span className="w-8 text-text-secondary">{(areaThreshold * 100).toFixed(1)}%</span>
       </label>

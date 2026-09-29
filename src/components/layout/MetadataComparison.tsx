@@ -155,7 +155,7 @@ function ComparisonRow({ label, valueA, valueB, unit }: ComparisonRowProps) {
     <div className="grid grid-cols-[100px_1fr_24px_1fr] gap-2 items-center py-1.5 border-b border-border/50 last:border-0">
       <span className="text-[11px] text-muted-foreground font-medium">{label}</span>
       <div
-        className="text-xs font-mono bg-surface-alt px-2 py-1 text-compare-a truncate"
+        className="ui-radius-sm text-xs font-mono bg-surface-alt px-2 py-1 text-compare-a truncate"
         title={strA}
       >
         {strA}
@@ -163,16 +163,16 @@ function ComparisonRow({ label, valueA, valueB, unit }: ComparisonRowProps) {
       </div>
       <div className="flex justify-center">
         {isSame ? (
-          <Equal className="w-3 h-3 text-green-500" />
+          <Equal className="w-3 h-3 text-success" />
         ) : isDifferent ? (
-          <ArrowUpDown className="w-3 h-3 text-amber-500" />
+          <ArrowUpDown className="w-3 h-3 text-warning" />
         ) : (
           <span className="w-3 h-3" />
         )}
       </div>
       <div
         className={cn(
-          'text-xs font-mono px-2 py-1 truncate',
+          'ui-radius-sm text-xs font-mono px-2 py-1 truncate',
           isDifferent ? 'bg-compare-b/20 text-compare-b' : 'bg-surface-alt text-compare-b',
         )}
         title={strB}
@@ -387,14 +387,14 @@ export function MetadataComparison() {
             <div className="surface-control p-2 border-t border-border flex items-center justify-between text-[10px] text-muted-foreground">
               <div className="flex items-center gap-3">
                 <span className="flex items-center gap-1">
-                  <Equal className="w-3 h-3 text-green-500" /> Same
+                  <Equal className="w-3 h-3 text-success" /> Same
                 </span>
                 <span className="flex items-center gap-1">
-                  <ArrowUpDown className="w-3 h-3 text-amber-500" /> Different
+                  <ArrowUpDown className="w-3 h-3 text-warning" /> Different
                 </span>
               </div>
               {diffCount > 0 && (
-                <span className="text-amber-500 font-medium">{diffCount} differences found</span>
+                <span className="text-warning font-medium">{diffCount} differences found</span>
               )}
             </div>
           </div>
