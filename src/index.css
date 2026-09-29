@@ -17,6 +17,10 @@
     helvetica-lt-pro, hiragino-kaku-gothic-pron, Inter, 'Noto Sans JP', system-ui, -apple-system,
     'Segoe UI', sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  --font-weight-normal: 700;
+  --font-weight-medium: 700;
+  --font-weight-semibold: 800;
+  --font-weight-bold: 800;
 
   --radius-sm: 4px;
   --radius-md: 6px;
@@ -207,20 +211,22 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-button,
-input,
-select,
-textarea,
-option {
-  font-family: var(--font-sans);
-  font-style: normal;
-}
+@layer base {
+  button,
+  input,
+  select,
+  textarea,
+  option {
+    font-family: var(--font-sans);
+    font-style: normal;
+  }
 
-input,
-select,
-textarea,
-option {
-  font-weight: var(--font-weight-ui);
+  input,
+  select,
+  textarea,
+  option {
+    font-weight: var(--font-weight-ui);
+  }
 }
 
 button,
@@ -241,6 +247,7 @@ h6,
 code,
 kbd,
 samp {
+  font-family: var(--font-mono);
   font-weight: var(--font-weight-technical);
 }
 
