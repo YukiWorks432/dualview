@@ -24,7 +24,9 @@ export function ExportReadiness({ hasMediaA, hasMediaB }: ExportReadinessProps) 
         className="mb-4 flex items-center gap-3 ui-radius-md border border-border bg-surface-alt p-2 text-xs"
         role="status"
       >
-        <div className={`flex items-center gap-1 ${hasMediaA ? 'text-compare-a' : 'text-muted-foreground'}`}>
+        <div
+          className={`flex items-center gap-1 ${hasMediaA ? 'text-compare-a' : 'text-muted-foreground'}`}
+        >
           <span
             className={`h-2 w-2 rounded-full ${hasMediaA ? 'bg-compare-a' : 'bg-border'}`}
             aria-hidden="true"

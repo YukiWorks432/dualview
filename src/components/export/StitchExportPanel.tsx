@@ -79,7 +79,7 @@ export function StitchExportPanel({
                 <span className="text-sm font-medium text-foreground">{track.name}</span>
               </div>
               <div className="text-xs text-muted-foreground">
-                {track.clipCount} clip{track.clipCount !== 1 ? 's' : ''} •{' '}
+                {track.clipCount} clip{track.clipCount !== 1 ? 's' : ''} â¢{' '}
                 {formatTime(track.totalDuration)}
               </div>
             </button>
@@ -92,7 +92,9 @@ export function StitchExportPanel({
           <div className="ui-radius-md border border-border bg-surface-alt p-4 text-center">
             <Film className="mx-auto mb-2 h-8 w-8 text-muted-foreground" aria-hidden="true" />
             <p className="text-sm text-muted-foreground">No clips on this track</p>
-            <p className="mt-1 text-xs text-muted-foreground">Add clips to the timeline to export</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Add clips to the timeline to export
+            </p>
           </div>
         ) : (
           <div className="space-y-2">

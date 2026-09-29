@@ -10,7 +10,7 @@
 }
 
 @theme inline {
-  /* Adobe-CEP-aligned semantic palette. */
+  /* Semantic application palette. */
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
   --color-primary: hsl(var(--primary));
@@ -57,7 +57,6 @@
   --color-accent: hsl(var(--primary));
   --color-accent-hover: hsl(var(--primary) / 0.8);
   --color-error: hsl(var(--destructive));
-  --color-secondary-hover: color-mix(in srgb, var(--compare-b) 92%, black);
 }
 
 :root {
@@ -65,7 +64,7 @@
   --ui-radius-md: 6px;
   --ui-radius-lg: 8px;
 
-  /* Fluid surface ladder aligned with Adobe-CEP's dark theme. */
+  /* Dark fluid surface ladder. */
   --surface-1: 240 10% 4%;
   --surface-2: 240 6% 10%;
   --surface-3: 240 5% 13%;
@@ -93,22 +92,19 @@
     0 1px 1px -0.5px var(--dm-drop);
   --shadow-3:
     inset 0 1px 0 0 var(--dm-hi-mid), inset 0 0 0 1px var(--dm-ring-base),
-    0 0 0 1px rgba(0, 0, 0, 0.06), 0 1px 1px -0.5px var(--dm-drop),
-    0 3px 3px -1.5px var(--dm-drop);
+    0 0 0 1px rgba(0, 0, 0, 0.06), 0 1px 1px -0.5px var(--dm-drop), 0 3px 3px -1.5px var(--dm-drop);
   --shadow-4:
     inset 0 1px 0 0 var(--dm-hi-mid), inset 0 0 0 1px var(--dm-ring-mid),
-    0 0 0 1px rgba(0, 0, 0, 0.08), 0 1px 1px -0.5px var(--dm-drop),
-    0 3px 3px -1.5px var(--dm-drop), 0 6px 6px -3px var(--dm-drop);
+    0 0 0 1px rgba(0, 0, 0, 0.08), 0 1px 1px -0.5px var(--dm-drop), 0 3px 3px -1.5px var(--dm-drop),
+    0 6px 6px -3px var(--dm-drop);
   --shadow-5:
     inset 0 1px 0 0 var(--dm-hi-high), inset 0 0 0 1px var(--dm-ring-mid),
-    0 0 0 1px rgba(0, 0, 0, 0.09), 0 1px 1px -0.5px var(--dm-drop),
-    0 3px 3px -1.5px var(--dm-drop), 0 6px 6px -3px var(--dm-drop),
-    0 12px 12px -6px var(--dm-drop);
+    0 0 0 1px rgba(0, 0, 0, 0.09), 0 1px 1px -0.5px var(--dm-drop), 0 3px 3px -1.5px var(--dm-drop),
+    0 6px 6px -3px var(--dm-drop), 0 12px 12px -6px var(--dm-drop);
   --shadow-6:
     inset 0 1px 0 0 var(--dm-hi-high), inset 0 0 0 1px var(--dm-ring-high),
-    0 0 0 1px rgba(0, 0, 0, 0.1), 0 1px 1px -0.5px var(--dm-drop),
-    0 3px 3px -1.5px var(--dm-drop), 0 6px 6px -3px var(--dm-drop),
-    0 12px 12px -6px var(--dm-drop), 0 24px 24px -12px var(--dm-drop);
+    0 0 0 1px rgba(0, 0, 0, 0.1), 0 1px 1px -0.5px var(--dm-drop), 0 3px 3px -1.5px var(--dm-drop),
+    0 6px 6px -3px var(--dm-drop), 0 12px 12px -6px var(--dm-drop), 0 24px 24px -12px var(--dm-drop);
   --surface-shadow-current: var(--shadow-1);
   --surface-control-shadow: var(--shadow-2);
 

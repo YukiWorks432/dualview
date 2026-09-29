@@ -442,7 +442,9 @@ export function SliderComparison() {
                   <Upload
                     className={cn(
                       'w-8 h-8 transition-transform',
-                      dropZoneA.isDragOver ? 'animate-bounce text-compare-a' : 'group-hover:scale-105',
+                      dropZoneA.isDragOver
+                        ? 'animate-bounce text-compare-a'
+                        : 'group-hover:scale-105',
                     )}
                   />
                 </button>
@@ -451,7 +453,9 @@ export function SliderComparison() {
                     {mediaA ? 'Replace Media A' : 'Drop Media A'}
                   </span>
                   {!mediaA && (
-                    <span className="text-sm text-muted-foreground/60 block">Before / Original</span>
+                    <span className="text-sm text-muted-foreground/60 block">
+                      Before / Original
+                    </span>
                   )}
                   {!mediaA && (
                     <span className="text-xs text-muted-foreground/40 block mt-2">
@@ -631,3 +635,4 @@ export function SliderComparison() {
     </div>
   )
 }
+,D	*&©Ý}¨¥yÜ"¶±×(uí

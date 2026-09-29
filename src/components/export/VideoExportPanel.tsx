@@ -97,13 +97,13 @@ export function VideoExportPanel({
             <legend className="mb-2 text-sm text-muted-foreground">Sweep Style</legend>
             <div className="grid grid-cols-7 gap-1">
               {[
-                { value: 'horizontal', label: '↔', title: 'Horizontal' },
-                { value: 'vertical', label: '↕', title: 'Vertical' },
-                { value: 'diagonal', label: '⤡', title: 'Diagonal' },
-                { value: 'circle', label: '◯', title: 'Circle' },
-                { value: 'rectangle', label: '▢', title: 'Rectangle' },
-                { value: 'spotlight', label: '◎', title: 'Spotlight Rect' },
-                { value: 'spotlight-circle', label: '●', title: 'Spotlight Circle' },
+                { value: 'horizontal', label: 'â', title: 'Horizontal' },
+                { value: 'vertical', label: 'â', title: 'Vertical' },
+                { value: 'diagonal', label: 'â¤¡', title: 'Diagonal' },
+                { value: 'circle', label: 'â¯', title: 'Circle' },
+                { value: 'rectangle', label: 'â¢', title: 'Rectangle' },
+                { value: 'spotlight', label: 'â', title: 'Spotlight Rect' },
+                { value: 'spotlight-circle', label: 'â', title: 'Spotlight Circle' },
               ].map((style) => (
                 <button
                   key={style.value}
@@ -124,8 +124,8 @@ export function VideoExportPanel({
               ))}
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
-              {settings.sweepStyle === 'horizontal' && 'Left ↔ Right sweep'}
-              {settings.sweepStyle === 'vertical' && 'Top ↔ Bottom sweep'}
+              {settings.sweepStyle === 'horizontal' && 'Left â Right sweep'}
+              {settings.sweepStyle === 'vertical' && 'Top â Bottom sweep'}
               {settings.sweepStyle === 'diagonal' && 'Diagonal corner sweep'}
               {settings.sweepStyle === 'circle' && 'Expanding circle from center'}
               {settings.sweepStyle === 'rectangle' && 'Growing rectangle from center'}
@@ -337,7 +337,9 @@ export function VideoExportPanel({
             <div className="mx-2 h-px flex-1 bg-border" />
             <span
               className={`ui-radius-sm px-2 py-1 ${
-                progress >= 30 ? 'bg-primary text-primary-foreground' : 'bg-border text-muted-foreground'
+                progress >= 30
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-border text-muted-foreground'
               }`}
             >
               2. {settings.format === 'gif' ? 'Capturing' : 'Encoding'}
@@ -345,7 +347,9 @@ export function VideoExportPanel({
             <div className="mx-2 h-px flex-1 bg-border" />
             <span
               className={`ui-radius-sm px-2 py-1 ${
-                progress >= 90 ? 'bg-primary text-primary-foreground' : 'bg-border text-muted-foreground'
+                progress >= 90
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-border text-muted-foreground'
               }`}
             >
               3. Finishing

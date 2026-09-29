@@ -323,9 +323,7 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
               <FilePlus2
                 className={cn(
                   'h-5 w-5',
-                  isDragOverA
-                    ? 'text-compare-a'
-                    : 'text-compare-a/70 group-hover:text-compare-a',
+                  isDragOverA ? 'text-compare-a' : 'text-compare-a/70 group-hover:text-compare-a',
                 )}
               />
             </div>

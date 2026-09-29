@@ -43,7 +43,7 @@ function formatFileSize(bytes: number): string {
 }
 
 function formatBitrate(bytes: number, seconds: number): string {
-  if (!seconds || seconds === 0) return '—'
+  if (!seconds || seconds === 0) return 'â'
   const bitsPerSecond = (bytes * 8) / seconds
   if (bitsPerSecond >= 1000000) {
     return `${(bitsPerSecond / 1000000).toFixed(2)} Mbps`
@@ -72,12 +72,12 @@ async function extractMetadata(media: MediaFile): Promise<ExtendedMetadata> {
     sizeBytes: media.file?.size || 0,
     format: media.file?.name.split('.').pop()?.toUpperCase() || 'Unknown',
     type: media.type,
-    lastModified: media.file ? new Date(media.file.lastModified).toLocaleDateString() : '—',
+    lastModified: media.file ? new Date(media.file.lastModified).toLocaleDateString() : 'â',
   }
 
   if (media.type === 'video' || media.type === 'image') {
     if (media.width && media.height) {
-      base.resolution = `${media.width} × ${media.height}`
+      base.resolution = `${media.width} Ã ${media.height}`
       base.width = media.width
       base.height = media.height
       base.aspectRatio = calculateAspectRatio(media.width, media.height)
@@ -105,13 +105,13 @@ async function extractMetadata(media: MediaFile): Promise<ExtendedMetadata> {
         setTimeout(resolve, 2000) // Timeout fallback
       })
       if (video.videoWidth && video.videoHeight) {
-        base.resolution = `${video.videoWidth} × ${video.videoHeight}`
+        base.resolution = `${video.videoWidth} Ã ${video.videoHeight}`
         base.width = video.videoWidth
         base.height = video.videoHeight
         base.aspectRatio = calculateAspectRatio(video.videoWidth, video.videoHeight)
       }
       // Estimate frame rate from video (approximate)
-      base.frameRate = '—' // Can't reliably get this from browser
+      base.frameRate = 'â' // Can't reliably get this from browser
     } catch (e) {
       // Ignore errors
     }
@@ -146,17 +146,20 @@ interface ComparisonRowProps {
 }
 
 function ComparisonRow({ label, valueA, valueB, unit }: ComparisonRowProps) {
-  const strA = valueA?.toString() || '—'
-  const strB = valueB?.toString() || '—'
-  const isSame = strA === strB && strA !== '—'
-  const isDifferent = strA !== strB && strA !== '—' && strB !== '—'
+  const strA = valueA?.toString() || 'â'
+  const strB = valueB?.toString() || 'â'
+  const isSame = strA === strB && strA !== 'â'
+  const isDifferent = strA !== strB && strA !== 'â' && strB !== 'â'
 
   return (
     <div className="grid grid-cols-[100px_1fr_24px_1fr] gap-2 items-center py-1.5 border-b border-border/50 last:border-0">
       <span className="text-[11px] text-muted-foreground font-medium">{label}</span>
-      <div className="text-xs font-mono bg-surface-alt px-2 py-1 text-compare-a truncate" title={strA}>
+      <div
+        className="text-xs font-mono bg-surface-alt px-2 py-1 text-compare-a truncate"
+        title={strA}
+      >
         {strA}
-        {unit && strA !== '—' ? ` ${unit}` : ''}
+        {unit && strA !== 'â' ? ` ${unit}` : ''}
       </div>
       <div className="flex justify-center">
         {isSame ? (
@@ -175,7 +178,7 @@ function ComparisonRow({ label, valueA, valueB, unit }: ComparisonRowProps) {
         title={strB}
       >
         {strB}
-        {unit && strB !== '—' ? ` ${unit}` : ''}
+        {unit && strB !== 'â' ? ` ${unit}` : ''}
       </div>
     </div>
   )

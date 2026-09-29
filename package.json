@@ -28,7 +28,7 @@
     "deploy": "wrangler deploy",
     "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test:run && pnpm build",
     "format": "oxfmt .",
-    "format:check": "oxfmt . && git diff --name-only -z | xargs -0 -r -I{} sh -c 'printf \"===OXFMT_FILE:%s===\\\\n\" \"$1\"; base64 -w0 \"$1\"; printf \"\\\\n===OXFMT_END===\\\\n\"' _ \"{}\" && exit 1",
+    "format:check": "oxfmt --check .",
     "lint": "oxlint .",
     "lint:fix": "oxlint . --fix",
     "typecheck": "tsc -b --pretty false",

@@ -70,7 +70,9 @@ export function TransitionExportPanel({
   return (
     <>
       <div className="mb-2 flex items-center justify-between">
-        <span className="text-xs text-muted-foreground">{shaderCount} transition effects available</span>
+        <span className="text-xs text-muted-foreground">
+          {shaderCount} transition effects available
+        </span>
         {!webglSupported && <span className="text-xs text-destructive">WebGL not supported</span>}
       </div>
 
@@ -80,7 +82,7 @@ export function TransitionExportPanel({
           {[
             {
               value: 'sequential',
-              label: 'A → T → B',
+              label: 'A â T â B',
               description: 'Full A, then transition, then full B',
             },
             {
@@ -90,8 +92,8 @@ export function TransitionExportPanel({
             },
             {
               value: 'loop',
-              label: 'Loop A↔B',
-              description: 'Continuous A↔B transitions',
+              label: 'Loop AâB',
+              description: 'Continuous AâB transitions',
             },
             {
               value: 'transition-only',
@@ -247,7 +249,9 @@ export function TransitionExportPanel({
             <div className="mx-2 h-px flex-1 bg-border" />
             <span
               className={`ui-radius-sm px-2 py-1 ${
-                progress >= 10 ? 'bg-primary text-primary-foreground' : 'bg-border text-muted-foreground'
+                progress >= 10
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-border text-muted-foreground'
               }`}
             >
               2. Rendering
@@ -255,7 +259,9 @@ export function TransitionExportPanel({
             <div className="mx-2 h-px flex-1 bg-border" />
             <span
               className={`ui-radius-sm px-2 py-1 ${
-                progress >= 90 ? 'bg-primary text-primary-foreground' : 'bg-border text-muted-foreground'
+                progress >= 90
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-border text-muted-foreground'
               }`}
             >
               3. Encode

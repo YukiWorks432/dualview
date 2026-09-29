@@ -76,7 +76,7 @@ export function ComparisonModePicker() {
                   <button
                     type="button"
                     onClick={() => setComparisonMode(mode)}
-                    className={`flex min-h-24 flex-col items-center justify-center gap-2 ui-radius-md border p-4 text-center outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                    className={`flex min-h-24 flex-col items-center justify-center gap-2 ui-radius-md border p-4 text-center outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                       comparisonMode === mode
                         ? 'surface-active surface-selected-border text-foreground hover:surface-active'
                         : 'surface-control text-foreground'
@@ -185,7 +185,9 @@ export function ComparisonModePicker() {
                   <DropdownMenuLabel className="pb-0 text-[10px] uppercase tracking-wider">
                     {group.name}
                   </DropdownMenuLabel>
-                  <div className="px-3 pb-1 text-[9px] text-muted-foreground">{group.description}</div>
+                  <div className="px-3 pb-1 text-[9px] text-muted-foreground">
+                    {group.description}
+                  </div>
                   {group.modes.map(({ mode, icon: Icon, label, description, shortcut }) => (
                     <DropdownMenuItem
                       key={mode}

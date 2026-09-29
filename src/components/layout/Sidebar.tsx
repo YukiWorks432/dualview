@@ -111,7 +111,9 @@ export function Sidebar({ onCollapse, isMobileOpen, onMobileClose, onOpenProject
         {saveStatus === 'unsaved' && (
           <span className="text-[10px] text-muted-foreground">Unsaved changes</span>
         )}
-        {saveStatus === 'error' && <span className="text-[10px] text-destructive">Save failed</span>}
+        {saveStatus === 'error' && (
+          <span className="text-[10px] text-destructive">Save failed</span>
+        )}
       </ElevatedSurface>
 
       {/* Tab navigation - Jakob's Law: Familiar tab pattern */}
@@ -319,9 +321,11 @@ function MediaPanel() {
       >
         <div className="flex items-center justify-between mb-2">
           <span className="text-xs font-medium text-muted-foreground">
-            {isReady ? '✓ Ready to Compare' : 'Setup Progress'}
+            {isReady ? 'â Ready to Compare' : 'Setup Progress'}
           </span>
-          <span className={`text-xs font-mono ${isReady ? 'text-primary' : 'text-muted-foreground'}`}>
+          <span
+            className={`text-xs font-mono ${isReady ? 'text-primary' : 'text-muted-foreground'}`}
+          >
             {completionSteps}/2
           </span>
         </div>
@@ -342,18 +346,18 @@ function MediaPanel() {
           <span
             className={`flex items-center gap-1 ${hasMediaA ? 'text-compare-a' : 'text-muted-foreground'}`}
           >
-            {hasMediaA ? '● Media A' : '○ Add Media A'}
+            {hasMediaA ? 'â Media A' : 'â Add Media A'}
           </span>
           <span
             className={`flex items-center gap-1 ${hasMediaB ? 'text-compare-b' : 'text-muted-foreground'}`}
           >
-            {hasMediaB ? '● Media B' : '○ Add Media B'}
+            {hasMediaB ? 'â Media B' : 'â Add Media B'}
           </span>
         </div>
         {/* Helpful hint - Paradox of Active User */}
         {!isReady && (
           <p className="text-[10px] text-muted-foreground mt-2 pt-2 border-t border-border/50">
-            💡 Drag files or paste URLs to add media
+            ð¡ Drag files or paste URLs to add media
           </p>
         )}
       </ElevatedSurface>
@@ -879,7 +883,7 @@ function SettingsPanel({
           <kbd className="kbd">E</kbd>
         </div>
         <p className="text-[10px] text-muted-foreground -mt-2">
-          Basic settings • Press E for full options
+          Basic settings â¢ Press E for full options
         </p>
         <div className="grid grid-cols-2 gap-3">
           <Select

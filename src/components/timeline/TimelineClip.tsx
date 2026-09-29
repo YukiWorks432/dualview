@@ -197,7 +197,9 @@ export const TimelineClip = memo(function TimelineClip({
       <div className="absolute inset-0 p-1 flex items-start justify-between z-10">
         <div className="flex items-center gap-1">
           {/* Overlap warning icon */}
-          {hasOverlap && <AlertTriangle className="w-3 h-3 text-destructive drop-shadow animate-pulse" />}
+          {hasOverlap && (
+            <AlertTriangle className="w-3 h-3 text-destructive drop-shadow animate-pulse" />
+          )}
           <span className="text-[10px] text-white font-medium drop-shadow">
             {mediaName || 'Clip'}
           </span>
