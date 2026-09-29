@@ -71,7 +71,7 @@
 > [!NOTE]
 > **DualView was originally created by [Gökay Aydoğan](https://github.com/gokayfem) in
 > [gokayfem/dualview](https://github.com/gokayfem/dualview).**
-> This repository is a maintained fork by [YukiWorks432](https://github.com/YukiWorks432),
+> This repository is a maintained fork by [花雪 / HanaYuki](https://github.com/YukiWorks432),
 > continuing that work with modernization, maintenance, and ongoing development while preserving
 > attribution to the original project.
 
@@ -80,7 +80,7 @@
 | **Original project** | [gokayfem/dualview](https://github.com/gokayfem/dualview) · [dualview.ai](https://dualview.ai)                                                     |
 | **Original creator** | [Gökay Aydoğan](https://github.com/gokayfem) · [@gokayfem](https://x.com/gokayfem)                                                                 |
 | **Maintained fork**  | [dualview.yukiworks432.workers.dev](https://dualview.yukiworks432.workers.dev) · [YukiWorks432/dualview](https://github.com/YukiWorks432/dualview) |
-| **Fork maintainer**  | [YukiWorks432](https://github.com/YukiWorks432) · [@YuK1_Works](https://x.com/YuK1_Works) · [hanayuki.xyz](https://hanayuki.xyz)                   |
+| **Fork maintainer**  | [花雪 / HanaYuki](https://github.com/YukiWorks432) · [@YuK1_Works](https://x.com/YuK1_Works) · [hanayuki.xyz](https://hanayuki.xyz)                   |
 
 ---
 
@@ -502,16 +502,14 @@ Toggle with `G` key.
 - **Templates:** Built-in presets + custom templates
 - **Metadata:** Title, description, tags
 
-Local files selected, dropped, pasted, or captured in DualView are processed in the browser; DualView
-does not provide a media-upload endpoint for that workflow. Project metadata, thumbnails, and media
-blobs are saved automatically in this browser's IndexedDB and can remain after the tab is closed.
+Local files added to DualView are processed in the browser and are not uploaded to the operator.
+Projects and media are saved in this browser so you can continue later.
 
-URL import is different: when you request a URL, the browser connects directly to that destination
-(and any redirects) to fetch the selected media. The destination can receive normal network
-information such as your IP address and the requested URL.
+URL import connects directly to the URL you enter to fetch that media. Other local files already
+loaded in DualView are not sent to that destination.
 
-A downloaded `.dualview` project contains the media itself as Base64 data. It is not a
-settings-only or encrypted container, so inspect what it contains before sharing it.
+A downloaded `.dualview` project includes the media itself, so share it with the same care as the
+source files.
 
 Published site information:
 [Privacy](https://dualview.yukiworks432.workers.dev/privacy/) ·
@@ -732,7 +730,7 @@ If your work depends on this maintained fork, GitHub's **Cite this repository** 
 
 ```bibtex
 @software{Aydogan_YukiWorks432_DualView_2026,
-  author  = {Aydoğan, Gökay and {YukiWorks432}},
+  author  = {Aydoğan, Gökay and {花雪 / HanaYuki}},
   title   = {DualView},
   version = {1.0.0},
   year    = {2026},
@@ -751,12 +749,12 @@ If your work depends on this maintained fork, GitHub's **Cite this repository** 
 
 DualView's original work remains credited to **Gökay Aydoğan** and the
 [gokayfem/dualview](https://github.com/gokayfem/dualview) project. This fork is maintained by
-**YukiWorks432**.
+**花雪 / HanaYuki**.
 
 |                      | GitHub                                          | X                                       | Website                              |
 | -------------------- | ----------------------------------------------- | --------------------------------------- | ------------------------------------ |
 | **Original creator** | [gokayfem](https://github.com/gokayfem)         | [@gokayfem](https://x.com/gokayfem)     | [dualview.ai](https://dualview.ai)   |
-| **Fork maintainer**  | [YukiWorks432](https://github.com/YukiWorks432) | [@YuK1_Works](https://x.com/YuK1_Works) | [hanayuki.xyz](https://hanayuki.xyz) |
+| **Fork maintainer**  | [花雪 / HanaYuki](https://github.com/YukiWorks432) | [@YuK1_Works](https://x.com/YuK1_Works) | [hanayuki.xyz](https://hanayuki.xyz) |
 
 ## 📄 License
 
