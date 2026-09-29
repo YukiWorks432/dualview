@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import { useCallback, useState, useEffect } from 'react'
 
+import { detachFile } from '../../lib/media/detachFile'
 import { SUPPORTED_MEDIA_ACCEPT, isSupportedMediaFile } from '../../lib/media/fileTypes'
 import { captureScreenAsFile, isScreenCaptureSupported } from '../../lib/screenCapture'
 import { cn } from '../../lib/utils'
@@ -52,7 +53,7 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
           if (file) {
             setIsUploading(true)
             try {
-              const mediaFile = await addFile(file)
+              const mediaFile = await addFile(await detachFile(file))
 
               // Auto-add to timeline
               const trackA = tracks.find((t) => t.type === 'a')
@@ -84,31 +85,41 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
 
   // Handle files with optional target track ('a', 'b', or 'auto' for alternating)
   const handleFiles = useCallback(
-    async (files: FileList | null, targetTrack: 'a' | 'b' | 'auto' = 'auto') => {
-      if (!files || files.length === 0) return
+    async (files: File[], targetTrack: 'a' | 'b' | 'auto' = 'auto') => {
+      if (files.length === 0) return
 
+      const totalFiles = files.length
       setIsUploading(true)
       setError(null)
-      setUploadProgress({ current: 0, total: files.length })
+      setUploadProgress({ current: 0, total: totalFiles })
 
       const invalidFiles: string[] = []
 
       // Track cumulative positions for sequential placement
       let nextStartTimeA = 0
       let nextStartTimeB = 0
+      let fileIndex = 0
 
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i]
+      while (files.length > 0) {
+        let sourceFile: File | undefined = files.shift()
+        if (!sourceFile) break
+
+        const sourceName = sourceFile.name
+        const currentIndex = fileIndex
+        fileIndex += 1
 
         // Delivery review intentionally accepts only images and videos.
-        if (!isSupportedMediaFile(file)) {
-          invalidFiles.push(file.name)
-          setUploadProgress((prev) => ({ ...prev, current: i + 1 }))
+        if (!isSupportedMediaFile(sourceFile)) {
+          invalidFiles.push(sourceName)
+          sourceFile = undefined
+          setUploadProgress({ current: fileIndex, total: totalFiles })
           continue
         }
 
         try {
-          setUploadProgress({ current: i + 1, total: files.length })
+          setUploadProgress({ current: fileIndex, total: totalFiles })
+          const file = await detachFile(sourceFile)
+          sourceFile = undefined
           const mediaFile = await addFile(file)
           const duration = mediaFile.duration || 10
 
@@ -126,13 +137,13 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
             nextStartTimeB += duration
           } else {
             // Auto mode: first file to A, second to B
-            if (i === 0 && trackA) {
+            if (currentIndex === 0 && trackA) {
               addClip(trackA.id, mediaFile.id, nextStartTimeA, duration)
               nextStartTimeA += duration
-            } else if (i === 1 && trackB) {
+            } else if (currentIndex === 1 && trackB) {
               addClip(trackB.id, mediaFile.id, nextStartTimeB, duration)
               nextStartTimeB += duration
-            } else if (i % 2 === 0 && trackA) {
+            } else if (currentIndex % 2 === 0 && trackA) {
               addClip(trackA.id, mediaFile.id, nextStartTimeA, duration)
               nextStartTimeA += duration
             } else if (trackB) {
@@ -141,8 +152,9 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
             }
           }
         } catch (error) {
+          sourceFile = undefined
           console.error('Failed to add file:', error)
-          invalidFiles.push(file.name)
+          invalidFiles.push(sourceName)
         }
       }
 
@@ -163,7 +175,7 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
     (e: React.DragEvent) => {
       e.preventDefault()
       setIsDragOverGeneral(false)
-      handleFiles(e.dataTransfer.files, 'auto')
+      handleFiles(Array.from(e.dataTransfer.files), 'auto')
     },
     [handleFiles],
   )
@@ -174,7 +186,7 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
       e.preventDefault()
       e.stopPropagation()
       setIsDragOverA(false)
-      handleFiles(e.dataTransfer.files, 'a')
+      handleFiles(Array.from(e.dataTransfer.files), 'a')
     },
     [handleFiles],
   )
@@ -185,7 +197,7 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
       e.preventDefault()
       e.stopPropagation()
       setIsDragOverB(false)
-      handleFiles(e.dataTransfer.files, 'b')
+      handleFiles(Array.from(e.dataTransfer.files), 'b')
     },
     [handleFiles],
   )
@@ -229,7 +241,10 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
     input.accept = SUPPORTED_MEDIA_ACCEPT
     input.onchange = (e) => {
       const target = e.target as HTMLInputElement
-      handleFiles(target.files, 'a')
+      const files = target.files ? Array.from(target.files) : []
+      target.value = ''
+      input.onchange = null
+      handleFiles(files, 'a')
     }
     input.click()
   }
@@ -241,7 +256,10 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
     input.accept = SUPPORTED_MEDIA_ACCEPT
     input.onchange = (e) => {
       const target = e.target as HTMLInputElement
-      handleFiles(target.files, 'b')
+      const files = target.files ? Array.from(target.files) : []
+      target.value = ''
+      input.onchange = null
+      handleFiles(files, 'b')
     }
     input.click()
   }
@@ -253,7 +271,10 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
     input.accept = SUPPORTED_MEDIA_ACCEPT
     input.onchange = (e) => {
       const target = e.target as HTMLInputElement
-      handleFiles(target.files, 'auto')
+      const files = target.files ? Array.from(target.files) : []
+      target.value = ''
+      input.onchange = null
+      handleFiles(files, 'auto')
     }
     input.click()
   }
