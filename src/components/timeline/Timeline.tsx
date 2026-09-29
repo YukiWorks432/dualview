@@ -802,7 +802,7 @@ export function Timeline() {
                     title="Add marker (M)"
                     className="h-7 w-7 relative"
                   >
-                    <Flag className="w-3.5 h-3.5" />
+                    <Flag className="w-3.5 h-3.5" aria-hidden="true" />
                     {markers.length > 0 && (
                       <span className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-warning text-[8px] text-warning-foreground font-bold flex items-center justify-center">
                         {markers.length}
