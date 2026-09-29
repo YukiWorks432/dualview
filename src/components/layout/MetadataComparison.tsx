@@ -112,7 +112,7 @@ async function extractMetadata(media: MediaFile): Promise<ExtendedMetadata> {
       }
       // Estimate frame rate from video (approximate)
       base.frameRate = '—' // Can't reliably get this from browser
-    } catch (e) {
+    } catch {
       // Ignore errors
     }
   }

@@ -178,12 +178,9 @@ export async function exportStitchedVideo(
   const muxer = await createAvcMp4Muxer()
 
   // Setup video encoder
-  let framesEncoded = 0
-
   const encoder = new VideoEncoder({
     output: (chunk, meta) => {
       muxer.addChunk(chunk, meta)
-      framesEncoded++
     },
     error: (e) => {
       console.error('Encoder error:', e)

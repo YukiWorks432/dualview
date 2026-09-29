@@ -24,7 +24,7 @@ export interface SurfaceProviderProps {
 }
 
 export function SurfaceProvider({ value = SURFACE_MIN_LEVEL, children }: SurfaceProviderProps) {
-  return React.createElement(UpstreamSurfaceProvider, { value: clampSurfaceLevel(value), children })
+  return React.createElement(UpstreamSurfaceProvider, { value: clampSurfaceLevel(value) }, children)
 }
 
 type SurfaceStyle = CSSProperties & {
@@ -96,7 +96,7 @@ export function ElevatedSurface({
       }),
     })
 
-    return React.createElement(UpstreamSurfaceProvider, { value: level, children: elevatedChild })
+    return React.createElement(UpstreamSurfaceProvider, { value: level }, elevatedChild)
   }
 
   return React.createElement(
