@@ -31,8 +31,20 @@ export function SideBySide() {
   const { zoom, resetZoom, getTransformStyle, containerProps } = useSyncedZoom()
   const { pixelInspectorEnabled, handlePixelClick } = usePixelInspector()
   const magnifier = useMagnifier()
-  const dropZoneA = useDropZone({ trackType: 'a' })
-  const dropZoneB = useDropZone({ trackType: 'b' })
+  const {
+    isDragOver: isDragOverA,
+    fileInputRef: fileInputRefA,
+    openFileDialog: openFileDialogA,
+    handleFileInputChange: handleFileInputChangeA,
+    dropZoneProps: dropZonePropsA,
+  } = useDropZone({ trackType: 'a' })
+  const {
+    isDragOver: isDragOverB,
+    fileInputRef: fileInputRefB,
+    openFileDialog: openFileDialogB,
+    handleFileInputChange: handleFileInputChangeB,
+    dropZoneProps: dropZonePropsB,
+  } = useDropZone({ trackType: 'b' })
 
   // Get tracks
   const trackA = tracks.find((t) => t.type === 'a')
@@ -93,18 +105,18 @@ export function SideBySide() {
     <div ref={containerRef} className="w-full h-full flex bg-black relative" {...containerProps}>
       {/* Hidden file inputs for click-to-upload */}
       <input
-        ref={dropZoneA.fileInputRef}
+        ref={fileInputRefA}
         type="file"
         accept={SUPPORTED_MEDIA_ACCEPT}
         className="hidden"
-        onChange={dropZoneA.handleFileInputChange}
+        onChange={handleFileInputChangeA}
       />
       <input
-        ref={dropZoneB.fileInputRef}
+        ref={fileInputRefB}
         type="file"
         accept={SUPPORTED_MEDIA_ACCEPT}
         className="hidden"
-        onChange={dropZoneB.handleFileInputChange}
+        onChange={handleFileInputChangeB}
       />
 
       {/* Quality Metrics Overlay */}
@@ -142,9 +154,9 @@ export function SideBySide() {
       <div
         className={cn(
           'flex-1 relative border-r border-border overflow-hidden transition-all duration-200',
-          dropZoneA.isDragOver && 'ring-2 ring-inset ring-compare-a bg-compare-a/10',
+          isDragOverA && 'ring-2 ring-inset ring-compare-a bg-compare-a/10',
         )}
-        {...dropZoneA.dropZoneProps}
+        {...dropZonePropsA}
       >
         <div className="w-full h-full" style={transformStyle}>
           {mediaA ? (
@@ -174,14 +186,14 @@ export function SideBySide() {
             <div
               className={cn(
                 'w-full h-full flex flex-col items-center justify-center text-muted-foreground bg-surface gap-3 transition-colors',
-                dropZoneA.isDragOver && 'bg-compare-a/20 text-compare-a',
+                isDragOverA && 'bg-compare-a/20 text-compare-a',
               )}
             >
               <button
-                onClick={() => dropZoneA.openFileDialog()}
+                onClick={() => openFileDialogA()}
                 className="surface-control surface-control-elevation ui-radius-lg border-2 border-dashed border-current p-4 transition-colors hover:bg-compare-a/10"
               >
-                <Upload className={cn('w-8 h-8', dropZoneA.isDragOver && 'animate-bounce')} />
+                <Upload className={cn('w-8 h-8', isDragOverA && 'animate-bounce')} />
               </button>
               <span className="text-sm">Click or drop Media A</span>
             </div>
@@ -194,9 +206,9 @@ export function SideBySide() {
           </div>
         )}
         {/* Upload button when has media */}
-        {mediaA && !dropZoneA.isDragOver && (
+        {mediaA && !isDragOverA && (
           <button
-            onClick={() => dropZoneA.openFileDialog()}
+            onClick={() => openFileDialogA()}
             className="surface-control ui-radius-lg absolute top-2 left-2 z-20 border p-2 text-compare-a-foreground transition-colors group hover:bg-compare-a/80"
             title="Replace Media A"
           >
@@ -204,7 +216,7 @@ export function SideBySide() {
           </button>
         )}
         {/* Drop overlay when has media */}
-        {mediaA && dropZoneA.isDragOver && (
+        {mediaA && isDragOverA && (
           <div className="absolute inset-0 bg-compare-a/20 flex items-center justify-center z-10 pointer-events-none">
             <div className="bg-black/80 px-4 py-2 rounded-lg flex items-center gap-2">
               <Upload className="w-5 h-5 text-compare-a" />
@@ -218,9 +230,9 @@ export function SideBySide() {
       <div
         className={cn(
           'flex-1 relative overflow-hidden transition-all duration-200',
-          dropZoneB.isDragOver && 'ring-2 ring-inset ring-compare-b bg-compare-b/10',
+          isDragOverB && 'ring-2 ring-inset ring-compare-b bg-compare-b/10',
         )}
-        {...dropZoneB.dropZoneProps}
+        {...dropZonePropsB}
       >
         <div className="w-full h-full" style={transformStyle}>
           {mediaB ? (
@@ -250,14 +262,14 @@ export function SideBySide() {
             <div
               className={cn(
                 'w-full h-full flex flex-col items-center justify-center text-muted-foreground bg-surface gap-3 transition-colors',
-                dropZoneB.isDragOver && 'bg-compare-b/20 text-compare-b',
+                isDragOverB && 'bg-compare-b/20 text-compare-b',
               )}
             >
               <button
-                onClick={() => dropZoneB.openFileDialog()}
+                onClick={() => openFileDialogB()}
                 className="surface-control surface-control-elevation ui-radius-lg border-2 border-dashed border-current p-4 transition-colors hover:bg-compare-b/10"
               >
-                <Upload className={cn('w-8 h-8', dropZoneB.isDragOver && 'animate-bounce')} />
+                <Upload className={cn('w-8 h-8', isDragOverB && 'animate-bounce')} />
               </button>
               <span className="text-sm">Click or drop Media B</span>
             </div>
@@ -270,9 +282,9 @@ export function SideBySide() {
           </div>
         )}
         {/* Upload button when has media */}
-        {mediaB && !dropZoneB.isDragOver && (
+        {mediaB && !isDragOverB && (
           <button
-            onClick={() => dropZoneB.openFileDialog()}
+            onClick={() => openFileDialogB()}
             className="surface-control ui-radius-lg absolute top-2 right-2 z-20 border p-2 text-compare-b-foreground transition-colors group hover:bg-compare-b/80"
             title="Replace Media B"
           >
@@ -280,7 +292,7 @@ export function SideBySide() {
           </button>
         )}
         {/* Drop overlay when has media */}
-        {mediaB && dropZoneB.isDragOver && (
+        {mediaB && isDragOverB && (
           <div className="absolute inset-0 bg-compare-b/20 flex items-center justify-center z-10 pointer-events-none">
             <div className="bg-black/80 px-4 py-2 rounded-lg flex items-center gap-2">
               <Upload className="w-5 h-5 text-compare-b" />
