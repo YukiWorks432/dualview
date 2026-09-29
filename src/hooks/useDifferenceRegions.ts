@@ -532,7 +532,6 @@ export function useDifferenceRegions({
       setRuntime({
         status: 'unavailable',
         message: 'Difference highlighting requires Web Worker support',
-        regionCount: 0,
         approximate: false,
       })
       return
@@ -563,7 +562,6 @@ export function useDifferenceRegions({
         message: isExporting
           ? 'Difference analysis pauses during export'
           : 'Difference analysis pauses while this tab is hidden',
-        regionCount: 0,
         approximate: false,
       })
       return
@@ -573,7 +571,6 @@ export function useDifferenceRegions({
       setRuntime({
         status: 'unavailable',
         message: 'Both A and B need an active clip at the current timeline position',
-        regionCount: 0,
         approximate: false,
       })
       return
@@ -594,7 +591,6 @@ export function useDifferenceRegions({
       setRuntime({
         status: 'syncing',
         message: 'Waiting for both A/B frames',
-        regionCount: 0,
         approximate: isPlaying,
       })
       return
@@ -608,7 +604,6 @@ export function useDifferenceRegions({
       setRuntime({
         status: 'unavailable',
         message: 'Both A and B need an active clip at the sampled timeline position',
-        regionCount: 0,
         approximate: isPlaying,
       })
       return
@@ -631,7 +626,6 @@ export function useDifferenceRegions({
         setRuntime({
           status: 'syncing',
           message: 'Waiting for synchronized A/B frames…',
-          regionCount: 0,
           approximate: isPlaying,
         })
 
@@ -647,7 +641,6 @@ export function useDifferenceRegions({
           setRuntime({
             status: 'syncing',
             message: 'Waiting for both A/B frame dimensions…',
-            regionCount: 0,
             approximate: isPlaying,
           })
           return
@@ -670,7 +663,6 @@ export function useDifferenceRegions({
           setRuntime({
             status: 'unavailable',
             message,
-            regionCount: 0,
             approximate: false,
           })
           return
@@ -728,7 +720,6 @@ export function useDifferenceRegions({
           setRuntime({
             status: 'syncing',
             message: 'Waiting for a synchronized A/B frame pair…',
-            regionCount: 0,
             approximate: isPlaying,
           })
           return
@@ -741,7 +732,6 @@ export function useDifferenceRegions({
         setRuntime({
           status: 'analyzing',
           message: isPlaying ? 'Analyzing playback preview…' : 'Analyzing current frame…',
-          regionCount: 0,
           approximate: isPlaying,
         })
 
@@ -772,7 +762,6 @@ export function useDifferenceRegions({
           setRuntime({
             status: 'unavailable',
             message: response.message,
-            regionCount: 0,
             approximate: isPlaying,
           })
           return
@@ -786,7 +775,6 @@ export function useDifferenceRegions({
           setRuntime({
             status: 'syncing',
             message: 'Waiting for a fresh playback frame pair…',
-            regionCount: 0,
             approximate: true,
           })
           return
@@ -802,10 +790,7 @@ export function useDifferenceRegions({
         if (response.regions.length > 0) {
           setRuntime({
             status: 'different',
-            message: isPlaying
-              ? `${response.regions.length} highlighted regions • playback preview`
-              : `${response.regions.length} highlighted regions on the current frame`,
-            regionCount: response.regions.length,
+            message: `${response.regions.length} highlighted regions on the current frame`,
             approximate: isPlaying,
           })
         } else {
@@ -815,7 +800,6 @@ export function useDifferenceRegions({
               response.diffPixelCount > 0
                 ? 'Differences are below the current region filter'
                 : 'No highlighted differences on the current frame',
-            regionCount: 0,
             approximate: isPlaying,
           })
         }
@@ -825,7 +809,6 @@ export function useDifferenceRegions({
         setRuntime({
           status: 'unavailable',
           message: error instanceof Error ? error.message : 'Difference analysis failed',
-          regionCount: 0,
           approximate: isPlaying,
         })
       } finally {

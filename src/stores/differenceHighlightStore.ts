@@ -13,7 +13,6 @@ export type DifferenceRuntimeStatus =
 export interface DifferenceRuntimeState {
   status: DifferenceRuntimeStatus
   message: string
-  regionCount: number
   approximate: boolean
 }
 
@@ -33,7 +32,6 @@ interface DifferenceHighlightStore {
 export const DEFAULT_DIFFERENCE_RUNTIME: DifferenceRuntimeState = {
   status: 'idle',
   message: 'Ready to compare the current A/B frames',
-  regionCount: 0,
   approximate: false,
 }
 
@@ -51,7 +49,6 @@ export const useDifferenceHighlightStore = create<DifferenceHighlightStore>((set
         : {
             status: 'idle',
             message: 'Difference region highlighting is off',
-            regionCount: 0,
             approximate: false,
           },
     }),

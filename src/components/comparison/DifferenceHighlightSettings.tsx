@@ -4,8 +4,27 @@ import {
   useDifferenceHighlightStore,
   type DifferenceAnalysisQuality,
   type DifferenceNoiseFilter,
+  type DifferenceRuntimeState,
 } from '../../stores/differenceHighlightStore'
 import { ElevatedSurface, Select, Slider } from '../ui'
+
+export function DifferenceRuntimeMessage({ runtime }: { runtime: DifferenceRuntimeState }) {
+  const showPlaybackApproximation =
+    runtime.approximate && (runtime.status === 'same' || runtime.status === 'different')
+
+  return (
+    <div
+      className={`text-[10px] ${
+        runtime.status === 'different' ? 'text-accent' : 'text-text-muted'
+      }`}
+    >
+      {runtime.message}
+      {showPlaybackApproximation && (
+        <span className="ml-1 text-text-muted">· Playback preview (approximate)</span>
+      )}
+    </div>
+  )
+}
 
 export function DifferenceHighlightSettings() {
   const enabled = useDifferenceHighlightStore((state) => state.enabled)
@@ -79,13 +98,7 @@ export function DifferenceHighlightSettings() {
           />
 
           <div className="surface-control ui-radius-md border p-2">
-            <div
-              className={`text-[10px] ${
-                runtime.status === 'different' ? 'text-accent' : 'text-text-muted'
-              }`}
-            >
-              {runtime.message}
-            </div>
+            <DifferenceRuntimeMessage runtime={runtime} />
           </div>
         </>
       )}
