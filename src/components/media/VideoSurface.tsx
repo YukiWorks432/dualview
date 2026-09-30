@@ -106,6 +106,7 @@ export const VideoSurface = forwardRef<VideoFrameElement, VideoSurfaceProps>(fun
       data-track={dataTrack}
       onClick={onClick}
       onLoadedData={handleNativeFrameReady}
+      onPause={handleNativeFrameReady}
       onSeeking={handleNativeFramePending}
       onSeeked={handleNativeFrameReady}
       muted
