@@ -17,7 +17,6 @@ test('shows difference regions only while playback is paused', async ({ page }) 
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.goto('/')
   await page.keyboard.press('Digit1')
-  await page.getByRole('button', { name: 'Settings', exact: true }).click()
   await page.getByRole('button', { name: 'Hide filmstrip' }).click()
 
   await uploadToTrack(page, 'Media A', 'difference-a.webm')
@@ -28,6 +27,7 @@ test('shows difference regions only while playback is paused', async ({ page }) 
   await expect(nextDifference).toBeEnabled()
   await nextDifference.click()
 
+  await page.getByRole('button', { name: 'Settings', exact: true }).click()
   await page.getByRole('button', { name: /Highlighting Off/ }).click()
 
   const overlay = page.getByTestId('difference-regions-overlay')
