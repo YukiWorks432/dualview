@@ -150,6 +150,8 @@ export function useProResClipSync(
     const unsubscribe = usePlaybackStore.subscribe((state, previousState) => {
       if (state.currentTime !== previousState.currentTime) {
         requestFrame(state.currentTime, !state.isPlaying)
+      } else if (previousState.isPlaying && !state.isPlaying) {
+        requestFrame(state.currentTime, true)
       }
     })
 
