@@ -60,16 +60,12 @@ export function useProResClipSync(
 
           const frameStart = frame.timestamp
           const frameEnd = frame.timestamp + frame.duration
-          if (
-            !Number.isFinite(frameStart) ||
-            !Number.isFinite(frameEnd) ||
-            frameEnd <= frameStart ||
-            mediaTime < frameStart - 0.000001 ||
-            mediaTime > frameEnd + 0.000001
-          ) {
-            clearFrame()
-            continue
-          }
+          const frameMatchesRequest =
+            Number.isFinite(frameStart) &&
+            Number.isFinite(frameEnd) &&
+            frameEnd > frameStart &&
+            mediaTime >= frameStart - 0.000001 &&
+            mediaTime <= frameEnd + 0.000001
 
           const canvas = canvasRef.current
           if (!canvas) continue
@@ -86,8 +82,13 @@ export function useProResClipSync(
           context.clearRect(0, 0, canvas.width, canvas.height)
           context.drawImage(source, 0, 0, canvas.width, canvas.height)
           canvas.dataset.frameReady = 'true'
-          canvas.dataset.frameMediaTime = String(frameStart)
-          canvas.dataset.frameMediaEndTime = String(frameEnd)
+          if (frameMatchesRequest) {
+            canvas.dataset.frameMediaTime = String(frameStart)
+            canvas.dataset.frameMediaEndTime = String(frameEnd)
+          } else {
+            delete canvas.dataset.frameMediaTime
+            delete canvas.dataset.frameMediaEndTime
+          }
 
           if (!usePlaybackStore.getState().isPlaying) {
             onFrameReady?.()
