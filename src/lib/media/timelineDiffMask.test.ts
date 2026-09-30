@@ -4,14 +4,8 @@ import { createPixelDifferenceMask } from './timelineDiff'
 
 describe('createPixelDifferenceMask', () => {
   it('returns the same changed-pixel semantics used by timeline analysis', () => {
-    const a = new Uint8ClampedArray([
-      0, 0, 0, 255,
-      255, 255, 255, 255,
-    ])
-    const b = new Uint8ClampedArray([
-      255, 255, 255, 255,
-      255, 255, 255, 255,
-    ])
+    const a = new Uint8ClampedArray([0, 0, 0, 255, 255, 255, 255, 255])
+    const b = new Uint8ClampedArray([255, 255, 255, 255, 255, 255, 255, 255])
 
     const result = createPixelDifferenceMask(a, b, 2, 1, 0.1)
 
