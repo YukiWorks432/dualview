@@ -220,8 +220,7 @@ export function useDifferenceRegions({
     const dimensionsA = getVisualFrameDimensions(sourceA)
     const dimensionsB = getVisualFrameDimensions(sourceB)
     const analysisDimensions = calculateCommonAnalysisDimensions(dimensionsA, dimensionsB, {
-      maxLongEdge:
-        analysisQuality === 'full' ? Number.POSITIVE_INFINITY : AUTO_MAX_LONG_EDGE,
+      maxLongEdge: analysisQuality === 'full' ? Number.POSITIVE_INFINITY : AUTO_MAX_LONG_EDGE,
       maxPixels: FULL_RESOLUTION_MAX_PIXELS,
     })
 
