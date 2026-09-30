@@ -1,12 +1,13 @@
 import { Upload } from 'lucide-react'
-import { useRef, useEffect, useMemo } from 'react'
+import { useRef, useEffect, useMemo, type RefObject } from 'react'
 
+import { useDifferenceRegions } from '../../hooks/useDifferenceRegions'
 import { useDropZone } from '../../hooks/useDropZone'
 import { useMagnifier } from '../../hooks/useMagnifier'
 import { usePixelInspector } from '../../hooks/usePixelInspector'
 import { useSyncedZoom } from '../../hooks/useSyncedZoom'
 import { SUPPORTED_MEDIA_ACCEPT } from '../../lib/media/fileTypes'
-import type { VideoFrameElement } from '../../lib/media/frameSource'
+import type { VideoFrameElement, VisualFrameElement } from '../../lib/media/frameSource'
 import { calculateVideoMetrics } from '../../lib/metrics'
 import { cn } from '../../lib/utils'
 import { useMediaStore } from '../../stores/mediaStore'
@@ -14,6 +15,7 @@ import { usePlaybackStore } from '../../stores/playbackStore'
 import { useProjectStore } from '../../stores/projectStore'
 import { useTimelineStore } from '../../stores/timelineStore'
 import { VideoSurface } from '../media/VideoSurface'
+import { DifferenceRegionsOverlay } from './DifferenceRegionsOverlay'
 import { MagnifierLoupe } from './MagnifierLoupe'
 import { MetricsOverlay } from './MetricsOverlay'
 import { PixelInspector } from './PixelInspector'
@@ -99,8 +101,18 @@ export function SideBySide() {
   const transformStyle = getTransformStyle()
 
   // Refs for magnifier
-  const sourceARef = mediaA?.type === 'video' ? videoARef : imgARef
-  const sourceBRef = mediaB?.type === 'video' ? videoBRef : imgBRef
+  const sourceARef = (
+    mediaA?.type === 'video' ? videoARef : imgARef
+  ) as RefObject<VisualFrameElement | null>
+  const sourceBRef = (
+    mediaB?.type === 'video' ? videoBRef : imgBRef
+  ) as RefObject<VisualFrameElement | null>
+  const difference = useDifferenceRegions({
+    sourceARef,
+    sourceBRef,
+    clipA: activeClipA,
+    clipB: activeClipB,
+  })
 
   return (
     <div ref={containerRef} className="w-full h-full flex bg-black relative" {...containerProps}>
@@ -159,7 +171,7 @@ export function SideBySide() {
         )}
         {...dropZonePropsA}
       >
-        <div className="w-full h-full" style={transformStyle}>
+        <div className="relative w-full h-full" style={transformStyle}>
           {mediaA ? (
             mediaA.type === 'video' ? (
               <VideoSurface
@@ -170,6 +182,7 @@ export function SideBySide() {
                 dataTrack="a"
                 style={pixelInspectorEnabled ? { cursor: 'crosshair' } : undefined}
                 onClick={(e) => handlePixelClick(e, videoARef.current, 'a')}
+                onFrameReady={difference.notifyFrameReady}
               />
             ) : (
               <img
@@ -181,6 +194,7 @@ export function SideBySide() {
                 draggable={false}
                 style={pixelInspectorEnabled ? { cursor: 'crosshair' } : undefined}
                 onClick={(e) => handlePixelClick(e, imgARef.current, 'a')}
+                onLoad={difference.notifyFrameReady}
               />
             )
           ) : (
@@ -199,6 +213,10 @@ export function SideBySide() {
               <span className="text-sm">Click or drop Media A</span>
             </div>
           )}
+          <DifferenceRegionsOverlay
+            regions={difference.regions}
+            aspectRatio={difference.aspectRatio}
+          />
         </div>
         {/* A badge - always visible when media loaded */}
         {mediaA && (
@@ -235,7 +253,7 @@ export function SideBySide() {
         )}
         {...dropZonePropsB}
       >
-        <div className="w-full h-full" style={transformStyle}>
+        <div className="relative w-full h-full" style={transformStyle}>
           {mediaB ? (
             mediaB.type === 'video' ? (
               <VideoSurface
@@ -246,6 +264,7 @@ export function SideBySide() {
                 dataTrack="b"
                 style={pixelInspectorEnabled ? { cursor: 'crosshair' } : undefined}
                 onClick={(e) => handlePixelClick(e, videoBRef.current, 'b')}
+                onFrameReady={difference.notifyFrameReady}
               />
             ) : (
               <img
@@ -257,6 +276,7 @@ export function SideBySide() {
                 draggable={false}
                 style={pixelInspectorEnabled ? { cursor: 'crosshair' } : undefined}
                 onClick={(e) => handlePixelClick(e, imgBRef.current, 'b')}
+                onLoad={difference.notifyFrameReady}
               />
             )
           ) : (
@@ -275,6 +295,10 @@ export function SideBySide() {
               <span className="text-sm">Click or drop Media B</span>
             </div>
           )}
+          <DifferenceRegionsOverlay
+            regions={difference.regions}
+            aspectRatio={difference.aspectRatio}
+          />
         </div>
         {/* B badge - always visible when media loaded */}
         {mediaB && (
