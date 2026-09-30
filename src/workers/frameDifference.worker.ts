@@ -1,3 +1,8 @@
+import { extractDifferenceRegions } from '../lib/difference/regions'
+import type {
+  DifferenceWorkerRequest,
+  DifferenceWorkerResponse,
+} from '../lib/difference/workerProtocol'
 /*!
  * pixelmatch 7.2.0 — ISC License
  * Copyright (c) 2025, Mapbox
@@ -14,11 +19,6 @@
  * SOFTWARE.
  */
 import { createPixelDifferenceMask } from '../lib/media/timelineDiff'
-import { extractDifferenceRegions } from '../lib/difference/regions'
-import type {
-  DifferenceWorkerRequest,
-  DifferenceWorkerResponse,
-} from '../lib/difference/workerProtocol'
 
 interface WorkerScope {
   onmessage: ((event: MessageEvent<DifferenceWorkerRequest>) => void) | null
