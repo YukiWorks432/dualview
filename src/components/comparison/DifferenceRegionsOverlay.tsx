@@ -16,6 +16,7 @@ export function DifferenceRegionsOverlay({
 
   return (
     <svg
+      data-testid="difference-regions-overlay"
       className={cn(
         'pointer-events-none absolute inset-0 z-10 h-full w-full overflow-visible text-accent',
         className,
