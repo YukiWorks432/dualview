@@ -32,7 +32,9 @@ test('shows difference regions only while playback is paused', async ({ page }) 
   await expect(overlay.first()).toBeVisible({ timeout: 10_000 })
 
   await page.getByTitle('Toggle playback (Space)').click()
-  await expect(page.getByText('Pause playback to highlight differences on the current frame')).toBeVisible()
+  await expect(
+    page.getByText('Pause playback to highlight differences on the current frame'),
+  ).toBeVisible()
   await expect(overlay).toHaveCount(0)
 
   await page.getByTitle('Toggle playback (Space)').click()
