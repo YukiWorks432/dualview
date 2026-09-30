@@ -29,6 +29,8 @@ export function useProResClipSync(
       const context = canvas?.getContext('2d')
       if (canvas) {
         canvas.dataset.frameReady = 'false'
+        delete canvas.dataset.frameMediaTime
+        delete canvas.dataset.frameMediaEndTime
       }
       if (canvas && context) {
         context.clearRect(0, 0, canvas.width, canvas.height)
@@ -56,6 +58,19 @@ export function useProResClipSync(
           const frame = await sink.getCanvas(mediaTime)
           if (disposed || !frame || !requestGate.isCurrent(request.generation)) continue
 
+          const frameStart = frame.timestamp
+          const frameEnd = frame.timestamp + frame.duration
+          if (
+            !Number.isFinite(frameStart) ||
+            !Number.isFinite(frameEnd) ||
+            frameEnd <= frameStart ||
+            mediaTime < frameStart - 0.000001 ||
+            mediaTime > frameEnd + 0.000001
+          ) {
+            clearFrame()
+            continue
+          }
+
           const canvas = canvasRef.current
           if (!canvas) continue
 
@@ -71,6 +86,8 @@ export function useProResClipSync(
           context.clearRect(0, 0, canvas.width, canvas.height)
           context.drawImage(source, 0, 0, canvas.width, canvas.height)
           canvas.dataset.frameReady = 'true'
+          canvas.dataset.frameMediaTime = String(frameStart)
+          canvas.dataset.frameMediaEndTime = String(frameEnd)
 
           if (!usePlaybackStore.getState().isPlaying) {
             onFrameReady?.()
