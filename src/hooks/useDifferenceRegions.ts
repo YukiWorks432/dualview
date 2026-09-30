@@ -85,14 +85,25 @@ function isPausedSourceReady(
   timelineTime: number,
 ): boolean {
   if (!isVisualFrameReady(source)) return false
+
+  const expectedMediaTime = calculateMediaTime(timelineTime, clip)
+  if (expectedMediaTime === null) return false
+
+  if (source instanceof HTMLCanvasElement) {
+    const frameStart = Number(source.dataset.frameMediaTime)
+    const frameEnd = Number(source.dataset.frameMediaEndTime)
+    return (
+      Number.isFinite(frameStart) &&
+      Number.isFinite(frameEnd) &&
+      expectedMediaTime >= frameStart - 0.000001 &&
+      expectedMediaTime <= frameEnd + 0.000001
+    )
+  }
+
   if (!(source instanceof HTMLVideoElement)) return true
   if (source.seeking || !source.paused) return false
 
-  const expectedMediaTime = calculateMediaTime(timelineTime, clip)
-  return (
-    expectedMediaTime !== null &&
-    Math.abs(source.currentTime - expectedMediaTime) <= PAUSED_VIDEO_TIME_TOLERANCE_SECONDS
-  )
+  return Math.abs(source.currentTime - expectedMediaTime) <= PAUSED_VIDEO_TIME_TOLERANCE_SECONDS
 }
 
 function analyzeInWorker(
