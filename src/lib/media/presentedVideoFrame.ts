@@ -1,0 +1,42 @@
+export interface PresentedVideoFrame {
+  mediaId: string
+  clipId: string
+  mediaTime: number
+  currentTime: number
+  seekGeneration: number
+}
+
+export interface PresentedVideoFrameTarget {
+  mediaId: string
+  clipId: string
+  mediaTime: number
+  currentTime: number
+  seekGeneration: number
+}
+
+const VIDEO_POSITION_TOLERANCE_SECONDS = 0.01
+const MEDIA_TIME_EPSILON_SECONDS = 0.000001
+
+/**
+ * Confirms that the frame submitted for display belongs to the current source,
+ * clip, seek, and paused media position. `mediaTime` is the frame PTS; it may
+ * precede the seek position by that frame's duration, so no fixed frame rate is
+ * assumed.
+ */
+export function isPresentedVideoFrameCurrent(
+  frame: PresentedVideoFrame | null,
+  target: PresentedVideoFrameTarget,
+): boolean {
+  return (
+    frame !== null &&
+    frame.mediaId === target.mediaId &&
+    frame.clipId === target.clipId &&
+    Number.isFinite(frame.mediaTime) &&
+    Number.isFinite(frame.currentTime) &&
+    Number.isFinite(frame.seekGeneration) &&
+    frame.seekGeneration === target.seekGeneration &&
+    frame.mediaTime <= target.mediaTime + MEDIA_TIME_EPSILON_SECONDS &&
+    Math.abs(frame.currentTime - target.mediaTime) <= VIDEO_POSITION_TOLERANCE_SECONDS &&
+    Math.abs(target.currentTime - target.mediaTime) <= VIDEO_POSITION_TOLERANCE_SECONDS
+  )
+}

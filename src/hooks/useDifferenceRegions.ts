@@ -16,6 +16,10 @@ import {
   isVisualFrameReady,
   type VisualFrameElement,
 } from '../lib/media/frameSource'
+import {
+  isPresentedVideoFrameCurrent,
+  type PresentedVideoFrame,
+} from '../lib/media/presentedVideoFrame'
 import { calculateMediaTime } from '../lib/media/timeline'
 import { useDifferenceHighlightStore } from '../stores/differenceHighlightStore'
 import { usePlaybackStore } from '../stores/playbackStore'
@@ -23,7 +27,6 @@ import type { TimelineClip } from '../types'
 
 const AUTO_MAX_LONG_EDGE = 1920
 const FULL_RESOLUTION_MAX_PIXELS = 12_000_000
-const PAUSED_VIDEO_TIME_TOLERANCE_SECONDS = 0.05
 const MAX_REGIONS = 80
 
 interface DifferenceResult {
@@ -92,9 +95,18 @@ function isPausedSourceReady(
   if (source instanceof HTMLCanvasElement) {
     const frameStart = Number(source.dataset.frameMediaTime)
     const frameEnd = Number(source.dataset.frameMediaEndTime)
+    const requestedMediaTime = Number(source.dataset.frameRequestedMediaTime)
+    const seekGeneration = Number(source.dataset.frameSeekGeneration)
+    const presentedGeneration = Number(source.dataset.framePresentedGeneration)
     return (
       Number.isFinite(frameStart) &&
       Number.isFinite(frameEnd) &&
+      Number.isFinite(requestedMediaTime) &&
+      Number.isFinite(seekGeneration) &&
+      presentedGeneration === seekGeneration &&
+      source.dataset.frameMediaId === clip.mediaId &&
+      source.dataset.frameClipId === clip.id &&
+      Math.abs(requestedMediaTime - expectedMediaTime) <= 0.000001 &&
       expectedMediaTime >= frameStart - 0.000001 &&
       expectedMediaTime <= frameEnd + 0.000001
     )
@@ -103,7 +115,21 @@ function isPausedSourceReady(
   if (!(source instanceof HTMLVideoElement)) return true
   if (source.seeking || !source.paused) return false
 
-  return Math.abs(source.currentTime - expectedMediaTime) <= PAUSED_VIDEO_TIME_TOLERANCE_SECONDS
+  const presentedFrame: PresentedVideoFrame = {
+    mediaId: source.dataset.framePresentedMediaId ?? '',
+    clipId: source.dataset.framePresentedClipId ?? '',
+    mediaTime: Number(source.dataset.framePresentedMediaTime),
+    currentTime: Number(source.dataset.framePresentedCurrentTime),
+    seekGeneration: Number(source.dataset.framePresentedSeekGeneration),
+  }
+
+  return isPresentedVideoFrameCurrent(presentedFrame, {
+    mediaId: clip.mediaId,
+    clipId: clip.id,
+    mediaTime: expectedMediaTime,
+    currentTime: source.currentTime,
+    seekGeneration: Number(source.dataset.frameSeekGeneration),
+  })
 }
 
 function analyzeInWorker(
@@ -227,6 +253,19 @@ export function useDifferenceRegions({
       setRuntime({
         status: 'syncing',
         message: 'Waiting for both A/B frames',
+      })
+      return
+    }
+
+    if (
+      [sourceA, sourceB].some(
+        (source) =>
+          source instanceof HTMLVideoElement && source.dataset.framePresentedSupported === 'false',
+      )
+    ) {
+      setRuntime({
+        status: 'unavailable',
+        message: 'Paused-frame highlighting requires requestVideoFrameCallback support',
       })
       return
     }

@@ -31,6 +31,10 @@ export function useProResClipSync(
         canvas.dataset.frameReady = 'false'
         delete canvas.dataset.frameMediaTime
         delete canvas.dataset.frameMediaEndTime
+        delete canvas.dataset.frameRequestedMediaTime
+        delete canvas.dataset.frameMediaId
+        delete canvas.dataset.frameClipId
+        delete canvas.dataset.framePresentedGeneration
       }
       if (canvas && context) {
         context.clearRect(0, 0, canvas.width, canvas.height)
@@ -85,9 +89,17 @@ export function useProResClipSync(
           if (frameMatchesRequest) {
             canvas.dataset.frameMediaTime = String(frameStart)
             canvas.dataset.frameMediaEndTime = String(frameEnd)
+            canvas.dataset.frameRequestedMediaTime = String(mediaTime)
+            canvas.dataset.frameMediaId = media.id
+            canvas.dataset.frameClipId = clip.id
+            canvas.dataset.framePresentedGeneration = String(request.generation)
           } else {
             delete canvas.dataset.frameMediaTime
             delete canvas.dataset.frameMediaEndTime
+            delete canvas.dataset.frameRequestedMediaTime
+            delete canvas.dataset.frameMediaId
+            delete canvas.dataset.frameClipId
+            delete canvas.dataset.framePresentedGeneration
           }
 
           if (!usePlaybackStore.getState().isPlaying) {
@@ -115,8 +127,16 @@ export function useProResClipSync(
         clearFrame()
       }
 
+      const canvas = canvasRef.current
+      if (canvas) canvas.dataset.frameSeekGeneration = String(requestGeneration)
+
       queuedRequest = { timelineTime, generation: requestGeneration }
       void renderQueuedFrame()
+    }
+
+    clearFrame()
+    if (canvasRef.current) {
+      canvasRef.current.dataset.frameSeekGeneration = String(requestGeneration)
     }
 
     const initialize = async () => {
