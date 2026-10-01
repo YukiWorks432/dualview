@@ -635,6 +635,7 @@ pnpm preview
 
 ### Requirements
 
+- `fnm` to install and select the repository's Node.js version ([installation guide](https://github.com/Schniz/fnm#installation))
 - Node.js 24.21+
 - pnpm 12+
 - Modern browser with WebGL 2.0 support
