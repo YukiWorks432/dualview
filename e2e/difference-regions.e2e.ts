@@ -41,4 +41,9 @@ test('shows difference regions only while playback is paused', async ({ page }) 
 
   await page.getByTitle('Toggle playback (Space)').click()
   await expect(overlay.first()).toBeVisible({ timeout: 10_000 })
+
+  await page.keyboard.press('Digit2')
+  await expect(overlay).toHaveCount(2, { timeout: 10_000 })
+  await expect(overlay.nth(0)).toBeVisible()
+  await expect(overlay.nth(1)).toBeVisible()
 })
