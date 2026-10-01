@@ -536,10 +536,10 @@ highlights from the current frame scores without decoding again.
 
 ### Current-frame Difference Regions
 
-Slider and Side by Side can optionally outline local differences on the current A/B frame. Region
-highlighting runs only while playback is paused; starting playback hides the rectangles and stops
-this analysis path. Paused seeks and frame steps invalidate the previous result and analyze the newly
-displayed frame once both sides are ready.
+Slider and Side by Side outline local differences on the current A/B frame by default; the setting
+can be turned off. Region highlighting runs only while playback is paused; starting playback hides
+the rectangles and stops this analysis path. Paused seeks and frame steps invalidate the previous
+result and analyze the newly displayed frame once both sides are ready.
 
 The region detector reuses the same pixel-difference semantics as the timeline analysis, then groups
 connected changed pixels into rectangles. Sensitivity, small-region filtering, and automatic or full

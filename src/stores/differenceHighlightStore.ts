@@ -34,7 +34,7 @@ export const DEFAULT_DIFFERENCE_RUNTIME: DifferenceRuntimeState = {
 }
 
 export const useDifferenceHighlightStore = create<DifferenceHighlightStore>((set) => ({
-  enabled: false,
+  enabled: true,
   sensitivity: 60,
   noiseFilter: 'low',
   analysisQuality: 'auto',

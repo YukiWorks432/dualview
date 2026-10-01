@@ -127,7 +127,8 @@ test('shows difference regions only while playback is paused', async ({ page }) 
   await nextDifference.click()
 
   await page.getByRole('button', { name: 'Settings', exact: true }).click()
-  await page.getByRole('button', { name: /Highlighting Off/ }).click()
+  const highlightingToggle = page.getByRole('button', { name: /Highlighting On/ })
+  await expect(highlightingToggle).toHaveAttribute('aria-pressed', 'true')
 
   const overlay = page.getByTestId('difference-regions-overlay')
   const videoA = page.locator('video[data-track="a"]').first()
