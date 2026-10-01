@@ -154,6 +154,7 @@ export function useDifferenceRegions({
     aspectRatio: 16 / 9,
   })
   const [frameRevision, setFrameRevision] = useState(0)
+  const [visibilityRevision, setVisibilityRevision] = useState(0)
   const canvasARef = useRef<HTMLCanvasElement | null>(null)
   const canvasBRef = useRef<HTMLCanvasElement | null>(null)
   const requestIdRef = useRef(0)
@@ -169,10 +170,20 @@ export function useDifferenceRegions({
     isPlaying ? 'playing' : 'paused',
     currentTime,
     frameRevision,
+    visibilityRevision,
   ].join('|')
 
   const notifyFrameReady = useCallback(() => {
     setFrameRevision((revision) => revision + 1)
+  }, [])
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      setVisibilityRevision((revision) => revision + 1)
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
   }, [])
 
   useEffect(() => {
@@ -358,6 +369,7 @@ export function useDifferenceRegions({
     sourceARef,
     sourceBRef,
     signature,
+    visibilityRevision,
   ])
 
   const hasCurrentResult = !isPlaying && result.signature === signature
