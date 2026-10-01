@@ -9,6 +9,7 @@
  */
 import { useRef, useEffect, useCallback } from 'react'
 
+import { VIDEO_FRAME_SEEK_REQUEST_EVENT } from '../lib/media/presentedVideoFrame'
 import { calculateMediaTime } from '../lib/media/timeline'
 import { usePlaybackStore } from '../stores/playbackStore'
 import type { TimelineClip } from '../types'
@@ -33,6 +34,12 @@ function getEffectivePlaybackRate(clip: TimelineClip | null, baseSpeed: number):
   const clipSpeed = clip.speed || 1
   // For reverse, we still use positive playback rate but calculate reversed time
   return baseSpeed * clipSpeed
+}
+
+function seekNativeVideoTo(video: HTMLVideoElement, targetTime: number) {
+  if (!video.seeking && Math.abs(video.currentTime - targetTime) <= 0.000001) return
+  video.dispatchEvent(new CustomEvent(VIDEO_FRAME_SEEK_REQUEST_EVENT, { detail: { targetTime } }))
+  video.currentTime = targetTime
 }
 
 /**
@@ -66,7 +73,7 @@ export function useOptimizedClipSync(
       const { currentTime } = usePlaybackStore.getState()
       const mediaTime = calculateMediaTime(currentTime, clip)
       if (mediaTime !== null) {
-        video.currentTime = mediaTime
+        seekNativeVideoTo(video, mediaTime)
         isVisibleRef.current = true
       }
     }
@@ -105,12 +112,12 @@ export function useOptimizedClipSync(
         const effectiveRate = getEffectivePlaybackRate(clip, baseSpeed)
 
         if (video.paused) {
-          video.currentTime = mediaTime
+          seekNativeVideoTo(video, mediaTime)
           video.playbackRate = effectiveRate
           video.play().catch(() => {})
         } else if (drift > HARD_SYNC_THRESHOLD) {
           // Large drift - hard sync
-          video.currentTime = mediaTime
+          seekNativeVideoTo(video, mediaTime)
           video.playbackRate = effectiveRate
         } else if (drift > DRIFT_THRESHOLD) {
           // Small drift - gentle correction using playbackRate
@@ -130,7 +137,7 @@ export function useOptimizedClipSync(
           video.pause()
         }
         if (drift > 0.01) {
-          video.currentTime = mediaTime
+          seekNativeVideoTo(video, mediaTime)
         }
       }
     }
@@ -167,7 +174,7 @@ export function useOptimizedClipSync(
 
       const mediaTime = calculateMediaTime(e.detail.time, clip)
       if (mediaTime !== null) {
-        video.currentTime = mediaTime
+        seekNativeVideoTo(video, mediaTime)
         isVisibleRef.current = true
       } else {
         isVisibleRef.current = false
@@ -199,11 +206,11 @@ export function useOptimizedClipSync(
       isVisibleRef.current = true
 
       if (isPlaying && video.paused) {
-        video.currentTime = mediaTime
+        seekNativeVideoTo(video, mediaTime)
         video.play().catch(() => {})
       } else if (!isPlaying && !video.paused) {
         video.pause()
-        video.currentTime = mediaTime
+        seekNativeVideoTo(video, mediaTime)
       }
     }
 
@@ -249,7 +256,7 @@ export function useOptimizedVideoSync(
     video.disableRemotePlayback = true
 
     const { currentTime } = usePlaybackStore.getState()
-    video.currentTime = Math.max(0, currentTime + timeOffset)
+    seekNativeVideoTo(video, Math.max(0, currentTime + timeOffset))
   }, [videoRef, timeOffset, muted])
 
   // Frame-accurate sync
@@ -270,10 +277,10 @@ export function useOptimizedVideoSync(
 
       if (isPlaying) {
         if (video.paused) {
-          video.currentTime = targetTime
+          seekNativeVideoTo(video, targetTime)
           video.play().catch(() => {})
         } else if (drift > HARD_SYNC_THRESHOLD) {
-          video.currentTime = targetTime
+          seekNativeVideoTo(video, targetTime)
         } else if (drift > DRIFT_THRESHOLD) {
           const correction = video.currentTime < targetTime ? 1.05 : 0.95
           video.playbackRate = playbackSpeed * correction
@@ -284,7 +291,7 @@ export function useOptimizedVideoSync(
         }
       } else {
         if (!video.paused) video.pause()
-        if (drift > 0.01) video.currentTime = targetTime
+        if (drift > 0.01) seekNativeVideoTo(video, targetTime)
       }
     }
 
@@ -315,7 +322,7 @@ export function useOptimizedVideoSync(
     const handleSeek = (e: CustomEvent<{ time: number }>) => {
       // Don't interfere during export
       if (usePlaybackStore.getState().isExporting) return
-      video.currentTime = Math.max(0, e.detail.time + timeOffset)
+      seekNativeVideoTo(video, Math.max(0, e.detail.time + timeOffset))
     }
 
     window.addEventListener('playback-seek', handleSeek as EventListener)
@@ -335,11 +342,11 @@ export function useOptimizedVideoSync(
       const targetTime = Math.max(0, time + timeOffset)
 
       if (isPlaying && video.paused) {
-        video.currentTime = targetTime
+        seekNativeVideoTo(video, targetTime)
         video.play().catch(() => {})
       } else if (!isPlaying && !video.paused) {
         video.pause()
-        video.currentTime = targetTime
+        seekNativeVideoTo(video, targetTime)
       }
     }
 
@@ -364,7 +371,7 @@ export function useOptimizedVideoSync(
     (time: number) => {
       const video = videoRef.current
       if (!video) return
-      video.currentTime = Math.max(0, time + timeOffset)
+      seekNativeVideoTo(video, Math.max(0, time + timeOffset))
       usePlaybackStore.getState().seek(time)
     },
     [videoRef, timeOffset],
@@ -399,7 +406,7 @@ export function useOptimizedDualSync(
         if (drift > DRIFT_THRESHOLD) {
           // B drifted from A - correct it
           if (drift > HARD_SYNC_THRESHOLD) {
-            videoB.currentTime = videoA.currentTime
+            seekNativeVideoTo(videoB, videoA.currentTime)
           } else {
             // Gentle correction
             const correction = videoB.currentTime < videoA.currentTime ? 1.03 : 0.97

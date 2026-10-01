@@ -21,6 +21,7 @@ import { usePersistenceStore } from '../../stores/persistenceStore'
 import { useProjectStore } from '../../stores/projectStore'
 import { useTimelineStore } from '../../stores/timelineStore'
 import type { BlendMode, SplitLayout, ExportSettings, WebGLComparisonMode } from '../../types'
+import { DifferenceHighlightSettings } from '../comparison/DifferenceHighlightSettings'
 import { MediaLibrary } from '../media/MediaLibrary'
 import { MediaUpload } from '../media/MediaUpload'
 import { AspectRatioSelector, ButtonWithIcon, ElevatedSurface, Select, Slider } from '../ui'
@@ -778,6 +779,10 @@ function SettingsPanel({
       <ElevatedSurface offset={1} className="ui-radius-lg border border-border p-4">
         <AspectRatioSelector showCustomInput={true} />
       </ElevatedSurface>
+
+      {(comparisonMode === 'slider' || comparisonMode === 'side-by-side') && (
+        <DifferenceHighlightSettings />
+      )}
 
       {/* Mode-specific settings - Law of Common Region */}
       {comparisonMode === 'slider' && (

@@ -29,6 +29,12 @@ export function useProResClipSync(
       const context = canvas?.getContext('2d')
       if (canvas) {
         canvas.dataset.frameReady = 'false'
+        delete canvas.dataset.frameMediaTime
+        delete canvas.dataset.frameMediaEndTime
+        delete canvas.dataset.frameRequestedMediaTime
+        delete canvas.dataset.frameMediaId
+        delete canvas.dataset.frameClipId
+        delete canvas.dataset.framePresentedGeneration
       }
       if (canvas && context) {
         context.clearRect(0, 0, canvas.width, canvas.height)
@@ -56,6 +62,15 @@ export function useProResClipSync(
           const frame = await sink.getCanvas(mediaTime)
           if (disposed || !frame || !requestGate.isCurrent(request.generation)) continue
 
+          const frameStart = frame.timestamp
+          const frameEnd = frame.timestamp + frame.duration
+          // CanvasSink returns the last frame starting at or before the request.
+          const frameMatchesRequest =
+            Number.isFinite(frameStart) &&
+            Number.isFinite(frameEnd) &&
+            frameEnd > frameStart &&
+            mediaTime >= frameStart - 0.000001
+
           const canvas = canvasRef.current
           if (!canvas) continue
 
@@ -71,6 +86,21 @@ export function useProResClipSync(
           context.clearRect(0, 0, canvas.width, canvas.height)
           context.drawImage(source, 0, 0, canvas.width, canvas.height)
           canvas.dataset.frameReady = 'true'
+          if (frameMatchesRequest) {
+            canvas.dataset.frameMediaTime = String(frameStart)
+            canvas.dataset.frameMediaEndTime = String(frameEnd)
+            canvas.dataset.frameRequestedMediaTime = String(mediaTime)
+            canvas.dataset.frameMediaId = media.id
+            canvas.dataset.frameClipId = clip.id
+            canvas.dataset.framePresentedGeneration = String(request.generation)
+          } else {
+            delete canvas.dataset.frameMediaTime
+            delete canvas.dataset.frameMediaEndTime
+            delete canvas.dataset.frameRequestedMediaTime
+            delete canvas.dataset.frameMediaId
+            delete canvas.dataset.frameClipId
+            delete canvas.dataset.framePresentedGeneration
+          }
 
           if (!usePlaybackStore.getState().isPlaying) {
             onFrameReady?.()
@@ -97,8 +127,16 @@ export function useProResClipSync(
         clearFrame()
       }
 
+      const canvas = canvasRef.current
+      if (canvas) canvas.dataset.frameSeekGeneration = String(requestGeneration)
+
       queuedRequest = { timelineTime, generation: requestGeneration }
       void renderQueuedFrame()
+    }
+
+    clearFrame()
+    if (canvasRef.current) {
+      canvasRef.current.dataset.frameSeekGeneration = String(requestGeneration)
     }
 
     const initialize = async () => {
@@ -132,6 +170,8 @@ export function useProResClipSync(
     const unsubscribe = usePlaybackStore.subscribe((state, previousState) => {
       if (state.currentTime !== previousState.currentTime) {
         requestFrame(state.currentTime, !state.isPlaying)
+      } else if (previousState.isPlaying && !state.isPlaying) {
+        requestFrame(state.currentTime, true)
       }
     })
 

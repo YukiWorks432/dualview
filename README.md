@@ -534,6 +534,18 @@ Analysis results are kept only in the current browser session and are discarded 
 timeline, source media, pixel threshold, or resolution changes. Changing the area threshold updates
 highlights from the current frame scores without decoding again.
 
+### Current-frame Difference Regions
+
+Slider and Side by Side outline local differences on the current A/B frame by default; the setting
+can be turned off. Region highlighting runs only while playback is paused; starting playback hides
+the rectangles and stops this analysis path. Paused seeks and frame steps invalidate the previous
+result and analyze the newly displayed frame once both sides are ready.
+
+The region detector reuses the same pixel-difference semantics as the timeline analysis, then groups
+connected changed pixels into rectangles. Sensitivity, small-region filtering, and automatic or full
+common-resolution analysis can be adjusted independently for this view. The SVG overlays are for
+interactive inspection and are not included in screenshot or video exports.
+
 Published site information:
 [Privacy](https://dualview.yukiworks432.workers.dev/privacy/) ·
 [Terms](https://dualview.yukiworks432.workers.dev/terms/) ·

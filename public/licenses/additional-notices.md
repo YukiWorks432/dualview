@@ -49,7 +49,7 @@ file.
 
 ## pixelmatch 7.2.0
 
-The separately emitted timeline-difference worker bundles `pixelmatch` for pixel-level frame
+The separately emitted difference-analysis workers bundle `pixelmatch` for pixel-level frame
 comparison.
 
 - Package: `pixelmatch` 7.2.0

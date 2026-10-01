@@ -150,13 +150,13 @@ export function collectTimelineDiffEventTimes(
   }, [])
 }
 
-export function calculatePixelDifferenceRate(
+export function createPixelDifferenceMask(
   imageA: Uint8Array | Uint8ClampedArray,
   imageB: Uint8Array | Uint8ClampedArray,
   width: number,
   height: number,
   colorThreshold: number,
-): number {
+): { mask: Uint8ClampedArray; differentPixels: number } {
   if (!Number.isInteger(width) || width <= 0 || !Number.isInteger(height) || height <= 0) {
     throw new RangeError('Comparison image dimensions must be positive integers')
   }
@@ -166,8 +166,8 @@ export function calculatePixelDifferenceRate(
     throw new RangeError('Comparison image data must contain one RGBA value per pixel')
   }
 
-  const differenceMask = new Uint8Array(expectedLength)
-  pixelmatch(imageA, imageB, differenceMask, width, height, {
+  const mask = new Uint8ClampedArray(expectedLength)
+  pixelmatch(imageA, imageB, mask, width, height, {
     threshold: colorThreshold,
     includeAA: true,
     diffMask: true,
@@ -175,10 +175,34 @@ export function calculatePixelDifferenceRate(
 
   let differentPixels = 0
   for (let offset = 0; offset < expectedLength; offset += 4) {
-    const colorChanged = differenceMask[offset + 3] !== 0
+    const colorChanged = mask[offset + 3] !== 0
     const alphaChanged = Math.abs(imageA[offset + 3] - imageB[offset + 3]) / 255 > colorThreshold
+    if (!colorChanged && alphaChanged) {
+      mask[offset] = 255
+      mask[offset + 1] = 255
+      mask[offset + 2] = 255
+      mask[offset + 3] = 255
+    }
     if (colorChanged || alphaChanged) differentPixels++
   }
+
+  return { mask, differentPixels }
+}
+
+export function calculatePixelDifferenceRate(
+  imageA: Uint8Array | Uint8ClampedArray,
+  imageB: Uint8Array | Uint8ClampedArray,
+  width: number,
+  height: number,
+  colorThreshold: number,
+): number {
+  const { differentPixels } = createPixelDifferenceMask(
+    imageA,
+    imageB,
+    width,
+    height,
+    colorThreshold,
+  )
   return differentPixels / (width * height)
 }
 
