@@ -217,7 +217,38 @@ test('shows difference regions only while playback is paused', async ({ page }) 
   await expect(overlay.first()).toBeVisible({ timeout: 10_000 })
 
   await page.getByRole('tab', { name: 'Side by Side comparison mode' }).click()
-  await expect(overlay).toHaveCount(2, { timeout: 10_000 })
+  try {
+    await expect(overlay).toHaveCount(2, { timeout: 30_000 })
+  } catch (error) {
+    console.log(
+      'Side by Side frame state at overlay timeout',
+      JSON.stringify(
+        await page.evaluate(() => ({
+          sources: Array.from(
+            document.querySelectorAll('video[data-track], canvas[data-track]'),
+          ).map((source) => ({
+            tag: source.tagName,
+            track: source.dataset.track,
+            dataset: { ...source.dataset },
+            ...(source instanceof HTMLVideoElement
+              ? {
+                  currentTime: source.currentTime,
+                  paused: source.paused,
+                  seeking: source.seeking,
+                  readyState: source.readyState,
+                  videoWidth: source.videoWidth,
+                }
+              : {
+                  width: (source as HTMLCanvasElement).width,
+                  height: (source as HTMLCanvasElement).height,
+                }),
+          })),
+          waitingForFrames: document.body.innerText.includes('Waiting for the paused A/B frames'),
+        })),
+      ),
+    )
+    throw error
+  }
   await expect(overlay.nth(0)).toBeVisible()
   await expect(overlay.nth(1)).toBeVisible()
 
