@@ -260,6 +260,20 @@ test('shows difference regions only while playback is paused', async ({ page }) 
     throw error
   }
   await expect(videoA).toHaveAttribute('data-frame-ready', 'false')
+  await expect(videoA).toHaveAttribute('data-frame-source-media-id', /.+/)
+  await expect(videoA).toHaveAttribute('data-frame-source-clip-id', /.+/)
+  await expect
+    .poll(() =>
+      videoA.evaluate((video) => {
+        const generation = video.dataset.frameSeekGeneration
+        return (
+          video.currentTime === 0 &&
+          generation !== undefined &&
+          video.dataset.frameInitialFrameGeneration === generation
+        )
+      }),
+    )
+    .toBe(true)
   await expect(overlay.nth(0)).toBeVisible()
   await expect(overlay.nth(1)).toBeVisible()
 

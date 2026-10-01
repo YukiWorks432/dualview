@@ -28,7 +28,6 @@ import type { TimelineClip } from '../types'
 const AUTO_MAX_LONG_EDGE = 1920
 const FULL_RESOLUTION_MAX_PIXELS = 12_000_000
 const MAX_REGIONS = 80
-const VIDEO_POSITION_TOLERANCE_SECONDS = 0.01
 
 interface DifferenceResult {
   signature: string
@@ -92,14 +91,21 @@ function isPausedSourceReady(
   if (expectedMediaTime === null) return false
 
   // A paused frame at the requested time is drawable once current data is
-  // available, even if the browser never reports a new video-frame callback.
+  // available at the initial media position, even if the browser never reports
+  // a new video-frame callback. Keep this recovery tied to the current source,
+  // clip, and seek generation so it cannot validate a stale frame after a seek.
   if (
     source instanceof HTMLVideoElement &&
     source.dataset.frameReady !== 'true' &&
     source.paused &&
     !source.seeking &&
     source.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA &&
-    Math.abs(source.currentTime - expectedMediaTime) <= VIDEO_POSITION_TOLERANCE_SECONDS
+    expectedMediaTime === 0 &&
+    source.currentTime === 0 &&
+    source.dataset.frameSourceMediaId === clip.mediaId &&
+    source.dataset.frameSourceClipId === clip.id &&
+    Number.isFinite(Number(source.dataset.frameSeekGeneration)) &&
+    source.dataset.frameInitialFrameGeneration === source.dataset.frameSeekGeneration
   ) {
     return true
   }

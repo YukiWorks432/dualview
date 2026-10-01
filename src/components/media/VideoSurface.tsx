@@ -80,6 +80,7 @@ export const VideoSurface = forwardRef<VideoFrameElement, VideoSurfaceProps>(fun
     let callbackId: number | null = null
     let callbackToken = 0
     let seekGeneration = 0
+    let hasRequestedSeek = false
     let requestedSeekTarget: number | null = null
     let seekingFrame: {
       mediaTime: number
@@ -99,6 +100,15 @@ export const VideoSurface = forwardRef<VideoFrameElement, VideoSurfaceProps>(fun
       delete video.dataset.framePresentedSeekGeneration
     }
 
+    const markInitialFramePosition = () => {
+      if (hasRequestedSeek || video.seeking || video.currentTime !== 0) {
+        delete video.dataset.frameInitialFrameGeneration
+        return
+      }
+
+      video.dataset.frameInitialFrameGeneration = String(seekGeneration)
+    }
+
     const cancelPendingFrameCallback = () => {
       if (callbackId === null) return
       cancelVideoFrameCallback.call(video, callbackId)
@@ -116,6 +126,8 @@ export const VideoSurface = forwardRef<VideoFrameElement, VideoSurfaceProps>(fun
         return
       }
 
+      hasRequestedSeek = true
+      delete video.dataset.frameInitialFrameGeneration
       seekGeneration += 1
       requestedSeekTarget = targetTime
       seekingFrame = null
@@ -175,6 +187,7 @@ export const VideoSurface = forwardRef<VideoFrameElement, VideoSurfaceProps>(fun
       requestedSeekTarget = null
       seekingFrame = null
       clearPresentedFrame()
+      markInitialFramePosition()
       cancelPendingFrameCallback()
       onFrameReadyRef.current?.()
     }
@@ -219,6 +232,7 @@ export const VideoSurface = forwardRef<VideoFrameElement, VideoSurfaceProps>(fun
 
     video.dataset.framePresentedSupported = 'true'
     clearPresentedFrame()
+    markInitialFramePosition()
     video.addEventListener(VIDEO_FRAME_SEEK_REQUEST_EVENT, handleSeekRequest)
     video.addEventListener('loadstart', handleLoadStart)
     video.addEventListener('seeking', handleSeeking)
@@ -296,6 +310,8 @@ export const VideoSurface = forwardRef<VideoFrameElement, VideoSurfaceProps>(fun
       className={className}
       style={style}
       data-track={dataTrack}
+      data-frame-source-media-id={media.id}
+      data-frame-source-clip-id={clip?.id ?? ''}
       onClick={onClick}
       onLoadStart={handleNativeFramePending}
       onLoadedData={handleNativeFrameReady}
