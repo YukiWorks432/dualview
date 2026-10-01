@@ -91,23 +91,23 @@ function isPausedSourceReady(
   if (expectedMediaTime === null) return false
 
   // A paused frame at the requested time is drawable once current data is
-  // available at the initial media position, even if the browser never reports
-  // a new video-frame callback. Keep this recovery tied to the current source,
-  // clip, and seek generation so it cannot validate a stale frame after a seek.
-  if (
-    source instanceof HTMLVideoElement &&
-    source.dataset.frameReady !== 'true' &&
-    source.paused &&
-    !source.seeking &&
-    source.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA &&
-    expectedMediaTime === 0 &&
-    source.currentTime === 0 &&
-    source.dataset.frameSourceMediaId === clip.mediaId &&
-    source.dataset.frameSourceClipId === clip.id &&
-    Number.isFinite(Number(source.dataset.frameSeekGeneration)) &&
-    source.dataset.frameInitialFrameGeneration === source.dataset.frameSeekGeneration
-  ) {
-    return true
+  // available after the initial load or a completed seek, even if the browser
+  // never reports another video-frame callback. Keep this recovery tied to the
+  // current source, clip, and seek generation so it cannot validate a stale frame.
+  if (source instanceof HTMLVideoElement && source.dataset.frameReady !== 'true') {
+    const seekGeneration = source.dataset.frameSeekGeneration
+    const hasDrawablePausedFrame =
+      source.paused &&
+      !source.seeking &&
+      source.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA &&
+      Math.abs(source.currentTime - expectedMediaTime) <= 0.000001 &&
+      source.dataset.frameSourceMediaId === clip.mediaId &&
+      source.dataset.frameSourceClipId === clip.id &&
+      Number.isFinite(Number(seekGeneration)) &&
+      (source.dataset.frameInitialFrameGeneration === seekGeneration ||
+        source.dataset.frameSeekedGeneration === seekGeneration)
+
+    if (hasDrawablePausedFrame) return true
   }
 
   if (!isVisualFrameReady(source)) return false
@@ -127,8 +127,7 @@ function isPausedSourceReady(
       source.dataset.frameMediaId === clip.mediaId &&
       source.dataset.frameClipId === clip.id &&
       Math.abs(requestedMediaTime - expectedMediaTime) <= 0.000001 &&
-      expectedMediaTime >= frameStart - 0.000001 &&
-      expectedMediaTime <= frameEnd + 0.000001
+      expectedMediaTime >= frameStart - 0.000001
     )
   }
 

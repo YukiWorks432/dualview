@@ -98,6 +98,7 @@ export const VideoSurface = forwardRef<VideoFrameElement, VideoSurfaceProps>(fun
       delete video.dataset.framePresentedMediaId
       delete video.dataset.framePresentedClipId
       delete video.dataset.framePresentedSeekGeneration
+      delete video.dataset.frameSeekedGeneration
     }
 
     const markInitialFramePosition = () => {
@@ -209,6 +210,9 @@ export const VideoSurface = forwardRef<VideoFrameElement, VideoSurfaceProps>(fun
     const handleSeeked = () => {
       if (video.seeking) return
       requestedSeekTarget = null
+      if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+        video.dataset.frameSeekedGeneration = String(seekGeneration)
+      }
       const candidate = seekingFrame
       seekingFrame = null
       if (

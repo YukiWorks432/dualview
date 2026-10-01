@@ -64,12 +64,12 @@ export function useProResClipSync(
 
           const frameStart = frame.timestamp
           const frameEnd = frame.timestamp + frame.duration
+          // CanvasSink returns the last frame starting at or before the request.
           const frameMatchesRequest =
             Number.isFinite(frameStart) &&
             Number.isFinite(frameEnd) &&
             frameEnd > frameStart &&
-            mediaTime >= frameStart - 0.000001 &&
-            mediaTime <= frameEnd + 0.000001
+            mediaTime >= frameStart - 0.000001
 
           const canvas = canvasRef.current
           if (!canvas) continue

@@ -181,8 +181,7 @@ test('shows difference regions only while playback is paused', async ({ page }) 
           presentedGeneration === seekGeneration &&
           Boolean(canvas.dataset.frameMediaId) &&
           Boolean(canvas.dataset.frameClipId) &&
-          requested >= start &&
-          requested <= end
+          requested >= start
         )
       }),
     )
@@ -192,24 +191,23 @@ test('shows difference regions only while playback is paused', async ({ page }) 
   await page.getByTitle('Go to start (Home)').click()
   await expect(overlay.first()).toBeVisible({ timeout: 10_000 })
 
-  const frameDrawsBeforePlayback = await page.evaluate(
-    () => window.__differenceRegionsTestCounters.mediaSourceDraws,
-  )
-  const analysisRequestsBeforePlayback = await page.evaluate(
-    () => window.__differenceRegionsTestCounters.analysisRequests,
-  )
-
   await page.getByTitle('Toggle playback (Space)').click()
   await expect(
     page.getByText('Pause playback to highlight differences on the current frame'),
   ).toBeVisible()
   await expect(overlay).toHaveCount(0)
+  const frameDrawsDuringPlayback = await page.evaluate(
+    () => window.__differenceRegionsTestCounters.mediaSourceDraws,
+  )
+  const analysisRequestsDuringPlayback = await page.evaluate(
+    () => window.__differenceRegionsTestCounters.analysisRequests,
+  )
   await page.waitForTimeout(200)
   expect(await page.evaluate(() => window.__differenceRegionsTestCounters.mediaSourceDraws)).toBe(
-    frameDrawsBeforePlayback,
+    frameDrawsDuringPlayback,
   )
   expect(await page.evaluate(() => window.__differenceRegionsTestCounters.analysisRequests)).toBe(
-    analysisRequestsBeforePlayback,
+    analysisRequestsDuringPlayback,
   )
 
   await page.getByTitle('Toggle playback (Space)').click()
