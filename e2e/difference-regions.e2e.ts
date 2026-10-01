@@ -216,9 +216,19 @@ test('shows difference regions only while playback is paused', async ({ page }) 
   await expect.poll(() => videoA.evaluate((video) => video.paused)).toBe(true)
   await expect(overlay.first()).toBeVisible({ timeout: 10_000 })
 
+  await page.getByTitle('Go to start (Home)').click()
+  await expect(overlay.first()).toBeVisible({ timeout: 10_000 })
+  await page.evaluate(() => {
+    let callbackId = 1_000_000
+    Object.defineProperty(HTMLVideoElement.prototype, 'requestVideoFrameCallback', {
+      configurable: true,
+      value: () => callbackId++,
+    })
+  })
+
   await page.getByRole('tab', { name: 'Side by Side comparison mode' }).click()
   try {
-    await expect(overlay).toHaveCount(2, { timeout: 30_000 })
+    await expect(overlay).toHaveCount(2, { timeout: 10_000 })
   } catch (error) {
     console.log(
       'Side by Side frame state at overlay timeout',
@@ -249,6 +259,7 @@ test('shows difference regions only while playback is paused', async ({ page }) 
     )
     throw error
   }
+  await expect(videoA).toHaveAttribute('data-frame-ready', 'false')
   await expect(overlay.nth(0)).toBeVisible()
   await expect(overlay.nth(1)).toBeVisible()
 
