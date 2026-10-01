@@ -613,6 +613,10 @@ Heavy comparison modes and export tooling are split so they are loaded only when
 git clone https://github.com/YukiWorks432/dualview.git
 cd dualview
 
+# Install and select the repository Node.js version with fnm
+fnm install
+fnm use
+
 # Install dependencies
 pnpm install
 
@@ -631,7 +635,8 @@ pnpm preview
 
 ### Requirements
 
-- Node.js 22.12+
+- `fnm` to install and select the repository's Node.js version ([installation guide](https://github.com/Schniz/fnm#installation))
+- Node.js 24.21+
 - pnpm 12+
 - Modern browser with WebGL 2.0 support
 - WebCodecs `VideoEncoder` support for MP4 export
