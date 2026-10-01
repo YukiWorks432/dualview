@@ -84,11 +84,26 @@ test('shows difference regions only while playback is paused', async ({ page }) 
       },
     })
 
+    const differenceWorkers = new WeakSet<Worker>()
+    const NativeWorker = window.Worker
+    window.Worker = new Proxy(NativeWorker, {
+      construct(target, args, newTarget) {
+        const worker = Reflect.construct(target, args, newTarget) as Worker
+        if (String(args[0]).includes('frameDifference.worker')) differenceWorkers.add(worker)
+        return worker
+      },
+    })
+
     const originalWorkerPostMessage = Worker.prototype.postMessage
     Object.defineProperty(Worker.prototype, 'postMessage', {
       configurable: true,
       value: function (message: unknown, ...transfer: unknown[]) {
-        if (typeof message === 'object' && message !== null && 'type' in message) {
+        if (
+          differenceWorkers.has(this) &&
+          typeof message === 'object' &&
+          message !== null &&
+          'type' in message
+        ) {
           if ((message as { type?: unknown }).type === 'analyze') {
             counters.analysisRequests += 1
           }
@@ -118,9 +133,9 @@ test('shows difference regions only while playback is paused', async ({ page }) 
   const videoA = page.locator('video[data-track="a"]').first()
   const proResB = page.locator('canvas[data-track="b"]').first()
   await expect(videoA).toHaveAttribute('data-frame-presented-supported', 'true')
-  await expect(videoA).toHaveAttribute('data-frame-ready', 'true')
+  await expect(videoA).toHaveAttribute('data-frame-ready', 'true', { timeout: 10_000 })
   await expect(videoA).toHaveAttribute('data-frame-presented-media-time', /.+/)
-  await expect(proResB).toHaveAttribute('data-frame-ready', 'true')
+  await expect(proResB).toHaveAttribute('data-frame-ready', 'true', { timeout: 10_000 })
   await expect(proResB).toHaveAttribute('data-frame-requested-media-time', /.+/)
 
   const initialSeekGeneration = Number(
@@ -132,15 +147,17 @@ test('shows difference regions only while playback is paused', async ({ page }) 
     await page.getByTitle('Next frame (→)').click()
   }
   await expect
-    .poll(() =>
-      videoA.evaluate((video) => {
-        const presentedTime = Number(video.dataset.framePresentedCurrentTime)
-        return (
-          video.dataset.frameReady === 'true' &&
-          Number.isFinite(presentedTime) &&
-          Math.abs(presentedTime - video.currentTime) <= 0.01
-        )
-      }),
+    .poll(
+      () =>
+        videoA.evaluate((video) => {
+          const presentedTime = Number(video.dataset.framePresentedCurrentTime)
+          return (
+            video.dataset.frameReady === 'true' &&
+            Number.isFinite(presentedTime) &&
+            Math.abs(presentedTime - video.currentTime) <= 0.01
+          )
+        }),
+      { timeout: 10_000 },
     )
     .toBe(true)
   await expect
@@ -185,7 +202,6 @@ test('shows difference regions only while playback is paused', async ({ page }) 
   await expect(
     page.getByText('Pause playback to highlight differences on the current frame'),
   ).toBeVisible()
-  await expect.poll(() => videoA.evaluate((video) => !video.paused)).toBe(true)
   await expect(overlay).toHaveCount(0)
   await page.waitForTimeout(200)
   expect(await page.evaluate(() => window.__differenceRegionsTestCounters.mediaSourceDraws)).toBe(

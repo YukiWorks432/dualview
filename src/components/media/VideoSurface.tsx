@@ -12,6 +12,11 @@ import {
 import { useOptimizedClipSync } from '../../hooks/useOptimizedVideoSync'
 import { useProResClipSync } from '../../hooks/useProResClipSync'
 import type { VideoFrameElement } from '../../lib/media/frameSource'
+import {
+  isPresentedVideoFrameCandidateCurrent,
+  isVideoFrameRequestCurrent,
+  VIDEO_FRAME_SEEK_REQUEST_EVENT,
+} from '../../lib/media/presentedVideoFrame'
 import type { MediaFile, TimelineClip } from '../../types'
 
 interface VideoSurfaceProps {
@@ -62,7 +67,10 @@ export const VideoSurface = forwardRef<VideoFrameElement, VideoSurfaceProps>(fun
 
     const requestVideoFrameCallback = video.requestVideoFrameCallback
     const cancelVideoFrameCallback = video.cancelVideoFrameCallback
-    if (typeof requestVideoFrameCallback !== 'function') {
+    if (
+      typeof requestVideoFrameCallback !== 'function' ||
+      typeof cancelVideoFrameCallback !== 'function'
+    ) {
       video.dataset.framePresentedSupported = 'false'
       onFrameReadyRef.current?.()
       return
@@ -70,117 +78,165 @@ export const VideoSurface = forwardRef<VideoFrameElement, VideoSurfaceProps>(fun
 
     let disposed = false
     let callbackId: number | null = null
+    let callbackToken = 0
     let seekGeneration = 0
-    let seekingTargetTime: number | null = null
+    let requestedSeekTarget: number | null = null
+    let seekingFrame: {
+      mediaTime: number
+      currentTime: number
+      mediaId: string
+      clipId: string
+      seekGeneration: number
+    } | null = null
+
+    const clearPresentedFrame = () => {
+      video.dataset.frameReady = 'false'
+      video.dataset.frameSeekGeneration = String(seekGeneration)
+      delete video.dataset.framePresentedMediaTime
+      delete video.dataset.framePresentedCurrentTime
+      delete video.dataset.framePresentedMediaId
+      delete video.dataset.framePresentedClipId
+      delete video.dataset.framePresentedSeekGeneration
+    }
+
+    const cancelPendingFrameCallback = () => {
+      if (callbackId === null) return
+      cancelVideoFrameCallback.call(video, callbackId)
+      callbackId = null
+      callbackToken += 1
+    }
+
+    let requestNextFrame: (allowWhileSeeking?: boolean) => void = () => {}
 
     const beginSeek = (targetTime: number) => {
       if (
-        seekingTargetTime === null ||
-        Math.abs(seekingTargetTime - targetTime) > SEEK_TIME_EPSILON_SECONDS
+        requestedSeekTarget !== null &&
+        Math.abs(requestedSeekTarget - targetTime) <= SEEK_TIME_EPSILON_SECONDS
       ) {
-        seekGeneration += 1
-        seekingTargetTime = targetTime
-        video.dataset.frameSeekGeneration = String(seekGeneration)
+        return
       }
+
+      seekGeneration += 1
+      requestedSeekTarget = targetTime
+      seekingFrame = null
+      clearPresentedFrame()
+      cancelPendingFrameCallback()
+      requestNextFrame(true)
+      onFrameReadyRef.current?.()
     }
 
-    const clearPresentedFrame = (clearMetadata: boolean) => {
-      video.dataset.frameReady = 'false'
-      video.dataset.frameSeekGeneration = String(seekGeneration)
-      if (clearMetadata) {
-        delete video.dataset.framePresentedMediaTime
-        delete video.dataset.framePresentedCurrentTime
-        delete video.dataset.framePresentedMediaId
-        delete video.dataset.framePresentedClipId
-        delete video.dataset.framePresentedSeekGeneration
-      }
+    const commitPresentedFrame = (frame: NonNullable<typeof seekingFrame>) => {
+      video.dataset.frameReady = 'true'
+      video.dataset.framePresentedMediaTime = String(frame.mediaTime)
+      video.dataset.framePresentedCurrentTime = String(frame.currentTime)
+      video.dataset.framePresentedMediaId = frame.mediaId
+      video.dataset.framePresentedClipId = frame.clipId
+      video.dataset.framePresentedSeekGeneration = String(frame.seekGeneration)
     }
 
-    const requestNextFrame = () => {
-      if (disposed || callbackId !== null) return
-      callbackId = requestVideoFrameCallback.call(video, handleVideoFrame)
-    }
-
-    const handleVideoFrame: VideoFrameRequestCallback = (_now, metadata) => {
+    const handleVideoFrame = (requestGeneration: number, metadata: VideoFrameCallbackMetadata) => {
       callbackId = null
       if (disposed) return
-      if (video.seeking) beginSeek(video.currentTime)
+      if (!isVideoFrameRequestCurrent(requestGeneration, seekGeneration)) {
+        if (!video.seeking) requestNextFrame()
+        return
+      }
 
-      video.dataset.frameReady = video.seeking ? 'false' : 'true'
-      video.dataset.framePresentedMediaTime = String(metadata.mediaTime)
-      video.dataset.framePresentedCurrentTime = String(video.currentTime)
-      video.dataset.framePresentedMediaId = media.id
-      video.dataset.framePresentedClipId = clip?.id ?? ''
-      video.dataset.framePresentedSeekGeneration = String(seekGeneration)
+      const frame = {
+        mediaTime: metadata.mediaTime,
+        currentTime: video.currentTime,
+        mediaId: media.id,
+        clipId: clip?.id ?? '',
+        seekGeneration: requestGeneration,
+      }
+      if (video.seeking) {
+        seekingFrame = frame
+        return
+      }
 
-      if (!video.seeking && video.paused) onFrameReadyRef.current?.()
+      commitPresentedFrame(frame)
+
+      if (video.paused) onFrameReadyRef.current?.()
       requestNextFrame()
+    }
+
+    requestNextFrame = (allowWhileSeeking = false) => {
+      if (disposed || callbackId !== null || (video.seeking && !allowWhileSeeking)) return
+      const requestGeneration = seekGeneration
+      const requestToken = ++callbackToken
+      callbackId = requestVideoFrameCallback.call(video, (_now, metadata) => {
+        if (requestToken !== callbackToken) return
+        handleVideoFrame(requestGeneration, metadata)
+      })
     }
 
     const handleLoadStart = () => {
       seekGeneration += 1
-      seekingTargetTime = null
-      clearPresentedFrame(true)
-      if (callbackId !== null) {
-        cancelVideoFrameCallback?.call(video, callbackId)
-        callbackId = null
-      }
+      requestedSeekTarget = null
+      seekingFrame = null
+      clearPresentedFrame()
+      cancelPendingFrameCallback()
       onFrameReadyRef.current?.()
     }
 
     const handleSeeking = () => {
       beginSeek(video.currentTime)
-      clearPresentedFrame(false)
+    }
+
+    const handleSeekRequest = (event: Event) => {
+      const { targetTime } = (event as CustomEvent<{ targetTime: number }>).detail
+      if (Number.isFinite(targetTime)) beginSeek(targetTime)
+    }
+
+    const handleLoadedData = () => {
+      if (!video.seeking) requestNextFrame()
       onFrameReadyRef.current?.()
     }
 
-    const requestFrameAfterLoadOrSeek = () => {
-      if (!video.seeking) {
-        const presentedGeneration = Number(video.dataset.framePresentedSeekGeneration)
-        if (
-          video.dataset.framePresentedMediaTime !== undefined &&
-          presentedGeneration === seekGeneration
-        ) {
-          // A callback can land while a seek is in progress. Pair its PTS with
-          // the settled media position after that seek completes.
-          video.dataset.framePresentedCurrentTime = String(video.currentTime)
-          video.dataset.frameReady = 'true'
-        }
-        seekingTargetTime = null
+    const handleSeeked = () => {
+      if (video.seeking) return
+      requestedSeekTarget = null
+      const candidate = seekingFrame
+      seekingFrame = null
+      if (
+        candidate &&
+        isPresentedVideoFrameCandidateCurrent(
+          candidate.seekGeneration,
+          seekGeneration,
+          candidate.currentTime,
+          video.currentTime,
+        )
+      ) {
+        commitPresentedFrame(candidate)
       }
       requestNextFrame()
       onFrameReadyRef.current?.()
     }
 
     const handlePause = () => {
-      if (
-        video.dataset.frameReady === 'true' &&
-        Number(video.dataset.framePresentedSeekGeneration) === seekGeneration
-      ) {
-        // No new frame is submitted just because playback pauses. The last
-        // submitted frame remains visible at the media element's paused time.
-        video.dataset.framePresentedCurrentTime = String(video.currentTime)
-      }
       onFrameReadyRef.current?.()
     }
 
     video.dataset.framePresentedSupported = 'true'
-    clearPresentedFrame(true)
+    clearPresentedFrame()
+    video.addEventListener(VIDEO_FRAME_SEEK_REQUEST_EVENT, handleSeekRequest)
     video.addEventListener('loadstart', handleLoadStart)
     video.addEventListener('seeking', handleSeeking)
-    video.addEventListener('loadeddata', requestFrameAfterLoadOrSeek)
-    video.addEventListener('seeked', requestFrameAfterLoadOrSeek)
+    video.addEventListener('loadeddata', handleLoadedData)
+    video.addEventListener('seeked', handleSeeked)
     video.addEventListener('pause', handlePause)
-    requestNextFrame()
+    if (video.seeking) beginSeek(video.currentTime)
+    else requestNextFrame()
 
     return () => {
       disposed = true
+      video.removeEventListener(VIDEO_FRAME_SEEK_REQUEST_EVENT, handleSeekRequest)
       video.removeEventListener('loadstart', handleLoadStart)
       video.removeEventListener('seeking', handleSeeking)
-      video.removeEventListener('loadeddata', requestFrameAfterLoadOrSeek)
-      video.removeEventListener('seeked', requestFrameAfterLoadOrSeek)
+      video.removeEventListener('loadeddata', handleLoadedData)
+      video.removeEventListener('seeked', handleSeeked)
       video.removeEventListener('pause', handlePause)
-      if (callbackId !== null) cancelVideoFrameCallback?.call(video, callbackId)
+      cancelPendingFrameCallback()
     }
   }, [hasFrameReadyCallback, clip?.id, clip?.mediaId, media.id, media.url, useMediabunny])
 

@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
-import { isPresentedVideoFrameCurrent, type PresentedVideoFrame } from './presentedVideoFrame'
+import {
+  isPresentedVideoFrameCurrent,
+  isPresentedVideoFrameCandidateCurrent,
+  isVideoFrameRequestCurrent,
+  type PresentedVideoFrame,
+} from './presentedVideoFrame'
 
 const frame: PresentedVideoFrame = {
   mediaId: 'media-a',
@@ -51,5 +56,44 @@ describe('isPresentedVideoFrameCurrent', () => {
         seekGeneration: 4,
       }),
     ).toBe(false)
+  })
+
+  it('rejects an earlier submitted frame after a seek even if its request is labeled with the new generation', () => {
+    expect(
+      isPresentedVideoFrameCurrent(
+        { ...frame, mediaTime: 1, currentTime: 1, seekGeneration: 5 },
+        {
+          mediaId: 'media-a',
+          clipId: 'clip-a',
+          mediaTime: 10,
+          currentTime: 10,
+          seekGeneration: 5,
+        },
+      ),
+    ).toBe(false)
+  })
+})
+
+describe('isVideoFrameRequestCurrent', () => {
+  it('rejects a callback requested before the current seek', () => {
+    expect(isVideoFrameRequestCurrent(4, 5)).toBe(false)
+  })
+
+  it('accepts a callback requested for the current seek', () => {
+    expect(isVideoFrameRequestCurrent(5, 5)).toBe(true)
+  })
+})
+
+describe('isPresentedVideoFrameCandidateCurrent', () => {
+  it('accepts a current-generation frame observed at the settled seek position', () => {
+    expect(isPresentedVideoFrameCandidateCurrent(5, 5, 10, 10.005)).toBe(true)
+  })
+
+  it('rejects an earlier frame position instead of relabeling it at the seek target', () => {
+    expect(isPresentedVideoFrameCandidateCurrent(5, 5, 1, 10)).toBe(false)
+  })
+
+  it('rejects a candidate requested before the current seek', () => {
+    expect(isPresentedVideoFrameCandidateCurrent(4, 5, 10, 10)).toBe(false)
   })
 })

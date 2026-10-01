@@ -16,6 +16,28 @@ export interface PresentedVideoFrameTarget {
 
 const VIDEO_POSITION_TOLERANCE_SECONDS = 0.01
 const MEDIA_TIME_EPSILON_SECONDS = 0.000001
+export const VIDEO_FRAME_SEEK_REQUEST_EVENT = 'dualview:video-seek-request'
+
+export function isVideoFrameRequestCurrent(
+  requestGeneration: number,
+  currentGeneration: number,
+): boolean {
+  return requestGeneration === currentGeneration
+}
+
+export function isPresentedVideoFrameCandidateCurrent(
+  requestGeneration: number,
+  currentGeneration: number,
+  presentedCurrentTime: number,
+  targetCurrentTime: number,
+): boolean {
+  return (
+    isVideoFrameRequestCurrent(requestGeneration, currentGeneration) &&
+    Number.isFinite(presentedCurrentTime) &&
+    Number.isFinite(targetCurrentTime) &&
+    Math.abs(presentedCurrentTime - targetCurrentTime) <= VIDEO_POSITION_TOLERANCE_SECONDS
+  )
+}
 
 /**
  * Confirms that the frame submitted for display belongs to the current source,
