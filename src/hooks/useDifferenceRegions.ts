@@ -147,6 +147,7 @@ export function useDifferenceRegions({
   const analysisQuality = useDifferenceHighlightStore((state) => state.analysisQuality)
   const setRuntime = useDifferenceHighlightStore((state) => state.setRuntime)
   const { currentTime, isPlaying, isExporting } = usePlaybackStore()
+  const analysisTime = isPlaying ? null : currentTime
 
   const [result, setResult] = useState<DifferenceResult>({
     signature: '',
@@ -168,7 +169,7 @@ export function useDifferenceRegions({
     analysisQuality,
     isExporting ? 'exporting' : 'preview',
     isPlaying ? 'playing' : 'paused',
-    currentTime,
+    analysisTime ?? 'playing',
     frameRevision,
     visibilityRevision,
   ].join('|')
@@ -210,6 +211,8 @@ export function useDifferenceRegions({
       return
     }
 
+    if (analysisTime === null) return
+
     if (!clipA || !clipB) {
       setRuntime({
         status: 'unavailable',
@@ -229,8 +232,8 @@ export function useDifferenceRegions({
     }
 
     if (
-      !isPausedSourceReady(sourceA, clipA, currentTime) ||
-      !isPausedSourceReady(sourceB, clipB, currentTime)
+      !isPausedSourceReady(sourceA, clipA, analysisTime) ||
+      !isPausedSourceReady(sourceB, clipB, analysisTime)
     ) {
       setRuntime({
         status: 'syncing',
@@ -358,7 +361,7 @@ export function useDifferenceRegions({
     analysisQuality,
     clipA,
     clipB,
-    currentTime,
+    analysisTime,
     enabled,
     frameRevision,
     isExporting,
