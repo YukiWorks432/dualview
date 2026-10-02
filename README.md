@@ -222,6 +222,12 @@ DualView currently exposes **12 comparison modes**:
 | **Grid Tile**     | Checkerboard A/B comparison                           |
 | **Morphological** | Morphological difference operations                   |
 
+Heatmapは一回の描画と再生中の繰り返し予約を分け、入力用Canvasと出力画素配列を再利用する。
+停止中はフレーム・設定・表示サイズの変更時だけ描画し、比較画面を離れると予約と作業用バッファを解放する。
+WebGLのSplit Viewは左右に表示する通常動画・ProRes・画像を中央の解析にも使い、共有の再生位置、トリム、速度、逆再生に従う。
+連続シークでは進行中のシーク完了後に最新の要求位置を反映し、空白区間と停止シークのフレーム待ちでは中央の古い解析結果を消す。停止中の繰り返し描画は、点滅検出と2種類のゼブラ表示のアニメーションに限る。
+フレーム通知APIが使えない環境でも比較プレビューは読み込み・シーク完了から更新する。差分矩形のAPI必須条件、停止中限定・既定ON・書き出し非混入、およびタイムライン全体の独立した解析は変更しない。
+
 ---
 
 <h2 id="webgl-analysis">🔥 WebGL Analysis Engine</h2>

@@ -5,15 +5,22 @@
  */
 
 import { GripVertical, Maximize2, Minimize2 } from 'lucide-react'
-import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 
-import { useOptimizedClipSync } from '../../hooks/useOptimizedVideoSync'
+import {
+  getVisualFrameDimensions,
+  isPausedVisualFrameReady,
+  isVisualFrameReady,
+  type VisualFrameElement,
+} from '../../lib/media/frameSource'
+import { findActiveClip } from '../../lib/media/timeline'
 import { getComparisonModeInfo } from '../../lib/webgl/comparison-shaders'
 import { WebGLComparisonRenderer } from '../../lib/webgl/WebGLComparisonRenderer'
 import { useMediaStore } from '../../stores/mediaStore'
 import { usePlaybackStore } from '../../stores/playbackStore'
 import { useProjectStore } from '../../stores/projectStore'
 import { useTimelineStore } from '../../stores/timelineStore'
+import { VisualSurface } from '../media/VisualSurface'
 
 interface WebGLSplitViewProps {
   isVisible: boolean
@@ -24,22 +31,19 @@ export function WebGLSplitView({ isVisible, onToggle }: WebGLSplitViewProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const rendererRef = useRef<WebGLComparisonRenderer | null>(null)
-  const videoARef = useRef<HTMLVideoElement>(null)
-  const videoBRef = useRef<HTMLVideoElement>(null)
-  const imgARef = useRef<HTMLImageElement>(null)
-  const imgBRef = useRef<HTMLImageElement>(null)
-  const animationRef = useRef<number>(0)
+  const sourceARef = useRef<VisualFrameElement>(null)
+  const sourceBRef = useRef<VisualFrameElement>(null)
 
   const [leftWidth, setLeftWidth] = useState(30) // % for source A
   const [rightWidth, setRightWidth] = useState(30) // % for source B
   const [isDraggingLeft, setIsDraggingLeft] = useState(false)
   const [isDraggingRight, setIsDraggingRight] = useState(false)
-  const [imagesLoaded, setImagesLoaded] = useState({ a: false, b: false })
+  const [frameRevision, setFrameRevision] = useState(0)
 
   const { webglComparisonSettings } = useProjectStore()
   const { getFile } = useMediaStore()
   const { tracks } = useTimelineStore()
-  const { currentTime } = usePlaybackStore()
+  const { currentTime, isPlaying } = usePlaybackStore()
 
   // Get active media from tracks
   const trackA = tracks.find((t) => t.type === 'a')
@@ -47,16 +51,8 @@ export function WebGLSplitView({ isVisible, onToggle }: WebGLSplitViewProps) {
   const firstClipA = trackA?.clips[0] || null
   const firstClipB = trackB?.clips[0] || null
 
-  // Find active clip (clip at current time)
-  const activeClipA = useMemo(() => {
-    if (!trackA) return null
-    return trackA.clips.find((c) => currentTime >= c.startTime && currentTime < c.endTime) || null
-  }, [trackA, currentTime])
-
-  const activeClipB = useMemo(() => {
-    if (!trackB) return null
-    return trackB.clips.find((c) => currentTime >= c.startTime && currentTime < c.endTime) || null
-  }, [trackB, currentTime])
+  const activeClipA = findActiveClip(trackA?.clips ?? [], currentTime)
+  const activeClipB = findActiveClip(trackB?.clips ?? [], currentTime)
 
   // Get media files - use active clip (clip at current time), fallback to first clip
   const displayClipA = activeClipA || firstClipA
@@ -66,9 +62,9 @@ export function WebGLSplitView({ isVisible, onToggle }: WebGLSplitViewProps) {
   const mediaA = rawMediaA?.type === 'video' || rawMediaA?.type === 'image' ? rawMediaA : null
   const mediaB = rawMediaB?.type === 'video' || rawMediaB?.type === 'image' ? rawMediaB : null
 
-  // Use the optimized clip sync hook for videos
-  useOptimizedClipSync(videoARef, activeClipA || firstClipA)
-  useOptimizedClipSync(videoBRef, activeClipB || firstClipB)
+  const handleFrameReady = useCallback(() => {
+    setFrameRevision((revision) => revision + 1)
+  }, [])
 
   // Initialize renderer
   useEffect(() => {
@@ -90,84 +86,86 @@ export function WebGLSplitView({ isVisible, onToggle }: WebGLSplitViewProps) {
     if (rendererRef.current) {
       rendererRef.current.setMode(webglComparisonSettings.mode)
     }
-  }, [webglComparisonSettings.mode])
+  }, [webglComparisonSettings.mode, isVisible])
 
-  // Render loop for center panel
-  const render = useCallback(
-    function renderLoop() {
-      if (!isVisible) return
+  // 中央の解析には、左右に表示している面そのものを使う。
+  const renderFrame = useCallback(() => {
+    const renderer = rendererRef.current
+    const canvas = canvasRef.current
+    if (!isVisible || !renderer || !canvas) return
+    const sourceA = sourceARef.current
+    const sourceB = sourceBRef.current
+    const playback = usePlaybackStore.getState()
+    canvas.dataset.frameReady = 'false'
+    if (
+      !mediaA ||
+      !mediaB ||
+      !activeClipA ||
+      !activeClipB ||
+      !sourceA ||
+      !sourceB ||
+      (playback.isPlaying
+        ? !isVisualFrameReady(sourceA) || !isVisualFrameReady(sourceB)
+        : !isPausedVisualFrameReady(sourceA, activeClipA, playback.currentTime) ||
+          !isPausedVisualFrameReady(sourceB, activeClipB, playback.currentTime))
+    ) {
+      // 空白区間とシーク待ちで、以前の解析結果を表示し続けない。
+      renderer.clear()
+      return
+    }
+    renderer.updateTexture('A', sourceA)
+    renderer.updateTexture('B', sourceB)
+    const dimensionsA = getVisualFrameDimensions(sourceA)
+    const dimensionsB = getVisualFrameDimensions(sourceB)
+    renderer.render({
+      amplification: webglComparisonSettings.amplification,
+      threshold: webglComparisonSettings.threshold,
+      opacity: webglComparisonSettings.opacity,
+      blockSize: webglComparisonSettings.blockSize,
+      loupeSize: webglComparisonSettings.loupeSize,
+      loupeZoom: webglComparisonSettings.loupeZoom,
+      checkerSize: webglComparisonSettings.checkerSize,
+      mouseX: 0.5,
+      mouseY: 0.5,
+      textureAWidth: dimensionsA.width,
+      textureAHeight: dimensionsA.height,
+      textureBWidth: dimensionsB.width,
+      textureBHeight: dimensionsB.height,
+    })
+    canvas.dataset.frameReady = 'true'
+  }, [activeClipA, activeClipB, mediaA, mediaB, webglComparisonSettings, isVisible])
 
-      const renderer = rendererRef.current
-      if (!renderer) {
-        animationRef.current = requestAnimationFrame(renderLoop)
-        return
-      }
-
-      // Update texture A
-      if (mediaA?.type === 'video' && videoARef.current && videoARef.current.readyState >= 2) {
-        renderer.updateTexture('A', videoARef.current)
-      } else if (mediaA?.type === 'image' && imgARef.current && imagesLoaded.a) {
-        renderer.updateTexture('A', imgARef.current)
-      }
-
-      // Update texture B
-      if (mediaB?.type === 'video' && videoBRef.current && videoBRef.current.readyState >= 2) {
-        renderer.updateTexture('B', videoBRef.current)
-      } else if (mediaB?.type === 'image' && imgBRef.current && imagesLoaded.b) {
-        renderer.updateTexture('B', imgBRef.current)
-      }
-
-      // Render
-      renderer.render({
-        amplification: webglComparisonSettings.amplification,
-        threshold: webglComparisonSettings.threshold,
-        opacity: webglComparisonSettings.opacity,
-        blockSize: webglComparisonSettings.blockSize,
-        loupeSize: webglComparisonSettings.loupeSize,
-        loupeZoom: webglComparisonSettings.loupeZoom,
-        checkerSize: webglComparisonSettings.checkerSize,
-        mouseX: 0.5,
-        mouseY: 0.5,
-      })
-
-      animationRef.current = requestAnimationFrame(renderLoop)
-    },
-    [mediaA, mediaB, webglComparisonSettings, imagesLoaded, isVisible],
+  // 静止画でも動くことが仕様のモードだけは、停止中も描画を続ける。
+  const animatedMode = ['video-flicker', 'exposure-zebra', 'exposure-zebra-compare'].includes(
+    webglComparisonSettings.mode,
   )
-
-  // Start render loop
   useEffect(() => {
     if (!isVisible) return
-    animationRef.current = requestAnimationFrame(render)
+    let animation: number | undefined
+    const tick = () => {
+      renderFrame()
+      if (isPlaying || animatedMode) animation = requestAnimationFrame(tick)
+    }
+    tick()
     return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current)
-      }
+      if (animation !== undefined) cancelAnimationFrame(animation)
     }
-  }, [render, isVisible])
+  }, [renderFrame, frameRevision, isPlaying, animatedMode, isVisible])
 
-  // Handle resize for center canvas
   useEffect(() => {
-    if (!isVisible) return
-
+    const canvas = canvasRef.current
+    const parent = canvas?.parentElement
+    if (!isVisible || !canvas || !parent) return
     const resizeCanvas = () => {
-      const canvas = canvasRef.current
-      if (!canvas) return
-
-      const rect = canvas.parentElement?.getBoundingClientRect()
-      if (rect) {
-        canvas.width = rect.width
-        canvas.height = rect.height
-        if (rendererRef.current) {
-          rendererRef.current.resize(rect.width, rect.height)
-        }
-      }
+      const rect = parent.getBoundingClientRect()
+      rendererRef.current?.resize(rect.width, rect.height)
+      renderFrame()
     }
-
     resizeCanvas()
-    window.addEventListener('resize', resizeCanvas)
-    return () => window.removeEventListener('resize', resizeCanvas)
-  }, [isVisible, leftWidth, rightWidth])
+    const observer = new ResizeObserver(resizeCanvas)
+    observer.observe(parent)
+    return () => observer.disconnect()
+  }, [isVisible, renderFrame])
 
   // Handle divider drag
   const handleMouseMove = useCallback(
@@ -204,70 +202,30 @@ export function WebGLSplitView({ isVisible, onToggle }: WebGLSplitViewProps) {
     }
   }, [isDraggingLeft, isDraggingRight, handleMouseMove, handleMouseUp])
 
-  const handleImageALoad = useCallback(() => {
-    setImagesLoaded((prev) => ({ ...prev, a: true }))
-  }, [])
-
-  const handleImageBLoad = useCallback(() => {
-    setImagesLoaded((prev) => ({ ...prev, b: true }))
-  }, [])
-
   const modeInfo = getComparisonModeInfo(webglComparisonSettings.mode)
   const centerWidth = 100 - leftWidth - rightWidth
 
   if (!isVisible) return null
 
   return (
-    <div ref={containerRef} className="absolute inset-0 flex bg-black z-40">
-      {/* Hidden video/image elements for texture sources */}
-      <video
-        ref={videoARef}
-        src={mediaA?.type === 'video' ? mediaA.url : undefined}
-        className="hidden"
-        muted
-        playsInline
-        loop
-        preload="auto"
-        autoPlay
-      />
-      <video
-        ref={videoBRef}
-        src={mediaB?.type === 'video' ? mediaB.url : undefined}
-        className="hidden"
-        muted
-        playsInline
-        loop
-        preload="auto"
-        autoPlay
-      />
-      {mediaA?.type === 'image' && (
-        <img ref={imgARef} src={mediaA.url} className="hidden" onLoad={handleImageALoad} alt="" />
-      )}
-      {mediaB?.type === 'image' && (
-        <img ref={imgBRef} src={mediaB.url} className="hidden" onLoad={handleImageBLoad} alt="" />
-      )}
-
+    <div
+      ref={containerRef}
+      className="absolute inset-0 flex bg-black z-40"
+      data-testid="webgl-split-view"
+    >
       {/* Source A Panel */}
       <div
         className="relative bg-black flex items-center justify-center overflow-hidden"
         style={{ width: `${leftWidth}%` }}
       >
-        {mediaA?.type === 'video' && (
-          <video
-            src={mediaA.url}
-            className="max-w-full max-h-full object-contain"
-            style={{
-              transform: `scale(${webglComparisonSettings.webglZoom}) translate(${(webglComparisonSettings.webglPanX * 50) / webglComparisonSettings.webglZoom}%, ${(-webglComparisonSettings.webglPanY * 50) / webglComparisonSettings.webglZoom}%)`,
-            }}
-            muted
-            playsInline
-            loop
-            autoPlay
-          />
-        )}
-        {mediaA?.type === 'image' && (
-          <img
-            src={mediaA.url}
+        {mediaA && (
+          <VisualSurface
+            key={mediaA.id}
+            ref={sourceARef}
+            media={mediaA}
+            clip={displayClipA}
+            dataTrack="a"
+            onFrameReady={handleFrameReady}
             className="max-w-full max-h-full object-contain"
             style={{
               transform: `scale(${webglComparisonSettings.webglZoom}) translate(${(webglComparisonSettings.webglPanX * 50) / webglComparisonSettings.webglZoom}%, ${(-webglComparisonSettings.webglPanY * 50) / webglComparisonSettings.webglZoom}%)`,
@@ -295,6 +253,8 @@ export function WebGLSplitView({ isVisible, onToggle }: WebGLSplitViewProps) {
       >
         <canvas
           ref={canvasRef}
+          data-frame-ready="false"
+          data-testid="split-analysis"
           className="w-full h-full"
           style={{
             transform: `scale(${webglComparisonSettings.webglZoom}) translate(${(webglComparisonSettings.webglPanX * 50) / webglComparisonSettings.webglZoom}%, ${(-webglComparisonSettings.webglPanY * 50) / webglComparisonSettings.webglZoom}%)`,
@@ -319,22 +279,14 @@ export function WebGLSplitView({ isVisible, onToggle }: WebGLSplitViewProps) {
         className="relative bg-black flex items-center justify-center overflow-hidden"
         style={{ width: `${rightWidth}%` }}
       >
-        {mediaB?.type === 'video' && (
-          <video
-            src={mediaB.url}
-            className="max-w-full max-h-full object-contain"
-            style={{
-              transform: `scale(${webglComparisonSettings.webglZoom}) translate(${(webglComparisonSettings.webglPanX * 50) / webglComparisonSettings.webglZoom}%, ${(-webglComparisonSettings.webglPanY * 50) / webglComparisonSettings.webglZoom}%)`,
-            }}
-            muted
-            playsInline
-            loop
-            autoPlay
-          />
-        )}
-        {mediaB?.type === 'image' && (
-          <img
-            src={mediaB.url}
+        {mediaB && (
+          <VisualSurface
+            key={mediaB.id}
+            ref={sourceBRef}
+            media={mediaB}
+            clip={displayClipB}
+            dataTrack="b"
+            onFrameReady={handleFrameReady}
             className="max-w-full max-h-full object-contain"
             style={{
               transform: `scale(${webglComparisonSettings.webglZoom}) translate(${(webglComparisonSettings.webglPanX * 50) / webglComparisonSettings.webglZoom}%, ${(-webglComparisonSettings.webglPanY * 50) / webglComparisonSettings.webglZoom}%)`,
