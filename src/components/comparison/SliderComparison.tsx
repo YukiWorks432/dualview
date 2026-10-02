@@ -3,7 +3,9 @@ import { useRef, useState, useCallback, useEffect, useMemo, type RefObject } fro
 
 import { useDifferenceRegions } from '../../hooks/useDifferenceRegions'
 import { useDropZone } from '../../hooks/useDropZone'
+import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts'
 import { useSyncedZoom } from '../../hooks/useSyncedZoom'
+import { isPlainShortcut } from '../../lib/keyboardShortcuts'
 import { SUPPORTED_MEDIA_ACCEPT } from '../../lib/media/fileTypes'
 import type { VideoFrameElement, VisualFrameElement } from '../../lib/media/frameSource'
 import { cn } from '../../lib/utils'
@@ -252,21 +254,14 @@ export function SliderComparison() {
   const isVertical = sliderOrientation === 'vertical'
   const transformStyle = getTransformStyle()
 
-  // Keyboard shortcut to toggle slider visibility (H key)
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
-        return
-      }
-      if (e.key === 'h' || e.key === 'H') {
-        e.preventDefault()
-        toggleHideSlider()
-      }
-    }
+  useKeyboardShortcuts('slider', (e) => {
+    if (!isPlainShortcut(e)) return
 
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [toggleHideSlider])
+    if (e.key === 'h' || e.key === 'H') {
+      e.preventDefault()
+      toggleHideSlider()
+    }
+  })
 
   // Calculate clipper dimensions based on slider position
   const clipperStyle = useMemo(() => {

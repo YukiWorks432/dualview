@@ -162,7 +162,7 @@ for (const route of ['chooser', 'drop', 'paste', 'preview', 'webgl', 'global'] a
   })
 }
 
-for (const boundary of ['close', 'new', 'clear'] as const) {
+for (const boundary of ['close', 'escape', 'new', 'clear'] as const) {
   test(`URL取得開始後の${boundary}で古い応答を採用せず、再取込できる`, async ({ page }) => {
     await page.addInitScript((png) => {
       const nativeFetch = window.fetch.bind(window)
@@ -192,6 +192,7 @@ for (const boundary of ['close', 'new', 'clear'] as const) {
     await expect.poll(() => page.evaluate(() => Boolean(window.__slowImport.finish))).toBe(true)
     if (boundary === 'close')
       await page.getByRole('button', { name: 'Cancel', exact: true }).click()
+    else if (boundary === 'escape') await page.keyboard.press('Escape')
     else
       await page.evaluate(async (boundary) => {
         if (boundary === 'new') {
@@ -205,7 +206,7 @@ for (const boundary of ['close', 'new', 'clear'] as const) {
     expect(await page.evaluate(() => window.__slowImport.signal?.aborted)).toBe(true)
     await page.evaluate(() => window.__slowImport.finish!())
     await expect.poll(() => snapshot(page)).toEqual({ files: [], clips: [] })
-    if (boundary !== 'close')
+    if (boundary !== 'close' && boundary !== 'escape')
       await page.getByRole('button', { name: 'Cancel', exact: true }).click()
     await page.getByRole('button', { name: 'URL', exact: true }).click()
     await page.getByRole('button', { name: 'Import', exact: true }).click()

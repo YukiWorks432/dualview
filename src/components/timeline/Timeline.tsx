@@ -30,6 +30,7 @@ import { useRef, useEffect, useCallback, useState, useMemo } from 'react'
 import type { DragEvent } from 'react'
 
 import { useEdgeAutoScroll } from '../../hooks/useEdgeAutoScroll'
+import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts'
 import { useMarqueeSelect } from '../../hooks/useMarqueeSelect'
 import { useTimelineDrag, useTimelineTrim } from '../../hooks/useTimelineDrag'
 import { MEDIA_DRAG_TYPE, type MediaDragData } from '../../lib/media/dragData'
@@ -37,6 +38,7 @@ import { formatTime, cn } from '../../lib/utils'
 import { useHistoryStore } from '../../stores/historyStore'
 import { useMediaStore } from '../../stores/mediaStore'
 import { usePlaybackStore } from '../../stores/playbackStore'
+import { useProjectStore } from '../../stores/projectStore'
 import { useTimelineStore } from '../../stores/timelineStore'
 import type { MediaType } from '../../types'
 import { Button, ElevatedSurface, IconButton } from '../ui'
@@ -46,6 +48,7 @@ import { TimelineDiffControls } from './TimelineDiffControls'
 import { TimelineDiffLane } from './TimelineDiffLane'
 
 export function Timeline() {
+  const comparisonMode = useProjectStore((state) => state.comparisonMode)
   const containerRef = useRef<HTMLDivElement>(null)
   const playheadRef = useRef<HTMLDivElement>(null)
   const [isDraggingPlayhead, setIsDraggingPlayhead] = useState(false)
@@ -339,122 +342,103 @@ export function Timeline() {
     [tracks, handleTrimStart],
   )
 
-  // Handle keyboard shortcuts for clip operations
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Ignore if typing in an input
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
-        return
-      }
+  useKeyboardShortcuts('timeline', (e) => {
+    if (e.altKey || e.shiftKey) return
 
-      // Delete selected clip(s)
-      if (
-        (e.key === 'Delete' || e.key === 'Backspace') &&
-        (selectedClipId || selectedClipIds.length > 0)
-      ) {
-        const clipsToDelete =
-          selectedClipIds.length > 0 ? selectedClipIds : selectedClipId ? [selectedClipId] : []
-        if (clipsToDelete.length > 0) {
-          pushState()
-          clipsToDelete.forEach((clipId) => {
-            const track = tracks.find((t) => t.clips.some((c) => c.id === clipId))
-            if (track && !track.locked) {
-              removeClip(clipId)
-            }
-          })
-          clearSelection()
-        }
-      }
-
-      // Split clip at playhead (TL-001)
-      if (e.key === 's' && !e.ctrlKey && !e.metaKey && !e.shiftKey && selectedClipId) {
-        const track = tracks.find((t) => t.clips.some((c) => c.id === selectedClipId))
-        if (track && !track.locked) {
-          runWithHistory(() => splitClip(selectedClipId, currentTime))
-        }
-      }
-
-      // Keep left of playhead (Q)
-      if (e.key === 'q' && !e.ctrlKey && !e.metaKey && !e.shiftKey && selectedClipId) {
-        const track = tracks.find((t) => t.clips.some((c) => c.id === selectedClipId))
-        if (track && !track.locked) {
-          runWithHistory(() => splitAndKeepLeft(selectedClipId, currentTime))
-        }
-      }
-
-      // Keep right of playhead (W)
-      if (e.key === 'w' && !e.ctrlKey && !e.metaKey && !e.shiftKey && selectedClipId) {
-        const track = tracks.find((t) => t.clips.some((c) => c.id === selectedClipId))
-        if (track && !track.locked) {
-          runWithHistory(() => splitAndKeepRight(selectedClipId, currentTime))
-        }
-      }
-
-      // Duplicate clip (TL-002)
-      if (e.key === 'd' && (e.ctrlKey || e.metaKey) && selectedClipId) {
-        e.preventDefault()
-        const track = tracks.find((t) => t.clips.some((c) => c.id === selectedClipId))
-        if (track && !track.locked) {
-          pushState()
-          duplicateClip(selectedClipId)
-        }
-      }
-
-      // Copy clip (TL-002)
-      if (e.key === 'c' && (e.ctrlKey || e.metaKey) && selectedClipId) {
-        e.preventDefault()
-        copyClip(selectedClipId)
-      }
-
-      // Paste clip (TL-002)
-      if (e.key === 'v' && (e.ctrlKey || e.metaKey)) {
-        e.preventDefault()
-        // Paste to the first available track at playhead
-        const track = tracks.find((t) => !t.locked)
-        if (track) {
-          pushState()
-          pasteClip(track.id, currentTime)
-        }
-      }
-
-      // Select all clips (TL-004)
-      if (e.key === 'a' && (e.ctrlKey || e.metaKey)) {
-        e.preventDefault()
-        selectAllClips()
-      }
-
-      // Toggle snap (TL-003)
-      if (e.key === 'n' && !e.ctrlKey && !e.metaKey) {
-        toggleSnap()
-      }
-
-      // Toggle ripple (TL-007)
-      if (e.key === 'r' && !e.ctrlKey && !e.metaKey) {
-        toggleRipple()
+    // Delete selected clip(s)
+    if (
+      (e.key === 'Delete' || e.key === 'Backspace') &&
+      !e.ctrlKey &&
+      !e.metaKey &&
+      (selectedClipId || selectedClipIds.length > 0)
+    ) {
+      e.preventDefault()
+      const clipsToDelete =
+        selectedClipIds.length > 0 ? selectedClipIds : selectedClipId ? [selectedClipId] : []
+      if (clipsToDelete.length > 0) {
+        pushState()
+        clipsToDelete.forEach((clipId) => {
+          const track = tracks.find((t) => t.clips.some((c) => c.id === clipId))
+          if (track && !track.locked) {
+            removeClip(clipId)
+          }
+        })
+        clearSelection()
       }
     }
 
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [
-    selectedClipId,
-    selectedClipIds,
-    tracks,
-    removeClip,
-    pushState,
-    runWithHistory,
-    splitClip,
-    splitAndKeepLeft,
-    splitAndKeepRight,
-    duplicateClip,
-    currentTime,
-    copyClip,
-    pasteClip,
-    selectAllClips,
-    clearSelection,
-    toggleSnap,
-    toggleRipple,
-  ])
+    // Split clip at playhead (TL-001)
+    if (e.key === 's' && !e.ctrlKey && !e.metaKey && !e.shiftKey && selectedClipId) {
+      e.preventDefault()
+      const track = tracks.find((t) => t.clips.some((c) => c.id === selectedClipId))
+      if (track && !track.locked) {
+        runWithHistory(() => splitClip(selectedClipId, currentTime))
+      }
+    }
+
+    // Keep left of playhead (Q)
+    if (e.key === 'q' && !e.ctrlKey && !e.metaKey && !e.shiftKey && selectedClipId) {
+      e.preventDefault()
+      const track = tracks.find((t) => t.clips.some((c) => c.id === selectedClipId))
+      if (track && !track.locked) {
+        runWithHistory(() => splitAndKeepLeft(selectedClipId, currentTime))
+      }
+    }
+
+    // Keep right of playhead (W)
+    if (e.key === 'w' && !e.ctrlKey && !e.metaKey && !e.shiftKey && selectedClipId) {
+      e.preventDefault()
+      const track = tracks.find((t) => t.clips.some((c) => c.id === selectedClipId))
+      if (track && !track.locked) {
+        runWithHistory(() => splitAndKeepRight(selectedClipId, currentTime))
+      }
+    }
+
+    // Duplicate clip (TL-002)
+    if (e.key === 'd' && (e.ctrlKey || e.metaKey) && selectedClipId) {
+      e.preventDefault()
+      const track = tracks.find((t) => t.clips.some((c) => c.id === selectedClipId))
+      if (track && !track.locked) {
+        pushState()
+        duplicateClip(selectedClipId)
+      }
+    }
+
+    // Copy clip (TL-002)
+    if (e.key === 'c' && (e.ctrlKey || e.metaKey) && selectedClipId) {
+      e.preventDefault()
+      copyClip(selectedClipId)
+    }
+
+    // Paste clip (TL-002)
+    if (e.key === 'v' && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault()
+      // Paste to the first available track at playhead
+      const track = tracks.find((t) => !t.locked)
+      if (track) {
+        pushState()
+        pasteClip(track.id, currentTime)
+      }
+    }
+
+    // Select all clips (TL-004)
+    if (e.key === 'a' && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault()
+      selectAllClips()
+    }
+
+    // Toggle snap (TL-003)
+    if (e.key === 'n' && !e.ctrlKey && !e.metaKey) {
+      e.preventDefault()
+      toggleSnap()
+    }
+
+    // Toggle ripple (TL-007)
+    if (e.key === 'r' && !e.ctrlKey && !e.metaKey) {
+      e.preventDefault()
+      toggleRipple()
+    }
+  })
 
   // TL-015: Generate adaptive time markers based on zoom level
   const timeMarkers = useMemo(() => {
@@ -695,7 +679,9 @@ export function Timeline() {
                       }
                     }}
                     disabled={!selectedClipId}
-                    title="Split at playhead (S)"
+                    title={
+                      comparisonMode === 'audio' ? 'Split at playhead' : 'Split at playhead (S)'
+                    }
                     className="h-7 w-7"
                   >
                     <Scissors className="w-3.5 h-3.5" />

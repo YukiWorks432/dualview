@@ -18,7 +18,7 @@ import {
 import { useState, useCallback, useRef } from 'react'
 
 import { useMediaStore } from '../../stores/mediaStore'
-import { ElevatedSurface } from '../ui'
+import { Dialog, DialogContent, DialogTitle } from '../ui'
 
 interface BatchResult {
   idA: string
@@ -287,20 +287,22 @@ export function BatchComparison({ isOpen, onClose }: BatchComparisonProps) {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-      <ElevatedSurface
-        offset={3}
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()} disablePointerDismissal>
+      <DialogContent
+        showCloseButton={false}
+        backdropClassName="bg-black/80"
         className="ui-radius-lg w-full max-w-6xl max-h-[90vh] flex flex-col border border-transparent"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border">
           <div className="flex items-center gap-3">
             <Grid3X3 size={20} className="text-accent" />
-            <h2 className="text-lg font-semibold text-text-primary">
+            <DialogTitle className="text-lg font-semibold text-text-primary">
               Batch Comparison (WEBGL-013)
-            </h2>
+            </DialogTitle>
           </div>
           <button
+            aria-label="Close batch comparison"
             onClick={onClose}
             className="surface-control ui-radius-sm border p-2 text-text-secondary hover:text-text-primary"
           >
@@ -583,11 +585,10 @@ export function BatchComparison({ isOpen, onClose }: BatchComparisonProps) {
             </div>
           </div>
         </div>
-      </ElevatedSurface>
-
-      {/* Hidden canvas for processing */}
-      <canvas ref={canvasRef} className="hidden" width={640} height={480} />
-    </div>
+        {/* Hidden canvas for processing */}
+        <canvas ref={canvasRef} className="hidden" width={640} height={480} />
+      </DialogContent>
+    </Dialog>
   )
 }
 

@@ -445,7 +445,15 @@ GIF encoding uses the bundled local worker. Borrowed preview videos return to th
 
 <h2 id="shortcuts">⌨️ Keyboard Shortcuts</h2>
 
-DualView is built for speed. Master these shortcuts:
+比較モード専用のキーを、タイムライン編集・全体操作より優先します。
+Audio QAではA/B/Sで音声を選択し、Bによるサイドバー切替やSによる分割は行いません。
+Ctrl/⌘付きの編集・保存・UndoとShift+Sの画像保存は引き続き使えます。
+input・textarea・select・contenteditableでの入力中、IME変換中、ダイアログ表示中は全体操作を停止します。
+ダイアログ内のEscapeはその画面だけを閉じ、元の操作要素へフォーカスを戻します。ループは保持します。
+入力欄にフォーカスが残ったままクリップをドラッグした場合も、Escapeでその操作を取り消します。
+クリップのメニューもEscapeで閉じ、どちらも入力値とループを保持します。IME変換とダイアログの操作が優先です。
+数字の比較モード切替は修飾キーなしで使います。Quad ViewのShift+1〜4は各枠の素材選択、
+表示中の素材一覧のAlt+1/2は動画・画像の絞り込みを優先します。
 
 ### Playback
 
@@ -476,38 +484,38 @@ silent because reverse audio is not synthesized.
 
 ### Modes & Views
 
-| Key       | Action                          |
-| --------- | ------------------------------- |
-| `1` - `4` | Switch primary comparison modes |
-| `F`       | Flip A/B (in Difference mode)   |
-| `P`       | Toggle focus peaking            |
-| `Z`       | Toggle zebra stripes            |
-| `G`       | Toggle video scopes             |
+| Key       | Action                                               |
+| --------- | ---------------------------------------------------- |
+| `1` - `4` | Switch primary comparison modes                      |
+| `F`       | Flip A/B (in Difference mode)                        |
+| `P`       | Toggle focus peaking                                 |
+| `Z`       | Toggle zebra stripes                                 |
+| `G`       | Difference: gamut warning; other modes: video scopes |
 
 ### Timeline Editing
 
-| Key      | Action                             |
-| -------- | ---------------------------------- |
-| `S`      | Split selected clip at playhead    |
-| `Q`      | Keep left of playhead (trim right) |
-| `W`      | Keep right of playhead (trim left) |
-| `R`      | Toggle ripple edit mode            |
-| `N`      | Toggle snapping                    |
-| `Delete` | Delete selected clips              |
+| Key      | Action                                 |
+| -------- | -------------------------------------- |
+| `S`      | Split selected clip (outside Audio QA) |
+| `Q`      | Keep left of playhead (trim right)     |
+| `W`      | Keep right of playhead (trim left)     |
+| `R`      | Toggle ripple edit mode                |
+| `N`      | Toggle snapping                        |
+| `Delete` | Delete selected clips                  |
 
 ### Interface
 
-| Key                      | Action                 |
-| ------------------------ | ---------------------- |
-| `T`                      | Toggle timeline        |
-| `B`                      | Toggle sidebar         |
-| `E`                      | Open export dialog     |
-| `Shift` + `S`            | Quick screenshot       |
-| `Shift` + `M`            | Toggle quality metrics |
-| `Ctrl/⌘` + `Z`           | Undo                   |
-| `Ctrl/⌘` + `Shift` + `Z` | Redo                   |
-| `Ctrl/⌘` + `S`           | Save project           |
-| `?`                      | Show all shortcuts     |
+| Key                      | Action                            |
+| ------------------------ | --------------------------------- |
+| `T`                      | Toggle timeline                   |
+| `B`                      | Toggle sidebar (outside Audio QA) |
+| `E`                      | Open export dialog                |
+| `Shift` + `S`            | Quick screenshot                  |
+| `Shift` + `M`            | Toggle quality metrics            |
+| `Ctrl/⌘` + `Z`           | Undo                              |
+| `Ctrl/⌘` + `Shift` + `Z` | Redo                              |
+| `Ctrl/⌘` + `S`           | Save project                      |
+| `?`                      | Show all shortcuts                |
 
 ---
 

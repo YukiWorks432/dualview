@@ -28,6 +28,7 @@ import {
  */
 import { useRef, useEffect, useState, useCallback } from 'react'
 
+import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts'
 import {
   analyzeAudio,
   formatLUFS,
@@ -38,6 +39,7 @@ import {
   type LoudnessMetrics,
 } from '../../lib/audio'
 import { audioAnalysisQueue } from '../../lib/audio/AudioJobQueue'
+import { isPlainShortcut } from '../../lib/keyboardShortcuts'
 import {
   AudioSourceRegistry,
   createAudioPlaybackSource,
@@ -1063,27 +1065,24 @@ export function AudioComparison() {
     [invalidateAudioPlayback],
   )
 
-  // Keyboard shortcuts
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement) return
+  useKeyboardShortcuts('audio', (e) => {
+    if (!isPlainShortcut(e)) return
 
-      switch (e.key.toLowerCase()) {
-        case 'a':
-          setActiveAudio('a')
-          break
-        case 'b':
-          setActiveAudio('b')
-          break
-        case 's':
-          setActiveAudio('both')
-          break
-      }
+    switch (e.code) {
+      case 'KeyA':
+        e.preventDefault()
+        setActiveAudio('a')
+        break
+      case 'KeyB':
+        e.preventDefault()
+        setActiveAudio('b')
+        break
+      case 'KeyS':
+        e.preventDefault()
+        setActiveAudio('both')
+        break
     }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [])
+  })
 
   return (
     <div className="w-full h-full bg-background flex flex-col overflow-hidden">
@@ -1148,6 +1147,7 @@ export function AudioComparison() {
               <button
                 key={mode}
                 onClick={() => setActiveAudio(mode)}
+                aria-pressed={activeAudio === mode}
                 className={cn(
                   'surface-control-elevation ui-radius-sm border px-3 py-1 text-xs font-medium transition-all',
                   activeAudio === mode

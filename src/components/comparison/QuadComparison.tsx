@@ -10,9 +10,10 @@
  */
 
 import { Maximize2, Minimize2, Grid2X2, Upload } from 'lucide-react'
-import { useRef, useEffect, useCallback, useMemo } from 'react'
+import { useRef, useCallback, useMemo } from 'react'
 
 import { useDropZone } from '../../hooks/useDropZone'
+import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts'
 import { useSyncedZoom } from '../../hooks/useSyncedZoom'
 import type { VideoFrameElement } from '../../lib/media/frameSource'
 import { cn } from '../../lib/utils'
@@ -200,36 +201,30 @@ export function QuadComparison() {
     setQuadExpandedQuadrant(null)
   }, [setQuadExpandedQuadrant])
 
-  // Handle number keys 1-4 to cycle sources for quadrants
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
+  useKeyboardShortcuts('quad', (e) => {
+    if (e.ctrlKey || e.metaKey || e.altKey || !e.shiftKey) return
 
-      // Check if number key 1-4 is pressed (for source cycling within quad view)
-      const quadrantIndex = ['Digit1', 'Digit2', 'Digit3', 'Digit4'].indexOf(e.code)
-      if (quadrantIndex !== -1 && e.shiftKey) {
-        e.preventDefault()
-        // Cycle through available media files for this quadrant
-        const currentMediaId = sources[quadrantIndex]
-        const availableMedia = files.filter((f) => f.type === 'video' || f.type === 'image')
-        if (availableMedia.length === 0) return
+    // Check if number key 1-4 is pressed (for source cycling within quad view)
+    const quadrantIndex = ['Digit1', 'Digit2', 'Digit3', 'Digit4'].indexOf(e.code)
+    if (quadrantIndex !== -1 && e.shiftKey) {
+      e.preventDefault()
+      // Cycle through available media files for this quadrant
+      const currentMediaId = sources[quadrantIndex]
+      const availableMedia = files.filter((f) => f.type === 'video' || f.type === 'image')
+      if (availableMedia.length === 0) return
 
-        const currentIndex = availableMedia.findIndex((m) => m.id === currentMediaId)
-        const nextIndex = (currentIndex + 1) % availableMedia.length
-        const newSources = [...sources] as [
-          string | null,
-          string | null,
-          string | null,
-          string | null,
-        ]
-        newSources[quadrantIndex] = availableMedia[nextIndex]?.id || null
-        setQuadViewSettings({ sources: newSources })
-      }
+      const currentIndex = availableMedia.findIndex((m) => m.id === currentMediaId)
+      const nextIndex = (currentIndex + 1) % availableMedia.length
+      const newSources = [...sources] as [
+        string | null,
+        string | null,
+        string | null,
+        string | null,
+      ]
+      newSources[quadrantIndex] = availableMedia[nextIndex]?.id || null
+      setQuadViewSettings({ sources: newSources })
     }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [sources, files, setQuadViewSettings])
+  })
 
   const transformStyle = getTransformStyle()
 

@@ -21,9 +21,11 @@ import {
  */
 import { useEffect, useRef, useState } from 'react'
 
+import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts'
 import { useHistoryStore } from '../../stores/historyStore'
 import { useMediaStore } from '../../stores/mediaStore'
 import { usePlaybackStore } from '../../stores/playbackStore'
+import { useProjectStore } from '../../stores/projectStore'
 import { useTimelineStore } from '../../stores/timelineStore'
 import { ElevatedSurface } from '../ui'
 
@@ -36,6 +38,7 @@ interface ClipContextMenuProps {
 }
 
 export function ClipContextMenu({ x, y, clipId, trackId, onClose }: ClipContextMenuProps) {
+  const comparisonMode = useProjectStore((state) => state.comparisonMode)
   const menuRef = useRef<HTMLDivElement>(null)
   const [showSpeedSubmenu, setShowSpeedSubmenu] = useState(false)
   const [showReplaceSubmenu, setShowReplaceSubmenu] = useState(false)
@@ -74,6 +77,13 @@ export function ClipContextMenu({ x, y, clipId, trackId, onClose }: ClipContextM
       (f.type === currentMedia?.type || track?.acceptedTypes.includes(f.type)),
   )
 
+  useKeyboardShortcuts('interaction', (event) => {
+    if (event.key === 'Escape') {
+      event.preventDefault()
+      onClose()
+    }
+  })
+
   // Close menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -82,18 +92,10 @@ export function ClipContextMenu({ x, y, clipId, trackId, onClose }: ClipContextM
       }
     }
 
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose()
-      }
-    }
-
     document.addEventListener('mousedown', handleClickOutside)
-    document.addEventListener('keydown', handleEscape)
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside)
-      document.removeEventListener('keydown', handleEscape)
     }
   }, [onClose])
 
@@ -194,7 +196,7 @@ export function ClipContextMenu({ x, y, clipId, trackId, onClose }: ClipContextM
         <MenuButton
           icon={Scissors}
           label="Split at Playhead"
-          shortcut="S"
+          shortcut={comparisonMode === 'audio' ? undefined : 'S'}
           disabled={isLocked}
           onClick={() =>
             handleAction(() => {

@@ -16,12 +16,20 @@ import {
 
 import type { ComparisonMode } from '../types'
 
+export interface ComparisonShortcut {
+  code: string
+  key: string
+  description: string
+  shift?: boolean
+}
+
 export interface ComparisonModeDefinition {
   mode: ComparisonMode
   icon: LucideIcon
   label: string
   description: string
   group: 'primary' | 'multi-view' | 'analysis'
+  localShortcuts?: ComparisonShortcut[]
   shortcut?: {
     key: string
     code: string
@@ -31,6 +39,7 @@ export interface ComparisonModeDefinition {
 export const comparisonModeDefinitions: ComparisonModeDefinition[] = [
   {
     mode: 'slider',
+    localShortcuts: [{ code: 'KeyH', key: 'H', description: 'Toggle slider visibility' }],
     icon: SplitSquareHorizontal,
     label: 'Slider',
     description: 'Drag to compare',
@@ -47,6 +56,7 @@ export const comparisonModeDefinitions: ComparisonModeDefinition[] = [
   },
   {
     mode: 'webgl-compare',
+    localShortcuts: [{ code: 'KeyG', key: 'G', description: 'Toggle gamut warning' }],
     icon: Microscope,
     label: 'Difference',
     description: 'Advanced difference analysis',
@@ -55,6 +65,11 @@ export const comparisonModeDefinitions: ComparisonModeDefinition[] = [
   },
   {
     mode: 'audio',
+    localShortcuts: [
+      { code: 'KeyA', key: 'A', description: 'Solo Track A' },
+      { code: 'KeyB', key: 'B', description: 'Solo Track B' },
+      { code: 'KeyS', key: 'S', description: 'Play both A+B' },
+    ],
     icon: AudioLines,
     label: 'Audio QA',
     description: 'Compare audio embedded in the current videos',
@@ -70,6 +85,12 @@ export const comparisonModeDefinitions: ComparisonModeDefinition[] = [
   },
   {
     mode: 'quad',
+    localShortcuts: [1, 2, 3, 4].map((index) => ({
+      code: `Digit${index}`,
+      key: String(index),
+      shift: true,
+      description: `Cycle source in quadrant ${index}`,
+    })),
     icon: Grid2X2,
     label: 'Quad View',
     description: 'Four-way comparison',
@@ -84,6 +105,10 @@ export const comparisonModeDefinitions: ComparisonModeDefinition[] = [
   },
   {
     mode: 'flicker',
+    localShortcuts: [
+      { code: 'KeyF', key: 'F', description: 'Toggle A/B and stop auto flicker' },
+      { code: 'Tab', key: 'Tab', description: 'Toggle A/B and stop auto flicker' },
+    ],
     icon: Zap,
     label: 'Flicker',
     description: 'Rapid A/B switching',
