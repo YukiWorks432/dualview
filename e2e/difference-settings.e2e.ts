@@ -90,11 +90,11 @@ test('dismisses with Tab and an outside click, then opens again', async ({ page 
   await page.keyboard.press('Tab')
   await expect(page.getByRole('menu')).toHaveCount(0)
   await expect(qualityTrigger(page)).toBeFocused()
-  await filter.click()
   const outside = await page
     .getByRole('heading', { name: 'Difference Regions', exact: true })
     .boundingBox()
   expect(outside).not.toBeNull()
+  await filter.click()
   await page.mouse.click(outside!.x + outside!.width / 2, outside!.y + outside!.height / 2)
   await expect(page.getByRole('menu')).toHaveCount(0)
   await expect(filter).toContainText('Low')
