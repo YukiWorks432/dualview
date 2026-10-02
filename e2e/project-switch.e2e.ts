@@ -121,8 +121,8 @@ test('shows a failed load in the project dialog and allows retry without losing 
     const store = usePersistenceStore.getState()
     const id = await store.createNewProject('Retry destination')
     const record = await getProject(id!)
-    await saveProjectWithMedia({ ...record!, projectSettings: '{' }, new Map())
     await store.createNewProject('Keep this edit')
+    await saveProjectWithMedia({ ...record!, projectSettings: '{' }, new Map())
     usePersistenceStore.setState({ _autoSaveDelay: 60_000 })
     store.updateProjectMetadata({ description: 'must survive the failed load' })
     return id!
