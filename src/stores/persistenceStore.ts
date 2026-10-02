@@ -11,7 +11,6 @@
 import { v4 as uuidv4 } from 'uuid'
 import { create } from 'zustand'
 
-import { comparisonModeDefinitions } from '../config/comparisonModes'
 import {
   initDB,
   saveProjectWithMedia,
@@ -24,10 +23,18 @@ import {
   type ProjectRecord,
   type MediaManifestEntry,
 } from '../lib/indexedDB'
-import type { ClipKeyframes } from '../lib/keyframes'
+import { LatestRequestGate } from '../lib/media/requestGate'
+import {
+  disposeProjectMedia,
+  prepareProject,
+  type PreparedProject,
+} from '../lib/projectPreparation'
+import { projectSession } from '../lib/projectSession'
 import type { TimelineTrack } from '../types'
+import { useHistoryStore } from './historyStore'
 import { useKeyframeStore } from './keyframeStore'
 import { useMediaStore } from './mediaStore'
+import { usePlaybackStore } from './playbackStore'
 import { useProjectStore } from './projectStore'
 import { useTimelineStore } from './timelineStore'
 
@@ -62,9 +69,9 @@ interface PersistenceStore {
 
   // Actions
   init: () => Promise<void>
-  createNewProject: (name?: string) => Promise<string>
-  saveCurrentProject: () => Promise<void>
-  loadProject: (projectId: string) => Promise<void>
+  createNewProject: (name?: string) => Promise<string | null>
+  saveCurrentProject: () => Promise<boolean>
+  loadProject: (projectId: string) => Promise<boolean>
   deleteProject: (projectId: string) => Promise<void>
   duplicateProject: (projectId: string) => Promise<string>
   updateProjectMetadata: (
@@ -99,8 +106,7 @@ interface PersistenceStore {
 }
 
 // Serialize timeline state for storage
-function serializeTimelineState(): string {
-  const state = useTimelineStore.getState()
+function serializeTimelineState(state = useTimelineStore.getState()): string {
   return JSON.stringify({
     tracks: state.tracks,
     currentTime: state.currentTime,
@@ -146,16 +152,6 @@ function serializeKeyframeData(): string {
   return JSON.stringify(entries)
 }
 
-// KEYFRAME-001: Deserialize keyframe data from storage
-function deserializeKeyframeData(json: string): Map<string, ClipKeyframes> {
-  try {
-    const entries = JSON.parse(json) as [string, ClipKeyframes][]
-    return new Map(entries)
-  } catch {
-    return new Map()
-  }
-}
-
 // Get media manifest (metadata without blobs)
 function getMediaManifest(files = useMediaStore.getState().files): MediaManifestEntry[] {
   return files.map((f) => ({
@@ -174,6 +170,8 @@ function getMediaManifest(files = useMediaStore.getState().files): MediaManifest
 let persistenceWriteQueue = Promise.resolve()
 const deletingProjectIds = new Set<string>()
 const projectWriteEpochs = new Map<string, number>()
+let saveSequence = 0
+const lastPersistedSequences = new Map<string, number>()
 
 function getProjectWriteEpoch(projectId: string): number {
   return projectWriteEpochs.get(projectId) ?? 0
@@ -190,6 +188,153 @@ function enqueuePersistenceWrite<T>(operation: () => Promise<T>): Promise<T> {
     () => undefined,
   )
   return result
+}
+
+const switchRequests = new LatestRequestGate()
+let activeSwitch: { sourceId: string | null; targetId: string } | null = null
+let isApplyingProject = false
+
+// Include all stored edits even when their automatic-save subscriptions are incomplete.
+// Playback time keeps advancing while preparation runs and is not an editing revision.
+function editingFingerprint(): string {
+  const metadata = usePersistenceStore.getState().projectMetadata
+  const timeline = JSON.parse(serializeTimelineState())
+  delete timeline.currentTime
+  return JSON.stringify([
+    metadata?.id,
+    metadata?.name,
+    metadata?.description,
+    metadata?.tags,
+    timeline,
+    serializeProjectSettings(),
+    serializeKeyframeData(),
+    getMediaManifest(),
+  ])
+}
+
+function resetProjectSession(prepared?: PreparedProject): void {
+  const oldFiles = useMediaStore.getState().files
+  isApplyingProject = true
+  try {
+    usePlaybackStore.getState().pause()
+    projectSession.advance()
+    useHistoryStore.getState().clear()
+    useMediaStore.setState({ files: prepared?.files ?? [], selectedIds: [] })
+    useTimelineStore.setState(
+      prepared?.timeline ?? {
+        ...JSON.parse(serializeTimelineState(useTimelineStore.getInitialState())),
+        isPlaying: false,
+        shuttleSpeed: 0,
+        selectedClipId: null,
+        selectedClipIds: [],
+        clipboardClipId: null,
+      },
+    )
+    useKeyframeStore.setState({
+      clipKeyframes: prepared?.keyframes ?? new Map(),
+      selectedKeyframeId: null,
+      clipboardKeyframes: null,
+    })
+    if (prepared) useProjectStore.setState(prepared.settings)
+    usePlaybackStore.getState().setSpeed(prepared?.timeline.playbackSpeed ?? 1)
+    usePlaybackStore.getState().seek(prepared?.timeline.currentTime ?? 0)
+    disposeProjectMedia(oldFiles)
+  } finally {
+    isApplyingProject = false
+  }
+}
+
+async function switchProject(
+  targetId: string,
+  prepare: (isCurrent: () => boolean) => Promise<PreparedProject | null>,
+  persistNew = false,
+): Promise<boolean> {
+  const request = switchRequests.begin()
+  const sourceId = usePersistenceStore.getState().currentProjectId
+  const targetEpoch = getProjectWriteEpoch(targetId)
+  const isCurrent = () =>
+    switchRequests.isCurrent(request) &&
+    !deletingProjectIds.has(targetId) &&
+    getProjectWriteEpoch(targetId) === targetEpoch
+  activeSwitch = { sourceId, targetId }
+  usePersistenceStore.setState({ isLoading: true, error: null })
+  let prepared: PreparedProject | null = null
+  try {
+    const flushOutgoing = async (): Promise<string> => {
+      let fingerprint = editingFingerprint()
+      while (sourceId && isCurrent()) {
+        if (!(await usePersistenceStore.getState().saveCurrentProject())) {
+          throw new Error(usePersistenceStore.getState().error || 'Failed to save project')
+        }
+        if (!isCurrent()) break
+        const latest = editingFingerprint()
+        if (latest === fingerprint) break
+        fingerprint = latest
+      }
+      return fingerprint
+    }
+    let savedFingerprint = await flushOutgoing()
+    if (!isCurrent()) return false
+    prepared = await prepare(isCurrent)
+    if (!prepared || !isCurrent()) return false
+
+    if (persistNew && isIndexedDBAvailable()) {
+      await enqueuePersistenceWrite(async () => {
+        if (isCurrent()) await saveProjectWithMedia(prepared!.record, new Map())
+      })
+      if (!isCurrent()) return false
+    }
+    // Editing remains enabled while decoding/saving. Flush again before the synchronous commit.
+    while (editingFingerprint() !== savedFingerprint) {
+      savedFingerprint = await flushOutgoing()
+      if (!isCurrent()) return false
+      if (sourceId === targetId) {
+        disposeProjectMedia(prepared.files)
+        prepared = null
+        prepared = await prepare(isCurrent)
+        if (!prepared || !isCurrent()) return false
+      }
+    }
+    if (!isCurrent()) return false
+    usePersistenceStore.getState().cancelAutoSave()
+    resetProjectSession(prepared)
+    const record = prepared.record
+    prepared = null // Ownership of these resources now belongs to the live media store.
+    usePersistenceStore.setState({
+      currentProjectId: targetId,
+      projectMetadata: {
+        id: record.id,
+        name: record.name,
+        description: record.description,
+        tags: record.tags,
+        createdAt: new Date(record.createdAt),
+        updatedAt: new Date(record.updatedAt),
+        thumbnail: record.thumbnail,
+      },
+      saveStatus: isIndexedDBAvailable() ? 'saved' : 'error',
+      lastSavedAt: isIndexedDBAvailable() ? new Date(record.updatedAt) : null,
+      error: isIndexedDBAvailable() ? null : 'IndexedDB not available',
+      _changeRevision: 0,
+    })
+    if (persistNew) {
+      await usePersistenceStore.getState().refreshProjectList()
+      await usePersistenceStore.getState().updateStorageUsage()
+    }
+    return switchRequests.isCurrent(request)
+  } catch (error) {
+    if (isCurrent()) {
+      usePersistenceStore.setState({
+        error: error instanceof Error ? error.message : 'Failed to switch project',
+      })
+    }
+    return false
+  } finally {
+    if (prepared) disposeProjectMedia(prepared.files)
+    if (switchRequests.isCurrent(request)) {
+      activeSwitch = null
+      usePersistenceStore.setState({ isLoading: false })
+    }
+  }
 }
 
 export const usePersistenceStore = create<PersistenceStore>((set, get) => ({
@@ -224,81 +369,50 @@ export const usePersistenceStore = create<PersistenceStore>((set, get) => ({
 
   createNewProject: async (name?: string) => {
     const projectId = uuidv4()
-    const now = new Date()
-
-    const metadata: ProjectMetadata = {
+    const now = Date.now()
+    const record: ProjectRecord = {
       id: projectId,
-      name: name || `Project ${now.toLocaleDateString()}`,
+      name: name || `Project ${new Date(now).toLocaleDateString()}`,
       description: '',
       tags: [],
       createdAt: now,
       updatedAt: now,
       thumbnail: null,
+      timelineState: serializeTimelineState(useTimelineStore.getInitialState()),
+      projectSettings: serializeProjectSettings(),
+      mediaManifest: [],
+      keyframeData: '[]',
     }
-
-    set({
-      currentProjectId: projectId,
-      projectMetadata: metadata,
-      saveStatus: 'unsaved',
-      lastSavedAt: null,
-    })
-
-    // Clear existing media, timeline, and keyframes
-    useMediaStore.getState().clearFiles()
-    useTimelineStore.setState({
-      tracks: [
-        {
-          id: 'track-a',
-          name: 'Track A',
-          type: 'a',
-          acceptedTypes: ['video', 'image'],
-          clips: [],
-          muted: false,
-          locked: false,
-        },
-        {
-          id: 'track-b',
-          name: 'Track B',
-          type: 'b',
-          acceptedTypes: ['video', 'image'],
-          clips: [],
-          muted: false,
-          locked: false,
-        },
-      ],
-      currentTime: 0,
-      duration: 30,
-      markers: [],
-      selectedClipId: null,
-      selectedClipIds: [],
-    })
-    // KEYFRAME-001: Clear keyframes for new project
-    useKeyframeStore.setState({ clipKeyframes: new Map() })
-
-    // Save initial project
-    await get().saveCurrentProject()
-
-    return projectId
+    const adopted = await switchProject(
+      projectId,
+      async (isCurrent) => {
+        return prepareProject(record, new Map(), isCurrent)
+      },
+      true,
+    )
+    return adopted ? projectId : null
   },
 
   saveCurrentProject: async () => {
     const state = get()
     if (!state.currentProjectId || !state.projectMetadata) {
       console.warn('No active project to save')
-      return
+      return false
     }
 
     if (!isIndexedDBAvailable()) {
       set({ saveStatus: 'error', error: 'IndexedDB not available' })
-      return
+      return false
     }
 
     const projectId = state.currentProjectId
-    if (deletingProjectIds.has(projectId)) return
+    if (deletingProjectIds.has(projectId)) return false
 
     state.cancelAutoSave()
 
     const projectWriteEpoch = getProjectWriteEpoch(projectId)
+    const sequence = ++saveSequence
+    const session = projectSession.capture()
     const changeRevision = state._changeRevision
     const metadata = { ...state.projectMetadata }
     const timelineState = serializeTimelineState()
@@ -331,22 +445,28 @@ export const usePersistenceStore = create<PersistenceStore>((set, get) => ({
         mediaManifest,
         keyframeData,
       }
-
-      const persisted = await enqueuePersistenceWrite(async () => {
+      const result = await enqueuePersistenceWrite(async () => {
         if (
           deletingProjectIds.has(projectId) ||
           getProjectWriteEpoch(projectId) !== projectWriteEpoch
-        ) {
-          return false
-        }
+        )
+          return 'invalidated'
+        // A delayed thumbnail must not let an old snapshot overwrite a newer committed save.
+        if ((lastPersistedSequences.get(projectId) ?? 0) > sequence) return 'superseded'
         await saveProjectWithMedia(projectRecord, mediaBlobs)
-        return true
+        lastPersistedSequences.set(projectId, sequence)
+        return 'saved'
       })
-
-      if (!persisted) return
+      if (result === 'invalidated') return false
+      if (result === 'superseded') return true
 
       const currentState = get()
-      if (currentState.currentProjectId !== projectId || deletingProjectIds.has(projectId)) return
+      if (
+        currentState.currentProjectId !== projectId ||
+        deletingProjectIds.has(projectId) ||
+        !projectSession.isCurrent(session)
+      )
+        return true
 
       const savedAt = new Date(projectRecord.updatedAt)
       const hasNewerChanges = currentState._changeRevision !== changeRevision
@@ -364,149 +484,34 @@ export const usePersistenceStore = create<PersistenceStore>((set, get) => ({
 
       await get().refreshProjectList()
       await get().updateStorageUsage()
+      return true
     } catch (error) {
       console.error('Failed to save project:', error)
-      if (get().currentProjectId === projectId && !deletingProjectIds.has(projectId)) {
+      if (
+        get().currentProjectId === projectId &&
+        !deletingProjectIds.has(projectId) &&
+        projectSession.isCurrent(session) &&
+        (lastPersistedSequences.get(projectId) ?? 0) <= sequence
+      ) {
         set({ saveStatus: 'error', error: 'Failed to save project' })
       }
+      return false
     }
   },
 
   loadProject: async (projectId: string) => {
     if (!isIndexedDBAvailable()) {
       set({ error: 'IndexedDB not available' })
-      return
+      return false
     }
-
-    get().cancelAutoSave()
-    set({ isLoading: true, error: null })
-
-    try {
-      // Get project record
-      const projectRecord = await getProject(projectId)
-      if (!projectRecord) {
-        throw new Error('Project not found')
-      }
-
-      // Get media blobs
-      const mediaBlobs = await getProjectMediaBlobs(projectId)
-
-      // Clear current media
-      useMediaStore.getState().clearFiles()
-
-      // Restore media files
-      const mediaStore = useMediaStore.getState()
-      const restoredMediaIds = new Set<string>()
-      for (const entry of projectRecord.mediaManifest) {
-        if (entry.type !== 'video' && entry.type !== 'image') continue
-
-        const blob = mediaBlobs.get(entry.id)
-        if (blob) {
-          // Create a File from the blob
-          const file = new File([blob], entry.name, { type: blob.type })
-          const mediaFile = await mediaStore.addFile(file)
-
-          // The addFile creates a new ID, but we need to use the original ID
-          // So we need to update the store directly
-          useMediaStore.setState((state) => ({
-            files: state.files.map((f) =>
-              f.name === entry.name && f.id === mediaFile.id
-                ? {
-                    ...f,
-                    id: entry.id,
-                  }
-                : f,
-            ),
-          }))
-          restoredMediaIds.add(entry.id)
-        }
-      }
-
-      // Restore timeline state. Legacy clips that point at removed media types are dropped.
-      const timelineState = JSON.parse(projectRecord.timelineState)
-      const tracks: TimelineTrack[] = (timelineState.tracks as TimelineTrack[]).map((track) => ({
-        ...track,
-        acceptedTypes: ['video', 'image'],
-        clips: track.clips.filter((clip) => restoredMediaIds.has(clip.mediaId)),
-      }))
-      const restoredClipIds = new Set(tracks.flatMap((track) => track.clips.map((clip) => clip.id)))
-
-      useTimelineStore.setState({
-        tracks,
-        currentTime: timelineState.currentTime || 0,
-        duration: timelineState.duration || 30,
-        zoom: timelineState.zoom || 1,
-        playbackSpeed: timelineState.playbackSpeed || 1,
-        loopRegion: timelineState.loopRegion || null,
-        frameRate: timelineState.frameRate || 30,
-        markers: timelineState.markers || [],
-        snapEnabled: timelineState.snapEnabled ?? true,
-        snapThreshold: timelineState.snapThreshold || 0.1,
-        rippleEnabled: timelineState.rippleEnabled ?? false,
-      })
-
-      // Restore project settings
-      const projectSettings = JSON.parse(projectRecord.projectSettings)
-      const comparisonMode = comparisonModeDefinitions.some(
-        (definition) => definition.mode === projectSettings.comparisonMode,
-      )
-        ? projectSettings.comparisonMode
-        : 'slider'
-
-      useProjectStore.setState({
-        comparisonMode,
-        blendMode: projectSettings.blendMode || 'difference',
-        splitLayout: projectSettings.splitLayout || '2x1',
-        sliderPosition: projectSettings.sliderPosition ?? 50,
-        sliderOrientation: projectSettings.sliderOrientation || 'vertical',
-        hideSlider: projectSettings.hideSlider ?? false,
-        aspectRatioSettings: projectSettings.aspectRatioSettings || { preset: '16:9' },
-        webglComparisonSettings: projectSettings.webglComparisonSettings,
-        scopesSettings: projectSettings.scopesSettings,
-        quadViewSettings: projectSettings.quadViewSettings,
-        radialLoupeSettings: projectSettings.radialLoupeSettings,
-        gridTileSettings: projectSettings.gridTileSettings,
-        pixelGridSettings: projectSettings.pixelGridSettings,
-        morphologicalSettings: projectSettings.morphologicalSettings,
-        exportSettings: projectSettings.exportSettings,
-      })
-
-      // KEYFRAME-001: Restore keyframe data
-      if (projectRecord.keyframeData) {
-        const keyframeMap = new Map(
-          [...deserializeKeyframeData(projectRecord.keyframeData)].filter(([clipId]) =>
-            restoredClipIds.has(clipId),
-          ),
-        )
-        useKeyframeStore.setState({ clipKeyframes: keyframeMap })
-      } else {
-        // Clear keyframes if project has none
-        useKeyframeStore.setState({ clipKeyframes: new Map() })
-      }
-
-      // Update persistence state
-      set({
-        currentProjectId: projectId,
-        projectMetadata: {
-          id: projectRecord.id,
-          name: projectRecord.name,
-          description: projectRecord.description,
-          tags: projectRecord.tags,
-          createdAt: new Date(projectRecord.createdAt),
-          updatedAt: new Date(projectRecord.updatedAt),
-          thumbnail: projectRecord.thumbnail,
-        },
-        saveStatus: 'saved',
-        lastSavedAt: new Date(projectRecord.updatedAt),
-        isLoading: false,
-      })
-    } catch (error) {
-      console.error('Failed to load project:', error)
-      set({
-        isLoading: false,
-        error: error instanceof Error ? error.message : 'Failed to load project',
-      })
-    }
+    return switchProject(projectId, async (isCurrent) => {
+      const record = await getProject(projectId)
+      if (!isCurrent()) return null
+      if (!record) throw new Error('Project not found')
+      const blobs = await getProjectMediaBlobs(projectId)
+      if (!isCurrent()) return null
+      return prepareProject(record, blobs, isCurrent)
+    })
   },
 
   deleteProject: async (projectId: string) => {
@@ -519,6 +524,11 @@ export const usePersistenceStore = create<PersistenceStore>((set, get) => ({
       get().cancelAutoSave()
     }
 
+    if (activeSwitch?.sourceId === projectId || activeSwitch?.targetId === projectId) {
+      switchRequests.invalidate()
+      activeSwitch = null
+      set({ isLoading: false })
+    }
     deletingProjectIds.add(projectId)
     invalidateProjectWrites(projectId)
 
@@ -534,7 +544,7 @@ export const usePersistenceStore = create<PersistenceStore>((set, get) => ({
           lastSavedAt: null,
           error: null,
         })
-        useMediaStore.getState().clearFiles()
+        resetProjectSession()
       }
 
       await get().refreshProjectList()
@@ -804,7 +814,7 @@ function base64ToBlob(base64: string, mimeType: string): Blob {
 // Timeline changes
 useTimelineStore.subscribe((state, prevState) => {
   const persistence = usePersistenceStore.getState()
-  if (!persistence.currentProjectId || persistence.isLoading) return
+  if (!persistence.currentProjectId || isApplyingProject) return
 
   // Check for meaningful changes
   if (
@@ -819,7 +829,7 @@ useTimelineStore.subscribe((state, prevState) => {
 // Project settings changes
 useProjectStore.subscribe((state, prevState) => {
   const persistence = usePersistenceStore.getState()
-  if (!persistence.currentProjectId || persistence.isLoading) return
+  if (!persistence.currentProjectId || isApplyingProject) return
 
   // Check for meaningful changes (excluding transient state)
   if (
@@ -836,7 +846,7 @@ useProjectStore.subscribe((state, prevState) => {
 // Media library changes
 useMediaStore.subscribe((state, prevState) => {
   const persistence = usePersistenceStore.getState()
-  if (!persistence.currentProjectId || persistence.isLoading) return
+  if (!persistence.currentProjectId || isApplyingProject) return
 
   if (state.files.length !== prevState.files.length) {
     persistence._markUnsaved()

@@ -4,10 +4,12 @@
  */
 import { create } from 'zustand'
 
+import { projectSession } from '../lib/projectSession'
 import type { TimelineTrack } from '../types'
 import { useTimelineStore } from './timelineStore'
 
 interface HistoryState {
+  session: number
   tracks: TimelineTrack[]
   duration: number
 }
@@ -44,6 +46,7 @@ export const useHistoryStore = create<HistoryStore>((set, get) => ({
   pushState: () => {
     const timelineState = useTimelineStore.getState()
     const currentState: HistoryState = {
+      session: projectSession.capture(),
       tracks: cloneTracks(timelineState.tracks),
       duration: timelineState.duration,
     }
@@ -57,9 +60,14 @@ export const useHistoryStore = create<HistoryStore>((set, get) => ({
   undo: () => {
     const { past } = get()
     if (past.length === 0) return
+    if (!projectSession.isCurrent(past[past.length - 1].session)) {
+      get().clear()
+      return
+    }
 
     const timelineState = useTimelineStore.getState()
     const currentState: HistoryState = {
+      session: projectSession.capture(),
       tracks: cloneTracks(timelineState.tracks),
       duration: timelineState.duration,
     }
@@ -82,9 +90,14 @@ export const useHistoryStore = create<HistoryStore>((set, get) => ({
   redo: () => {
     const { future } = get()
     if (future.length === 0) return
+    if (!projectSession.isCurrent(future[0].session)) {
+      get().clear()
+      return
+    }
 
     const timelineState = useTimelineStore.getState()
     const currentState: HistoryState = {
+      session: projectSession.capture(),
       tracks: cloneTracks(timelineState.tracks),
       duration: timelineState.duration,
     }
@@ -104,8 +117,14 @@ export const useHistoryStore = create<HistoryStore>((set, get) => ({
     })
   },
 
-  canUndo: () => get().past.length > 0,
-  canRedo: () => get().future.length > 0,
+  canUndo: () => {
+    const previous = get().past.at(-1)
+    return previous !== undefined && projectSession.isCurrent(previous.session)
+  },
+  canRedo: () => {
+    const next = get().future[0]
+    return next !== undefined && projectSession.isCurrent(next.session)
+  },
 
   clear: () => set({ past: [], future: [] }),
 }))

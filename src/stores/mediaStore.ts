@@ -38,6 +38,8 @@ async function loadNativeVideo(url: string): Promise<HTMLVideoElement> {
     }
     const handleError = () => {
       cleanup()
+      video.removeAttribute('src')
+      video.load()
       reject(new Error('The browser could not decode this video'))
     }
 
@@ -66,7 +68,8 @@ function createVideoThumbnail(video: HTMLVideoElement): string | undefined {
   return canvas.toDataURL('image/jpeg', 0.7)
 }
 
-async function processFile(file: File): Promise<MediaFile> {
+// Prepare resources without publishing them to the active media library.
+export async function prepareMediaFile(file: File): Promise<MediaFile> {
   const type = getSupportedMediaType(file)
   if (!type) throw new Error('DualView only accepts image and video files')
 
@@ -194,7 +197,7 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
     }))
 
     try {
-      const mediaFile = await processFile(file)
+      const mediaFile = await prepareMediaFile(file)
       set((state) => ({
         files: state.files.map((item) =>
           item.id === pendingId ? { ...mediaFile, id: pendingId } : item,
@@ -273,7 +276,7 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
     }))
 
     try {
-      const newMediaFile = await processFile(file.file)
+      const newMediaFile = await prepareMediaFile(file.file)
       set((state) => ({
         files: state.files.map((item) => (item.id === id ? { ...newMediaFile, id } : item)),
       }))

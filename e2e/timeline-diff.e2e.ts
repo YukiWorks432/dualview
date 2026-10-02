@@ -148,28 +148,53 @@ test('calibrates compression-only differences on the default thresholds', async 
   await uploadToTrack(page, 'Media B', 'quality-low.webm')
   await expect(page.getByText('Complete', { exact: true }).first()).toBeVisible({ timeout: 60_000 })
 
+  // Give every source frame several CSS pixels so mouse coordinates cannot alias neighbors.
+  for (let step = 0; step < 10; step++) await page.keyboard.press('Control+Equal')
   const lane = page.getByRole('img', { name: /Read-only A\/B difference lane/ })
+  await expect
+    .poll(() =>
+      lane.evaluate((canvas) => Number.parseFloat(canvas.parentElement?.style.width ?? '0')),
+    )
+    .toBeGreaterThan(450)
+  const duration = await page
+    .locator('video[data-track="a"]')
+    .first()
+    .evaluate((video) => video.duration)
   const laneWidth = await lane.evaluate((canvas) =>
     Number.parseFloat(canvas.parentElement?.style.width ?? '0'),
   )
   const frameCount = 45
-  const titles = await lane.evaluate(
-    async (canvas, { frameCount, laneWidth }) => {
-      const rect = canvas.getBoundingClientRect()
-      const sampledTitles: string[] = []
-      for (let index = 0; index < frameCount; index++) {
+  const titles: string[] = []
+  for (let index = 0; index < frameCount; index++) {
+    await lane.evaluate(
+      (canvas, { index, frameCount, laneWidth }) => {
+        const rect = canvas.getBoundingClientRect()
         const clientX = rect.left + (index + 0.5) * (laneWidth / frameCount)
         canvas.dispatchEvent(
           new MouseEvent('mousemove', { bubbles: true, clientX, clientY: rect.top + 16 }),
         )
-        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
-        sampledTitles.push(canvas.title)
-      }
-      return sampledTitles
-    },
-    { frameCount, laneWidth },
-  )
+      },
+      { index, frameCount, laneWidth },
+    )
+    // Wait for the requested interval, not just a generic or previous frame's title.
+    const sampleTime = ((index + 0.5) * duration) / frameCount
+    await expect
+      .poll(async () => {
+        const title = await lane.getAttribute('title')
+        const interval = /^(?<start>[\d.]+)–(?<end>[\d.]+)s.*Frame difference: [\d.]+%/.exec(
+          title ?? '',
+        )
+        return (
+          interval !== null &&
+          Number(interval.groups!.start) <= sampleTime &&
+          sampleTime < Number(interval.groups!.end)
+        )
+      })
+      .toBe(true)
+    titles.push((await lane.getAttribute('title'))!)
+  }
   expect(titles).toHaveLength(frameCount)
+  expect(new Set(titles).size).toBe(frameCount)
   const measuredRates = titles.map((title) => {
     const match = /Frame difference: ([\d.]+)%/.exec(title)
     expect(match, title).not.toBeNull()
