@@ -308,17 +308,17 @@ export function useTimelineTrim(options: UseTimelineTrimOptions) {
 
   const [trimState, setTrimState] = useState<TrimState | null>(null)
   const isTrimmingRef = useRef(false)
+  const hasTrimmedRef = useRef(false)
 
   const { trimClip, frameRate, getSnapPoint } = useTimelineStore()
-  const { pushState } = useHistoryStore()
+  const { runWithHistory } = useHistoryStore()
 
   const handleTrimStart = useCallback(
     (e: React.MouseEvent, clipId: string, side: 'start' | 'end', currentTime: number) => {
       e.preventDefault()
       e.stopPropagation()
 
-      // Push history at trim start
-      pushState()
+      hasTrimmedRef.current = false
 
       setTrimState({
         isTrimming: true,
@@ -335,7 +335,7 @@ export function useTimelineTrim(options: UseTimelineTrimOptions) {
       isTrimmingRef.current = true
       onTrimStart?.(clipId, side)
     },
-    [pushState, onTrimStart],
+    [onTrimStart],
   )
 
   useEffect(() => {
@@ -371,7 +371,11 @@ export function useTimelineTrim(options: UseTimelineTrimOptions) {
       )
 
       // Apply trim in real-time
-      trimClip(trimState.clipId, trimState.side, newTime)
+      if (hasTrimmedRef.current) trimClip(trimState.clipId, trimState.side, newTime)
+      else
+        hasTrimmedRef.current = runWithHistory(() =>
+          trimClip(trimState.clipId, trimState.side, newTime),
+        )
     }
 
     const handleMouseUp = () => {
@@ -389,7 +393,7 @@ export function useTimelineTrim(options: UseTimelineTrimOptions) {
       document.removeEventListener('mousemove', handleMouseMove)
       document.removeEventListener('mouseup', handleMouseUp)
     }
-  }, [trimState, pixelsPerSecond, frameRate, trimClip, onTrimEnd, getSnapPoint])
+  }, [trimState, pixelsPerSecond, frameRate, trimClip, onTrimEnd, getSnapPoint, runWithHistory])
 
   // TL-006: Get trim snap indicator for visual feedback
   const getTrimSnapIndicator = useCallback(() => {

@@ -54,7 +54,7 @@ export function ClipContextMenu({ x, y, clipId, trackId, onClose }: ClipContextM
     replaceClipMedia,
     separateAudio,
   } = useTimelineStore()
-  const { pushState } = useHistoryStore()
+  const { pushState, runWithHistory } = useHistoryStore()
   const { files, getFile } = useMediaStore()
 
   // Find track and clip
@@ -198,8 +198,7 @@ export function ClipContextMenu({ x, y, clipId, trackId, onClose }: ClipContextM
           disabled={isLocked}
           onClick={() =>
             handleAction(() => {
-              pushState()
-              splitClip(clipId, currentTime)
+              runWithHistory(() => splitClip(clipId, currentTime))
             })
           }
         />
@@ -210,8 +209,7 @@ export function ClipContextMenu({ x, y, clipId, trackId, onClose }: ClipContextM
           disabled={isLocked}
           onClick={() =>
             handleAction(() => {
-              pushState()
-              splitAndKeepLeft(clipId, currentTime)
+              runWithHistory(() => splitAndKeepLeft(clipId, currentTime))
             })
           }
         />
@@ -222,8 +220,7 @@ export function ClipContextMenu({ x, y, clipId, trackId, onClose }: ClipContextM
           disabled={isLocked}
           onClick={() =>
             handleAction(() => {
-              pushState()
-              splitAndKeepRight(clipId, currentTime)
+              runWithHistory(() => splitAndKeepRight(clipId, currentTime))
             })
           }
         />
@@ -255,8 +252,7 @@ export function ClipContextMenu({ x, y, clipId, trackId, onClose }: ClipContextM
                       key={media.id}
                       className="w-full ui-radius-sm px-3 py-1.5 flex items-center gap-2 text-sm text-foreground hover:bg-surface-hover"
                       onClick={() => {
-                        pushState()
-                        replaceClipMedia(clipId, media.id, media.duration)
+                        runWithHistory(() => replaceClipMedia(clipId, media.id, media.duration))
                         onClose()
                       }}
                     >

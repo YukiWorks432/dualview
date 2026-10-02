@@ -5,6 +5,7 @@ import { useTimelineStore } from '../stores/timelineStore'
 import type { MediaFile, TimelineTrack } from '../types'
 import type { ProjectRecord } from './indexedDB'
 import type { ClipKeyframes } from './keyframes'
+import { calculateTimelineDuration } from './media/timeline'
 
 export interface PreparedProject {
   record: ProjectRecord
@@ -73,7 +74,7 @@ export async function prepareProject(
       timeline: {
         tracks,
         currentTime: timeline.currentTime ?? 0,
-        duration: timeline.duration || 30,
+        duration: calculateTimelineDuration(tracks),
         zoom: timeline.zoom || 1,
         playbackSpeed: timeline.playbackSpeed || 1,
         loopRegion: timeline.loopRegion || null,

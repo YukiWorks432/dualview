@@ -224,6 +224,7 @@ export const TimelineClip = memo(function TimelineClip({
               'absolute left-0 top-0 bottom-0 w-2 bg-foreground/30 hover:bg-foreground/80 cursor-ew-resize z-10 transition-colors',
               trimState?.clipId === clip.id && trimState.side === 'start' && 'bg-primary',
             )}
+            title="先頭をトリム"
             onMouseDown={handleTrimStartMouseDown}
           />
           <div
@@ -231,6 +232,7 @@ export const TimelineClip = memo(function TimelineClip({
               'absolute right-0 top-0 bottom-0 w-2 bg-foreground/30 hover:bg-foreground/80 cursor-ew-resize z-10 transition-colors',
               trimState?.clipId === clip.id && trimState.side === 'end' && 'bg-primary',
             )}
+            title="末尾をトリム"
             onMouseDown={handleTrimEndMouseDown}
           />
         </>
