@@ -97,26 +97,31 @@ async function waitForProject(page: Page) {
     )
     .toBe(true)
 }
-async function waitForSurface(page: Page, track: 'A' | 'B') {
+async function waitForSurface(page: Page, track: 'A' | 'B', presented = true) {
   await expect
     .poll(
       () =>
-        page.evaluate((track) => {
-          const sources = document.querySelectorAll(
-            `video[data-track="${track.toLowerCase()}"], img[data-track="${track.toLowerCase()}"], canvas[data-track="${track.toLowerCase()}"]`,
-          )
-          return Array.from(sources).some((source) => {
-            if (source instanceof HTMLImageElement)
-              return source.complete && source.naturalWidth > 0
-            if (source instanceof HTMLVideoElement)
-              return source.readyState >= 2 && source.dataset.frameReady === 'true'
-            return (
-              source instanceof HTMLCanvasElement &&
-              source.width > 0 &&
-              source.dataset.frameReady === 'true'
+        page.evaluate(
+          (track) => {
+            const sources = document.querySelectorAll(
+              `video[data-track="${track.toLowerCase()}"], img[data-track="${track.toLowerCase()}"], canvas[data-track="${track.toLowerCase()}"]`,
             )
-          })
-        }, track),
+            return Array.from(sources).some((source) => {
+              if (source instanceof HTMLImageElement)
+                return source.complete && source.naturalWidth > 0
+              if (source instanceof HTMLVideoElement)
+                return (
+                  source.readyState >= 2 && (!presented || source.dataset.frameReady === 'true')
+                )
+              return (
+                source instanceof HTMLCanvasElement &&
+                source.width > 0 &&
+                source.dataset.frameReady === 'true'
+              )
+            })
+          },
+          { track, presented },
+        ),
       { timeout: 60_000 },
     )
     .toBe(true)
@@ -129,7 +134,7 @@ async function upload(
   const chooser = page.waitForEvent('filechooser')
   await page.getByText(`Media ${track}`, { exact: true }).last().click()
   await (await chooser).setFiles(file)
-  await waitForSurface(page, track)
+  await waitForSurface(page, track, false)
 }
 async function prepareColors(page: Page) {
   await observeResources(page)
@@ -413,6 +418,7 @@ test('ProRes retains Image/PDF output and refuses every animated path', async ({
   await page.setViewportSize({ width: 1440, height: 1100 })
   await page.goto('/')
   await waitForProject(page)
+  await page.getByRole('button', { name: 'Hide filmstrip' }).click()
   await upload(page, 'A', path.join(process.cwd(), 'e2e/fixtures/difference-a.webm'))
   await upload(page, 'B', path.join(process.cwd(), 'e2e/fixtures/difference-b.mov'))
   await expect(page.locator('canvas[data-track="b"]').first()).toHaveAttribute(
@@ -420,6 +426,13 @@ test('ProRes retains Image/PDF output and refuses every animated path', async ({
     'true',
     { timeout: 60_000 },
   )
+  // Present a known differing frame after both imports. Initial native video
+  // callbacks may precede the preview's observer while the video stays paused.
+  const nextDifference = page.getByRole('button', { name: 'Next highlighted interval' })
+  await expect(nextDifference).toBeEnabled({ timeout: 60_000 })
+  await nextDifference.click()
+  await waitForSurface(page, 'A')
+  await waitForSurface(page, 'B')
   await page.getByTitle('Export (E)').click()
   const dialog = page.getByRole('dialog')
   for (const format of ['MP4', 'GIF', 'WebM']) {
