@@ -199,56 +199,8 @@ async function download(page: Page, label: string, info: TestInfo, name: string)
 async function inspectVideo(page: Page, bytes: Buffer, mime: string, time = 0.25) {
   return page.evaluate(
     async ({ bytes, mime, time }) => {
-      const url = URL.createObjectURL(new Blob([new Uint8Array(bytes)], { type: mime }))
-      const video = document.createElement('video')
-      video.muted = true
-      try {
-        await new Promise<void>((resolve, reject) => {
-          video.onloadeddata = () => resolve()
-          video.onerror = () => reject(new Error('Artifact failed to decode'))
-          video.src = url
-        })
-        await new Promise<void>((resolve) => {
-          video.onseeked = () => resolve()
-          video.currentTime = time
-        })
-        const canvas = document.createElement('canvas')
-        canvas.width = video.videoWidth
-        canvas.height = video.videoHeight
-        const context = canvas.getContext('2d')!
-        context.drawImage(video, 0, 0)
-        const pixel = (x: number) =>
-          Array.from(
-            context.getImageData(
-              Math.round(canvas.width * x),
-              Math.round(canvas.height * 0.5),
-              1,
-              1,
-            ).data,
-          )
-        const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data
-        let coloredPixels = 0
-        for (let offset = 0; offset < pixels.length; offset += 4) {
-          if (
-            Math.max(pixels[offset], pixels[offset + 1], pixels[offset + 2]) -
-              Math.min(pixels[offset], pixels[offset + 1], pixels[offset + 2]) >
-            30
-          )
-            coloredPixels++
-        }
-        return {
-          coloredPixels,
-          width: video.videoWidth,
-          height: video.videoHeight,
-          duration: video.duration,
-          left: pixel(0.2),
-          right: pixel(0.9),
-        }
-      } finally {
-        video.removeAttribute('src')
-        video.load()
-        URL.revokeObjectURL(url)
-      }
+      const { inspectEncodedVideo } = await import('/e2e/videoInspection.ts')
+      return inspectEncodedVideo(bytes, mime, time)
     },
     { bytes: Array.from(bytes), mime, time },
   )
@@ -502,6 +454,26 @@ test('ProRes retains Image/PDF output and refuses every animated path', async ({
   expect(pdf.toString('ascii', 0, 5)).toBe('%PDF-')
   expect(pdf.toString('latin1')).toContain('/Subtype /Image')
   await released(page)
+})
+
+test('生成物の読取はシーク表示に依存せず既知の黒・白・黒フレームを復号する', async ({ page }) => {
+  await page.goto('/')
+  const bytes = await readFile(path.join(process.cwd(), 'e2e/fixtures/difference-brief.webm'))
+  for (const [time, expected] of [
+    [0.6, 0],
+    [0.35, 255],
+    [0.1, 0],
+    [0.35, 255],
+  ]) {
+    const frame = await inspectVideo(page, bytes, 'video/webm', time)
+    expect(frame.width).toBe(64)
+    expect(frame.height).toBe(64)
+    expect(Math.abs(frame.duration - 0.75)).toBeLessThan(0.04)
+    expect(frame.frameTimestamp).toBeLessThanOrEqual(time)
+    expect(frame.frameTimestamp + frame.frameDuration).toBeGreaterThan(time)
+    expect(frame.coloredPixels).toBe(0)
+    expect(Math.abs(frame.left[0] - expected)).toBeLessThan(10)
+  }
 })
 
 test('native video seeking preserves black-white-black frames and excludes paused difference rectangles', async ({

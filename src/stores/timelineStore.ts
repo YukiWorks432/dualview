@@ -535,9 +535,13 @@ const createTimelineState: StateCreator<TimelineStore> = (set, get) => ({
       side === 'start'
         ? Math.max(0, earliest, Math.min(snapped, original.endTime - minDuration))
         : original.startTime
+    // 既存の静止末尾を含む短縮は許可し、素材端は延長時だけ制限する。
     const end =
       side === 'end'
-        ? Math.min(latest, Math.max(original.startTime + minDuration, snapped))
+        ? Math.min(
+            Math.max(original.endTime, latest),
+            Math.max(original.startTime + minDuration, snapped),
+          )
         : original.endTime
     if (end <= start || (start === original.startTime && end === original.endTime)) return
     if (side === 'start' && hasClipKeyframes(clipId)) {

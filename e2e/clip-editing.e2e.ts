@@ -362,5 +362,16 @@ test('末尾静止区間を分割して速度変更・リセットしてもフ�
     expect((await snapshot(page)).clips).toEqual(changed.clips)
     await seek(page, 4.5)
     await expectColor(page, 'a', reverse ? 'red' : 'blue')
+    await page.evaluate(async (id) => {
+      const { useTimelineStore } = await import('/src/stores/timelineStore.ts')
+      useTimelineStore.getState().selectClip(id)
+      if (document.activeElement instanceof HTMLElement) document.activeElement.blur()
+    }, changed.clips[1].id)
+    await seek(page, 5)
+    await page.keyboard.press('q')
+    expect((await snapshot(page)).clips[1]).toMatchObject({ startTime: 4, endTime: 5 })
+    expect((await snapshot(page)).duration).toBe(5)
+    await seek(page, 4.5)
+    await expectColor(page, 'a', reverse ? 'red' : 'blue')
   }
 })

@@ -233,6 +233,46 @@ describe('クリップの素材時刻を保つ編集', () => {
     },
   )
 
+  describe.each([
+    { reverse: false, tailOnly: false, heldFrame: 12 },
+    { reverse: true, tailOnly: false, heldFrame: 4 },
+    { reverse: false, tailOnly: true, heldFrame: 12 },
+    { reverse: true, tailOnly: true, heldFrame: 4 },
+  ])(
+    '旧静止末尾を指定境界で切る（逆再生 $reverse、静止専用 $tailOnly）',
+    ({ reverse, tailOnly, heldFrame }) => {
+      it.each(['trim-end', 'keep-left', 'trim-start', 'keep-right'] as const)(
+        '%s で既存の表示時間とフレームを保つ',
+        (operation) => {
+          media.setState({ files: [source('source', 12)] })
+          seed({ startTime: 0, endTime: 8, inPoint: 4, outPoint: 12, speed: 2, reverse })
+          const id = tailOnly ? timeline.getState().splitClip('clip', 6)!.id : 'clip'
+          history.getState().runWithHistory(() => {
+            if (operation === 'trim-end') timeline.getState().trimClip(id, 'end', 7)
+            if (operation === 'keep-left') timeline.getState().splitAndKeepLeft(id, 7)
+            if (operation === 'trim-start') timeline.getState().trimClip(id, 'start', 7)
+            if (operation === 'keep-right') timeline.getState().splitAndKeepRight(id, 7)
+          })
+          const kept = clips().find((clip) => clip.id === id)!
+          const trimsEnd = operation === 'trim-end' || operation === 'keep-left'
+          expect(kept).toMatchObject({
+            startTime: trimsEnd ? (tailOnly ? 6 : 0) : 7,
+            endTime: trimsEnd ? 7 : 8,
+            inPoint: trimsEnd && !tailOnly ? 4 : heldFrame,
+            outPoint: trimsEnd && !tailOnly ? 12 : heldFrame,
+          })
+          expect(at(trimsEnd ? 6.5 : 7.5)).toBe(heldFrame)
+          expect(timeline.getState().duration).toBe(trimsEnd ? 7 : 8)
+          history.getState().undo()
+          expect(clips().find((clip) => clip.id === id)!.endTime).toBe(8)
+          expect(at(7.5)).toBe(heldFrame)
+          history.getState().redo()
+          expect(clips().find((clip) => clip.id === id)).toEqual(kept)
+        },
+      )
+    },
+  )
+
   it.each(['duplicate', 'paste', 'playhead'] as const)(
     '複製経路 %s は属性・相対時刻のキーフレームを保持しUndo/Redoできる',
     (operation) => {
