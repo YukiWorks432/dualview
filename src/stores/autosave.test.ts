@@ -149,7 +149,6 @@ const settingsChanges = [
 
 const timelineChanges = [
   ['tracks', () => timeline.getState().renameTrack('track-a', 'Renamed A')],
-  ['duration', () => timeline.getState().setDuration(90)],
   ['zoom', () => timeline.getState().setZoom(2)],
   ['playbackSpeed', () => timeline.getState().setPlaybackSpeed(0.5)],
   ['loopRegion', () => timeline.getState().setLoopOut()],
@@ -179,6 +178,23 @@ describe('保存項目の単独変更と復元', () => {
     const record = await autosave()
     expect(JSON.parse(record.timelineState)[key]).toEqual(expected)
     expect((await restore(record)).timeline[key]).toEqual(expected)
+  })
+
+  it('継続時間だけの変更も保存対象として検知する', async () => {
+    timeline.getState().setDuration(90)
+    const record = await autosave()
+    expect(JSON.parse(record.timelineState).duration).toBe(90)
+  })
+
+  it('クリップ終端と一致する継続時間を自動保存して復元する', async () => {
+    const clip = timeline.getState().tracks[0].clips[0]
+    timeline.getState().updateClip(clip.id, { endTime: 90, outPoint: 90 })
+    expect(timeline.getState().duration).toBe(90)
+    const record = await autosave()
+    expect(JSON.parse(record.timelineState).duration).toBe(90)
+    const restored = await restore(record)
+    expect(restored.timeline.duration).toBe(90)
+    expect(restored.timeline.tracks?.[0]?.clips[0]?.endTime).toBe(90)
   })
 
   it.each([

@@ -97,6 +97,8 @@ export function Timeline() {
     removeClip,
     addClip,
     splitClip,
+    editError,
+    clearEditError,
     splitAndKeepLeft,
     splitAndKeepRight,
     duplicateClip,
@@ -135,7 +137,7 @@ export function Timeline() {
   } = useTimelineStore()
 
   const { getFile } = useMediaStore()
-  const { pushState } = useHistoryStore()
+  const { pushState, runWithHistory } = useHistoryStore()
 
   const pixelsPerSecond = 50 * zoom
   const timelineWidth = duration * pixelsPerSecond
@@ -368,8 +370,7 @@ export function Timeline() {
       if (e.key === 's' && !e.ctrlKey && !e.metaKey && !e.shiftKey && selectedClipId) {
         const track = tracks.find((t) => t.clips.some((c) => c.id === selectedClipId))
         if (track && !track.locked) {
-          pushState()
-          splitClip(selectedClipId, currentTime)
+          runWithHistory(() => splitClip(selectedClipId, currentTime))
         }
       }
 
@@ -377,8 +378,7 @@ export function Timeline() {
       if (e.key === 'q' && !e.ctrlKey && !e.metaKey && !e.shiftKey && selectedClipId) {
         const track = tracks.find((t) => t.clips.some((c) => c.id === selectedClipId))
         if (track && !track.locked) {
-          pushState()
-          splitAndKeepLeft(selectedClipId, currentTime)
+          runWithHistory(() => splitAndKeepLeft(selectedClipId, currentTime))
         }
       }
 
@@ -386,8 +386,7 @@ export function Timeline() {
       if (e.key === 'w' && !e.ctrlKey && !e.metaKey && !e.shiftKey && selectedClipId) {
         const track = tracks.find((t) => t.clips.some((c) => c.id === selectedClipId))
         if (track && !track.locked) {
-          pushState()
-          splitAndKeepRight(selectedClipId, currentTime)
+          runWithHistory(() => splitAndKeepRight(selectedClipId, currentTime))
         }
       }
 
@@ -443,6 +442,7 @@ export function Timeline() {
     tracks,
     removeClip,
     pushState,
+    runWithHistory,
     splitClip,
     splitAndKeepLeft,
     splitAndKeepRight,
@@ -507,6 +507,17 @@ export function Timeline() {
 
   return (
     <div className="h-64 md:h-80 bg-surface border-t border-border flex flex-col">
+      {editError && (
+        <div
+          role="alert"
+          className="flex items-center gap-2 border-b border-border px-4 py-2 text-sm text-warning"
+        >
+          <span className="flex-1">{editError}</span>
+          <button type="button" onClick={clearEditError} aria-label="編集メッセージを閉じる">
+            ×
+          </button>
+        </div>
+      )}
       {/* Transport controls - Miller's Law: Grouped into logical chunks */}
       <ElevatedSurface asChild offset={1}>
         <div className="h-10 px-2 md:px-4 flex items-center justify-between border-b border-border">
@@ -679,8 +690,7 @@ export function Timeline() {
                           t.clips.some((c) => c.id === selectedClipId),
                         )
                         if (track && !track.locked) {
-                          pushState()
-                          splitClip(selectedClipId, currentTime)
+                          runWithHistory(() => splitClip(selectedClipId, currentTime))
                         }
                       }
                     }}

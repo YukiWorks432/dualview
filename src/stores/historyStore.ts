@@ -4,14 +4,16 @@
  */
 import { create } from 'zustand'
 
+import type { ClipKeyframes } from '../lib/keyframes'
 import { projectSession } from '../lib/projectSession'
 import type { TimelineTrack } from '../types'
+import { useKeyframeStore } from './keyframeStore'
 import { useTimelineStore } from './timelineStore'
 
 interface HistoryState {
   session: number
   tracks: TimelineTrack[]
-  duration: number
+  keyframes: Map<string, ClipKeyframes>
 }
 
 interface HistoryStore {
@@ -21,6 +23,7 @@ interface HistoryStore {
 
   // Actions
   pushState: () => void
+  runWithHistory: (action: () => void) => boolean
   undo: () => void
   redo: () => void
   canUndo: () => boolean
@@ -48,13 +51,37 @@ export const useHistoryStore = create<HistoryStore>((set, get) => ({
     const currentState: HistoryState = {
       session: projectSession.capture(),
       tracks: cloneTracks(timelineState.tracks),
-      duration: timelineState.duration,
+      keyframes: structuredClone(useKeyframeStore.getState().clipKeyframes),
     }
 
     set((state) => ({
       past: [...state.past.slice(-MAX_HISTORY + 1), currentState],
       future: [], // Clear future when new action is performed
     }))
+  },
+
+  runWithHistory: (action) => {
+    const before = useTimelineStore.getState().tracks
+    const beforeKeyframes = useKeyframeStore.getState().clipKeyframes
+    const session = projectSession.capture()
+    action()
+    if (
+      useTimelineStore.getState().tracks === before &&
+      useKeyframeStore.getState().clipKeyframes === beforeKeyframes
+    )
+      return false
+    set((state) => ({
+      past: [
+        ...state.past.slice(-MAX_HISTORY + 1),
+        {
+          session,
+          tracks: cloneTracks(before),
+          keyframes: structuredClone(beforeKeyframes),
+        },
+      ],
+      future: [],
+    }))
+    return true
   },
 
   undo: () => {
@@ -69,17 +96,18 @@ export const useHistoryStore = create<HistoryStore>((set, get) => ({
     const currentState: HistoryState = {
       session: projectSession.capture(),
       tracks: cloneTracks(timelineState.tracks),
-      duration: timelineState.duration,
+      keyframes: structuredClone(useKeyframeStore.getState().clipKeyframes),
     }
 
     const previousState = past[past.length - 1]
     const newPast = past.slice(0, -1)
 
     // Apply previous state to timeline
-    useTimelineStore.setState({
-      tracks: cloneTracks(previousState.tracks),
-      duration: previousState.duration,
+    useKeyframeStore.setState({
+      clipKeyframes: structuredClone(previousState.keyframes),
+      selectedKeyframeId: null,
     })
+    useTimelineStore.getState().restoreTracks(cloneTracks(previousState.tracks))
 
     set({
       past: newPast,
@@ -99,17 +127,18 @@ export const useHistoryStore = create<HistoryStore>((set, get) => ({
     const currentState: HistoryState = {
       session: projectSession.capture(),
       tracks: cloneTracks(timelineState.tracks),
-      duration: timelineState.duration,
+      keyframes: structuredClone(useKeyframeStore.getState().clipKeyframes),
     }
 
     const nextState = future[0]
     const newFuture = future.slice(1)
 
     // Apply next state to timeline
-    useTimelineStore.setState({
-      tracks: cloneTracks(nextState.tracks),
-      duration: nextState.duration,
+    useKeyframeStore.setState({
+      clipKeyframes: structuredClone(nextState.keyframes),
+      selectedKeyframeId: null,
     })
+    useTimelineStore.getState().restoreTracks(cloneTracks(nextState.tracks))
 
     set({
       past: [...get().past, currentState],

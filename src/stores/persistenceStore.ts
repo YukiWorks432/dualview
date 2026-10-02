@@ -259,6 +259,7 @@ function resetProjectSession(prepared?: PreparedProject): void {
         clipboardClipId: null,
       },
     )
+    useTimelineStore.getState().clearEditError()
     useKeyframeStore.setState({
       clipKeyframes: prepared?.keyframes ?? new Map(),
       selectedKeyframeId: null,

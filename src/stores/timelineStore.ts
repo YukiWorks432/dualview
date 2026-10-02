@@ -1,7 +1,10 @@
-import { create, type StoreApi, type UseBoundStore } from 'zustand'
+import { create, type StateCreator, type StoreApi, type UseBoundStore } from 'zustand'
 
+import { calculateTimelineDuration, sliceClip } from '../lib/media/timeline'
 import { generateId, snapTimeToFrame } from '../lib/utils'
 import type { TimelineTrack, TimelineClip, MediaType, TrackType } from '../types'
+import { useKeyframeStore } from './keyframeStore'
+import { useMediaStore } from './mediaStore'
 import { usePlaybackStore } from './playbackStore'
 
 // Track colors for visual distinction
@@ -11,20 +14,6 @@ const TRACK_COLORS: Record<TrackType, string> = {
   audio: '#60a5fa', // blue
   text: '#c084fc', // purple
   media: '#4ade80', // green
-}
-
-// Helper to calculate the maximum end time from all clips
-function calculateMaxDuration(tracks: TimelineTrack[]): number {
-  let maxEndTime = 0
-  for (const track of tracks) {
-    for (const clip of track.clips) {
-      if (clip.endTime > maxEndTime) {
-        maxEndTime = clip.endTime
-      }
-    }
-  }
-  // Return at least 1 second if no clips, otherwise the max end time
-  return maxEndTime > 0 ? maxEndTime : 1
 }
 
 interface LoopRegion {
@@ -96,7 +85,11 @@ interface TimelineStore {
   renameTrack: (id: string, name: string) => void
   reorderTracks: (fromIndex: number, toIndex: number) => void
 
+  editError: string | null
+  clearEditError: () => void
+
   // Clip operations
+  restoreTracks: (tracks: TimelineTrack[]) => void
   addClip: (trackId: string, mediaId: string, startTime: number, duration: number) => TimelineClip
   removeClip: (clipId: string) => void
   updateClip: (clipId: string, updates: Partial<TimelineClip>) => void
@@ -158,9 +151,52 @@ interface TimelineStore {
   getMarkerAtTime: (time: number) => TimelineMarker | undefined
 }
 
+const KEYFRAME_EDIT_ERROR =
+  'このクリップにはキーフレームが含まれています。時刻変換の仕様が未定義のため、分割・先頭トリム・右側だけ残す操作は現在利用できません。データは保持されています。'
+
+function hasClipKeyframes(clipId: string): boolean {
+  return (
+    useKeyframeStore
+      .getState()
+      .clipKeyframes.get(clipId)
+      ?.tracks.some((track) => track.keyframes.length > 0) ?? false
+  )
+}
+
+function cloneClipKeyframes(sourceId: string, targetId: string): void {
+  const state = useKeyframeStore.getState()
+  const source = state.clipKeyframes.get(sourceId)
+  if (!source) return
+  const copy = structuredClone(source)
+  copy.clipId = targetId
+  for (const track of copy.tracks) {
+    for (const keyframe of track.keyframes) keyframe.id = generateId()
+  }
+  useKeyframeStore.setState({ clipKeyframes: new Map(state.clipKeyframes).set(targetId, copy) })
+}
+
+function replaceEditedClip(
+  tracks: TimelineTrack[],
+  original: TimelineClip,
+  edited: TimelineClip,
+  ripple: boolean,
+): TimelineTrack[] {
+  const delta = edited.endTime - original.endTime
+  return tracks.map((track) => ({
+    ...track,
+    clips: track.clips.map((clip) => {
+      if (clip.id === original.id) return edited
+      if (ripple && track.id === original.trackId && clip.startTime >= original.endTime) {
+        return { ...clip, startTime: clip.startTime + delta, endTime: clip.endTime + delta }
+      }
+      return clip
+    }),
+  }))
+}
+
 type TimelineHook = UseBoundStore<StoreApi<TimelineStore>>
 
-export const useTimelineStore: TimelineHook = create<TimelineStore>((set, get) => ({
+const createTimelineState: StateCreator<TimelineStore> = (set, get) => ({
   tracks: [
     {
       id: 'track-a',
@@ -196,6 +232,8 @@ export const useTimelineStore: TimelineHook = create<TimelineStore>((set, get) =
   snapThreshold: 0.1, // 100ms snap threshold
   rippleEnabled: false,
   clipboardClipId: null,
+  editError: null,
+  clearEditError: () => set({ editError: null }),
 
   play: () => usePlaybackStore.getState().play(),
   pause: () => usePlaybackStore.getState().pause(),
@@ -236,6 +274,16 @@ export const useTimelineStore: TimelineHook = create<TimelineStore>((set, get) =
   setZoom: (zoom: number) => set({ zoom: Math.max(0.1, Math.min(10, zoom)) }),
   zoomIn: () => set((state) => ({ zoom: Math.min(10, state.zoom * 1.2) })),
   zoomOut: () => set((state) => ({ zoom: Math.max(0.1, state.zoom / 1.2) })),
+
+  restoreTracks: (tracks) => {
+    const mediaIds = new Set(useMediaStore.getState().files.map((file) => file.id))
+    set({
+      tracks: tracks.map((track) => ({
+        ...track,
+        clips: track.clips.filter((clip) => mediaIds.has(clip.mediaId)),
+      })),
+    })
+  },
 
   // Add new track
   addTrack: (type: TrackType, name?: string) => {
@@ -356,9 +404,7 @@ export const useTimelineStore: TimelineHook = create<TimelineStore>((set, get) =
       t.id === trackId ? { ...t, clips: [...t.clips, clip] } : t,
     )
 
-    // Recalculate duration based on all clips
-    const newDuration = calculateMaxDuration(updatedTracks)
-    set({ tracks: updatedTracks, duration: newDuration })
+    set({ tracks: updatedTracks })
 
     return clip
   },
@@ -402,23 +448,30 @@ export const useTimelineStore: TimelineHook = create<TimelineStore>((set, get) =
       return { ...t, clips }
     })
 
-    // Recalculate duration based on remaining clips
-    const newDuration = calculateMaxDuration(updatedTracks)
-
     set({
       tracks: updatedTracks,
       selectedClipId: state.selectedClipId === clipId ? null : state.selectedClipId,
-      duration: newDuration,
     })
   },
 
   updateClip: (clipId: string, updates: Partial<TimelineClip>) => {
-    set((state) => ({
-      tracks: state.tracks.map((t) => ({
-        ...t,
-        clips: t.clips.map((c) => (c.id === clipId ? { ...c, ...updates } : c)),
-      })),
-    }))
+    if (updates.speed !== undefined && (!Number.isFinite(updates.speed) || updates.speed <= 0))
+      return
+    const state = get()
+    const original = state.tracks.flatMap((track) => track.clips).find((clip) => clip.id === clipId)
+    if (!original) return
+    if (updates.mediaId !== undefined && !useMediaStore.getState().getFile(updates.mediaId)) return
+    const updated = { ...original, ...updates, id: original.id, trackId: original.trackId }
+    if (updates.speed !== undefined && updates.endTime === undefined) {
+      const sourceDuration = updated.outPoint - updated.inPoint
+      // 旧データの末尾静止区間は素材幅が0でも正の表示時間を持つ。
+      updated.endTime =
+        updated.startTime +
+        (sourceDuration > 0
+          ? sourceDuration / updated.speed!
+          : original.endTime - original.startTime)
+    }
+    set({ tracks: replaceEditedClip(state.tracks, original, updated, state.rippleEnabled) })
   },
 
   selectClip: (clipId: string | null) => {
@@ -429,6 +482,7 @@ export const useTimelineStore: TimelineHook = create<TimelineStore>((set, get) =
     const state = get()
     const { frameRate } = state
     let clip: TimelineClip | undefined
+    if (!state.tracks.some((track) => track.id === newTrackId)) return
 
     // Find and remove clip from current track
     const tracks = state.tracks.map((t) => {
@@ -453,101 +507,69 @@ export const useTimelineStore: TimelineHook = create<TimelineStore>((set, get) =
       t.id === newTrackId ? { ...t, clips: [...t.clips, clip!] } : t,
     )
 
-    // Recalculate duration based on all clips
-    const newDuration = calculateMaxDuration(updatedTracks)
-
-    set({ tracks: updatedTracks, duration: newDuration })
+    set({ tracks: updatedTracks })
   },
 
   trimClip: (clipId: string, side: 'start' | 'end', newTime: number) => {
     const state = get()
-    const { frameRate, rippleEnabled } = state
-    const minClipDuration = 1 / frameRate // Minimum one frame
-
-    // Find the clip and its track for ripple calculation
-    let originalClip: TimelineClip | undefined
-    let clipTrackId: string | undefined
-
-    for (const track of state.tracks) {
-      const clip = track.clips.find((c) => c.id === clipId)
-      if (clip) {
-        originalClip = clip
-        clipTrackId = track.id
-        break
-      }
+    if (!Number.isFinite(newTime)) return
+    const track = state.tracks.find((track) => track.clips.some((clip) => clip.id === clipId))
+    const original = track?.clips.find((clip) => clip.id === clipId)
+    if (!original || !track) return
+    const speed = original.speed || 1
+    const minDuration = 1 / state.frameRate
+    const media = useMediaStore.getState().getFile(original.mediaId)
+    const mediaEnd = media?.type === 'video' ? media.duration : undefined
+    const earliest =
+      original.startTime -
+      (original.reverse
+        ? ((mediaEnd ?? original.outPoint) - original.outPoint) / speed
+        : original.inPoint / speed)
+    const latest =
+      original.startTime +
+      (original.reverse
+        ? original.outPoint / speed
+        : ((mediaEnd ?? Infinity) - original.inPoint) / speed)
+    const snapped = snapTimeToFrame(newTime, state.frameRate)
+    const start =
+      side === 'start'
+        ? Math.max(0, earliest, Math.min(snapped, original.endTime - minDuration))
+        : original.startTime
+    // 既存の静止末尾を含む短縮は許可し、素材端は延長時だけ制限する。
+    const end =
+      side === 'end'
+        ? Math.min(
+            Math.max(original.endTime, latest),
+            Math.max(original.startTime + minDuration, snapped),
+          )
+        : original.endTime
+    if (end <= start || (start === original.startTime && end === original.endTime)) return
+    if (side === 'start' && hasClipKeyframes(clipId)) {
+      set({ editError: KEYFRAME_EDIT_ERROR })
+      return
     }
-
-    if (!originalClip) return
-
-    // Calculate trim delta first for ripple
-    let trimDelta = 0
-    const snappedTime = snapTimeToFrame(newTime, frameRate)
-
-    if (side === 'end') {
-      const constrainedNewTime = Math.max(originalClip.startTime + minClipDuration, snappedTime)
-      trimDelta = constrainedNewTime - originalClip.endTime
-    }
-
-    const updatedTracks = state.tracks.map((t) => ({
-      ...t,
-      clips: t.clips.map((c) => {
-        // TL-012: Ripple edit - shift subsequent clips when trimming end
-        if (
-          c.id !== clipId &&
-          rippleEnabled &&
-          t.id === clipTrackId &&
-          side === 'end' &&
-          c.startTime >= originalClip!.endTime
-        ) {
-          return {
-            ...c,
-            startTime: Math.max(0, c.startTime + trimDelta),
-            endTime: c.endTime + trimDelta,
-          }
-        }
-
-        if (c.id !== clipId) return c
-
-        if (side === 'start') {
-          // TL-002: Snap to frame boundary
-          const constrainedNewTime = Math.max(0, Math.min(snappedTime, c.endTime - minClipDuration))
-          const delta = constrainedNewTime - c.startTime
-          const newInPoint = c.inPoint + delta
-
-          // Don't allow inPoint to go negative or past outPoint
-          if (newInPoint < 0 || newInPoint >= c.outPoint) {
-            return c // Invalid trim, return unchanged
-          }
-
-          return {
-            ...c,
-            startTime: constrainedNewTime,
-            inPoint: newInPoint,
-          }
-        } else {
-          // TL-002: Snap to frame boundary
-          const constrainedNewTime = Math.max(c.startTime + minClipDuration, snappedTime)
-          const delta = constrainedNewTime - c.endTime
-          const newOutPoint = c.outPoint + delta
-
-          // Don't allow outPoint to go negative or before inPoint
-          if (newOutPoint <= c.inPoint) {
-            return c // Invalid trim, return unchanged
-          }
-
-          return {
-            ...c,
-            endTime: constrainedNewTime,
-            outPoint: newOutPoint,
-          }
-        }
-      }),
-    }))
-
-    // Recalculate duration based on all clips
-    const newDuration = calculateMaxDuration(updatedTracks)
-
-    set({ tracks: updatedTracks, duration: newDuration })
+    const trimmed = sliceClip(original, start, end)
+    const delta = end - original.endTime
+    set({
+      tracks: state.tracks.map((item) =>
+        item.id !== track.id
+          ? item
+          : {
+              ...item,
+              clips: item.clips.map((clip) => {
+                if (clip.id === clipId) return trimmed
+                if (state.rippleEnabled && side === 'end' && clip.startTime >= original.endTime) {
+                  return {
+                    ...clip,
+                    startTime: clip.startTime + delta,
+                    endTime: clip.endTime + delta,
+                  }
+                }
+                return clip
+              }),
+            },
+      ),
+    })
   },
 
   // TL-001: Split Clip at Playhead
@@ -569,40 +591,25 @@ export const useTimelineStore: TimelineHook = create<TimelineStore>((set, get) =
         return null // Can't split outside clip bounds
       }
 
-      // Calculate split position in media time
-      const relativeTime = snappedSplitTime - clip.startTime
-      const mediaSplitPoint = clip.inPoint + relativeTime
-
-      // Create second clip (after split)
-      newClip = {
-        id: generateId(),
-        mediaId: clip.mediaId,
-        trackId: track.id,
-        startTime: snappedSplitTime,
-        endTime: clip.endTime,
-        inPoint: mediaSplitPoint,
-        outPoint: clip.outPoint,
+      if (hasClipKeyframes(clipId)) {
+        set({ editError: KEYFRAME_EDIT_ERROR })
+        return null
       }
-
-      // Update first clip (before split) and add new clip
+      newClip = { ...sliceClip(clip, snappedSplitTime, clip.endTime), id: generateId() }
       set({
-        tracks: state.tracks.map((t) => {
-          if (t.id !== track.id) return t
-          return {
-            ...t,
-            clips: [
-              ...t.clips.map((c) => {
-                if (c.id !== clipId) return c
-                return {
-                  ...c,
-                  endTime: snappedSplitTime,
-                  outPoint: mediaSplitPoint,
-                }
-              }),
-              newClip!,
-            ],
-          }
-        }),
+        tracks: state.tracks.map((t) =>
+          t.id !== track.id
+            ? t
+            : {
+                ...t,
+                clips: [
+                  ...t.clips.map((c) =>
+                    c.id === clipId ? sliceClip(c, c.startTime, snappedSplitTime) : c,
+                  ),
+                  newClip!,
+                ],
+              },
+        ),
       })
 
       return newClip
@@ -614,94 +621,48 @@ export const useTimelineStore: TimelineHook = create<TimelineStore>((set, get) =
   // TL-001: Split and keep left (delete everything after split point)
   splitAndKeepLeft: (clipId: string, splitTime: number) => {
     const state = get()
-    const { frameRate } = state
-    const snappedSplitTime = snapTimeToFrame(splitTime, frameRate)
-
-    // Find the clip
-    for (const track of state.tracks) {
-      const clip = track.clips.find((c) => c.id === clipId)
-      if (!clip) continue
-
-      // Check if split time is within the clip
-      if (snappedSplitTime <= clip.startTime || snappedSplitTime >= clip.endTime) {
-        return // Can't split outside clip bounds
-      }
-
-      // Calculate new out point
-      const relativeTime = snappedSplitTime - clip.startTime
-      const newOutPoint = clip.inPoint + relativeTime
-
-      // Update clip to end at split point
-      set({
-        tracks: state.tracks.map((t) => {
-          if (t.id !== track.id) return t
-          return {
-            ...t,
-            clips: t.clips.map((c) => {
-              if (c.id !== clipId) return c
-              return {
-                ...c,
-                endTime: snappedSplitTime,
-                outPoint: newOutPoint,
-              }
-            }),
-          }
-        }),
-      })
-
-      return
-    }
+    const clip = state.tracks.flatMap((track) => track.clips).find((clip) => clip.id === clipId)
+    const time = snapTimeToFrame(splitTime, state.frameRate)
+    if (!clip || time <= clip.startTime || time >= clip.endTime) return
+    get().trimClip(clipId, 'end', time)
   },
 
   // TL-001: Split and keep right (delete everything before split point)
   splitAndKeepRight: (clipId: string, splitTime: number) => {
     const state = get()
-    const { frameRate, rippleEnabled } = state
-    const snappedSplitTime = snapTimeToFrame(splitTime, frameRate)
-
-    // Find the clip
-    for (const track of state.tracks) {
-      const clip = track.clips.find((c) => c.id === clipId)
-      if (!clip) continue
-
-      // Check if split time is within the clip
-      if (snappedSplitTime <= clip.startTime || snappedSplitTime >= clip.endTime) {
-        return // Can't split outside clip bounds
-      }
-
-      // Calculate new in point and duration change for ripple
-      const relativeTime = snappedSplitTime - clip.startTime
-      const newInPoint = clip.inPoint + relativeTime
-
-      // Update clip to start at split point
-      set({
-        tracks: state.tracks.map((t) => {
-          if (t.id !== track.id) return t
-          return {
-            ...t,
-            clips: t.clips.map((c) => {
-              if (c.id !== clipId) return c
-              // If ripple is enabled, keep the clip at its original start and shift the in point
-              if (rippleEnabled) {
-                return {
-                  ...c,
-                  endTime: c.endTime - relativeTime,
-                  inPoint: newInPoint,
-                }
-              }
-              // Otherwise, move the clip start to the split point
-              return {
-                ...c,
-                startTime: snappedSplitTime,
-                inPoint: newInPoint,
-              }
-            }),
-          }
-        }),
-      })
-
+    const time = snapTimeToFrame(splitTime, state.frameRate)
+    const track = state.tracks.find((track) => track.clips.some((clip) => clip.id === clipId))
+    const clip = track?.clips.find((clip) => clip.id === clipId)
+    if (!clip || !track || time <= clip.startTime || time >= clip.endTime) return
+    if (hasClipKeyframes(clipId)) {
+      set({ editError: KEYFRAME_EDIT_ERROR })
       return
     }
+    const kept = sliceClip(clip, time, clip.endTime)
+    const delta = time - clip.startTime
+    set({
+      tracks: state.tracks.map((item) =>
+        item.id !== track.id
+          ? item
+          : {
+              ...item,
+              clips: item.clips.map((other) => {
+                if (other.id === clipId)
+                  return state.rippleEnabled
+                    ? { ...kept, startTime: clip.startTime, endTime: kept.endTime - delta }
+                    : kept
+                if (state.rippleEnabled && other.startTime >= clip.endTime) {
+                  return {
+                    ...other,
+                    startTime: other.startTime - delta,
+                    endTime: other.endTime - delta,
+                  }
+                }
+                return other
+              }),
+            },
+      ),
+    })
   },
 
   // TL-002: Duplicate Clip
@@ -715,6 +676,7 @@ export const useTimelineStore: TimelineHook = create<TimelineStore>((set, get) =
 
       // Create duplicate immediately after the original
       newClip = {
+        ...clip,
         id: generateId(),
         mediaId: clip.mediaId,
         trackId: track.id,
@@ -724,6 +686,7 @@ export const useTimelineStore: TimelineHook = create<TimelineStore>((set, get) =
         outPoint: clip.outPoint,
       }
 
+      cloneClipKeyframes(clip.id, newClip.id)
       set({
         tracks: state.tracks.map((t) => {
           if (t.id !== track.id) return t
@@ -733,11 +696,6 @@ export const useTimelineStore: TimelineHook = create<TimelineStore>((set, get) =
           }
         }),
       })
-
-      // Extend duration if needed
-      if (newClip.endTime > state.duration) {
-        set({ duration: newClip.endTime })
-      }
 
       return newClip
     }
@@ -752,7 +710,8 @@ export const useTimelineStore: TimelineHook = create<TimelineStore>((set, get) =
 
   pasteClip: (trackId: string, time: number) => {
     const state = get()
-    if (!state.clipboardClipId) return null
+    if (!state.clipboardClipId || !state.tracks.some((track) => track.id === trackId)) return null
+    time = snapTimeToFrame(Math.max(0, time), state.frameRate)
 
     // Find the original clip
     for (const track of state.tracks) {
@@ -760,6 +719,7 @@ export const useTimelineStore: TimelineHook = create<TimelineStore>((set, get) =
       if (!clip) continue
 
       const newClip: TimelineClip = {
+        ...clip,
         id: generateId(),
         mediaId: clip.mediaId,
         trackId: trackId,
@@ -769,16 +729,13 @@ export const useTimelineStore: TimelineHook = create<TimelineStore>((set, get) =
         outPoint: clip.outPoint,
       }
 
+      cloneClipKeyframes(clip.id, newClip.id)
       set({
         tracks: state.tracks.map((t) => {
           if (t.id !== trackId) return t
           return { ...t, clips: [...t.clips, newClip] }
         }),
       })
-
-      if (newClip.endTime > state.duration) {
-        set({ duration: newClip.endTime })
-      }
 
       return newClip
     }
@@ -803,18 +760,15 @@ export const useTimelineStore: TimelineHook = create<TimelineStore>((set, get) =
       const clipDuration = clip.endTime - clip.startTime
       let pasteTime = usePlaybackStore.getState().currentTime
 
-      // Check for overlaps and nudge forward if needed
-      const overlappingClips = targetTrack.clips.filter(
-        (c) => c.id !== clip.id && c.startTime < pasteTime + clipDuration && c.endTime > pasteTime,
-      )
-
-      if (overlappingClips.length > 0) {
-        // Find the latest end time of overlapping clips
-        const latestEnd = Math.max(...overlappingClips.map((c) => c.endTime))
-        pasteTime = latestEnd
+      // 元クリップを含め、後続の重なりもなくなるまで貼り付け位置を進める。
+      for (const existing of [...targetTrack.clips].sort((a, b) => a.startTime - b.startTime)) {
+        if (existing.startTime < pasteTime + clipDuration && existing.endTime > pasteTime) {
+          pasteTime = existing.endTime
+        }
       }
 
       const newClip: TimelineClip = {
+        ...clip,
         id: generateId(),
         mediaId: clip.mediaId,
         trackId: targetTrack.id,
@@ -824,13 +778,13 @@ export const useTimelineStore: TimelineHook = create<TimelineStore>((set, get) =
         outPoint: clip.outPoint,
       }
 
+      cloneClipKeyframes(clip.id, newClip.id)
       const updatedTracks = state.tracks.map((t) => {
         if (t.id !== targetTrack.id) return t
         return { ...t, clips: [...t.clips, newClip] }
       })
 
-      const newDuration = calculateMaxDuration(updatedTracks)
-      set({ tracks: updatedTracks, duration: newDuration })
+      set({ tracks: updatedTracks })
 
       return newClip
     }
@@ -838,35 +792,27 @@ export const useTimelineStore: TimelineHook = create<TimelineStore>((set, get) =
     return null
   },
 
-  // Replace clip media keeping position and trim
+  // 開始位置とinPointを保ち、新素材の末尾まで使う。
   replaceClipMedia: (clipId: string, newMediaId: string, newDuration?: number) => {
     const state = get()
-
-    set({
-      tracks: state.tracks.map((track) => ({
-        ...track,
-        clips: track.clips.map((clip) => {
-          if (clip.id !== clipId) return clip
-
-          // Keep position, update media and optionally duration
-          if (newDuration !== undefined) {
-            const clipDuration = clip.endTime - clip.startTime
-            const scale = newDuration / (clip.outPoint - clip.inPoint)
-            return {
-              ...clip,
-              mediaId: newMediaId,
-              outPoint: newDuration,
-              endTime: clip.startTime + clipDuration * scale,
-            }
-          }
-
-          return {
-            ...clip,
-            mediaId: newMediaId,
-          }
-        }),
-      })),
-    })
+    const original = state.tracks.flatMap((track) => track.clips).find((clip) => clip.id === clipId)
+    const media = useMediaStore.getState().getFile(newMediaId)
+    if (!original || !media) return
+    const outPoint = newDuration ?? (media.type === 'video' ? media.duration : original.outPoint)
+    if (outPoint === undefined || !Number.isFinite(outPoint) || outPoint <= original.inPoint) {
+      set({
+        editError:
+          '差し替える素材がトリム開始位置より短いため、差し替えできません。元の素材と編集内容は保持されています。',
+      })
+      return
+    }
+    const edited = {
+      ...original,
+      mediaId: newMediaId,
+      outPoint,
+      endTime: original.startTime + (outPoint - original.inPoint) / (original.speed || 1),
+    }
+    set({ tracks: replaceEditedClip(state.tracks, original, edited, state.rippleEnabled) })
   },
 
   // Separate audio from video clip to new audio track
@@ -907,6 +853,7 @@ export const useTimelineStore: TimelineHook = create<TimelineStore>((set, get) =
 
     // Create new audio clip with same timing
     const newClip: TimelineClip = {
+      ...sourceClip,
       id: generateId(),
       mediaId: sourceClip.mediaId, // Same media, player will extract audio
       trackId: audioTrack.id,
@@ -932,6 +879,7 @@ export const useTimelineStore: TimelineHook = create<TimelineStore>((set, get) =
       updatedTracks = [...state.tracks, { ...audioTrack, clips: [newClip] }]
     }
 
+    cloneClipKeyframes(sourceClip.id, newClip.id)
     set({ tracks: updatedTracks })
 
     return newClip.id
@@ -1104,4 +1052,49 @@ export const useTimelineStore: TimelineHook = create<TimelineStore>((set, get) =
   getMarkerAtTime: (time: number) => {
     return get().markers.find((m) => Math.abs(m.time - time) < 0.1)
   },
-}))
+})
+
+export const useTimelineStore: TimelineHook = create<TimelineStore>((rawSet, get, api) => {
+  // 全編集経路で派生値と選択・コピー元の参照を同じ変更内に更新する。
+  const set: StoreApi<TimelineStore>['setState'] = (update) => {
+    const state = get()
+    const changes = typeof update === 'function' ? update(state) : update
+    if (!changes.tracks) {
+      rawSet(changes)
+      return
+    }
+    const next = { ...state, ...changes }
+    const ids = new Set(next.tracks.flatMap((track) => track.clips.map((clip) => clip.id)))
+    const duration = calculateTimelineDuration(next.tracks)
+    rawSet({
+      ...changes,
+      duration,
+      editError: null,
+      selectedClipId:
+        next.selectedClipId && ids.has(next.selectedClipId) ? next.selectedClipId : null,
+      selectedClipIds: next.selectedClipIds.filter((id) => ids.has(id)),
+      clipboardClipId:
+        next.clipboardClipId && ids.has(next.clipboardClipId) ? next.clipboardClipId : null,
+    })
+    const keyframes = useKeyframeStore.getState()
+    const retained = new Map([...keyframes.clipKeyframes].filter(([id]) => ids.has(id)))
+    if (retained.size !== keyframes.clipKeyframes.size) {
+      const selectedExists = [...retained.values()].some((clip) =>
+        clip.tracks.some((track) =>
+          track.keyframes.some((keyframe) => keyframe.id === keyframes.selectedKeyframeId),
+        ),
+      )
+      useKeyframeStore.setState({
+        clipKeyframes: retained,
+        selectedKeyframeId: selectedExists ? keyframes.selectedKeyframeId : null,
+      })
+    }
+    const playback = usePlaybackStore.getState()
+    if (duration < state.duration && playback.currentTime >= duration) {
+      playback.seek(
+        Math.max(0, (Math.ceil(duration * next.frameRate - 0.000001) - 1) / next.frameRate),
+      )
+    }
+  }
+  return createTimelineState(set, get, api)
+})

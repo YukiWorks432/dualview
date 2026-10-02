@@ -93,4 +93,26 @@ describe('native media follows the playback clock', () => {
     expect(video.play).not.toHaveBeenCalled()
     expect(video.dispatchEvent).not.toHaveBeenCalled()
   })
+
+  it('丸められた停止位置へ再シークし続けず、別の明示位置への移動は保つ', () => {
+    const video = makeVideo()
+    const requests: number[] = []
+    let position = 2
+    Object.defineProperty(video, 'currentTime', {
+      get: () => position,
+      set: (time: number) => {
+        requests.push(time)
+        // 実Chromiumで観測した、要求と約2µs違うシーク完了位置。
+        position = 2.032538
+      },
+    })
+    const untrimmed = { ...clip, startTime: 0, endTime: 4, inPoint: 0, outPoint: 4, speed: 1 }
+    const paused = { ...state, currentTime: 2.032539999999106 }
+    syncNativeClipPlayback(video, untrimmed, paused, true)
+    for (let count = 0; count < 20; count++) syncNativeClipPlayback(video, untrimmed, paused)
+    expect(requests).toEqual([2.032539999999106])
+    // 明示シークに10µsの完了許容差を流用しない。
+    syncNativeClipPlayback(video, untrimmed, { ...paused, currentTime: 2.032542 }, true)
+    expect(requests).toEqual([2.032539999999106, 2.032542])
+  })
 })

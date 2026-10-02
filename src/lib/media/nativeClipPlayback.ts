@@ -1,5 +1,8 @@
 import type { TimelineClip } from '../../types'
-import { VIDEO_FRAME_SEEK_REQUEST_EVENT } from './presentedVideoFrame'
+import {
+  NATIVE_SEEK_SETTLE_EPSILON_SECONDS,
+  VIDEO_FRAME_SEEK_REQUEST_EVENT,
+} from './presentedVideoFrame'
 import { calculateMediaTime } from './timeline'
 
 export interface ClipPlaybackState {
@@ -10,8 +13,13 @@ export interface ClipPlaybackState {
   isExporting: boolean
 }
 
-export function seekNativeVideoTo(video: HTMLVideoElement, targetTime: number): void {
-  if (!video.seeking && Math.abs(video.currentTime - targetTime) <= 0.000001) return
+export function seekNativeVideoTo(
+  video: HTMLVideoElement,
+  targetTime: number,
+  forceSeek = false,
+): void {
+  const tolerance = forceSeek ? 0.000001 : NATIVE_SEEK_SETTLE_EPSILON_SECONDS
+  if (!video.seeking && Math.abs(video.currentTime - targetTime) <= tolerance) return
   video.dispatchEvent(new CustomEvent(VIDEO_FRAME_SEEK_REQUEST_EVENT, { detail: { targetTime } }))
   video.currentTime = targetTime
 }
@@ -36,13 +44,13 @@ export function syncNativeClipPlayback(
   // instead, also covering positive rates outside the browser's supported range.
   if (!state.isPlaying || direction < 0 || rate < 0.0625 || rate > 16) {
     if (!video.paused) video.pause()
-    seekNativeVideoTo(video, mediaTime)
+    seekNativeVideoTo(video, mediaTime, forceSeek)
     return
   }
 
   const drift = Math.abs(video.currentTime - mediaTime)
   if (forceSeek || video.paused || drift > 0.15) {
-    seekNativeVideoTo(video, mediaTime)
+    seekNativeVideoTo(video, mediaTime, forceSeek)
     video.playbackRate = rate
   } else if (drift > 0.05) {
     video.playbackRate = Math.max(

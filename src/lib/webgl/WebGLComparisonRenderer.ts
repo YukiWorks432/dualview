@@ -423,6 +423,14 @@ export class WebGLComparisonRenderer {
     }
   }
 
+  /** 入力待ちや空白区間では前の解析表示を消す。 */
+  clear(): void {
+    const gl = this.gl
+    if (!gl) return
+    gl.clearColor(0, 0, 0, 1)
+    gl.clear(gl.COLOR_BUFFER_BIT)
+  }
+
   /**
    * Resize the renderer
    */
