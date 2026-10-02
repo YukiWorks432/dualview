@@ -43,6 +43,7 @@ async function seed(page: Page) {
       const media = await useMediaStore
         .getState()
         .addFile(new File([blob], `${color}.png`, { type: 'image/png' }))
+      if (!media) throw new Error('検証用画像の取込が取り消されました')
       const clip = useTimelineStore
         .getState()
         .addClip(index === 0 ? 'track-a' : 'track-b', media.id, 0, 10)
