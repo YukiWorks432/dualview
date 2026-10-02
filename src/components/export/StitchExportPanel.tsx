@@ -242,7 +242,7 @@ export function StitchExportPanel({
       )}
 
       <div className="flex justify-end gap-2 pt-4">
-        <Button variant="outline" onClick={onClose} disabled={isExporting}>
+        <Button variant="outline" onClick={onClose}>
           Cancel
         </Button>
         <Button onClick={onExport} disabled={isExporting || !canExport}>
