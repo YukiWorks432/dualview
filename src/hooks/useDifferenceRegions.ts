@@ -13,14 +13,9 @@ import type {
 } from '../lib/difference/workerProtocol'
 import {
   getVisualFrameDimensions,
-  isVisualFrameReady,
+  isPausedVisualFrameReady,
   type VisualFrameElement,
 } from '../lib/media/frameSource'
-import {
-  isPresentedVideoFrameCurrent,
-  type PresentedVideoFrame,
-} from '../lib/media/presentedVideoFrame'
-import { calculateMediaTime } from '../lib/media/timeline'
 import { useDifferenceHighlightStore } from '../stores/differenceHighlightStore'
 import { usePlaybackStore } from '../stores/playbackStore'
 import type { TimelineClip } from '../types'
@@ -80,75 +75,6 @@ function captureSource(
   context.clearRect(0, 0, width, height)
   context.drawImage(source, 0, 0, width, height)
   return context.getImageData(0, 0, width, height)
-}
-
-function isPausedSourceReady(
-  source: VisualFrameElement,
-  clip: TimelineClip,
-  timelineTime: number,
-): boolean {
-  const expectedMediaTime = calculateMediaTime(timelineTime, clip)
-  if (expectedMediaTime === null) return false
-
-  // A paused frame at the requested time is drawable once current data is
-  // available after the initial load or a completed seek, even if the browser
-  // never reports another video-frame callback. Keep this recovery tied to the
-  // current source, clip, and seek generation so it cannot validate a stale frame.
-  if (source instanceof HTMLVideoElement && source.dataset.frameReady !== 'true') {
-    const seekGeneration = source.dataset.frameSeekGeneration
-    const hasDrawablePausedFrame =
-      source.paused &&
-      !source.seeking &&
-      source.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA &&
-      Math.abs(source.currentTime - expectedMediaTime) <= 0.000001 &&
-      source.dataset.frameSourceMediaId === clip.mediaId &&
-      source.dataset.frameSourceClipId === clip.id &&
-      Number.isFinite(Number(seekGeneration)) &&
-      (source.dataset.frameInitialFrameGeneration === seekGeneration ||
-        source.dataset.frameSeekedGeneration === seekGeneration)
-
-    if (hasDrawablePausedFrame) return true
-  }
-
-  if (!isVisualFrameReady(source)) return false
-
-  if (source instanceof HTMLCanvasElement) {
-    const frameStart = Number(source.dataset.frameMediaTime)
-    const frameEnd = Number(source.dataset.frameMediaEndTime)
-    const requestedMediaTime = Number(source.dataset.frameRequestedMediaTime)
-    const seekGeneration = Number(source.dataset.frameSeekGeneration)
-    const presentedGeneration = Number(source.dataset.framePresentedGeneration)
-    return (
-      Number.isFinite(frameStart) &&
-      Number.isFinite(frameEnd) &&
-      Number.isFinite(requestedMediaTime) &&
-      Number.isFinite(seekGeneration) &&
-      presentedGeneration === seekGeneration &&
-      source.dataset.frameMediaId === clip.mediaId &&
-      source.dataset.frameClipId === clip.id &&
-      Math.abs(requestedMediaTime - expectedMediaTime) <= 0.000001 &&
-      expectedMediaTime >= frameStart - 0.000001
-    )
-  }
-
-  if (!(source instanceof HTMLVideoElement)) return true
-  if (source.seeking || !source.paused) return false
-
-  const presentedFrame: PresentedVideoFrame = {
-    mediaId: source.dataset.framePresentedMediaId ?? '',
-    clipId: source.dataset.framePresentedClipId ?? '',
-    mediaTime: Number(source.dataset.framePresentedMediaTime),
-    currentTime: Number(source.dataset.framePresentedCurrentTime),
-    seekGeneration: Number(source.dataset.framePresentedSeekGeneration),
-  }
-
-  return isPresentedVideoFrameCurrent(presentedFrame, {
-    mediaId: clip.mediaId,
-    clipId: clip.id,
-    mediaTime: expectedMediaTime,
-    currentTime: source.currentTime,
-    seekGeneration: Number(source.dataset.frameSeekGeneration),
-  })
 }
 
 function analyzeInWorker(
@@ -290,8 +216,8 @@ export function useDifferenceRegions({
     }
 
     if (
-      !isPausedSourceReady(sourceA, clipA, analysisTime) ||
-      !isPausedSourceReady(sourceB, clipB, analysisTime)
+      !isPausedVisualFrameReady(sourceA, clipA, analysisTime) ||
+      !isPausedVisualFrameReady(sourceB, clipB, analysisTime)
     ) {
       setRuntime({
         status: 'syncing',
