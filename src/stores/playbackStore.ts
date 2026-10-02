@@ -1,51 +1,43 @@
 /**
- * Playback Store (TL-001: OpenCut Pattern)
- *
- * Separate playback state management with:
- * - requestAnimationFrame for smooth time updates
- * - Delta time calculation for accuracy
- * - Custom events for sync (playback-seek, playback-update)
- * - Stop one frame before end to show final frame
- * - Effective duration from timeline content
+ * Owns the playback clock, transport and discontinuous seek notifications.
+ * Timeline playback fields are a read-only compatibility projection; commands
+ * always enter here, including commands initiated by timeline markers or edits.
  */
-import { create } from 'zustand'
+import { create, type StoreApi, type UseBoundStore } from 'zustand'
 
 import { useTimelineStore } from './timelineStore'
 
 interface PlaybackStore {
-  // State
   currentTime: number
   isPlaying: boolean
   playbackSpeed: number
+  playbackDirection: 1 | -1
+  isShuttling: boolean
+  seekRevision: number
   volume: number
   isMuted: boolean
   previousVolume: number
-  isExporting: boolean // Flag to disable sync hooks during export
-
-  // Internal
+  isExporting: boolean
   _animationFrameId: number | null
   _lastUpdateTime: number | null
 
-  // Actions
   play: () => void
   pause: () => void
   togglePlay: () => void
   seek: (time: number) => void
   setSpeed: (speed: number) => void
+  shuttleForward: () => void
+  shuttleBackward: () => void
+  shuttleStop: () => void
   setVolume: (volume: number) => void
   toggleMute: () => void
-  setExporting: (exporting: boolean) => void // Enable/disable export mode
-
-  // Frame-accurate operations
+  setExporting: (exporting: boolean) => void
   stepFrame: (direction: 1 | -1) => void
   getCurrentFrame: () => number
   snapTimeToFrame: (time: number) => number
-
-  // Getters
   getEffectiveDuration: () => number
 }
 
-// Custom event types
 declare global {
   interface WindowEventMap {
     'playback-seek': CustomEvent<{ time: number }>
@@ -54,93 +46,108 @@ declare global {
   }
 }
 
-export const usePlaybackStore = create<PlaybackStore>((set, get) => {
-  // Animation loop function
-  const updatePlayback = (now: number) => {
+type PlaybackHook = UseBoundStore<StoreApi<PlaybackStore>>
+
+export const usePlaybackStore: PlaybackHook = create<PlaybackStore>((set, get) => {
+  const publish = (update: Partial<PlaybackStore>) => {
+    set(update)
     const state = get()
+    useTimelineStore.setState({
+      currentTime: state.currentTime,
+      isPlaying: state.isPlaying,
+      playbackSpeed: state.playbackSpeed,
+      shuttleSpeed:
+        state.isPlaying && state.isShuttling ? state.playbackSpeed * state.playbackDirection : 0,
+    })
+  }
 
-    if (!state.isPlaying) {
-      set({ _animationFrameId: null, _lastUpdateTime: null })
-      return
-    }
+  const notifyUpdate = () => {
+    const { currentTime: time, isPlaying } = get()
+    window.dispatchEvent(new CustomEvent('playback-update', { detail: { time, isPlaying } }))
+  }
 
-    const lastUpdate = state._lastUpdateTime || now
-    const deltaSeconds = (now - lastUpdate) / 1000
+  const notifySeek = () => {
+    window.dispatchEvent(new CustomEvent('playback-seek', { detail: { time: get().currentTime } }))
+  }
 
-    // Get effective duration from timeline
-    const effectiveDuration = state.getEffectiveDuration()
-    const frameRate = useTimelineStore.getState().frameRate || 30
-    const frameOffset = 1 / frameRate
-
-    // Calculate new time with speed
-    let newTime = state.currentTime + deltaSeconds * state.playbackSpeed
-
-    // Handle loop region
-    const loopRegion = useTimelineStore.getState().loopRegion
-    let didLoop = false
-    if (loopRegion && loopRegion.inPoint < loopRegion.outPoint) {
-      if (newTime >= loopRegion.outPoint) {
-        newTime = loopRegion.inPoint
-        didLoop = true
-      }
-    } else {
-      // Stop one frame before end to show final frame (OpenCut pattern)
-      if (newTime >= effectiveDuration - frameOffset) {
-        newTime = effectiveDuration - frameOffset
-        set({
-          isPlaying: false,
-          currentTime: Math.max(0, newTime),
-          _animationFrameId: null,
-          _lastUpdateTime: null,
-        })
-
-        // Sync with timeline store
-        useTimelineStore.getState().pause()
-
-        // Dispatch update event
-        window.dispatchEvent(
-          new CustomEvent('playback-update', {
-            detail: { time: newTime, isPlaying: false },
-          }),
-        )
-
-        return
-      }
-    }
-
-    // Clamp time
-    newTime = Math.max(0, Math.min(newTime, effectiveDuration))
-
-    set({ currentTime: newTime, _lastUpdateTime: now })
-
-    // Sync currentTime with timeline store for components that use it
-    useTimelineStore.setState({ currentTime: newTime })
-
-    // Loop wraps are discontinuous seeks. Notify all media sync paths explicitly.
-    if (didLoop) {
-      window.dispatchEvent(
-        new CustomEvent('playback-seek', {
-          detail: { time: newTime },
-        }),
-      )
-    }
-
-    // Dispatch update event for video sync
-    window.dispatchEvent(
-      new CustomEvent('playback-update', {
-        detail: { time: newTime, isPlaying: true },
-      }),
+  const frameRate = () => useTimelineStore.getState().frameRate || 30
+  const lastFrameTime = () =>
+    Math.max(
+      0,
+      (Math.ceil(get().getEffectiveDuration() * frameRate() - 0.000001) - 1) / frameRate(),
     )
 
-    // Schedule next frame
-    const frameId = requestAnimationFrame(updatePlayback)
-    set({ _animationFrameId: frameId })
+  const activeLoop = () => {
+    const loop = useTimelineStore.getState().loopRegion
+    if (!loop) return null
+    const duration = get().getEffectiveDuration()
+    const inPoint = Math.max(0, Math.min(loop.inPoint, duration))
+    const outPoint = Math.max(0, Math.min(loop.outPoint, duration))
+    return inPoint < outPoint ? { inPoint, outPoint } : null
+  }
+
+  const advance = (now: number) => {
+    const state = get()
+    if (!state.isPlaying) return
+    const delta = Math.max(0, now - (state._lastUpdateTime ?? now)) / 1000
+    let time = state.currentTime + delta * state.playbackSpeed * state.playbackDirection
+    const loop = activeLoop()
+    let wrapped = false
+    let isPlaying = true
+
+    if (loop && loop.inPoint < loop.outPoint) {
+      if (
+        (state.playbackDirection > 0 && time >= loop.outPoint) ||
+        (state.playbackDirection < 0 && time < loop.inPoint)
+      ) {
+        const length = loop.outPoint - loop.inPoint
+        time = loop.inPoint + ((((time - loop.inPoint) % length) + length) % length)
+        wrapped = true
+      }
+    } else if (state.playbackDirection > 0 && time >= lastFrameTime()) {
+      time = lastFrameTime()
+      isPlaying = false
+    } else if (state.playbackDirection < 0 && time <= 0) {
+      time = 0
+      isPlaying = false
+    }
+
+    publish({
+      currentTime: Math.max(0, Math.min(time, state.getEffectiveDuration())),
+      isPlaying,
+      _lastUpdateTime: isPlaying ? now : null,
+      seekRevision: state.seekRevision + (wrapped ? 1 : 0),
+    })
+    if (wrapped) notifySeek()
+    notifyUpdate()
+  }
+
+  const updatePlayback = (now: number) => {
+    set({ _animationFrameId: null })
+    advance(now)
+    if (get().isPlaying) set({ _animationFrameId: requestAnimationFrame(updatePlayback) })
+  }
+
+  const shuttle = (direction: 1 | -1) => {
+    advance(performance.now())
+    const state = get()
+    const speed =
+      state.isPlaying && state.isShuttling && state.playbackDirection === direction
+        ? Math.min(8, state.playbackSpeed * 2)
+        : 1
+    publish({ playbackSpeed: speed, playbackDirection: direction, isShuttling: true })
+    window.dispatchEvent(new CustomEvent('playback-speed', { detail: { speed } }))
+    if (get().isPlaying) notifyUpdate()
+    else get().play()
   }
 
   return {
     currentTime: 0,
     isPlaying: false,
     playbackSpeed: 1,
+    playbackDirection: 1,
+    isShuttling: false,
+    seekRevision: 0,
     volume: 1,
     isMuted: false,
     previousVolume: 1,
@@ -150,198 +157,87 @@ export const usePlaybackStore = create<PlaybackStore>((set, get) => {
 
     play: () => {
       const state = get()
-      if (state.isPlaying) return
-
-      // If at or near the end, seek to beginning before playing
-      const effectiveDuration = state.getEffectiveDuration()
-      const frameRate = useTimelineStore.getState().frameRate || 30
-      const frameOffset = 1 / frameRate
-
-      if (state.currentTime >= effectiveDuration - frameOffset) {
-        // Seek to beginning
-        set({ currentTime: 0 })
-        useTimelineStore.setState({ currentTime: 0 })
-        window.dispatchEvent(
-          new CustomEvent('playback-seek', {
-            detail: { time: 0 },
-          }),
-        )
+      if (state.isPlaying || state.isExporting) return
+      const loop = activeLoop()
+      if (
+        loop &&
+        loop.inPoint < loop.outPoint &&
+        (state.currentTime < loop.inPoint || state.currentTime >= loop.outPoint)
+      ) {
+        state.seek(state.playbackDirection > 0 ? loop.inPoint : loop.outPoint - 1 / frameRate())
+      } else if (state.playbackDirection > 0 && state.currentTime >= lastFrameTime()) {
+        state.seek(0)
+      } else if (state.playbackDirection < 0 && state.currentTime <= 0) {
+        state.seek(lastFrameTime())
       }
-
-      set({ isPlaying: true, _lastUpdateTime: null })
-
-      // Sync with timeline store
-      useTimelineStore.getState().play()
-
-      // Start animation loop
-      const frameId = requestAnimationFrame(updatePlayback)
-      set({ _animationFrameId: frameId })
+      publish({ isPlaying: true, _lastUpdateTime: performance.now() })
+      notifyUpdate()
+      if (get()._animationFrameId === null) {
+        set({ _animationFrameId: requestAnimationFrame(updatePlayback) })
+      }
     },
 
     pause: () => {
+      advance(performance.now())
       const state = get()
-      if (!state.isPlaying) return
-
-      // Cancel animation frame
-      if (state._animationFrameId) {
-        cancelAnimationFrame(state._animationFrameId)
-      }
-
-      set({ isPlaying: false, _animationFrameId: null, _lastUpdateTime: null })
-
-      // Sync with timeline store
-      useTimelineStore.getState().pause()
-
-      // Dispatch update event
-      window.dispatchEvent(
-        new CustomEvent('playback-update', {
-          detail: { time: state.currentTime, isPlaying: false },
-        }),
-      )
+      if (state._animationFrameId !== null) cancelAnimationFrame(state._animationFrameId)
+      publish({ isPlaying: false, _animationFrameId: null, _lastUpdateTime: null })
+      notifyUpdate()
     },
 
-    togglePlay: () => {
+    togglePlay: () => (get().isPlaying ? get().pause() : get().play()),
+
+    seek: (time) => {
+      if (!Number.isFinite(time)) return
       const state = get()
-      if (state.isPlaying) {
-        state.pause()
-      } else {
-        state.play()
-      }
+      const currentTime = Math.max(0, Math.min(state.snapTimeToFrame(time), lastFrameTime()))
+      publish({
+        currentTime,
+        seekRevision: state.seekRevision + 1,
+        _lastUpdateTime: state.isPlaying ? performance.now() : null,
+      })
+      notifySeek()
     },
 
-    seek: (time: number) => {
-      const state = get()
-      const effectiveDuration = state.getEffectiveDuration()
-
-      // Snap to frame boundary
-      const snappedTime = state.snapTimeToFrame(Math.max(0, Math.min(time, effectiveDuration)))
-
-      set({ currentTime: snappedTime })
-
-      // Sync with timeline store
-      useTimelineStore.setState({ currentTime: snappedTime })
-
-      // Dispatch seek event for video sync
-      window.dispatchEvent(
-        new CustomEvent('playback-seek', {
-          detail: { time: snappedTime },
-        }),
-      )
+    setSpeed: (speed) => {
+      if (!Number.isFinite(speed)) return
+      advance(performance.now())
+      const clampedSpeed = Math.max(0.1, Math.min(8, speed))
+      publish({ playbackSpeed: clampedSpeed, playbackDirection: 1, isShuttling: false })
+      window.dispatchEvent(new CustomEvent('playback-speed', { detail: { speed: clampedSpeed } }))
+      notifyUpdate()
     },
 
-    setSpeed: (speed: number) => {
-      const clampedSpeed = Math.max(0.1, Math.min(4, speed))
-      set({ playbackSpeed: clampedSpeed })
-
-      // Sync with timeline store
-      useTimelineStore.setState({ playbackSpeed: clampedSpeed })
-
-      // Dispatch speed event
-      window.dispatchEvent(
-        new CustomEvent('playback-speed', {
-          detail: { speed: clampedSpeed },
-        }),
-      )
+    shuttleForward: () => shuttle(1),
+    shuttleBackward: () => shuttle(-1),
+    shuttleStop: () => {
+      get().pause()
+      get().setSpeed(1)
     },
 
-    setVolume: (volume: number) => {
+    setVolume: (volume) => {
       const clampedVolume = Math.max(0, Math.min(1, volume))
       set({ volume: clampedVolume, isMuted: clampedVolume === 0 })
     },
-
     toggleMute: () => {
       const state = get()
-      if (state.isMuted) {
-        set({ isMuted: false, volume: state.previousVolume || 1 })
-      } else {
-        set({ isMuted: true, previousVolume: state.volume, volume: 0 })
-      }
+      if (state.isMuted) set({ isMuted: false, volume: state.previousVolume || 1 })
+      else set({ isMuted: true, previousVolume: state.volume, volume: 0 })
     },
-
-    setExporting: (exporting: boolean) => {
-      set({ isExporting: exporting })
-      // When entering export mode, pause playback
-      if (exporting) {
-        const state = get()
-        if (state.isPlaying) {
-          state.pause()
-        }
-      }
+    setExporting: (isExporting) => {
+      if (isExporting) get().pause()
+      set({ isExporting })
     },
-
-    stepFrame: (direction: 1 | -1) => {
-      const state = get()
-      const frameRate = useTimelineStore.getState().frameRate || 30
-      const frameTime = 1 / frameRate
-      const effectiveDuration = state.getEffectiveDuration()
-
-      const newTime = state.snapTimeToFrame(
-        Math.max(0, Math.min(state.currentTime + direction * frameTime, effectiveDuration)),
-      )
-
-      set({ currentTime: newTime })
-
-      // Sync with timeline store
-      useTimelineStore.setState({ currentTime: newTime })
-
-      // Dispatch seek event
-      window.dispatchEvent(
-        new CustomEvent('playback-seek', {
-          detail: { time: newTime },
-        }),
-      )
-    },
-
-    getCurrentFrame: () => {
-      const state = get()
-      const frameRate = useTimelineStore.getState().frameRate || 30
-      return Math.floor(state.currentTime * frameRate)
-    },
-
-    snapTimeToFrame: (time: number) => {
-      const frameRate = useTimelineStore.getState().frameRate || 30
-      const frame = Math.round(time * frameRate)
-      return frame / frameRate
-    },
-
+    stepFrame: (direction) => get().seek(get().currentTime + direction / frameRate()),
+    getCurrentFrame: () => Math.floor(get().currentTime * frameRate() + 0.000001),
+    snapTimeToFrame: (time) => Math.round(time * frameRate()) / frameRate(),
     getEffectiveDuration: () => {
-      const timelineState = useTimelineStore.getState()
-
-      // Calculate actual content duration from clips
-      let maxEndTime = 0
-      for (const track of timelineState.tracks) {
-        for (const clip of track.clips) {
-          if (clip.endTime > maxEndTime) {
-            maxEndTime = clip.endTime
-          }
-        }
+      const timeline = useTimelineStore.getState()
+      let duration = timeline.duration
+      for (const track of timeline.tracks) {
+        for (const clip of track.clips) duration = Math.max(duration, clip.endTime)
       }
-
-      // Use timeline duration as minimum, but actual content duration if longer
-      return Math.max(timelineState.duration, maxEndTime, 1)
+      return duration > 0 ? duration : 1
     },
-  }
-})
-
-// Subscribe to timeline store changes to keep in sync
-useTimelineStore.subscribe((state, prevState) => {
-  // Sync currentTime if changed externally (e.g., by seek in timeline)
-  if (state.currentTime !== prevState.currentTime) {
-    const playbackState = usePlaybackStore.getState()
-    if (Math.abs(state.currentTime - playbackState.currentTime) > 0.01) {
-      usePlaybackStore.setState({ currentTime: state.currentTime })
-    }
-  }
-
-  // Sync isPlaying if changed externally
-  if (state.isPlaying !== prevState.isPlaying) {
-    const playbackState = usePlaybackStore.getState()
-    if (state.isPlaying !== playbackState.isPlaying) {
-      if (state.isPlaying) {
-        playbackState.play()
-      } else {
-        playbackState.pause()
-      }
-    }
   }
 })
