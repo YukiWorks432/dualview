@@ -369,6 +369,26 @@ describe('transactional project switching', () => {
     expect(JSON.parse(db.records.get('A')!.timelineState).tracks[0].clips[0].endTime).toBe(8)
   })
 
+  it('flushes a same-metadata File replacement made while the destination is decoding', async () => {
+    await openA()
+    storedProject('B')
+    let pendingImage: TestImage | undefined
+    imageControls.set('blob:B.png', (image) => {
+      pendingImage = image
+    })
+    const loading = persistence.getState().loadProject('B')
+    await vi.waitFor(() => expect(pendingImage).toBeDefined())
+    const replacement = new File(['replacement bytes'], 'A.png', { type: 'image/png' })
+    media.setState({
+      files: media.getState().files.map((file) => ({ ...file, file: replacement })),
+    })
+    expect(persistence.getState().saveStatus).toBe('unsaved')
+    pendingImage!.onload?.()
+    expect(await loading).toBe(true)
+    expect(await db.blobs.get('A')!.get('A-media-0')!.text()).toBe('replacement bytes')
+    expect(persistence.getState()).toMatchObject({ currentProjectId: 'B', saveStatus: 'saved' })
+  })
+
   it('retains edits and frees the prepared destination when the final outgoing flush fails', async () => {
     await openA()
     storedProject('B')

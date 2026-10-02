@@ -509,6 +509,12 @@ Toggle with `G` key.
 Local files added to DualView are processed in the browser and are not uploaded to the operator.
 Projects and media are saved in this browser so you can continue later.
 
+Auto-save includes all stored comparison, scope, export and timeline settings, project metadata,
+media replacements and keyframe edits. The indicator stays unsaved while newer edits are pending,
+shows saving during the latest write, and reports write failures. Playback position is included in
+the next save for restoration, but playback ticks, analysis progress, pointer information and
+selection changes alone do not schedule writes. The existing project file format is unchanged.
+
 Creating or opening a project first saves the outgoing edits. The current project stays available
 until the destination has been fully read and decoded; a save or load failure keeps your current
 edits and media, and the Projects dialog shows the error so you can retry. If several switches
