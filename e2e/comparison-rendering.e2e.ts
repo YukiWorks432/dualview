@@ -522,3 +522,66 @@ test('Heatmapの再利用バッファは透明度と素材交換を正しく反�
   await expectPixel(canvas, [0, 0, 0, 255], 0)
   expect((await counters(page)).canvases).toBe(initial.canvases)
 })
+
+test('フレーム通知APIがない環境でも比較プレビューを保ち、差分矩形の対応条件を維持する', async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(HTMLVideoElement.prototype, 'requestVideoFrameCallback', {
+      configurable: true,
+      value: undefined,
+    })
+    Object.defineProperty(HTMLVideoElement.prototype, 'cancelVideoFrameCallback', {
+      configurable: true,
+      value: undefined,
+    })
+  })
+  await measure(page)
+  await start(page)
+  await prepareVideos(page, false)
+  const split = await splitView(page)
+  await page.evaluate(async () => {
+    const { useProjectStore } = await import('/src/stores/projectStore.ts')
+    useProjectStore.getState().setWebGLComparisonSettings({ opacity: 0 })
+  })
+  for (const [time, expected] of [
+    [0.5, [255, 0, 0, 255]],
+    [2.5, [0, 0, 255, 255]],
+  ] as const) {
+    await seek(page, time)
+    await expectPixel(split.locator('video[data-track="a"]'), [...expected])
+    await expectPixel(split.locator('video[data-track="b"]'), [...expected])
+    await expectPixel(split.getByTestId('split-analysis'), [...expected])
+  }
+  await seek(page, 1.8)
+  await page.evaluate(async () => {
+    const { usePlaybackStore } = await import('/src/stores/playbackStore.ts')
+    usePlaybackStore.getState().play()
+  })
+  await expectPixel(split.getByTestId('split-analysis'), [0, 0, 255, 255])
+  await page.evaluate(async () => {
+    const { usePlaybackStore } = await import('/src/stores/playbackStore.ts')
+    usePlaybackStore.getState().pause()
+  })
+  await expectPixel(split.getByTestId('split-analysis'), [0, 0, 255, 255])
+  await page.getByTitle('Exit Split View').click()
+  await page.evaluate(async () => {
+    const { useProjectStore } = await import('/src/stores/projectStore.ts')
+    useProjectStore.getState().setComparisonMode('heatmap')
+  })
+  await expect(page.getByTestId('difference-heatmap')).toHaveAttribute('data-frame-ready', 'true')
+  await page.getByRole('button', { name: 'absolute', exact: true }).click()
+  await expectPixel(page.getByTestId('difference-heatmap'), [0, 0, 0, 255])
+  await page.keyboard.press('Digit1')
+  await expect
+    .poll(() =>
+      page.evaluate(async () => {
+        const { useDifferenceHighlightStore } =
+          await import('/src/stores/differenceHighlightStore.ts')
+        const state = useDifferenceHighlightStore.getState()
+        return { enabled: state.enabled, status: state.runtime.status }
+      }),
+    )
+    .toEqual({ enabled: true, status: 'unavailable' })
+  await expect(page.getByTestId('difference-regions-overlay')).toHaveCount(0)
+})

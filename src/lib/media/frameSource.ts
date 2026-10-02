@@ -53,6 +53,19 @@ export function isPausedVisualFrameReady(
   const expectedMediaTime = calculateMediaTime(timelineTime, clip)
   if (expectedMediaTime === null) return false
 
+  // 通知APIがないブラウザーのプレビューは、現在の素材・クリップ・時刻と
+  // 通常のシーク完了から判定する。差分矩形のAPI必須条件は利用側で維持する。
+  if (source instanceof HTMLVideoElement && source.dataset.framePresentedSupported === 'false') {
+    return (
+      isVisualFrameReady(source) &&
+      source.paused &&
+      !source.seeking &&
+      source.dataset.frameSourceMediaId === clip.mediaId &&
+      source.dataset.frameSourceClipId === clip.id &&
+      Math.abs(source.currentTime - expectedMediaTime) <= 0.000001
+    )
+  }
+
   // 新しいフレーム通知が来ない停止動画も、素材・クリップ・シーク世代と
   // デコード完了が一致する場合に限って採用する。
   if (source instanceof HTMLVideoElement && source.dataset.frameReady !== 'true') {

@@ -289,10 +289,23 @@ export const VideoSurface = forwardRef<VideoFrameElement, VideoSurfaceProps>(fun
       delete event.currentTarget.dataset.framePresentedClipId
       delete event.currentTarget.dataset.framePresentedSeekGeneration
     }
+    if (event.currentTarget.dataset.framePresentedSupported === 'false') {
+      onFrameReadyRef.current?.()
+    }
   }, [])
 
   const handleNativeFrameReady = useCallback((event: SyntheticEvent<HTMLVideoElement>) => {
-    if (!onFrameReadyRef.current) event.currentTarget.dataset.frameReady = 'true'
+    const video = event.currentTarget
+    if (!onFrameReadyRef.current) {
+      video.dataset.frameReady = 'true'
+    } else if (video.dataset.framePresentedSupported === 'false') {
+      // フレーム通知APIがない環境でも、通常の比較プレビューを更新する。
+      // 厳密な提示フレームが必要な差分矩形は、別途API非対応を判定する。
+      video.dataset.frameReady = String(
+        !video.seeking && video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA,
+      )
+      onFrameReadyRef.current()
+    }
   }, [])
 
   if (useMediabunny) {
