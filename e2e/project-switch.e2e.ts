@@ -9,6 +9,27 @@ async function openSavedProject(page: Page, name: string) {
   await expect(page.getByRole('dialog')).toHaveCount(0)
 }
 
+async function expectDecodedFixture(page: Page) {
+  const video = page.locator('video[data-track="a"]').first()
+  await expect(video).toBeVisible()
+  // Inspect the decoded fixture itself rather than the preview's frame-callback bookkeeping.
+  await expect
+    .poll(() =>
+      video.evaluate((element: HTMLVideoElement) => {
+        if (element.readyState < HTMLMediaElement.HAVE_CURRENT_DATA || element.seeking) return null
+        const canvas = document.createElement('canvas')
+        canvas.width = element.videoWidth
+        canvas.height = element.videoHeight
+        const context = canvas.getContext('2d')!
+        context.fillStyle = 'red'
+        context.fillRect(0, 0, canvas.width, canvas.height)
+        context.drawImage(element, 0, 0)
+        return [canvas.width, canvas.height, ...context.getImageData(32, 32, 1, 1).data]
+      }),
+    )
+    .toEqual([64, 64, 0, 0, 0, 255])
+}
+
 async function projectSnapshot(page: Page) {
   return page.evaluate(async () => {
     const { usePersistenceStore } = await import('/src/stores/persistenceStore.ts')
@@ -46,10 +67,7 @@ test('saves outgoing edits, reloads browser media and keeps Undo inside each pro
     await chooserReady
   ).setFiles(path.join(process.cwd(), 'e2e', 'fixtures', 'difference-a.webm'))
   await expect(page.locator('[data-clip]')).toHaveCount(1)
-  await expect(page.locator('video[data-track="a"]').first()).toHaveAttribute(
-    'data-frame-ready',
-    'true',
-  )
+  await expectDecodedFixture(page)
   const a = await projectSnapshot(page)
   expect(a.status).toBe('unsaved')
 
@@ -77,10 +95,7 @@ test('saves outgoing edits, reloads browser media and keeps Undo inside each pro
 
   await openSavedProject(page, 'Persistence A')
   await expect(page.locator('[data-clip]')).toHaveCount(1)
-  await expect(page.locator('video[data-track="a"]').first()).toHaveAttribute(
-    'data-frame-ready',
-    'true',
-  )
+  await expectDecodedFixture(page)
   expect((await projectSnapshot(page)).clips).toEqual(a.clips)
   expect((await projectSnapshot(page)).mediaIds).toEqual(a.mediaIds)
   await expect(page.getByRole('button', { name: 'Undo', exact: true })).toBeDisabled()
@@ -97,10 +112,7 @@ test('saves outgoing edits, reloads browser media and keeps Undo inside each pro
   await expect.poll(async () => (await projectSnapshot(page)).id).toBeTruthy()
   await openSavedProject(page, 'Persistence A')
   await expect(page.locator('[data-clip]')).toHaveCount(1)
-  await expect(page.locator('video[data-track="a"]').first()).toHaveAttribute(
-    'data-frame-ready',
-    'true',
-  )
+  await expectDecodedFixture(page)
   const reloaded = await projectSnapshot(page)
   expect(reloaded.id).toBe(a.id)
   expect(reloaded.clips).toEqual(a.clips)

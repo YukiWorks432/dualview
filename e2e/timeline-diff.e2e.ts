@@ -153,22 +153,24 @@ test('calibrates compression-only differences on the default thresholds', async 
     Number.parseFloat(canvas.parentElement?.style.width ?? '0'),
   )
   const frameCount = 45
-  const titles = await lane.evaluate(
-    async (canvas, { frameCount, laneWidth }) => {
-      const rect = canvas.getBoundingClientRect()
-      const sampledTitles: string[] = []
-      for (let index = 0; index < frameCount; index++) {
+  const titles: string[] = []
+  for (let index = 0; index < frameCount; index++) {
+    const previousTitle = await lane.getAttribute('title')
+    await lane.evaluate(
+      (canvas, { index, frameCount, laneWidth }) => {
+        const rect = canvas.getBoundingClientRect()
         const clientX = rect.left + (index + 0.5) * (laneWidth / frameCount)
         canvas.dispatchEvent(
           new MouseEvent('mousemove', { bubbles: true, clientX, clientY: rect.top + 16 }),
         )
-        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
-        sampledTitles.push(canvas.title)
-      }
-      return sampledTitles
-    },
-    { frameCount, laneWidth },
-  )
+      },
+      { index, frameCount, laneWidth },
+    )
+    // A browser animation frame does not guarantee that React has committed this hover result.
+    await expect(lane).not.toHaveAttribute('title', previousTitle!)
+    await expect(lane).toHaveAttribute('title', /Frame difference: [\d.]+%/)
+    titles.push((await lane.getAttribute('title'))!)
+  }
   expect(titles).toHaveLength(frameCount)
   const measuredRates = titles.map((title) => {
     const match = /Frame difference: ([\d.]+)%/.exec(title)
