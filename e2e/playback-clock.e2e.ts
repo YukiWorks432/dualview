@@ -3,9 +3,11 @@ import path from 'node:path'
 import { expect, test, type Page } from '@playwright/test'
 
 async function upload(page: Page, label: string, file: string) {
+  const previousClips = await page.locator('[data-clip]').count()
   const chooser = page.waitForEvent('filechooser')
   await page.getByText(label, { exact: true }).last().click()
   await (await chooser).setFiles(path.join(process.cwd(), 'e2e', 'fixtures', file))
+  await expect(page.locator('[data-clip]')).toHaveCount(previousClips + 1)
 }
 
 async function snapshot(page: Page) {
@@ -40,8 +42,33 @@ async function expectColor(page: Page, track: 'a' | 'b', color: 'red' | 'blue') 
   await expect
     .poll(
       () =>
-        source.evaluate((element: HTMLVideoElement | HTMLCanvasElement) => {
-          if (element.dataset.frameReady !== 'true') return null
+        source.evaluate(async (element: HTMLVideoElement | HTMLCanvasElement) => {
+          const { useTimelineStore } = await import('/src/stores/timelineStore.ts')
+          const { usePlaybackStore } = await import('/src/stores/playbackStore.ts')
+          const { calculateMediaTime, findActiveClip } = await import('/src/lib/media/timeline.ts')
+          const time = usePlaybackStore.getState().currentTime
+          const clips =
+            useTimelineStore.getState().tracks.find((track) => track.type === element.dataset.track)
+              ?.clips ?? []
+          const clip = findActiveClip(clips, time)
+          if (!clip) return null
+          const target = calculateMediaTime(time, clip)
+          if (target === null) return null
+          if (element instanceof HTMLVideoElement) {
+            // An initial decoded frame need not trigger another frame callback.
+            // Inspect real pixels only at this clip's current requested position.
+            if (
+              Math.abs(element.currentTime - target) > 0.000001 ||
+              element.dataset.frameSourceClipId !== clip.id
+            )
+              return null
+          } else if (
+            element.dataset.frameReady !== 'true' ||
+            Number(element.dataset.frameRequestedMediaTime) !== target ||
+            element.dataset.frameClipId !== clip.id ||
+            element.dataset.frameSeekGeneration !== element.dataset.framePresentedGeneration
+          )
+            return null
           if (element instanceof HTMLVideoElement && (element.seeking || element.readyState < 2))
             return null
           const canvas = document.createElement('canvas')
@@ -145,7 +172,8 @@ test('paused markers, rapid seeks, clip crossings and project reload present the
   await seek(page, 0.5)
   await expectColor(page, 'a', 'red')
   await expectColor(page, 'b', 'red')
-  await page.getByTitle(/^Blue frame -/).click()
+  await page.getByTitle(/^Blue frame -/).click({ position: { x: 5, y: 20 } })
+  expect((await snapshot(page)).time).toBe(2.5)
   await expectColor(page, 'a', 'blue')
   await expectColor(page, 'b', 'blue')
   await page.evaluate(async () => {
