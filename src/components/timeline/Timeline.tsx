@@ -1081,7 +1081,7 @@ export function Timeline() {
               {markers.map((marker) => (
                 <div
                   key={marker.id}
-                  className="absolute top-0 h-full group"
+                  className="absolute top-0 z-30 h-full group"
                   style={{ left: marker.time * pixelsPerSecond - 14 }}
                 >
                   <button

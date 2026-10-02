@@ -225,6 +225,25 @@ test('paused markers, rapid seeks, clip crossings and project reload present the
   await page.getByRole('button', { name: 'Remove marker Blue frame', exact: true }).click()
   await expect(marker).toHaveCount(0)
   expect((await snapshot(page)).time).toBe(2.5)
+  await page.evaluate(async () => {
+    const { useTimelineStore } = await import('/src/stores/timelineStore.ts')
+    useTimelineStore.getState().addMarker('Keyboard frame')
+  })
+  await seek(page, 0.5)
+  const keyboardMarker = page.getByRole('button', {
+    name: 'Jump to marker Keyboard frame',
+    exact: true,
+  })
+  await keyboardMarker.focus()
+  await page.keyboard.press('Enter')
+  expect((await snapshot(page)).time).toBe(2.5)
+  await page.keyboard.press('Tab')
+  await expect(
+    page.getByRole('button', { name: 'Remove marker Keyboard frame', exact: true }),
+  ).toBeFocused()
+  await page.keyboard.press('Enter')
+  await expect(keyboardMarker).toHaveCount(0)
+  expect((await snapshot(page)).time).toBe(2.5)
 })
 
 test('embedded audio keeps clip placement, trims and speed, and stops during reverse shuttle', async ({
