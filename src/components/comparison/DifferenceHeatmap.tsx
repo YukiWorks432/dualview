@@ -237,7 +237,7 @@ export function DifferenceHeatmap() {
       {/* Hidden visual surfaces for canvas drawing */}
       {mediaA && (
         <VisualSurface
-          key={mediaA.id}
+          key={`a:${mediaA.id}`}
           ref={mediaARef}
           media={mediaA}
           clip={displayClipA}
@@ -249,7 +249,7 @@ export function DifferenceHeatmap() {
       )}
       {mediaB && (
         <VisualSurface
-          key={mediaB.id}
+          key={`b:${mediaB.id}`}
           ref={mediaBRef}
           media={mediaB}
           clip={displayClipB}

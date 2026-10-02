@@ -227,6 +227,8 @@ test('Heatmapはサイズ・設定変更後も描画予約を一つに保ち、�
   })
   const canvas = page.getByTestId('difference-heatmap')
   await expectPixel(canvas, [0, 0, 255, 255], 0)
+  const initial = await counters(page)
+  expect(initial.allocatedCanvases).toBe(2)
   await page.evaluate(async () => {
     const { usePlaybackStore } = await import('/src/stores/playbackStore.ts')
     usePlaybackStore.getState().play()
@@ -248,7 +250,8 @@ test('Heatmapはサイズ・設定変更後も描画予約を一つに保ち、�
   expect(after.heatmap.callbacks).toBe(before.heatmap.callbacks)
   expect(after.heatmap.pending).toBe(0)
   expect(after.heatmap.peak).toBeLessThanOrEqual(1)
-  expect(after.canvases).toBe(2)
+  expect(after.canvases).toBe(initial.canvases)
+  expect(after.allocatedCanvases).toBe(2)
   expect(after.outputs).toBe(before.outputs)
   await expectPixel(canvas, [0, 0, 255, 255], 0)
   await testInfo.attach('heatmap-paused', {
@@ -262,7 +265,7 @@ test('Heatmapはサイズ・設定変更後も描画予約を一つに保ち、�
   await expect
     .poll(async () => (await counters(page)).heatmap.callbacks)
     .toBeGreaterThan(after.heatmap.callbacks)
-  expect((await counters(page)).canvases).toBe(2)
+  expect((await counters(page)).canvases).toBe(initial.canvases)
   await page.keyboard.press('Digit1')
   await page.waitForTimeout(200)
   const closed = await counters(page)
@@ -390,10 +393,17 @@ test('Split Viewは通常動画とProResのトリム・速度・逆再生・ク�
   })
   await page.evaluate(async () => {
     const { usePlaybackStore } = await import('/src/stores/playbackStore.ts')
-    for (const time of [1.1, 0.2, 1.1, 0.3, 1.1]) usePlaybackStore.getState().seek(time)
+    for (const time of [0.3, 1.1, 0.2, 1.2, 1.1]) usePlaybackStore.getState().seek(time)
   })
   await expectPixel(a, [0, 0, 255, 255])
   await expectPixel(b, [255, 0, 0, 255])
+  await expectPixel(analysis, [255, 0, 255, 255])
+  await page.evaluate(async () => {
+    const { usePlaybackStore } = await import('/src/stores/playbackStore.ts')
+    for (const time of [1.2, 0.3, 1.1, 0.4, 0.3]) usePlaybackStore.getState().seek(time)
+  })
+  await expectPixel(a, [255, 0, 0, 255])
+  await expectPixel(b, [0, 0, 255, 255])
   await expectPixel(analysis, [255, 0, 255, 255])
   await seek(page, 1.75)
   await expect(analysis).toHaveAttribute('data-frame-ready', 'false')
@@ -487,6 +497,8 @@ test('Heatmapの再利用バッファは透明度と素材交換を正しく反�
   await page.getByRole('button', { name: 'absolute', exact: true }).click()
   const canvas = page.getByTestId('difference-heatmap')
   await expectPixel(canvas, [32, 32, 32, 255], 0)
+  const initial = await counters(page)
+  expect(initial.allocatedCanvases).toBe(2)
   // 同じ半透明入力を何度描いても濃くならない。
   for (const width of [850, 920, 880, 900]) {
     await page.setViewportSize({ width, height: 650 })
@@ -508,5 +520,5 @@ test('Heatmapの再利用バッファは透明度と素材交換を正しく反�
     })
   })
   await expectPixel(canvas, [0, 0, 0, 255], 0)
-  expect((await counters(page)).canvases).toBe(2)
+  expect((await counters(page)).canvases).toBe(initial.canvases)
 })

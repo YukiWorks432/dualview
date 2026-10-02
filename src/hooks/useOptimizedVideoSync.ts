@@ -41,8 +41,21 @@ export function useOptimizedClipSync(
     video.preload = 'auto'
     video.disableRemotePlayback = true
 
-    const sync = (forceSeek = false) =>
-      syncNativeClipPlayback(video, clip, usePlaybackStore.getState(), forceSeek)
+    let forceSeekPending = false
+    const sync = (forceSeek = false) => {
+      const state = usePlaybackStore.getState()
+      if (state.isExporting) return
+      forceSeekPending ||= forceSeek
+      // デコード途中のシークを連続して中断しない。完了通知で共有時計の
+      // 最新値だけを反映し、その間の古い要求は保持しない。
+      if (video.seeking) {
+        if (!state.isPlaying && !video.paused) video.pause()
+        return
+      }
+      const shouldForceSeek = forceSeekPending
+      forceSeekPending = false
+      syncNativeClipPlayback(video, clip, state, shouldForceSeek)
+    }
     const unsubscribe = usePlaybackStore.subscribe((state, previous) => {
       if (
         state.currentTime !== previous.currentTime ||
@@ -55,7 +68,9 @@ export function useOptimizedClipSync(
         sync(state.seekRevision !== previous.seekRevision)
     })
     const handleLoaded = () => sync(true)
+    const handleSeeked = () => sync()
     video.addEventListener('loadeddata', handleLoaded)
+    video.addEventListener('seeked', handleSeeked)
     sync(true)
 
     let frameId: number | null = null
@@ -73,6 +88,7 @@ export function useOptimizedClipSync(
     return () => {
       unsubscribe()
       video.removeEventListener('loadeddata', handleLoaded)
+      video.removeEventListener('seeked', handleSeeked)
       if (frameId !== null) video.cancelVideoFrameCallback(frameId)
       if (intervalId !== null) clearInterval(intervalId)
       video.pause()
