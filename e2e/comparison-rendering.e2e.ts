@@ -2,6 +2,10 @@ import { expect, test, type Locator, type Page } from '@playwright/test'
 
 declare global {
   interface Window {
+    __latePresentedFrames: {
+      enabled: boolean
+      injected: { mediaId: string; oldMediaTime: number; newMediaTime: number }[]
+    }
     __comparisonCounters: {
       heatmap: { callbacks: number; pending: Set<number>; peak: number }
       split: { callbacks: number; pending: Set<number>; peak: number }
@@ -385,6 +389,69 @@ test('Split Viewは通常動画の左右と解析に同じ停止フレームを�
   await seek(page, 0.5)
   await expectPixel(split.locator('video[data-track="a"]'), [255, 0, 0, 255])
   await expectPixel(split.getByTestId('split-analysis'), [0, 0, 0, 255])
+})
+
+test('再表示後に旧PTS通知が一度届いても、新しい通知なしで現在の停止画素へ復旧する', async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const state: Window['__latePresentedFrames'] = { enabled: false, injected: [] }
+    window.__latePresentedFrames = state
+    const previousFrames = new Map<string, VideoFrameCallbackMetadata>()
+    const injectedFrames = new WeakMap<HTMLVideoElement, number>()
+    const request = HTMLVideoElement.prototype.requestVideoFrameCallback
+    HTMLVideoElement.prototype.requestVideoFrameCallback = function (callback) {
+      return request.call(this, (now, metadata) => {
+        const mediaId = this.dataset.frameSourceMediaId ?? ''
+        const visible = this.getBoundingClientRect().width > 0
+        if (!state.enabled) {
+          if (visible && metadata.mediaTime >= 2) previousFrames.set(mediaId, metadata)
+          callback(now, metadata)
+          return
+        }
+        const previous = previousFrames.get(mediaId)
+        if (!visible || !previous || this.currentTime > 0.51) {
+          callback(now, metadata)
+          return
+        }
+        let injectedFrame = injectedFrames.get(this)
+        if (injectedFrame === undefined) {
+          injectedFrame = metadata.presentedFrames
+          injectedFrames.set(this, injectedFrame)
+          state.injected.push({
+            mediaId,
+            oldMediaTime: previous.mediaTime,
+            newMediaTime: metadata.mediaTime,
+          })
+        }
+        // 一つの提示フレームに登録された各監視へ、実際に採取した旧通知を遅配する。
+        // その後の正しい通知は渡さず、停止中に次の通知が来ない順序を固定する。
+        if (metadata.presentedFrames === injectedFrame) callback(now, previous)
+      })
+    }
+  })
+  await start(page)
+  await prepareVideos(page, false)
+  const split = await splitView(page)
+  await page.evaluate(async () => {
+    const { useProjectStore } = await import('/src/stores/projectStore.ts')
+    useProjectStore.getState().setWebGLComparisonSettings({ opacity: 0 })
+  })
+  await seek(page, 2.5)
+  await expectPixel(split.getByTestId('split-analysis'), [0, 0, 255, 255])
+  await page.getByTitle('Exit Split View').click()
+  await page.evaluate(() => {
+    window.__latePresentedFrames.enabled = true
+  })
+  await page.getByTitle('Split View: A | Analysis | B (WEBGL-011)').click()
+  await seek(page, 0.5)
+  await expect.poll(() => page.evaluate(() => window.__latePresentedFrames.injected.length)).toBe(2)
+  await expectPixel(split.locator('video[data-track="a"]'), [255, 0, 0, 255])
+  await expectPixel(split.locator('video[data-track="b"]'), [255, 0, 0, 255])
+  console.log('DELAYED_PRESENTED_FRAMES', await page.evaluate(() => window.__latePresentedFrames))
+  await expectPixel(split.getByTestId('split-analysis'), [255, 0, 0, 255])
+  await page.waitForTimeout(200)
+  await expectPixel(split.getByTestId('split-analysis'), [255, 0, 0, 255])
 })
 
 test('Split Viewは通常動画とProResのトリム・速度・逆再生・クリップ境界を実画素で合わせる', async ({
