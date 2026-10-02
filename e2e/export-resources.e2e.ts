@@ -102,7 +102,7 @@ async function waitForSurface(page: Page, track: 'A' | 'B', presented = true) {
     .poll(
       () =>
         page.evaluate(
-          (track) => {
+          ({ track, presented }) => {
             const sources = document.querySelectorAll(
               `video[data-track="${track.toLowerCase()}"], img[data-track="${track.toLowerCase()}"], canvas[data-track="${track.toLowerCase()}"]`,
             )
