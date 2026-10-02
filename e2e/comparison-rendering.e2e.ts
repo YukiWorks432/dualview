@@ -143,6 +143,7 @@ async function prepareVideos(page: Page, prores: boolean) {
           type: extension === 'mov' ? 'video/quicktime' : 'video/webm',
         }),
       )
+      if (!file) throw new Error('検証用動画の取込が取り消されました')
       useTimelineStore.getState().addClip(`track-${side}`, file.id, 0, file.duration!)
     }
   }, prores)
@@ -262,6 +263,7 @@ test('Heatmapはサイズ・設定変更後も描画予約を一つに保ち、�
       const media = await useMediaStore
         .getState()
         .addFile(new File([blob], `${side}.png`, { type: 'image/png' }))
+      if (!media) throw new Error('検証用画像の取込が取り消されました')
       useTimelineStore.getState().addClip(`track-${side}`, media.id, 0, 30)
     }
     useProjectStore.getState().setComparisonMode('heatmap')
@@ -531,6 +533,7 @@ test('Heatmapの再利用バッファは透明度と素材交換を正しく反�
       const media = await useMediaStore
         .getState()
         .addFile(new File([blob], `${side}.png`, { type: 'image/png' }))
+      if (!media) throw new Error('検証用画像の取込が取り消されました')
       useTimelineStore.getState().addClip(`track-${side}`, media.id, 0, 10)
     }
     useProjectStore.getState().setComparisonMode('heatmap')

@@ -17,38 +17,34 @@ export interface FilmstripData {
   frameInterval: number // Seconds between frames
 }
 
-// Cache for extracted filmstrips with LRU eviction
-const filmstripCache = new Map<string, FilmstripData>()
-const MAX_CACHE_SIZE = 50 // Maximum number of filmstrips to cache
-
-// Pending extractions to avoid duplicate work
-const pendingExtractions = new Map<string, Promise<FilmstripData | null>>()
-
-/**
- * Add to cache with LRU eviction
- */
-function addToCache(mediaId: string, data: FilmstripData): void {
-  // If cache is full, evict oldest entry (first in Map)
-  if (filmstripCache.size >= MAX_CACHE_SIZE) {
-    const firstKey = filmstripCache.keys().next().value
-    if (firstKey) {
-      filmstripCache.delete(firstKey)
-    }
-  }
-  filmstripCache.set(mediaId, data)
+interface Extraction {
+  mediaId: string
+  controller: AbortController
+  promise: Promise<FilmstripData | null>
+  result?: FilmstripData | null
 }
 
-/**
- * Get from cache and move to end (most recently used)
- */
-function getFromCache(mediaId: string): FilmstripData | undefined {
-  const data = filmstripCache.get(mediaId)
-  if (data) {
-    // Move to end for LRU
-    filmstripCache.delete(mediaId)
-    filmstripCache.set(mediaId, data)
+// 表示の再描画から独立した要求。失敗も完了として保持し、無限再試行を避ける。
+const extractions = new Map<string, Extraction>()
+const MAX_CACHE_SIZE = 50
+const fileIds = new WeakMap<File, number>()
+let nextFileId = 0
+
+function fileIdentity(file?: File): number {
+  if (!file) return 0
+  let id = fileIds.get(file)
+  if (id === undefined) {
+    id = ++nextFileId
+    fileIds.set(file, id)
   }
-  return data
+  return id
+}
+
+function trimCompletedCache(): void {
+  const completed = [...extractions].filter(([, entry]) => entry.result !== undefined)
+  for (const [key] of completed.slice(0, Math.max(0, completed.length - MAX_CACHE_SIZE))) {
+    extractions.delete(key)
+  }
 }
 
 /**
@@ -71,39 +67,46 @@ const DEFAULT_CONFIG: Required<FilmstripConfig> = {
 /**
  * Extract filmstrip frames from a video
  */
-export async function extractFilmstrip(
+export function extractFilmstrip(
   mediaId: string,
   videoUrl: string,
   duration: number,
   config: FilmstripConfig = {},
+  file?: File,
 ): Promise<FilmstripData | null> {
-  // Check cache first (uses LRU access)
-  const cached = getFromCache(mediaId)
-  if (cached) {
-    return cached
+  const cfg = {
+    frameInterval: config.frameInterval ?? DEFAULT_CONFIG.frameInterval,
+    thumbnailWidth: config.thumbnailWidth ?? DEFAULT_CONFIG.thumbnailWidth,
+    thumbnailHeight: config.thumbnailHeight ?? DEFAULT_CONFIG.thumbnailHeight,
+    maxFrames: config.maxFrames ?? DEFAULT_CONFIG.maxFrames,
+  }
+  const key = JSON.stringify([mediaId, fileIdentity(file), videoUrl, duration, cfg])
+  const existing = extractions.get(key)
+  if (existing) {
+    extractions.delete(key)
+    extractions.set(key, existing)
+    return existing.promise
   }
 
-  // Check if extraction is already pending
-  if (pendingExtractions.has(mediaId)) {
-    return pendingExtractions.get(mediaId)!
+  const controller = new AbortController()
+  const entry: Extraction = {
+    mediaId,
+    controller,
+    promise: Promise.resolve(null),
   }
-
-  // Merge with defaults
-  const cfg = { ...DEFAULT_CONFIG, ...config }
-
-  // Create extraction promise
-  const extractionPromise = performExtraction(mediaId, videoUrl, duration, cfg)
-  pendingExtractions.set(mediaId, extractionPromise)
-
-  try {
-    const result = await extractionPromise
-    if (result) {
-      addToCache(mediaId, result)
-    }
-    return result
-  } finally {
-    pendingExtractions.delete(mediaId)
-  }
+  extractions.set(key, entry)
+  entry.promise = performExtraction(mediaId, videoUrl, duration, cfg, controller.signal)
+    .catch((error) => {
+      console.warn('Failed to extract filmstrip:', error)
+      return null
+    })
+    .then((result) => {
+      if (controller.signal.aborted || extractions.get(key) !== entry) return null
+      entry.result = result
+      trimCompletedCache()
+      return result
+    })
+  return entry.promise
 }
 
 /**
@@ -114,17 +117,19 @@ async function performExtraction(
   videoUrl: string,
   duration: number,
   config: Required<FilmstripConfig>,
+  signal: AbortSignal,
 ): Promise<FilmstripData | null> {
   return new Promise((resolve) => {
     const video = document.createElement('video')
     video.crossOrigin = 'anonymous'
     video.preload = 'metadata'
     video.muted = true
-    video.src = videoUrl
 
     const frames: FilmstripFrame[] = []
     let currentFrame = 0
     let isResolved = false
+    let idleId: number | null = null
+    let nextFrameTimeout: ReturnType<typeof setTimeout> | null = null
     let timeoutId: ReturnType<typeof setTimeout> | null = null
 
     // Cleanup function to properly release resources
@@ -132,7 +137,10 @@ async function performExtraction(
       video.removeEventListener('loadedmetadata', handleLoadedMetadata)
       video.removeEventListener('seeked', handleSeeked)
       video.removeEventListener('error', handleError)
-      video.src = ''
+      signal.removeEventListener('abort', handleAbort)
+      if (idleId !== null) window.cancelIdleCallback(idleId)
+      if (nextFrameTimeout !== null) clearTimeout(nextFrameTimeout)
+      video.removeAttribute('src')
       video.load() // Force release
       if (timeoutId) {
         clearTimeout(timeoutId)
@@ -146,6 +154,8 @@ async function performExtraction(
       cleanup()
       resolve(result)
     }
+
+    const handleAbort = () => resolveOnce(null)
 
     // Calculate frame times
     const frameCount = Math.min(Math.ceil(duration / config.frameInterval), config.maxFrames)
@@ -196,13 +206,9 @@ async function performExtraction(
 
         // Use requestIdleCallback for next frame if available, otherwise setTimeout
         if ('requestIdleCallback' in window) {
-          ;(
-            window as Window & {
-              requestIdleCallback: (cb: () => void, options?: { timeout: number }) => number
-            }
-          ).requestIdleCallback(captureFrame, { timeout: 100 })
+          idleId = window.requestIdleCallback(captureFrame, { timeout: 100 })
         } else {
-          setTimeout(captureFrame, 10)
+          nextFrameTimeout = setTimeout(captureFrame, 10)
         }
       } catch (error) {
         console.warn('Failed to capture frame:', error)
@@ -237,6 +243,11 @@ async function performExtraction(
 
     video.addEventListener('loadedmetadata', handleLoadedMetadata)
     video.addEventListener('error', handleError)
+    signal.addEventListener('abort', handleAbort, { once: true })
+    if (signal.aborted) {
+      handleAbort()
+      return
+    }
 
     // Timeout fallback - resolve with partial results or null
     timeoutId = setTimeout(() => {
@@ -254,28 +265,30 @@ async function performExtraction(
         )
       }
     }, 30000) // 30 second timeout
+    video.src = videoUrl
   })
 }
 
 /**
- * Get cached filmstrip if available (uses LRU access)
+ * 素材の直近の成功結果を診断用に取得する
  */
 export function getCachedFilmstrip(mediaId: string): FilmstripData | null {
-  return getFromCache(mediaId) || null
+  // 診断用。抽出時の再利用判定は必ず実ファイル・URL・設定も照合する。
+  const entries = [...extractions.values()].reverse()
+  return entries.find((entry) => entry.mediaId === mediaId && entry.result)?.result ?? null
 }
 
-/**
- * Clear filmstrip cache for a media item
- */
 export function clearFilmstripCache(mediaId: string): void {
-  filmstripCache.delete(mediaId)
+  for (const [key, entry] of extractions) {
+    if (entry.mediaId !== mediaId) continue
+    extractions.delete(key)
+    entry.controller.abort()
+  }
 }
 
-/**
- * Clear entire filmstrip cache
- */
 export function clearAllFilmstripCache(): void {
-  filmstripCache.clear()
+  for (const entry of extractions.values()) entry.controller.abort()
+  extractions.clear()
 }
 
 /**

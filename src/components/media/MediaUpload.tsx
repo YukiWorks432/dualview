@@ -10,11 +10,11 @@ import {
 } from 'lucide-react'
 import { useCallback, useState, useEffect } from 'react'
 
-import { detachFile } from '../../lib/media/detachFile'
 import { SUPPORTED_MEDIA_ACCEPT, isSupportedMediaFile } from '../../lib/media/fileTypes'
+import { captureMediaImport } from '../../lib/media/importRequest'
 import { captureScreenAsFile, isScreenCaptureSupported } from '../../lib/screenCapture'
 import { cn } from '../../lib/utils'
-import { useMediaStore } from '../../stores/mediaStore'
+import { isMediaImportCurrent, useMediaStore } from '../../stores/mediaStore'
 import { useTimelineStore } from '../../stores/timelineStore'
 import { ElevatedSurface } from '../ui'
 import { URLImport } from './URLImport'
@@ -35,11 +35,12 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
   const [isCapturing, setIsCapturing] = useState(false)
 
   const { addFile } = useMediaStore()
-  const { addClip, tracks } = useTimelineStore()
+  const { addClip } = useTimelineStore()
 
   // Clipboard paste handler (IMPORT-002)
   useEffect(() => {
     const handlePaste = async (e: ClipboardEvent) => {
+      const request = captureMediaImport()
       const items = e.clipboardData?.items
       if (!items) return
 
@@ -53,11 +54,12 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
           if (file) {
             setIsUploading(true)
             try {
-              const mediaFile = await addFile(await detachFile(file))
+              const mediaFile = await addFile(file, request)
+              if (!isMediaImportCurrent(mediaFile, request)) return
 
               // Auto-add to timeline
-              const trackA = tracks.find((t) => t.type === 'a')
-              const trackB = tracks.find((t) => t.type === 'b')
+              const trackA = useTimelineStore.getState().tracks.find((t) => t.type === 'a')
+              const trackB = useTimelineStore.getState().tracks.find((t) => t.type === 'b')
 
               if (trackA && trackA.clips.length === 0) {
                 addClip(trackA.id, mediaFile.id, 0, mediaFile.duration || 10)
@@ -81,13 +83,14 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
 
     window.addEventListener('paste', handlePaste)
     return () => window.removeEventListener('paste', handlePaste)
-  }, [addFile, addClip, tracks, onUpload])
+  }, [addFile, addClip, onUpload])
 
   // Handle files with optional target track ('a', 'b', or 'auto' for alternating)
   const handleFiles = useCallback(
     async (files: File[], targetTrack: 'a' | 'b' | 'auto' = 'auto') => {
       if (files.length === 0) return
 
+      const request = captureMediaImport()
       const totalFiles = files.length
       setIsUploading(true)
       setError(null)
@@ -118,14 +121,14 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
 
         try {
           setUploadProgress({ current: fileIndex, total: totalFiles })
-          const file = await detachFile(sourceFile)
+          const mediaFile = await addFile(sourceFile, request)
           sourceFile = undefined
-          const mediaFile = await addFile(file)
+          if (!isMediaImportCurrent(mediaFile, request)) continue
           const duration = mediaFile.duration || 10
 
           // Auto-add to timeline based on target track
-          const trackA = tracks.find((t) => t.type === 'a')
-          const trackB = tracks.find((t) => t.type === 'b')
+          const trackA = useTimelineStore.getState().tracks.find((t) => t.type === 'a')
+          const trackB = useTimelineStore.getState().tracks.find((t) => t.type === 'b')
 
           if (targetTrack === 'a' && trackA) {
             // Add all files to Track A sequentially
@@ -167,13 +170,14 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
       setUploadProgress({ current: 0, total: 0 })
       onUpload?.()
     },
-    [addFile, addClip, tracks, onUpload],
+    [addFile, addClip, onUpload],
   )
 
   // General drop handler (auto mode)
   const handleDropGeneral = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault()
+      e.stopPropagation()
       setIsDragOverGeneral(false)
       handleFiles(Array.from(e.dataTransfer.files), 'auto')
     },
@@ -286,16 +290,18 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
       return
     }
 
+    const request = captureMediaImport()
     setIsCapturing(true)
     setError(null)
 
     try {
       const file = await captureScreenAsFile()
-      const mediaFile = await addFile(file)
+      const mediaFile = await addFile(file, request)
+      if (!isMediaImportCurrent(mediaFile, request)) return
 
       // Auto-add to timeline
-      const trackA = tracks.find((t) => t.type === 'a')
-      const trackB = tracks.find((t) => t.type === 'b')
+      const trackA = useTimelineStore.getState().tracks.find((t) => t.type === 'a')
+      const trackB = useTimelineStore.getState().tracks.find((t) => t.type === 'b')
 
       if (trackA && trackA.clips.length === 0) {
         addClip(trackA.id, mediaFile.id, 0, mediaFile.duration || 10)

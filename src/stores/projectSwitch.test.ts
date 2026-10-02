@@ -291,6 +291,46 @@ describe('transactional project switching', () => {
     },
   )
 
+  it.each(
+    ['new', 'load'].flatMap((operation) =>
+      ['import', 'retry'].map((work) => ({ operation, work })),
+    ),
+  )(
+    'invalidates pending $work when $operation adopts a different session',
+    async ({ operation, work }) => {
+      await openA()
+      storedProject('B')
+      let pendingImage: TestImage | undefined
+      imageControls.set('blob:pending.png', (image) => {
+        pendingImage = image
+      })
+      let pending: Promise<unknown> = media
+        .getState()
+        .addFile(new File(['image'], 'pending.png', { type: 'image/png' }))
+      await vi.waitFor(() => expect(pendingImage).toBeDefined())
+      const pendingId = media.getState().files.find((file) => file.name === 'pending.png')!.id
+      if (work === 'retry') {
+        const failed = pending.catch(() => undefined)
+        pendingImage!.onerror!()
+        await failed
+        pending = media.getState().retryProcessing(pendingId)
+      }
+      const staleLoad = pendingImage!.onload!
+      expect(
+        await (operation === 'new'
+          ? persistence.getState().createNewProject('B')
+          : persistence.getState().loadProject('B')),
+      ).toBeTruthy()
+      await pending
+      staleLoad()
+      expect(media.getState().getFile(pendingId)).toBeUndefined()
+      expect(clips().some((clip) => clip.mediaId === pendingId)).toBe(false)
+      expect(pendingImage!.onload).toBeNull()
+      expect(revoked).toHaveBeenCalledWith('blob:pending.png')
+      expect(persistence.getState().currentProjectId).not.toBe('A')
+    },
+  )
+
   it('does not replace the active project when saving the initial new project fails', async () => {
     await openA()
     db.save
@@ -397,6 +437,26 @@ describe('transactional project switching', () => {
     expect(await loading).toBe(true)
     expect(db.records.get('A')!.name).toBe('Edited A')
     expect(JSON.parse(db.records.get('A')!.timelineState).tracks[0].clips[0].endTime).toBe(8)
+  })
+
+  it('flushes a same-metadata File replacement made while the destination is decoding', async () => {
+    await openA()
+    storedProject('B')
+    let pendingImage: TestImage | undefined
+    imageControls.set('blob:B.png', (image) => {
+      pendingImage = image
+    })
+    const loading = persistence.getState().loadProject('B')
+    await vi.waitFor(() => expect(pendingImage).toBeDefined())
+    const replacement = new File(['replacement bytes'], 'A.png', { type: 'image/png' })
+    media.setState({
+      files: media.getState().files.map((file) => ({ ...file, file: replacement })),
+    })
+    expect(persistence.getState().saveStatus).toBe('unsaved')
+    pendingImage!.onload?.()
+    expect(await loading).toBe(true)
+    expect(await db.blobs.get('A')!.get('A-media-0')!.text()).toBe('replacement bytes')
+    expect(persistence.getState()).toMatchObject({ currentProjectId: 'B', saveStatus: 'saved' })
   })
 
   it('retains edits and frees the prepared destination when the final outgoing flush fails', async () => {
