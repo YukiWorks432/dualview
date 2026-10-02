@@ -237,7 +237,7 @@ export const usePlaybackStore: PlaybackHook = create<PlaybackStore>((set, get) =
       for (const track of timeline.tracks) {
         for (const clip of track.clips) duration = Math.max(duration, clip.endTime)
       }
-      return Math.max(duration, 1)
+      return duration > 0 ? duration : 1
     },
   }
 })

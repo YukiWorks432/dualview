@@ -145,6 +145,32 @@ test('J/K/L, Space and speed selection advance the real clock and both displayed
   await page.getByTitle('Go to end (End)').click()
   await expectColor(page, 'a', 'blue')
   await expectColor(page, 'b', 'blue')
+
+  // End and reverse-from-start must stay in the last valid frame of short clips.
+  await page.evaluate(async () => {
+    const { useTimelineStore } = await import('/src/stores/timelineStore.ts')
+    useTimelineStore.setState({
+      duration: 0.5,
+      tracks: useTimelineStore.getState().tracks.map((track) => ({
+        ...track,
+        clips: track.clips.map((clip) => ({ ...clip, endTime: 0.5, outPoint: 0.5 })),
+      })),
+    })
+  })
+  await page.getByTitle('Go to end (End)').click()
+  expect((await snapshot(page)).time).toBe(14 / 30)
+  await expectColor(page, 'a', 'red')
+  await expectColor(page, 'b', 'red')
+  await page.getByTitle('Go to start (Home)').click()
+  await page.keyboard.press('j')
+  await page.keyboard.press('Space')
+  const shortReverse = await snapshot(page)
+  expect(shortReverse.time).toBeGreaterThanOrEqual(0)
+  expect(shortReverse.time).toBeLessThan(0.5)
+  expect(shortReverse.direction).toBe(-1)
+  expect(shortReverse.playing).toBe(false)
+  await expectColor(page, 'a', 'red')
+  await expectColor(page, 'b', 'red')
 })
 
 test('paused markers, rapid seeks, clip crossings and project reload present the newest native/ProRes frame', async ({

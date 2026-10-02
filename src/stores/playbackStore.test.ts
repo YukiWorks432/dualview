@@ -179,6 +179,36 @@ describe('shared playback transport', () => {
     expect(playback.getState().currentTime).toBe(10 - 1 / 30)
   })
 
+  it('keeps End, reverse start and terminal playback inside a sub-second clip', () => {
+    timeline.getState().addClip('track-a', 'short-video', 0, 0.5)
+    expect(playback.getState().getEffectiveDuration()).toBe(0.5)
+    playback.getState().seek(timeline.getState().duration)
+    expect(playback.getState().currentTime).toBe(14 / 30)
+    timeline.getState().stepFrame(1)
+    expect(playback.getState().currentTime).toBe(14 / 30)
+    playback.getState().seek(0)
+    timeline.getState().shuttleBackward()
+    expect(playback.getState().currentTime).toBe(14 / 30)
+    advanceBy(100)
+    expect(playback.getState().currentTime).toBeCloseTo(11 / 30)
+    timeline.getState().shuttleStop()
+    playback.getState().seek(0.4)
+    playback.getState().play()
+    advanceBy(100)
+    expect(playback.getState()).toMatchObject({ currentTime: 14 / 30, isPlaying: false })
+    expectProjection()
+  })
+
+  it('uses the longest positive timeline/content duration and falls back only when empty', () => {
+    timeline.setState({ duration: 0 })
+    expect(playback.getState().getEffectiveDuration()).toBe(1)
+    timeline.getState().addClip('track-a', 'short-video', 0, 0.5)
+    timeline.setState({ duration: 0.2 })
+    expect(playback.getState().getEffectiveDuration()).toBe(0.5)
+    timeline.setState({ duration: 0.75 })
+    expect(playback.getState().getEffectiveDuration()).toBe(0.75)
+  })
+
   it('resets the elapsed baseline on a playing seek and respects export ownership', () => {
     playback.getState().play()
     now += 500
