@@ -417,6 +417,10 @@ Export with stunning WebGL shader transitions:
 > Animated Video/GIF, transition, and stitch export currently require browser-native video decoding.
 > ProRes sources are rejected for those export paths instead of producing stale or incorrect frames.
 
+Animated exports can be cancelled with **Cancel**. After cancellation or a failed export,
+resources are released before another export can start. MP4 and GIF do not require WebM support;
+GIF encoding uses the bundled local worker. Borrowed preview videos return to their paused position.
+
 ---
 
 <h2 id="shortcuts">⌨️ Keyboard Shortcuts</h2>

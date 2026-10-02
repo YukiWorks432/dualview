@@ -6,7 +6,16 @@
  */
 
 import type { TimelineTrack, MediaFile } from '../types'
-import { createAvcMp4Muxer } from './mp4Muxer'
+import {
+  ExportResources,
+  createMp4ExportEncoder,
+  encodeCanvasFrame,
+  seekVideoAndWait,
+  throwIfAborted,
+  waitForExport,
+  waitForMedia,
+  yieldToExport,
+} from './exportResources'
 
 export interface StitchExportSettings {
   trackId: string
@@ -40,35 +49,6 @@ const BITRATES: Record<string, number> = {
 }
 
 /**
- * Wait for video to seek to specific time
- */
-async function seekVideoAndWait(video: HTMLVideoElement, time: number): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const timeout = setTimeout(() => {
-      resolve() // Resolve anyway after timeout
-    }, 2000)
-
-    const onSeeked = () => {
-      clearTimeout(timeout)
-      video.removeEventListener('seeked', onSeeked)
-      video.removeEventListener('error', onError)
-      resolve()
-    }
-
-    const onError = (e: Event) => {
-      clearTimeout(timeout)
-      video.removeEventListener('seeked', onSeeked)
-      video.removeEventListener('error', onError)
-      reject(e)
-    }
-
-    video.addEventListener('seeked', onSeeked, { once: true })
-    video.addEventListener('error', onError, { once: true })
-    video.currentTime = time
-  })
-}
-
-/**
  * Create a video element from a MediaFile
  */
 function createVideoElement(media: MediaFile): HTMLVideoElement {
@@ -81,40 +61,6 @@ function createVideoElement(media: MediaFile): HTMLVideoElement {
 }
 
 /**
- * Wait for video to be ready
- */
-async function waitForVideoReady(video: HTMLVideoElement): Promise<void> {
-  return new Promise((resolve, reject) => {
-    if (video.readyState >= 2) {
-      resolve()
-      return
-    }
-
-    const timeout = setTimeout(() => {
-      reject(new Error('Video load timeout'))
-    }, 10000)
-
-    const onCanPlay = () => {
-      clearTimeout(timeout)
-      video.removeEventListener('canplay', onCanPlay)
-      video.removeEventListener('error', onError)
-      resolve()
-    }
-
-    const onError = () => {
-      clearTimeout(timeout)
-      video.removeEventListener('canplay', onCanPlay)
-      video.removeEventListener('error', onError)
-      reject(new Error('Video failed to load'))
-    }
-
-    video.addEventListener('canplay', onCanPlay, { once: true })
-    video.addEventListener('error', onError, { once: true })
-    video.load()
-  })
-}
-
-/**
  * Export stitched video from track clips
  */
 export async function exportStitchedVideo(
@@ -122,6 +68,7 @@ export async function exportStitchedVideo(
   getFile: (id: string) => MediaFile | undefined,
   settings: StitchExportSettings,
   onProgress: (progress: StitchExportProgress) => void,
+  signal?: AbortSignal,
 ): Promise<Blob | null> {
   // Sort clips by start time
   const sortedClips = [...track.clips].sort((a, b) => a.startTime - b.startTime)
@@ -137,231 +84,233 @@ export async function exportStitchedVideo(
     return null
   }
 
-  const { width, height } = RESOLUTIONS[settings.resolution]
-  const bitrate = BITRATES[settings.quality]
-  const fps = settings.fps
+  throwIfAborted(signal)
+  if (sortedClips.some((clip) => getFile(clip.mediaId)?.playbackBackend === 'mediabunny')) {
+    throw new Error(
+      'Stitch export for ProRes is not supported yet. Use Image or PDF export for the current frame.',
+    )
+  }
+  const resources = new ExportResources()
+  const onAbort = () => resources.controller.abort(signal?.reason)
+  signal?.addEventListener('abort', onAbort, { once: true })
+  resources.defer(() => signal?.removeEventListener('abort', onAbort))
+  try {
+    const { width, height } = RESOLUTIONS[settings.resolution]
+    const bitrate = BITRATES[settings.quality]
+    const fps = settings.fps
 
-  // Create canvas for rendering
-  const canvas = document.createElement('canvas')
-  canvas.width = width
-  canvas.height = height
-  const ctx = canvas.getContext('2d')!
+    // Create canvas for rendering
+    const canvas = document.createElement('canvas')
+    canvas.width = width
+    canvas.height = height
+    const ctx = canvas.getContext('2d')!
 
-  // Check WebCodecs support
-  if (typeof VideoEncoder === 'undefined') {
+    // Check WebCodecs support
+    if (typeof VideoEncoder === 'undefined') {
+      onProgress({
+        status: 'error',
+        progress: 0,
+        message: 'WebCodecs not supported in this browser',
+        currentClip: 0,
+        totalClips: sortedClips.length,
+      })
+      return null
+    }
+
     onProgress({
-      status: 'error',
+      status: 'preparing',
       progress: 0,
-      message: 'WebCodecs not supported in this browser',
+      message: 'Preparing video encoder...',
       currentClip: 0,
       totalClips: sortedClips.length,
     })
-    return null
-  }
 
-  onProgress({
-    status: 'preparing',
-    progress: 0,
-    message: 'Preparing video encoder...',
-    currentClip: 0,
-    totalClips: sortedClips.length,
-  })
-
-  // Calculate total frames needed
-  let totalDuration = 0
-  for (const clip of sortedClips) {
-    totalDuration += clip.outPoint - clip.inPoint
-  }
-  const totalFrames = Math.ceil(totalDuration * fps)
-
-  // Setup MP4 muxer
-  const muxer = await createAvcMp4Muxer()
-
-  // Setup video encoder
-  const encoder = new VideoEncoder({
-    output: (chunk, meta) => {
-      muxer.addChunk(chunk, meta)
-    },
-    error: (e) => {
-      console.error('Encoder error:', e)
-    },
-  })
-
-  await encoder.configure({
-    codec: 'avc1.640028',
-    width,
-    height,
-    bitrate,
-    framerate: fps,
-  })
-
-  onProgress({
-    status: 'encoding',
-    progress: 0,
-    message: 'Encoding clips...',
-    currentClip: 1,
-    totalClips: sortedClips.length,
-  })
-
-  let globalFrameIndex = 0
-  const frameDuration = 1 / fps
-
-  // Process each clip
-  for (let clipIndex = 0; clipIndex < sortedClips.length; clipIndex++) {
-    const clip = sortedClips[clipIndex]
-    const media = getFile(clip.mediaId)
-
-    if (!media) {
-      console.warn(`Media not found for clip ${clip.id}`)
-      continue
+    // Calculate total frames needed
+    let totalDuration = 0
+    for (const clip of sortedClips) {
+      totalDuration += clip.outPoint - clip.inPoint
     }
+    const totalFrames = Math.ceil(totalDuration * fps)
+
+    const { muxer, encoder } = await createMp4ExportEncoder(resources)
+
+    encoder.configure({
+      codec: 'avc1.640028',
+      width,
+      height,
+      bitrate,
+      framerate: fps,
+    })
 
     onProgress({
       status: 'encoding',
-      progress: Math.round((clipIndex / sortedClips.length) * 100),
-      message: `Processing clip ${clipIndex + 1}/${sortedClips.length}: ${media.name}`,
-      currentClip: clipIndex + 1,
+      progress: 0,
+      message: 'Encoding clips...',
+      currentClip: 1,
       totalClips: sortedClips.length,
     })
 
-    // Handle different media types
-    if (media.type === 'video') {
-      // Create video element for this clip
-      const video = createVideoElement(media)
-      await waitForVideoReady(video)
+    let globalFrameIndex = 0
+    const frameDuration = 1 / fps
 
-      // Calculate clip duration and frames
-      const clipDuration = clip.outPoint - clip.inPoint
-      const clipFrames = Math.ceil(clipDuration * fps)
+    // Process each clip
+    for (let clipIndex = 0; clipIndex < sortedClips.length; clipIndex++) {
+      throwIfAborted(resources.signal)
+      const clip = sortedClips[clipIndex]
+      const media = getFile(clip.mediaId)
 
-      // Process each frame of the clip
-      for (let frameInClip = 0; frameInClip < clipFrames; frameInClip++) {
-        // Calculate source time in video
-        const sourceTime = clip.inPoint + frameInClip * frameDuration
-
-        // Seek video
-        await seekVideoAndWait(video, sourceTime)
-
-        // Draw to canvas with aspect ratio correction
-        ctx.fillStyle = '#000'
-        ctx.fillRect(0, 0, width, height)
-
-        // Calculate scaled dimensions maintaining aspect ratio
-        const videoAspect = video.videoWidth / video.videoHeight
-        const canvasAspect = width / height
-        let drawWidth = width
-        let drawHeight = height
-        let drawX = 0
-        let drawY = 0
-
-        if (videoAspect > canvasAspect) {
-          drawHeight = width / videoAspect
-          drawY = (height - drawHeight) / 2
-        } else {
-          drawWidth = height * videoAspect
-          drawX = (width - drawWidth) / 2
-        }
-
-        ctx.drawImage(video, drawX, drawY, drawWidth, drawHeight)
-
-        // Create video frame
-        const frame = new VideoFrame(canvas, {
-          timestamp: globalFrameIndex * frameDuration * 1_000_000, // microseconds
-          duration: frameDuration * 1_000_000,
-        })
-
-        // Encode frame
-        const keyFrame = globalFrameIndex % (fps * 2) === 0 // Keyframe every 2 seconds
-        encoder.encode(frame, { keyFrame })
-        frame.close()
-
-        globalFrameIndex++
-
-        // Update progress
-        const overallProgress = Math.round(
-          ((clipIndex + frameInClip / clipFrames) / sortedClips.length) * 100,
-        )
-        onProgress({
-          status: 'encoding',
-          progress: overallProgress,
-          message: `Encoding frame ${globalFrameIndex}/${totalFrames}`,
-          currentClip: clipIndex + 1,
-          totalClips: sortedClips.length,
-        })
+      if (!media) {
+        console.warn(`Media not found for clip ${clip.id}`)
+        continue
       }
 
-      // Cleanup video element
-      video.src = ''
-      video.load()
-    } else if (media.type === 'image') {
-      // Load image
-      const img = new Image()
-      img.crossOrigin = 'anonymous'
-      await new Promise<void>((resolve, reject) => {
-        img.onload = () => resolve()
-        img.onerror = () => reject(new Error('Failed to load image'))
-        img.src = media.url
+      onProgress({
+        status: 'encoding',
+        progress: Math.round((clipIndex / sortedClips.length) * 100),
+        message: `Processing clip ${clipIndex + 1}/${sortedClips.length}: ${media.name}`,
+        currentClip: clipIndex + 1,
+        totalClips: sortedClips.length,
       })
 
-      // Calculate clip duration (use outPoint - inPoint, or default to 5 seconds)
-      const clipDuration = clip.outPoint - clip.inPoint
-      const clipFrames = Math.ceil(clipDuration * fps)
+      // Handle different media types
+      if (media.type === 'video') {
+        // Create video element for this clip
+        const video = createVideoElement(media)
+        try {
+          if (video.readyState < 2) {
+            await waitForMedia(video, 'canplay', () => video.load(), resources.signal)
+          }
 
-      // Draw image for duration
-      for (let frameInClip = 0; frameInClip < clipFrames; frameInClip++) {
-        // Draw to canvas with aspect ratio correction
-        ctx.fillStyle = '#000'
-        ctx.fillRect(0, 0, width, height)
+          // Calculate clip duration and frames
+          const clipDuration = clip.outPoint - clip.inPoint
+          const clipFrames = Math.ceil(clipDuration * fps)
 
-        const imgAspect = img.width / img.height
-        const canvasAspect = width / height
-        let drawWidth = width
-        let drawHeight = height
-        let drawX = 0
-        let drawY = 0
+          // Process each frame of the clip
+          for (let frameInClip = 0; frameInClip < clipFrames; frameInClip++) {
+            throwIfAborted(resources.signal)
+            if (frameInClip % 3 === 0) await yieldToExport(resources.signal)
+            // Calculate source time in video
+            const sourceTime = clip.inPoint + frameInClip * frameDuration
 
-        if (imgAspect > canvasAspect) {
-          drawHeight = width / imgAspect
-          drawY = (height - drawHeight) / 2
-        } else {
-          drawWidth = height * imgAspect
-          drawX = (width - drawWidth) / 2
+            // Seek video
+            await seekVideoAndWait(video, sourceTime, resources.signal)
+
+            // Draw to canvas with aspect ratio correction
+            ctx.fillStyle = '#000'
+            ctx.fillRect(0, 0, width, height)
+
+            // Calculate scaled dimensions maintaining aspect ratio
+            const videoAspect = video.videoWidth / video.videoHeight
+            const canvasAspect = width / height
+            let drawWidth = width
+            let drawHeight = height
+            let drawX = 0
+            let drawY = 0
+
+            if (videoAspect > canvasAspect) {
+              drawHeight = width / videoAspect
+              drawY = (height - drawHeight) / 2
+            } else {
+              drawWidth = height * videoAspect
+              drawX = (width - drawWidth) / 2
+            }
+
+            ctx.drawImage(video, drawX, drawY, drawWidth, drawHeight)
+
+            encodeCanvasFrame(encoder, canvas, globalFrameIndex, fps)
+
+            globalFrameIndex++
+
+            // Update progress
+            const overallProgress = Math.round(
+              ((clipIndex + frameInClip / clipFrames) / sortedClips.length) * 100,
+            )
+            onProgress({
+              status: 'encoding',
+              progress: overallProgress,
+              message: `Encoding frame ${globalFrameIndex}/${totalFrames}`,
+              currentClip: clipIndex + 1,
+              totalClips: sortedClips.length,
+            })
+          }
+        } finally {
+          video.pause()
+          video.removeAttribute('src')
+          video.load()
         }
+      } else if (media.type === 'image') {
+        // Load image
+        const img = new Image()
+        img.crossOrigin = 'anonymous'
+        try {
+          await waitForMedia(
+            img,
+            'load',
+            () => {
+              img.src = media.url
+            },
+            resources.signal,
+          )
 
-        ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight)
+          // Calculate clip duration (use outPoint - inPoint, or default to 5 seconds)
+          const clipDuration = clip.outPoint - clip.inPoint
+          const clipFrames = Math.ceil(clipDuration * fps)
 
-        // Create video frame
-        const frame = new VideoFrame(canvas, {
-          timestamp: globalFrameIndex * frameDuration * 1_000_000,
-          duration: frameDuration * 1_000_000,
-        })
+          // Draw image for duration
+          for (let frameInClip = 0; frameInClip < clipFrames; frameInClip++) {
+            throwIfAborted(resources.signal)
+            if (frameInClip % 3 === 0) await yieldToExport(resources.signal)
+            // Draw to canvas with aspect ratio correction
+            ctx.fillStyle = '#000'
+            ctx.fillRect(0, 0, width, height)
 
-        const keyFrame = globalFrameIndex % (fps * 2) === 0
-        encoder.encode(frame, { keyFrame })
-        frame.close()
+            const imgAspect = img.width / img.height
+            const canvasAspect = width / height
+            let drawWidth = width
+            let drawHeight = height
+            let drawX = 0
+            let drawY = 0
 
-        globalFrameIndex++
+            if (imgAspect > canvasAspect) {
+              drawHeight = width / imgAspect
+              drawY = (height - drawHeight) / 2
+            } else {
+              drawWidth = height * imgAspect
+              drawX = (width - drawWidth) / 2
+            }
+
+            ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight)
+
+            encodeCanvasFrame(encoder, canvas, globalFrameIndex, fps)
+
+            globalFrameIndex++
+          }
+        } finally {
+          img.removeAttribute('src')
+        }
       }
     }
+
+    // Flush encoder
+    await waitForExport(encoder.flush(), resources.signal)
+
+    // Finalize muxer
+    const buffer = await waitForExport(muxer.finalize(), resources.signal)
+    throwIfAborted(resources.signal)
+
+    onProgress({
+      status: 'done',
+      progress: 100,
+      message: 'Export complete!',
+      currentClip: sortedClips.length,
+      totalClips: sortedClips.length,
+    })
+
+    // Create blob
+    return new Blob([buffer], { type: 'video/mp4' })
+  } finally {
+    await resources.dispose()
   }
-
-  // Flush encoder
-  await encoder.flush()
-  encoder.close()
-
-  // Finalize muxer
-  const buffer = await muxer.finalize()
-
-  onProgress({
-    status: 'done',
-    progress: 100,
-    message: 'Export complete!',
-    currentClip: sortedClips.length,
-    totalClips: sortedClips.length,
-  })
-
-  // Create blob
-  return new Blob([buffer], { type: 'video/mp4' })
 }
 
 /**

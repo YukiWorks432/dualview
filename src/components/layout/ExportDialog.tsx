@@ -1,7 +1,18 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
+import {
+  ExportResources,
+  createMp4ExportEncoder,
+  encodeCanvasFrame,
+  preserveVideoPositions,
+  recordCanvasWebM,
+  seekVideoAndWait as seekExportVideo,
+  throwIfAborted,
+  waitForExport,
+  yieldToExport,
+} from '../../lib/exportResources'
 import { isExportTrackSelected } from '../../lib/exportSource'
-import { GIF_PRESETS } from '../../lib/gifEncoder'
+import { createGifFromFrames, GIF_PRESETS } from '../../lib/gifEncoder'
 import {
   getVisualFrameDimensions,
   isVisualFrameReady,
@@ -9,7 +20,6 @@ import {
 } from '../../lib/media/frameSource'
 import { findDisplayedClip } from '../../lib/media/timeline'
 import { isWebCodecsSupported } from '../../lib/mp4Encoder'
-import { createAvcMp4Muxer } from '../../lib/mp4Muxer'
 import {
   captureCanvasScreenshot,
   downloadBlob,
@@ -124,6 +134,12 @@ export function ExportDialog({ isOpen, onClose, canvasRef, captureFrame }: Expor
   const { tracks, duration } = useTimelineStore()
   const { currentTime, setExporting } = usePlaybackStore()
   const exportLockRef = useRef(false)
+  const activeExportRef = useRef<AbortController | null>(null)
+
+  useEffect(() => {
+    if (!isOpen) activeExportRef.current?.abort()
+    return () => activeExportRef.current?.abort()
+  }, [isOpen])
 
   const isAnyExporting =
     isExporting ||
@@ -143,6 +159,10 @@ export function ExportDialog({ isOpen, onClose, canvasRef, captureFrame }: Expor
   }, [])
 
   const handleClose = useCallback(() => {
+    if (activeExportRef.current) {
+      activeExportRef.current.abort()
+      return
+    }
     if (!exportLockRef.current && !isAnyExporting) {
       onClose()
     }
@@ -233,8 +253,14 @@ export function ExportDialog({ isOpen, onClose, canvasRef, captureFrame }: Expor
     setError(null)
     setProgress(0)
 
+    const resources = new ExportResources()
+    activeExportRef.current = resources.controller
+    const seekVideoAndWait = (video: HTMLVideoElement, time: number) =>
+      seekExportVideo(video, time, resources.signal)
+
     try {
       const { videoA, videoB } = getVideoElements()
+      preserveVideoPositions(resources, [videoA, videoB])
       const { mediaA, mediaB } = getVisualElements()
 
       if (!mediaA && !mediaB) {
@@ -295,9 +321,7 @@ export function ExportDialog({ isOpen, onClose, canvasRef, captureFrame }: Expor
 
         // Draw media B as background
         if (mediaB) {
-          try {
-            ctx.drawImage(mediaB, 0, 0, width, height)
-          } catch {}
+          ctx.drawImage(mediaB, 0, 0, width, height)
         }
 
         // Draw media A with different clip shapes based on sweep style
@@ -311,9 +335,7 @@ export function ExportDialog({ isOpen, onClose, canvasRef, captureFrame }: Expor
               const sliderX = (progress / 100) * width
               ctx.rect(0, 0, sliderX, height)
               ctx.clip()
-              try {
-                ctx.drawImage(mediaA, 0, 0, width, height)
-              } catch {}
+              ctx.drawImage(mediaA, 0, 0, width, height)
               ctx.restore()
               // Draw slider line
               ctx.fillStyle = '#ffffff'
@@ -326,9 +348,7 @@ export function ExportDialog({ isOpen, onClose, canvasRef, captureFrame }: Expor
               const sliderY = (progress / 100) * height
               ctx.rect(0, 0, width, sliderY)
               ctx.clip()
-              try {
-                ctx.drawImage(mediaA, 0, 0, width, height)
-              } catch {}
+              ctx.drawImage(mediaA, 0, 0, width, height)
               ctx.restore()
               // Draw slider line
               ctx.fillStyle = '#ffffff'
@@ -346,9 +366,7 @@ export function ExportDialog({ isOpen, onClose, canvasRef, captureFrame }: Expor
               ctx.lineTo(-width, 0)
               ctx.closePath()
               ctx.clip()
-              try {
-                ctx.drawImage(mediaA, 0, 0, width, height)
-              } catch {}
+              ctx.drawImage(mediaA, 0, 0, width, height)
               ctx.restore()
               // Draw diagonal line
               ctx.strokeStyle = '#ffffff'
@@ -368,9 +386,7 @@ export function ExportDialog({ isOpen, onClose, canvasRef, captureFrame }: Expor
               const centerY = height / 2
               ctx.arc(centerX, centerY, radius, 0, Math.PI * 2)
               ctx.clip()
-              try {
-                ctx.drawImage(mediaA, 0, 0, width, height)
-              } catch {}
+              ctx.drawImage(mediaA, 0, 0, width, height)
               ctx.restore()
               // Draw circle outline
               ctx.strokeStyle = '#ffffff'
@@ -391,9 +407,7 @@ export function ExportDialog({ isOpen, onClose, canvasRef, captureFrame }: Expor
               const rectY = (height - rectH) / 2
               ctx.rect(rectX, rectY, rectW, rectH)
               ctx.clip()
-              try {
-                ctx.drawImage(mediaA, 0, 0, width, height)
-              } catch {}
+              ctx.drawImage(mediaA, 0, 0, width, height)
               ctx.restore()
               // Draw rectangle outline
               ctx.strokeStyle = '#ffffff'
@@ -444,9 +458,7 @@ export function ExportDialog({ isOpen, onClose, canvasRef, captureFrame }: Expor
 
               ctx.rect(rectX, rectY, rectW, rectH)
               ctx.clip()
-              try {
-                ctx.drawImage(mediaA, 0, 0, width, height)
-              } catch {}
+              ctx.drawImage(mediaA, 0, 0, width, height)
               ctx.restore()
               // Draw rectangle outline
               ctx.strokeStyle = '#ffffff'
@@ -498,9 +510,7 @@ export function ExportDialog({ isOpen, onClose, canvasRef, captureFrame }: Expor
 
               ctx.arc(centerX, centerY, circleRadius, 0, Math.PI * 2)
               ctx.clip()
-              try {
-                ctx.drawImage(mediaA, 0, 0, width, height)
-              } catch {}
+              ctx.drawImage(mediaA, 0, 0, width, height)
               ctx.restore()
               // Draw circle outline
               ctx.strokeStyle = '#ffffff'
@@ -523,9 +533,7 @@ export function ExportDialog({ isOpen, onClose, canvasRef, captureFrame }: Expor
         ctx.fillStyle = '#000'
         ctx.fillRect(0, 0, width, height)
         if (media) {
-          try {
-            ctx.drawImage(media, 0, 0, width, height)
-          } catch {}
+          ctx.drawImage(media, 0, 0, width, height)
         }
       }
 
@@ -568,12 +576,7 @@ export function ExportDialog({ isOpen, onClose, canvasRef, captureFrame }: Expor
           // Pause and prepare for seeking
           if (targetVideo) targetVideo.pause()
 
-          const muxer = await createAvcMp4Muxer()
-
-          const encoder = new VideoEncoder({
-            output: (chunk, meta) => muxer.addChunk(chunk, meta),
-            error: (e) => console.error('VideoEncoder error:', e),
-          })
+          const { muxer, encoder } = await createMp4ExportEncoder(resources)
 
           encoder.configure({
             codec: 'avc1.640028',
@@ -583,34 +586,17 @@ export function ExportDialog({ isOpen, onClose, canvasRef, captureFrame }: Expor
             framerate: fps,
           })
 
-          const frameDuration = 1_000_000 / fps
-
           for (let i = 0; i < totalFrames; i++) {
+            throwIfAborted(resources.signal)
             const frameTime = (i / totalFrames) * targetDuration
 
             if (targetVideo) {
-              await new Promise<void>((resolve) => {
-                if (Math.abs(targetVideo.currentTime - frameTime) < 0.01) {
-                  resolve()
-                  return
-                }
-                const onSeeked = () => {
-                  targetVideo.removeEventListener('seeked', onSeeked)
-                  resolve()
-                }
-                targetVideo.addEventListener('seeked', onSeeked)
-                targetVideo.currentTime = frameTime
-              })
+              await seekVideoAndWait(targetVideo, frameTime)
             }
 
             drawSingleMedia(targetMedia)
 
-            const frame = new VideoFrame(captureCanvas, {
-              timestamp: i * frameDuration,
-              duration: frameDuration,
-            })
-            encoder.encode(frame, { keyFrame: i % 30 === 0 })
-            frame.close()
+            encodeCanvasFrame(encoder, captureCanvas, i, fps)
 
             if (i % 5 === 0) {
               const progress = Math.round((i / totalFrames) * 90)
@@ -621,12 +607,12 @@ export function ExportDialog({ isOpen, onClose, canvasRef, captureFrame }: Expor
                 message: `Encoding frame ${i + 1}/${totalFrames}`,
               })
             }
-            if (i % 3 === 0) await new Promise((r) => setTimeout(r, 0))
+            if (i % 3 === 0) await yieldToExport(resources.signal)
           }
 
-          await encoder.flush()
-          encoder.close()
-          const buffer = await muxer.finalize()
+          await waitForExport(encoder.flush(), resources.signal)
+          const buffer = await waitForExport(muxer.finalize(), resources.signal)
+          throwIfAborted(resources.signal)
           const mp4Blob = new Blob([buffer], { type: 'video/mp4' })
           const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
           downloadVideo(mp4Blob, `dualview-${exportSettings.exportSource}-${timestamp}.mp4`)
@@ -649,21 +635,11 @@ export function ExportDialog({ isOpen, onClose, canvasRef, captureFrame }: Expor
           const gifCtx = gifCanvas.getContext('2d')!
 
           for (let i = 0; i < totalFrames; i++) {
+            throwIfAborted(resources.signal)
             const frameTime = (i / totalFrames) * targetDuration
 
             if (targetVideo) {
-              await new Promise<void>((resolve) => {
-                if (Math.abs(targetVideo.currentTime - frameTime) < 0.01) {
-                  resolve()
-                  return
-                }
-                const onSeeked = () => {
-                  targetVideo.removeEventListener('seeked', onSeeked)
-                  resolve()
-                }
-                targetVideo.addEventListener('seeked', onSeeked)
-                targetVideo.currentTime = frameTime
-              })
+              await seekVideoAndWait(targetVideo, frameTime)
             }
 
             drawSingleMedia(targetMedia)
@@ -678,45 +654,23 @@ export function ExportDialog({ isOpen, onClose, canvasRef, captureFrame }: Expor
                 message: `Capturing frame ${i + 1}/${totalFrames}`,
               })
             }
-            if (i % 3 === 0) await new Promise((r) => setTimeout(r, 0))
+            if (i % 3 === 0) await yieldToExport(resources.signal)
           }
 
-          // Load and encode GIF
-          if (!(window as any).GIF) {
-            await new Promise<void>((resolve, reject) => {
-              const script = document.createElement('script')
-              script.src = 'https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js'
-              script.onload = () => resolve()
-              script.onerror = () => reject(new Error('Failed to load GIF encoder'))
-              document.head.appendChild(script)
-            })
-          }
-
-          const GIF = (window as any).GIF
-          const gif = new GIF({
-            workers: 2,
-            quality: 10,
-            width: gifOptions.width,
-            height: gifOptions.height,
-            workerScript: 'https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.worker.js',
-          })
-
-          const frameDelay = Math.round(1000 / gifOptions.fps)
-          frames.forEach((frame) => gif.addFrame(frame, { delay: frameDelay }))
-
-          const gifBlob = await new Promise<Blob>((resolve, reject) => {
-            gif.on('progress', (p: number) => {
-              setProgress(40 + Math.round(p * 60))
+          const gifBlob = await createGifFromFrames(
+            frames,
+            gifPreset,
+            (progress, message) => {
+              setProgress(45 + Math.round(progress * 0.55))
               setExportProgress({
                 status: 'encoding',
-                progress: 40 + Math.round(p * 60),
-                message: `Encoding GIF... ${Math.round(p * 100)}%`,
+                progress: 45 + Math.round(progress * 0.55),
+                message,
               })
-            })
-            gif.on('finished', (blob: Blob) => resolve(blob))
-            gif.on('error', (err: Error) => reject(err))
-            gif.render()
-          })
+            },
+            resources.signal,
+          )
+          throwIfAborted(resources.signal)
 
           const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
           downloadVideo(gifBlob, `dualview-${exportSettings.exportSource}-${timestamp}.gif`)
@@ -724,180 +678,37 @@ export function ExportDialog({ isOpen, onClose, canvasRef, captureFrame }: Expor
           return
         }
 
-        // WebM export for single media (real-time)
-        const stream = captureCanvas.captureStream(30)
-        const mimeType = 'video/webm;codecs=vp9'
-        if (!MediaRecorder.isTypeSupported(mimeType)) {
-          throw new Error('Video recording not supported')
-        }
-
-        const mediaRecorder = new MediaRecorder(stream, {
-          mimeType,
-          videoBitsPerSecond:
-            exportSettings.quality === 'high'
-              ? 10_000_000
-              : exportSettings.quality === 'medium'
-                ? 5_000_000
-                : 2_500_000,
-        })
-
-        const chunks: Blob[] = []
-        mediaRecorder.ondataavailable = (e) => {
-          if (e.data.size > 0) chunks.push(e.data)
-        }
-
-        const recordingPromise = new Promise<Blob>((resolve) => {
-          mediaRecorder.onstop = () => resolve(new Blob(chunks, { type: 'video/webm' }))
-        })
-
-        if (targetVideo) {
-          targetVideo.currentTime = 0
-          targetVideo.play()
-        }
-
-        mediaRecorder.start(100)
-
-        const totalDurationMs = targetDuration * 1000
-        const startTime = performance.now()
-
-        const animateSingle = () => {
-          const elapsed = performance.now() - startTime
-          const progressPct = elapsed / totalDurationMs
-
-          if (progressPct >= 1) {
-            if (targetVideo) targetVideo.pause()
-            mediaRecorder.stop()
-            return
-          }
-
-          drawSingleMedia(targetMedia)
-          setProgress(Math.round(progressPct * 100))
-          setExportProgress({
-            status: 'encoding',
-            progress: Math.round(progressPct * 100),
-            message: `Recording... ${Math.round(progressPct * 100)}%`,
-          })
-          requestAnimationFrame(animateSingle)
-        }
-
-        setTimeout(animateSingle, 100)
-        const webmBlob = await recordingPromise
-        const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
-        downloadVideo(webmBlob, `dualview-${exportSettings.exportSource}-${timestamp}.webm`)
-        setExportProgress({ status: 'done', progress: 100, message: 'Export complete!' })
-        return
-      }
-
-      // Set up canvas stream capture (for comparison/sweep export)
-      const stream = captureCanvas.captureStream(30)
-
-      const mimeType = 'video/webm;codecs=vp9'
-      if (!MediaRecorder.isTypeSupported(mimeType)) {
-        throw new Error('Video recording not supported')
-      }
-
-      const mediaRecorder = new MediaRecorder(stream, {
-        mimeType,
-        videoBitsPerSecond:
+        const webmBlob = await recordCanvasWebM(
+          captureCanvas,
+          targetDuration * 1000,
           exportSettings.quality === 'high'
             ? 10_000_000
             : exportSettings.quality === 'medium'
               ? 5_000_000
               : 2_500_000,
-      })
-
-      const chunks: Blob[] = []
-      mediaRecorder.ondataavailable = (e) => {
-        if (e.data.size > 0) chunks.push(e.data)
-      }
-
-      const recordingPromise = new Promise<Blob>((resolve) => {
-        mediaRecorder.onstop = () => {
-          resolve(new Blob(chunks, { type: 'video/webm' }))
-        }
-      })
-
-      // Reset videos to start
-      if (videoA) {
-        videoA.currentTime = 0
-        videoA.play().catch(() => {})
-      }
-      if (videoB) {
-        videoB.currentTime = 0
-        videoB.play().catch(() => {})
-      }
-
-      mediaRecorder.start(100)
-
-      const totalDuration = loopDuration * exportSettings.videoLoops * 1000
-      const loopDurationMs = loopDuration * 1000
-      const startTime = performance.now()
-      let lastLoopIndex = 0
-
-      // Animation loop - render directly to canvas
-      const animate = () => {
-        const elapsed = performance.now() - startTime
-        const progressPct = elapsed / totalDuration
-
-        if (progressPct >= 1) {
-          if (videoA) videoA.pause()
-          if (videoB) videoB.pause()
-          mediaRecorder.stop()
-          return
-        }
-
-        // Check if we've crossed into a new loop - if so, restart videos
-        const currentLoopIndex = Math.floor(elapsed / loopDurationMs)
-        if (currentLoopIndex > lastLoopIndex) {
-          lastLoopIndex = currentLoopIndex
-          // Restart videos for the new loop and ensure they keep playing
-          if (videoA) {
-            videoA.currentTime = 0
-            videoA.play().catch(() => {})
-          }
-          if (videoB) {
-            videoB.currentTime = 0
-            videoB.play().catch(() => {})
-          }
-        }
-
-        // Sweep: multiple sweeps per video loop using sine wave
-        const loopProgress = (elapsed % loopDurationMs) / loopDurationMs
-        const sweepProgress = (loopProgress * exportSettings.sweepsPerLoop) % 1
-        const sweepPos = Math.sin(sweepProgress * Math.PI) * 100
-
-        // Draw the sweep frame directly to canvas (no React dependency)
-        drawSweepFrame(sweepPos, exportSettings.sweepStyle)
-
-        // Also update UI slider for visual feedback (only for horizontal mode)
-        if (exportSettings.sweepStyle === 'horizontal') {
-          setSliderPosition(sweepPos)
-        }
-
-        setProgress(Math.round(progressPct * 100))
-        setExportProgress({
-          status: 'encoding',
-          progress: Math.round(progressPct * 100),
-          message: `Recording... ${Math.round(progressPct * 100)}%`,
-        })
-
-        requestAnimationFrame(animate)
-      }
-
-      // Helper function to seek video and wait for it to be ready
-      const seekVideoAndWait = async (video: HTMLVideoElement, time: number): Promise<void> => {
-        return new Promise((resolve) => {
-          if (Math.abs(video.currentTime - time) < 0.01) {
-            resolve()
-            return
-          }
-          const onSeeked = () => {
-            video.removeEventListener('seeked', onSeeked)
-            resolve()
-          }
-          video.addEventListener('seeked', onSeeked)
-          video.currentTime = time
-        })
+          (elapsed) => {
+            drawSingleMedia(targetMedia)
+            const progress = Math.round((elapsed / (targetDuration * 1000)) * 100)
+            setProgress(progress)
+            setExportProgress({
+              status: 'encoding',
+              progress,
+              message: `Recording... ${progress}%`,
+            })
+          },
+          resources.signal,
+          async () => {
+            if (targetVideo) {
+              await seekVideoAndWait(targetVideo, 0)
+              await targetVideo.play()
+            }
+          },
+        )
+        throwIfAborted(resources.signal)
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
+        downloadVideo(webmBlob, `dualview-${exportSettings.exportSource}-${timestamp}.webm`)
+        setExportProgress({ status: 'done', progress: 100, message: 'Export complete!' })
+        return
       }
 
       // Handle MP4 export using WebCodecs + mp4-muxer
@@ -933,15 +744,7 @@ export function ExportDialog({ isOpen, onClose, canvasRef, captureFrame }: Expor
         if (videoB) videoB.pause()
 
         // Create muxer
-        const muxer = await createAvcMp4Muxer()
-
-        // Create video encoder
-        const encoder = new VideoEncoder({
-          output: (chunk, meta) => {
-            muxer.addChunk(chunk, meta)
-          },
-          error: (e) => console.error('VideoEncoder error:', e),
-        })
+        const { muxer, encoder } = await createMp4ExportEncoder(resources)
 
         encoder.configure({
           codec: 'avc1.640028',
@@ -951,10 +754,9 @@ export function ExportDialog({ isOpen, onClose, canvasRef, captureFrame }: Expor
           framerate: fps,
         })
 
-        const frameDuration = 1_000_000 / fps // microseconds
-
         // Encode frames - now with proper video seeking
         for (let i = 0; i < totalFrames; i++) {
+          throwIfAborted(resources.signal)
           const frameProgress = i / totalFrames
           const currentTime = frameProgress * totalExportDuration
 
@@ -987,13 +789,7 @@ export function ExportDialog({ isOpen, onClose, canvasRef, captureFrame }: Expor
           drawSweepFrame(sweepPos, exportSettings.sweepStyle)
 
           // Create VideoFrame from canvas
-          const frame = new VideoFrame(captureCanvas, {
-            timestamp: i * frameDuration,
-            duration: frameDuration,
-          })
-
-          encoder.encode(frame, { keyFrame: i % 30 === 0 })
-          frame.close()
+          encodeCanvasFrame(encoder, captureCanvas, i, fps)
 
           if (i % 5 === 0) {
             const progress = Math.round((i / totalFrames) * 90)
@@ -1006,13 +802,13 @@ export function ExportDialog({ isOpen, onClose, canvasRef, captureFrame }: Expor
           }
 
           // Small delay to prevent blocking and allow UI updates
-          if (i % 3 === 0) await new Promise((r) => setTimeout(r, 0))
+          if (i % 3 === 0) await yieldToExport(resources.signal)
         }
 
         setExportProgress({ status: 'encoding', progress: 95, message: 'Finalizing MP4...' })
-        await encoder.flush()
-        encoder.close()
-        const buffer = await muxer.finalize()
+        await waitForExport(encoder.flush(), resources.signal)
+        const buffer = await waitForExport(muxer.finalize(), resources.signal)
+        throwIfAborted(resources.signal)
         const mp4Blob = new Blob([buffer], { type: 'video/mp4' })
 
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
@@ -1051,6 +847,7 @@ export function ExportDialog({ isOpen, onClose, canvasRef, captureFrame }: Expor
 
         // Capture frames - now with proper video seeking
         for (let i = 0; i < totalFrames; i++) {
+          throwIfAborted(resources.signal)
           const frameProgress = i / totalFrames
           const currentTime = frameProgress * totalExportDuration
 
@@ -1096,52 +893,23 @@ export function ExportDialog({ isOpen, onClose, canvasRef, captureFrame }: Expor
           }
 
           // Small delay to prevent blocking and allow UI updates
-          if (i % 3 === 0) await new Promise((r) => setTimeout(r, 0))
+          if (i % 3 === 0) await yieldToExport(resources.signal)
         }
 
-        // Encode GIF using gif.js from CDN
-        setExportProgress({ status: 'encoding', progress: 40, message: 'Loading GIF encoder...' })
-
-        // Dynamically load gif.js
-        if (!(window as any).GIF) {
-          await new Promise<void>((resolve, reject) => {
-            const script = document.createElement('script')
-            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js'
-            script.onload = () => resolve()
-            script.onerror = () => reject(new Error('Failed to load GIF encoder'))
-            document.head.appendChild(script)
-          })
-        }
-
-        setExportProgress({ status: 'encoding', progress: 45, message: 'Encoding GIF...' })
-
-        const GIF = (window as any).GIF
-        const gif = new GIF({
-          workers: 2,
-          quality: 10,
-          width: gifOptions.width,
-          height: gifOptions.height,
-          workerScript: 'https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.worker.js',
-        })
-
-        const frameDelay = Math.round(1000 / gifOptions.fps)
-        frames.forEach((frame) => {
-          gif.addFrame(frame, { delay: frameDelay })
-        })
-
-        const gifBlob = await new Promise<Blob>((resolve, reject) => {
-          gif.on('progress', (p: number) => {
-            setProgress(45 + Math.round(p * 55))
+        const gifBlob = await createGifFromFrames(
+          frames,
+          gifPreset,
+          (progress, message) => {
+            setProgress(45 + Math.round(progress * 0.55))
             setExportProgress({
               status: 'encoding',
-              progress: 45 + Math.round(p * 55),
-              message: `Encoding GIF... ${Math.round(p * 100)}%`,
+              progress: 45 + Math.round(progress * 0.55),
+              message,
             })
-          })
-          gif.on('finished', (blob: Blob) => resolve(blob))
-          gif.on('error', (err: Error) => reject(err))
-          gif.render()
-        })
+          },
+          resources.signal,
+        )
+        throwIfAborted(resources.signal)
 
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
         downloadVideo(gifBlob, `dualview-sweep-${timestamp}.gif`)
@@ -1149,19 +917,66 @@ export function ExportDialog({ isOpen, onClose, canvasRef, captureFrame }: Expor
         return
       }
 
-      // WebM export (default, fast)
-      setTimeout(animate, 100)
-
-      const webmBlob = await recordingPromise
+      let lastLoopIndex = 0
+      const loopDurationMs = loopDuration * 1000
+      const totalDurationMs = loopDurationMs * exportSettings.videoLoops
+      const webmBlob = await recordCanvasWebM(
+        captureCanvas,
+        totalDurationMs,
+        exportSettings.quality === 'high'
+          ? 10_000_000
+          : exportSettings.quality === 'medium'
+            ? 5_000_000
+            : 2_500_000,
+        (elapsed) => {
+          const loopIndex = Math.floor(elapsed / loopDurationMs)
+          if (loopIndex > lastLoopIndex) {
+            lastLoopIndex = loopIndex
+            for (const video of [videoA, videoB]) {
+              if (video) {
+                video.currentTime = 0
+                void video.play().catch((error) => resources.controller.abort(error))
+              }
+            }
+          }
+          const loopProgress = (elapsed % loopDurationMs) / loopDurationMs
+          const sweepPos =
+            Math.sin(((loopProgress * exportSettings.sweepsPerLoop) % 1) * Math.PI) * 100
+          drawSweepFrame(sweepPos, exportSettings.sweepStyle)
+          if (exportSettings.sweepStyle === 'horizontal') setSliderPosition(sweepPos)
+          const progress = Math.round((elapsed / totalDurationMs) * 100)
+          setProgress(progress)
+          setExportProgress({ status: 'encoding', progress, message: `Recording... ${progress}%` })
+        },
+        resources.signal,
+        async () => {
+          await Promise.all(
+            [videoA, videoB].map(async (video) => {
+              if (video) {
+                await seekVideoAndWait(video, 0)
+                await video.play()
+              }
+            }),
+          )
+        },
+      )
+      throwIfAborted(resources.signal)
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
       downloadVideo(webmBlob, `dualview-sweep-${timestamp}.webm`)
 
       setExportProgress({ status: 'done', progress: 100, message: 'Export complete!' })
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Export failed'
-      setError(message)
-      setExportProgress({ status: 'error', progress: 0, message })
+      const cancelled = err instanceof DOMException && err.name === 'AbortError'
+      const message = cancelled
+        ? 'Export cancelled'
+        : err instanceof Error
+          ? err.message
+          : 'Export failed'
+      setError(cancelled ? null : message)
+      setExportProgress({ status: cancelled ? 'idle' : 'error', progress: 0, message })
     } finally {
+      await resources.dispose()
+      activeExportRef.current = null
       setIsExporting(false)
       setExporting(false)
       setSliderPosition(50)
@@ -1345,8 +1160,14 @@ export function ExportDialog({ isOpen, onClose, canvasRef, captureFrame }: Expor
     setError(null)
     setProgress(0)
 
+    const resources = new ExportResources()
+    activeExportRef.current = resources.controller
+    const seekVideoAndWait = (video: HTMLVideoElement, time: number) =>
+      seekExportVideo(video, time, resources.signal)
+
     try {
       const { videoA, videoB } = getVideoElements()
+      preserveVideoPositions(resources, [videoA, videoB])
       const { mediaA, mediaB } = getVisualElements()
 
       if (!mediaA || !mediaB) {
@@ -1412,6 +1233,7 @@ export function ExportDialog({ isOpen, onClose, canvasRef, captureFrame }: Expor
 
       // Create WebGL renderer
       const renderer = new WebGLTransitionRenderer(width, height)
+      resources.defer(() => renderer.dispose())
 
       // Load the selected shader
       const shaderLoaded = renderer.loadTransition(transitionEngine, transitionVariant)
@@ -1428,22 +1250,6 @@ export function ExportDialog({ isOpen, onClose, canvasRef, captureFrame }: Expor
       captureCanvas.width = width
       captureCanvas.height = height
       const ctx = captureCanvas.getContext('2d')!
-
-      // Helper to seek video and wait
-      const seekVideoAndWait = async (video: HTMLVideoElement, time: number): Promise<void> => {
-        return new Promise((resolve) => {
-          if (Math.abs(video.currentTime - time) < 0.01) {
-            resolve()
-            return
-          }
-          const onSeeked = () => {
-            video.removeEventListener('seeked', onSeeked)
-            resolve()
-          }
-          video.addEventListener('seeked', onSeeked)
-          video.currentTime = Math.max(0, Math.min(time, video.duration - 0.001))
-        })
-      }
 
       // Helper to draw media to canvas
       const drawToCanvas = (source: HTMLVideoElement | HTMLImageElement) => {
@@ -1464,12 +1270,7 @@ export function ExportDialog({ isOpen, onClose, canvasRef, captureFrame }: Expor
               ? 5_000_000
               : 2_500_000
 
-        const muxer = await createAvcMp4Muxer()
-
-        const encoder = new VideoEncoder({
-          output: (chunk, meta) => muxer.addChunk(chunk, meta),
-          error: (e) => console.error('VideoEncoder error:', e),
-        })
+        const { muxer, encoder } = await createMp4ExportEncoder(resources)
 
         encoder.configure({
           codec: 'avc1.640028',
@@ -1479,10 +1280,9 @@ export function ExportDialog({ isOpen, onClose, canvasRef, captureFrame }: Expor
           framerate: fps,
         })
 
-        const frameDuration = 1_000_000 / fps
-
         // Encode frames
         for (let i = 0; i < totalFrames; i++) {
+          throwIfAborted(resources.signal)
           const currentTime = (i / totalFrames) * totalDuration
           let transitionProgress = 0
           let showA = true
@@ -1589,12 +1389,7 @@ export function ExportDialog({ isOpen, onClose, canvasRef, captureFrame }: Expor
           }
 
           // Encode frame
-          const frame = new VideoFrame(captureCanvas, {
-            timestamp: i * frameDuration,
-            duration: frameDuration,
-          })
-          encoder.encode(frame, { keyFrame: i % 30 === 0 })
-          frame.close()
+          encodeCanvasFrame(encoder, captureCanvas, i, fps)
 
           if (i % 5 === 0) {
             const prog = 5 + Math.round((i / totalFrames) * 90)
@@ -1606,13 +1401,13 @@ export function ExportDialog({ isOpen, onClose, canvasRef, captureFrame }: Expor
             })
           }
 
-          if (i % 3 === 0) await new Promise((r) => setTimeout(r, 0))
+          if (i % 3 === 0) await yieldToExport(resources.signal)
         }
 
         setExportProgress({ status: 'encoding', progress: 95, message: 'Finalizing MP4...' })
-        await encoder.flush()
-        encoder.close()
-        const buffer = await muxer.finalize()
+        await waitForExport(encoder.flush(), resources.signal)
+        const buffer = await waitForExport(muxer.finalize(), resources.signal)
+        throwIfAborted(resources.signal)
         const mp4Blob = new Blob([buffer], { type: 'video/mp4' })
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
         downloadVideo(mp4Blob, `dualview-transition-${transitionEngine}-${timestamp}.mp4`)
@@ -1629,6 +1424,7 @@ export function ExportDialog({ isOpen, onClose, canvasRef, captureFrame }: Expor
         const gifTotalFrames = Math.ceil(totalDuration * gifOptions.fps)
 
         for (let i = 0; i < gifTotalFrames; i++) {
+          throwIfAborted(resources.signal)
           const currentTime = (i / gifTotalFrames) * totalDuration
           let transitionProgress = 0
           let showA = true
@@ -1700,61 +1496,41 @@ export function ExportDialog({ isOpen, onClose, canvasRef, captureFrame }: Expor
               message: `Capturing frame ${i + 1}/${gifTotalFrames}`,
             })
           }
-          if (i % 3 === 0) await new Promise((r) => setTimeout(r, 0))
+          if (i % 3 === 0) await yieldToExport(resources.signal)
         }
 
-        // Encode GIF
-        setExportProgress({ status: 'encoding', progress: 50, message: 'Encoding GIF...' })
-
-        if (!(window as any).GIF) {
-          await new Promise<void>((resolve, reject) => {
-            const script = document.createElement('script')
-            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js'
-            script.onload = () => resolve()
-            script.onerror = () => reject(new Error('Failed to load GIF encoder'))
-            document.head.appendChild(script)
-          })
-        }
-
-        const GIF = (window as any).GIF
-        const gif = new GIF({
-          workers: 2,
-          quality: 10,
-          width: gifOptions.width,
-          height: gifOptions.height,
-          workerScript: 'https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.worker.js',
-        })
-
-        const frameDelay = Math.round(1000 / gifOptions.fps)
-        gifFrames.forEach((frame) => gif.addFrame(frame, { delay: frameDelay }))
-
-        const gifBlob = await new Promise<Blob>((resolve, reject) => {
-          gif.on('progress', (p: number) => {
-            setProgress(50 + Math.round(p * 50))
+        const gifBlob = await createGifFromFrames(
+          gifFrames,
+          'medium',
+          (progress, message) => {
+            setProgress(45 + Math.round(progress * 0.55))
             setExportProgress({
               status: 'encoding',
-              progress: 50 + Math.round(p * 50),
-              message: `Encoding GIF... ${Math.round(p * 100)}%`,
+              progress: 45 + Math.round(progress * 0.55),
+              message,
             })
-          })
-          gif.on('finished', (blob: Blob) => resolve(blob))
-          gif.on('error', (err: Error) => reject(err))
-          gif.render()
-        })
+          },
+          resources.signal,
+        )
+        throwIfAborted(resources.signal)
 
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
         downloadVideo(gifBlob, `dualview-transition-${transitionEngine}-${timestamp}.gif`)
       }
 
-      // Cleanup
-      renderer.dispose()
-
       setExportProgress({ status: 'done', progress: 100, message: 'Transition export complete!' })
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Transition export failed'
-      setError(message)
-      setExportProgress({ status: 'error', progress: 0, message })
+      const cancelled = err instanceof DOMException && err.name === 'AbortError'
+      const message = cancelled
+        ? 'Export cancelled'
+        : err instanceof Error
+          ? err.message
+          : 'Transition export failed'
+      setError(cancelled ? null : message)
+      setExportProgress({ status: cancelled ? 'idle' : 'error', progress: 0, message })
     } finally {
+      await resources.dispose()
+      activeExportRef.current = null
       setIsExportingTransition(false)
       setExporting(false)
       releaseExportLock()
@@ -1788,6 +1564,8 @@ export function ExportDialog({ isOpen, onClose, canvasRef, captureFrame }: Expor
       totalClips: selectedTrack.clips.length,
     })
 
+    const controller = new AbortController()
+    activeExportRef.current = controller
     try {
       const blob = await exportStitchedVideo(
         selectedTrack,
@@ -1801,8 +1579,10 @@ export function ExportDialog({ isOpen, onClose, canvasRef, captureFrame }: Expor
           includeAudio: false,
         },
         setStitchProgress,
+        controller.signal,
       )
 
+      throwIfAborted(controller.signal)
       if (blob) {
         downloadStitchedVideo(
           blob,
@@ -1812,13 +1592,14 @@ export function ExportDialog({ isOpen, onClose, canvasRef, captureFrame }: Expor
     } catch (err) {
       console.error('Stitch export error:', err)
       setStitchProgress({
-        status: 'error',
+        status: err instanceof DOMException && err.name === 'AbortError' ? 'idle' : 'error',
         progress: 0,
         message: err instanceof Error ? err.message : 'Export failed',
         currentClip: 0,
         totalClips: 0,
       })
     } finally {
+      activeExportRef.current = null
       setIsExportingStitch(false)
       releaseExportLock()
     }

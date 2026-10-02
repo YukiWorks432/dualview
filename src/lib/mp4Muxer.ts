@@ -9,6 +9,7 @@ import {
 interface AvcMp4Muxer {
   addChunk: (chunk: EncodedVideoChunk, meta?: EncodedVideoChunkMetadata) => void
   finalize: () => Promise<ArrayBuffer>
+  dispose: () => Promise<void>
 }
 
 /**
@@ -26,18 +27,33 @@ export async function createAvcMp4Muxer(): Promise<AvcMp4Muxer> {
   const source = new EncodedVideoPacketSource('avc')
 
   output.addVideoTrack(source)
-  await output.start()
+  try {
+    await output.start()
+  } catch (error) {
+    await output.cancel()
+    throw error
+  }
 
   let writeQueue = Promise.resolve()
+  let writeError: unknown
+  let disposed = false
 
   return {
     addChunk(chunk, meta) {
       const packet = EncodedPacket.fromEncodedChunk(chunk)
-      writeQueue = writeQueue.then(() => source.add(packet, meta))
+      writeQueue = writeQueue
+        .then(async () => {
+          if (disposed || writeError) return
+          await source.add(packet, meta)
+        })
+        .catch((error) => {
+          writeError = error
+        })
     },
 
     async finalize() {
       await writeQueue
+      if (writeError) throw writeError
       source.close()
       await output.finalize()
 
@@ -46,6 +62,14 @@ export async function createAvcMp4Muxer(): Promise<AvcMp4Muxer> {
       }
 
       return target.buffer
+    },
+
+    async dispose() {
+      if (disposed) return
+      disposed = true
+      source.close()
+      if (output.state !== 'finalized') await output.cancel()
+      await writeQueue
     },
   }
 }
