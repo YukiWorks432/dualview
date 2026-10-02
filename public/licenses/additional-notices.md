@@ -1,13 +1,19 @@
-# Additional distributed notices
+# 追加の配布通知 / Additional distributed notices
 
-This file covers browser-distributed third-party code that is vendored, copied, or loaded outside
-normal dependency metadata. The Vite production build also generates `licenses/third-party.md` for
-bundled dependencies.
+ブラウザーへ配布するコードのうち、同梱・コピー・別経路での読み込みによって通常の依存関係情報だけでは扱えないものを記載する。
+Viteの製品版ビルドは、バンドルした依存コードの通知を`licenses/third-party.md`へ別途生成する。
+以下のライセンス本文と著作権表示は原文を掲載する。
+
+This page records notices for browser-distributed code that is vendored, copied, or loaded outside
+ordinary dependency metadata. Vite generates `licenses/third-party.md` separately for bundled
+dependencies. License texts and copyright notices below are reproduced in their original form.
 
 ## gif.worker.js / gif.js-upgrade 0.2.1
 
-DualView copies `public/gif.worker.js` into the production output. The distributed worker identifies
-itself as `gif.worker.js 0.2.1` and points to the original gif.js project.
+`public/gif.worker.js`は製品版へコピーされる。Worker内の表記は`gif.worker.js 0.2.1`で、原プロジェクトのgif.jsを参照している。
+
+The production build includes `public/gif.worker.js`. Its header identifies version `gif.worker.js 0.2.1`
+and refers to the original gif.js project.
 
 - Package: `gif.js-upgrade` 0.2.1
 - License: MIT
@@ -35,7 +41,10 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 
 ## @mediabunny/prores 1.59.0
 
-DualView uses the ProRes decoder package distributed with the browser application.
+ブラウザーアプリに同梱するProResデコーダー。配布版の対応ソースとライセンスは以下のとおり。
+
+This ProRes decoder is distributed with the browser application. The links below identify its
+corresponding source and license.
 
 - Package: `@mediabunny/prores` 1.59.0
 - License: Mozilla Public License 2.0 (MPL-2.0)
@@ -43,14 +52,17 @@ DualView uses the ProRes decoder package distributed with the browser applicatio
   https://github.com/Vanilagy/mediabunny/tree/v1.59.0/packages/prores
 - MPL 2.0 license text: https://www.mozilla.org/MPL/2.0/
 
-The MPL-covered ProRes component remains under MPL-2.0. Its inclusion does not change the overall
-DualView application license from MIT; the applicable license follows each covered component and
-file.
+ProResコンポーネントのMPL対象部分にはMPL-2.0が適用される。DualView本体のMIT Licenseは変わらず、
+各コンポーネントとファイルにはそれぞれのライセンスが適用される。
+
+MPL-covered ProRes code remains under MPL-2.0. DualView itself remains MIT-licensed; the applicable
+license is determined for each component and file.
 
 ## pixelmatch 7.2.0
 
-The separately emitted difference-analysis workers bundle `pixelmatch` for pixel-level frame
-comparison.
+別ファイルとして出力する差分解析Workerは、フレームの画素比較に`pixelmatch`を同梱する。
+
+The separately emitted difference-analysis Workers include `pixelmatch` to compare frame pixels.
 
 - Package: `pixelmatch` 7.2.0
 - License: ISC
@@ -73,9 +85,11 @@ THIS SOFTWARE.
 
 ## Fluid Functionalism surface system
 
-DualView vendors the surface context, surface class lookup, and elevation primitive from Fluid
-Functionalism's `@fluid/elevated` shadcn registry item. The small adapter in
-`src/components/ui/surface.ts` remains DualView-owned.
+Fluid Functionalismの`@fluid/elevated` shadcnレジストリ項目から、面のコンテキスト、クラスの参照、
+高さの基本部品を取り込んでいる。`src/components/ui/surface.ts`の互換層のコードはDualView側に帰属する。
+
+The surface context, class lookup, and elevation primitive are vendored from Fluid Functionalism's
+`@fluid/elevated` shadcn registry item. DualView owns the adapter in `src/components/ui/surface.ts`.
 
 - Project: https://github.com/mickadesign/fluid-functionalism
 - Registry: https://www.fluidfunctionalism.com/r/elevated.json

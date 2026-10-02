@@ -7,7 +7,7 @@
     <title>ライセンスと第三者ソフトウェア | DualView</title>
     <meta
       name="description"
-      content="DualViewと、利用している第三者ソフトウェアのライセンス情報です。"
+      content="DualView本体と配布する第三者コードのライセンス、通知、対応するソースコードへの参照をまとめる。"
     />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="stylesheet" href="/site-info.css" />
@@ -16,108 +16,121 @@
     <header class="site-header">
       <div class="site-header__inner">
         <a class="brand" href="/">DualView</a>
-        <nav class="site-nav" aria-label="Site information">
-          <a href="/privacy/">Privacy</a>
-          <a href="/terms/">Terms</a>
-          <a href="/about/">About</a>
-          <a href="/licenses/" aria-current="page">Licenses</a>
+        <nav class="site-nav" aria-label="サイト情報 / Site information">
+          <a href="/privacy/">Privacy</a><a href="/terms/">Terms</a><a href="/about/">About</a
+          ><a href="/licenses/" aria-current="page">Licenses</a>
         </nav>
       </div>
     </header>
-
     <main>
       <div class="hero">
-        <p class="eyebrow">Licenses</p>
         <h1>ライセンスと第三者ソフトウェア</h1>
-        <p>DualViewと、サイト内で利用している第三者ソフトウェアのライセンス情報です。</p>
+        <p>
+          DualView本体と配布する第三者コードのライセンス、通知、対応するソースコードへの参照をまとめる。
+        </p>
+        <nav aria-label="言語 / Language">
+          <a href="#japanese" lang="ja">日本語</a> · <a href="#english" lang="en">English</a>
+        </nav>
       </div>
-
-      <section class="language-block" lang="ja">
-        <span class="language-label">日本語</span>
-
-        <section class="card notice">
-          <h2>DualView</h2>
+      <section class="language-block" lang="ja" id="japanese">
+        <h2 class="language-label">日本語</h2>
+        <section class="card">
+          <h3>DualView本体</h3>
+          <p>DualViewはMIT Licenseで公開する。著作権表示とライセンス全文は次の参照先に記載する。</p>
           <p>
-            DualViewはMIT Licenseのもとで公開されています。
-            著作権表示とライセンス全文は、以下から確認できます。
-          </p>
-          <div class="link-list">
-            <a href="/licenses/dualview-license.txt">MIT License</a>
+            <a href="/licenses/dualview-license.txt">MIT License</a> ·
             <a
               href="https://github.com/YukiWorks432/dualview/blob/main/LICENSE"
               target="_blank"
               rel="noopener noreferrer"
-              >Repository LICENSE ↗</a
+              >Repository LICENSE</a
             >
-          </div>
-        </section>
-
-        <section class="card">
-          <h2>第三者ソフトウェア</h2>
-          <p>
-            DualViewが利用している第三者ソフトウェアには、それぞれのライセンスが適用されます。
-            配布物に含まれるライセンス通知は以下から確認できます。
           </p>
-          <div class="link-list">
-            <a href="/licenses/third-party.md">Third-party licenses</a>
+        </section>
+        <section class="card">
+          <h3>第三者コードの通知</h3>
+          <p>
+            利用する第三者ソフトウェアには、それぞれのライセンスが適用される。ビルドで生成する依存コードの通知と、同梱・別経路で読み込むコードの追加通知を以下に掲載する。
+          </p>
+          <p>
+            <a href="/licenses/third-party.md">Third-party licenses</a> ·
             <a href="/licenses/additional-notices.md">Additional notices</a>
-          </div>
-        </section>
-
-        <section class="card">
-          <h2>対応するソースコード</h2>
-          <p>
-            MPL-2.0が適用されるProResデコード用コンポーネントについては、
-            対応するソースコードを以下から確認できます。
           </p>
-          <div class="link-list">
+        </section>
+        <section class="card">
+          <h3>ProResデコーダーのソース</h3>
+          <p>
+            MPL-2.0の対象となるProResデコード用コンポーネントについて、配布版に対応するソースコードとライセンスを以下から確認できる。
+          </p>
+          <p>
             <a
               href="https://github.com/Vanilagy/mediabunny/tree/v1.59.0/packages/prores"
               target="_blank"
               rel="noopener noreferrer"
-              >@mediabunny/prores 1.59.0 source ↗</a
+              >@mediabunny/prores 1.59.0 source</a
             >
+            ·
             <a href="https://www.mozilla.org/MPL/2.0/" target="_blank" rel="noopener noreferrer"
-              >MPL 2.0 ↗</a
+              >MPL 2.0</a
             >
-          </div>
+          </p>
         </section>
       </section>
-
-      <section class="language-block" lang="en">
-        <span class="language-label">English</span>
-
-        <section class="card notice">
-          <h2>DualView</h2>
+      <section class="language-block" lang="en" id="english">
+        <h2 class="language-label">English</h2>
+        <section class="card">
+          <h3>DualView</h3>
           <p>
-            DualView is published under the MIT License. The copyright notice and full license text
-            are available through the links above.
+            DualView is published under the MIT License. Read the copyright notice and complete
+            license through these links.
+          </p>
+          <p>
+            <a href="/licenses/dualview-license.txt">MIT License</a> ·
+            <a
+              href="https://github.com/YukiWorks432/dualview/blob/main/LICENSE"
+              target="_blank"
+              rel="noopener noreferrer"
+              >Repository LICENSE</a
+            >
           </p>
         </section>
-
         <section class="card">
-          <h2>Third-party software</h2>
+          <h3>Third-party notices</h3>
           <p>
-            Third-party software used by DualView remains subject to its respective licenses.
-            Distributed license notices are available through the third-party and additional notice
-            files above.
+            Each third-party component retains its own license. The following files provide
+            build-generated dependency notices and additional notices for vendored or separately
+            loaded code.
+          </p>
+          <p>
+            <a href="/licenses/third-party.md">Third-party licenses</a> ·
+            <a href="/licenses/additional-notices.md">Additional notices</a>
           </p>
         </section>
-
         <section class="card">
-          <h2>Corresponding source</h2>
+          <h3>ProRes decoder source</h3>
           <p>
-            The corresponding source for the ProRes decoding component covered by MPL-2.0 is
-            available through the source link above.
+            The source corresponding to the distributed ProRes decoding component covered by
+            MPL-2.0, and the license text, are available here.
+          </p>
+          <p>
+            <a
+              href="https://github.com/Vanilagy/mediabunny/tree/v1.59.0/packages/prores"
+              target="_blank"
+              rel="noopener noreferrer"
+              >@mediabunny/prores 1.59.0 source</a
+            >
+            ·
+            <a href="https://www.mozilla.org/MPL/2.0/" target="_blank" rel="noopener noreferrer"
+              >MPL 2.0</a
+            >
           </p>
         </section>
       </section>
     </main>
-
     <footer class="site-footer">
-      <a href="/">Open DualView</a> ·
+      <a href="/">DualViewを開く / Open DualView</a> ·
       <a href="https://github.com/YukiWorks432/dualview" target="_blank" rel="noopener noreferrer"
-        >Source ↗</a
+        >ソースコード / Source</a
       >
     </footer>
   </body>

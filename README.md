@@ -1,902 +1,112 @@
 <p align="center">
-  <img src="public/favicon.svg" width="80" height="80" alt="DualView Logo">
+  <img src="public/favicon.svg" width="64" height="64" alt="DualViewのロゴ">
 </p>
 
-<h1 align="center">DualView</h1>
+# DualView
 
-<p align="center">
-  <a href="https://dualview.yukiworks432.workers.dev">
-    <img src="https://img.shields.io/badge/App-dualview.yukiworks432.workers.dev-ff5722?style=for-the-badge" alt="Open DualView">
-  </a>
-  <a href="https://github.com/YukiWorks432/dualview">
-    <img src="https://img.shields.io/badge/GitHub-YukiWorks432-181717?style=for-the-badge&logo=github" alt="YukiWorks432 on GitHub">
-  </a>
-  <a href="https://hanayuki.xyz">
-    <img src="https://img.shields.io/badge/Website-hanayuki.xyz-ff5722?style=for-the-badge" alt="hanayuki.xyz">
-  </a>
-  <a href="https://x.com/YuK1_Works">
-    <img src="https://img.shields.io/badge/X-@YuK1__Works-000000?style=for-the-badge&logo=x" alt="@YuK1_Works on X">
-  </a>
-</p>
+画像と動画を並べて、納品前の変更や意図しない差分を確認するブラウザーアプリ。
+A/Bの同期再生、画素・色・構造の解析、動画に含まれる音声の確認、比較結果の書き出しに対応する。
 
-<p align="center">
-  <sub>
-    Originally created by <a href="https://github.com/gokayfem"><strong>Gökay Aydoğan</strong></a>
-    · <a href="https://github.com/gokayfem/dualview">Upstream repository</a>
-    · <a href="https://dualview.ai">Original website</a>
-    · <a href="https://x.com/gokayfem">@gokayfem</a>
-    · <a href="https://huggingface.co/gokaygokay">Hugging Face</a>
-  </sub>
-</p>
+[アプリを開く](https://dualview.yukiworks432.workers.dev) ·
+[English](README.en.md) · [利用ガイド](docs/user-guide.md) ·
+[開発・公開手順](docs/development.md)
 
-<p align="center">
-  <strong>The Ultimate Comparison Tool for Creative Professionals</strong>
-</p>
+![A/Bの素材を比較するDualViewのデモ](https://github.com/user-attachments/assets/24a2b466-a9d9-4b0a-990a-66b47b308357)
 
-<p align="center">
-  Compare delivery-ready videos and images with synchronized playback, visual analysis, and embedded-audio QA.<br>
-  GPU-accelerated analysis • ProRes playback • Frame-accurate review • Exportable evidence
-</p>
+## 比較を始める
 
-<br>
+1. アプリを開き、比較する画像または動画を読み込む。
+2. 素材をTrack AとTrack Bに配置し、必要に応じて開始位置やトリムをそろえる。
+3. `Slider`で境界を動かすか、`Side by Side`で両方を表示する。動画は同期再生し、停止してフレームごとの差を確認する。
+4. 詳細を調べる場合は`Difference`、動画の音声を調べる場合は`Audio QA`を選ぶ。
+5. 比較結果を画像やPDFに書き出す。編集を引き継ぐ場合は、素材を含む`.dualview`ファイルを保存する。
 
-<p align="center">
-  <img src="https://github.com/user-attachments/assets/24a2b466-a9d9-4b0a-990a-66b47b308357" alt="DualView Demo" width="100%">
-</p>
+ローカル素材はブラウザー内で処理され、運営者へアップロードされない。
+URLからの取り込みでは取得先へ直接通信する。プロジェクトはこのブラウザーに自動保存されるため、
+重要な作業は別途書き出して保管する。詳しくは[データの取り扱い](https://dualview.yukiworks432.workers.dev/privacy/)を参照。
 
-<br>
+<h2 id="features">できること</h2>
 
-<p align="center">
-  <a href="#features">Features</a> •
-  <a href="#comparison-modes">Modes</a> •
-  <a href="#webgl-analysis">Analysis</a> •
-  <a href="#export">Export</a> •
-  <a href="#shortcuts">Shortcuts</a> •
-  <a href="#getting-started">Get Started</a> •
-  <a href="#project-lineage">Lineage</a>
-</p>
+| 確認したいこと                     | 主な機能                                                                 |
+| ---------------------------------- | ------------------------------------------------------------------------ |
+| 修正前後、レンダー、圧縮結果の違い | 12種類の比較表示、同期した拡大・移動、フレーム送り、ループ、マーカー     |
+| 色や細部の変化                     | WebGL解析、SSIM・PSNR、Delta E、ヒートマップ、画素検査、ルーペ、スコープ |
+| 動画の途中にある差分               | A/Bフレーム差分レーン、差分区間への移動                                  |
+| 動画の音声                         | 波形、ラウドネスの参考値、Sample Peak、RMS、位相相関、ステレオ幅         |
+| 確認結果の共有                     | PNG/JPEG、PDF、通常動画からのMP4/WebM/GIF、トランジション、連結書き出し  |
+| 比較作業の再開                     | 複数プロジェクト、自動保存、`.dualview`入出力、テンプレート、Undo/Redo   |
 
-<p align="center">
-  <img src="https://img.shields.io/badge/React-19.3.0-61DAFB?style=flat-square&logo=react" alt="React">
-  <img src="https://img.shields.io/badge/TypeScript-7.0.2-3178C6?style=flat-square&logo=typescript" alt="TypeScript">
-  <img src="https://img.shields.io/badge/Vite-8.3.0-646CFF?style=flat-square&logo=vite" alt="Vite">
-  <img src="https://img.shields.io/badge/WebGL-GPU_Accelerated-990000?style=flat-square&logo=webgl" alt="WebGL">
-  <img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" alt="License">
-</p>
+画像生成やアップスケーリングの比較、レタッチ、カラーグレーディング、VFXの確認にも使える。
+単独の音声ファイル、テキスト・JSON、3Dモデル、文書ファイルの比較は対象に含まれない。
 
----
+<h2 id="comparison-modes">比較表示を選ぶ</h2>
 
-<h2 id="project-lineage">Project Lineage</h2>
+`1`〜`4`で`Slider`、`Side by Side`、`Difference`、`Audio QA`を切り替える。
+重ね合わせ、点滅、分割表示などを含む全モードと使い分けは[利用ガイド](docs/user-guide.md#comparison-modes)に記載する。
 
-> [!NOTE]
-> **DualView was originally created by [Gökay Aydoğan](https://github.com/gokayfem) in
-> [gokayfem/dualview](https://github.com/gokayfem/dualview).**
-> This repository is a maintained fork by [花雪 / HanaYuki](https://github.com/YukiWorks432),
-> continuing that work with modernization, maintenance, and ongoing development while preserving
-> attribution to the original project.
+<h2 id="webgl-analysis">解析結果を読む</h2>
 
-| Role                 | Links                                                                                                                                              |
-| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Original project** | [gokayfem/dualview](https://github.com/gokayfem/dualview) · [dualview.ai](https://dualview.ai)                                                     |
-| **Original creator** | [Gökay Aydoğan](https://github.com/gokayfem) · [@gokayfem](https://x.com/gokayfem)                                                                 |
-| **Maintained fork**  | [dualview.yukiworks432.workers.dev](https://dualview.yukiworks432.workers.dev) · [YukiWorks432/dualview](https://github.com/YukiWorks432/dualview) |
-| **Fork maintainer**  | [花雪 / HanaYuki](https://github.com/YukiWorks432) · [@YuK1_Works](https://x.com/YuK1_Works) · [hanayuki.xyz](https://hanayuki.xyz)                |
+`Difference`には、差分、構造、色、合成、時間変化、知覚的重み付け、高度な解析、露出の8分類がある。
+各表示の目的と制約は[解析リファレンス](docs/analysis-reference.md)を参照。
+解析値は確認の参考情報であり、品質や放送・配信規格への適合を認証するものではない。
 
----
+<h2 id="export">書き出しの条件</h2>
 
-## Why DualView?
+画像とPDFはProResの現在のデコード済みフレームも扱える。
+動画・GIF・トランジション・連結書き出しには、ブラウザー標準でデコードできる動画が必要。
+MP4はWebCodecsの`VideoEncoder`対応にも依存する。
+解像度や形式、中止時の動作は[書き出しガイド](docs/user-guide.md#export)で確認できる。
 
-This maintained fork focuses on **pre-delivery image and video review**: checking client revisions, render changes, compression artifacts, and accidental differences before delivery.
+<h2 id="shortcuts">キーボード操作</h2>
 
-> **Drop A/B media** → **Choose a comparison mode** → **Inspect differences** → **Save evidence**
+`Space`で再生・停止、停止中の`←`・`→`でフレーム送り、`J`・`K`・`L`で逆方向・停止・順方向の再生を操作する。
+`?`でショートカット一覧を表示できる。画面ごとに意味が変わるキーを含む一覧は
+[ショートカット](docs/user-guide.md#shortcuts)を参照。
 
-| Input                       | Review                                                                                |
-| :-------------------------- | :------------------------------------------------------------------------------------ |
-| 🎬 **Video**                | Synchronized playback, ProRes playback, scopes, SSIM/PSNR, heatmaps, WebGL analysis   |
-| 🖼️ **Image**                | Slider, side-by-side, pixel/color difference, loupe, histogram, WebGL analysis        |
-| 🎵 **Embedded video audio** | Waveform, integrated loudness reference, sample peak, phase correlation, stereo width |
+<h2 id="getting-started">ローカルで動かす</h2>
 
-Standalone audio files, text/JSON, 3D models, and document comparison are not part of this maintained fork's current scope.
-
----
-
-<h2 id="features">✨ Features at a Glance</h2>
-
-<table>
-<tr>
-<td width="50%">
-
-### 🎬 Video & Image
-
-- Frame-by-frame navigation
-- Synchronized playback
-- Apple ProRes playback in-browser
-- Loop regions with I/O points
-- Multi-clip timeline editing
-- Clip trimming & positioning
-
-</td>
-<td width="50%">
-
-### 🔬 Analysis Tools
-
-- SSIM & PSNR metrics
-- Delta E perceptual difference
-- Difference heatmaps including alpha
-- Pixel inspector
-- Magnifier loupe
-- Video scopes
-
-</td>
-</tr>
-<tr>
-<td width="50%">
-
-### 🎨 Comparison Modes
-
-- 12 image/video review modes
-- 50+ WebGL analysis shaders
-- Slider and side-by-side review
-- Blend, flicker, heatmap, and grid views
-- Focus peaking and zebra analysis
-- Synchronized pan/zoom
-
-</td>
-<td width="50%">
-
-### 📤 Export Options
-
-- Current comparison screenshots (PNG/JPEG)
-- PDF comparison reports
-- MP4, WebM, and GIF export for browser-native video
-- WebGL transition and stitch exports
-- Up to 4K screenshot resolution
-- ProRes current-frame evidence via Image/PDF export
-
-</td>
-</tr>
-<tr>
-<td width="50%">
-
-### 🎵 Embedded Audio QA
-
-- Timeline-aware playback for trimmed/positioned clips
-- Waveform visualization with playhead
-- Integrated loudness reference comparison
-- Sample Peak & RMS measurement
-- Phase correlation & stereo width
-- EBU R128 and ATSC A/85 reference targets
-
-</td>
-<td width="50%">
-
-### 💾 Project Management
-
-- Auto-save to IndexedDB
-- Multiple projects support
-- Import/Export `.dualview` files
-- Built-in & custom templates
-- Undo/Redo history
-
-</td>
-</tr>
-</table>
-
-### クリップ編集の保持範囲
-
-クリップを分割・トリム・複製・貼り付けしても、一定の再生速度と逆再生の設定は保持されます。
-リップル編集では、クリップの長さの変更に合わせて、同じトラックの後続クリップが移動します。
-素材を差し替えると、クリップの開始位置と素材のトリム開始位置を保ち、新しい素材の末尾までを使います。
-新しい素材がトリム開始位置より短い場合は、理由を表示し、元の編集内容を保持します。
-
-保存ファイルに含まれるキーフレームも読み込めます。ただし、キーフレーム付きクリップの分割、
-先頭のトリム、右側だけを残す操作は、時刻変換の仕様が未定義のため利用できません。
-これらの操作を試みると理由を表示し、データを保持します。
-
-クリップを複製・貼り付けすると、キーフレームの相対時刻と補間設定もコピーされます。
-末尾のトリムや左側だけを残す操作で範囲外になったキーフレームも、削除せずに保持します。
-Undo/Redoでは、キーフレームをクリップと一緒に復元します。
-
----
-
-<h2 id="comparison-modes">🎯 Comparison Modes</h2>
-
-DualView currently exposes **12 comparison modes**:
-
-### Primary Modes
-
-| Mode             | Key | Description                                      |
-| ---------------- | --- | ------------------------------------------------ |
-| **Slider**       | `1` | Draggable A/B reveal                             |
-| **Side by Side** | `2` | View synchronized A/B media together             |
-| **Difference**   | `3` | GPU-accelerated visual difference analysis       |
-| **Audio QA**     | `4` | Analyze audio embedded in the current A/B videos |
-
-### Additional Modes
-
-| Mode              | Description                                           |
-| ----------------- | ----------------------------------------------------- |
-| **Split Screen**  | Multi-panel image/video layout                        |
-| **Quad View**     | Four-panel comparison                                 |
-| **Blend Modes**   | Difference, overlay, multiply, and screen compositing |
-| **Flicker**       | Rapid A/B switching                                   |
-| **Heatmap**       | Pixel and alpha difference visualization              |
-| **Radial Loupe**  | Magnified circular comparison                         |
-| **Grid Tile**     | Checkerboard A/B comparison                           |
-| **Morphological** | Morphological difference operations                   |
-
-### 比較プレビューの描画と更新
-
-Heatmapは、1回の描画処理と再生中に描画を繰り返す処理を分け、入力用Canvasと出力用の画素配列を再利用します。
-停止中に描画するのは、フレーム、設定、表示サイズが変わったときだけです。
-比較画面を離れると、予約済みの描画を取り消し、作業用バッファを解放します。
-
-WebGLのSplit Viewでは、左右に表示している通常動画・ProRes・画像を中央の解析にも使います。
-中央の解析も、共有の再生位置、トリム、再生速度、逆再生の設定に従います。
-シーク操作が続いた場合は、進行中のシークが完了してから、最後に要求された位置を反映します。
-空白区間や、停止中のシークでフレームの準備を待つ間は、中央に古い解析結果を残しません。
-停止中も繰り返し描画するのは、点滅検出と2種類のゼブラ表示のアニメーションだけです。
-
-フレーム通知APIが使えない環境でも、比較プレビューは読み込みやシークの完了に合わせて更新します。
-ただし、現在のフレームの差分を矩形で示す機能には、このAPIが必要です。
-差分矩形の表示は既定で有効になっており、再生の停止中だけ動作し、書き出しには含まれません。
-タイムライン全体の差分解析は、比較プレビューとは独立して実行します。
-
----
-
-<h2 id="webgl-analysis">🔥 WebGL Analysis Engine</h2>
-
-The heart of DualView is its **GPU-accelerated analysis engine** with **50+ GLSL shaders** organized into 8 categories:
-
-<details>
-<summary><strong>📊 Difference Analysis</strong> (10 modes)</summary>
-
-| Mode       | What it does                                           |
-| ---------- | ------------------------------------------------------ |
-| Absolute   | RGB channel difference with amplification              |
-| Perceptual | Delta E in LAB color space — how humans see difference |
-| Luminance  | Brightness-only comparison                             |
-| Chroma     | Color-only comparison (ignores brightness)             |
-| Threshold  | Binary mask at configurable threshold                  |
-| Amplified  | Magnify tiny differences 10x-100x                      |
-| Wipe       | Vertical/horizontal A↔B comparison                     |
-| Split      | Side-by-side 50/50                                     |
-| Debug      | Raw texture output for troubleshooting                 |
-
-</details>
-
-<details>
-<summary><strong>🏗️ Structural Analysis</strong> (5 modes)</summary>
-
-| Mode             | What it does                                   |
-| ---------------- | ---------------------------------------------- |
-| SSIM Map         | Local structural similarity visualization      |
-| Edge Comparison  | Sobel edge detection difference                |
-| Gradient         | Gradient magnitude comparison                  |
-| Local Contrast   | Contrast difference per region                 |
-| Block Difference | Block-based comparison (compression artifacts) |
-
-</details>
-
-<details>
-<summary><strong>🎨 Color Analysis</strong> (5 modes)</summary>
-
-| Mode              | What it does                    |
-| ----------------- | ------------------------------- |
-| Hue Difference    | Color wheel position comparison |
-| Saturation Map    | Vibrance difference             |
-| False Color       | Rainbow gradient for amplitude  |
-| Channel Split     | R/G/B separated                 |
-| Histogram Overlay | Distribution comparison         |
-
-</details>
-
-<details>
-<summary><strong>🎬 Professional Tools</strong> (6 modes)</summary>
-
-| Mode            | What it does                  |
-| --------------- | ----------------------------- |
-| Anaglyph 3D     | Red/cyan stereoscopic view    |
-| Checkerboard    | Alternating pixel tiles       |
-| Onion Skin      | Semi-transparent overlay      |
-| Loupe Wipe      | Magnified wipe comparison     |
-| Frequency Split | Low/high frequency separation |
-| Difference Mask | Use diff as alpha mask        |
-
-</details>
-
-<details>
-<summary><strong>🎥 Video-Specific</strong> (4 modes)</summary>
-
-| Mode              | What it does               |
-| ----------------- | -------------------------- |
-| Temporal Diff     | Frame-to-frame changes     |
-| Motion Vectors    | Optical flow approximation |
-| Flicker Detection | Unstable pixel detection   |
-| Frame Blend       | Temporal averaging         |
-
-</details>
-
-<details>
-<summary><strong>📐 Advanced Analysis</strong> (10+ modes)</summary>
-
-| Mode               | What it does                              |
-| ------------------ | ----------------------------------------- |
-| Multi-scale Edge   | Laplacian pyramid edge comparison         |
-| Local Contrast     | Standard deviation maps                   |
-| Gradient Direction | Direction as hue visualization            |
-| Optical Flow       | Motion vectors (8×8, 16×16, 32×32 blocks) |
-| FFT Magnitude      | Frequency spectrum analysis               |
-| Band-pass Filter   | Low/high/band frequency isolation         |
-| Temporal Noise     | Frame-to-frame noise analysis             |
-| Diff Accumulator   | Motion history over time                  |
-
-</details>
-
-<details>
-<summary><strong>📷 Exposure Tools</strong> (8 modes)</summary>
-
-| Mode                                        | Shortcut | What it does                                |
-| ------------------------------------------- | -------- | ------------------------------------------- |
-| False Color                                 | —        | Exposure level visualization (cinema style) |
-| Focus Peaking                               | `P`      | Sharp edge highlighting                     |
-| Zebra Stripes                               | `Z`      | Overexposure warning (100 IRE)              |
-| Zone System                                 | —        | Ansel Adams exposure zones (0-X)            |
-| _All above with A vs B comparison variants_ |
-
-</details>
-
-<details>
-<summary><strong>⚖️ Perceptual Weighting</strong> (3 modes)</summary>
-
-| Mode          | What it does                                |
-| ------------- | ------------------------------------------- |
-| Saliency      | Visual attention importance                 |
-| Edge Weighted | Edge-aware comparison                       |
-| Weighted SSIM | Perceptually-weighted structural similarity |
-
-</details>
-
----
-
-## 🎵 Embedded Video Audio QA
-
-Audio QA analyzes the primary audio track embedded in the videos on Track A and Track B. Standalone audio-file import is intentionally outside the maintained fork's current scope.
-
-The audio player follows timeline clip placement, trim in-points, and playback speed. Reverse-audio playback is currently not synthesized.
-
-### Measurements
-
-| Measurement                | Current behavior                                                            |
-| -------------------------- | --------------------------------------------------------------------------- |
-| **Integrated loudness**    | Full decoded source-file estimate used against selectable reference targets |
-| **Tail 400 ms / Tail 3 s** | Final 400 ms / 3 s of the decoded source, not live playhead meters          |
-| **Sample Peak**            | Maximum decoded sample level; not presented as standards-compliant dBTP     |
-| **RMS**                    | Root mean square level                                                      |
-| **Phase correlation**      | Stereo phase relationship                                                   |
-| **Stereo width**           | Mid/side-derived width indicator                                            |
-
-Reference targets include Spotify, YouTube, Apple Music, EBU R128 (-23 LUFS), and ATSC A/85 (-24 LUFS). The ±1 LU indicator is a convenience comparison, not a certification of platform or broadcast compliance.
-
-To avoid exhausting browser memory on long or high-channel-count sources, embedded-audio analysis refuses decoded PCM estimates above 512 MiB and reports the reason in the Audio QA view.
-
-### Audio Shortcuts
-
-| Key     | Action        |
-| ------- | ------------- |
-| `A`     | Solo Track A  |
-| `B`     | Solo Track B  |
-| `S`     | Play both A+B |
-| `Space` | Play/Pause    |
-
----
-
-<h2 id="export">📤 Export System</h2>
-
-### Video Export
-
-Export your comparisons as polished videos with professional transitions:
-
-| Setting        | Options                      |
-| -------------- | ---------------------------- |
-| **Format**     | MP4 • WebM • GIF             |
-| **Resolution** | 720p • 1080p • 4K            |
-| **Frame Rate** | 24 • 30 • 60 fps             |
-| **Quality**    | Low • Medium • High          |
-| **Source**     | Comparison • A Only • B Only |
-
-### 🌀 100+ GPU Transitions
-
-Export with stunning WebGL shader transitions:
-
-| Category       | Variants | Examples                                          |
-| -------------- | -------- | ------------------------------------------------- |
-| **Dissolve**   | 8        | Powder, Ink, Cellular, Bokeh, Fractal, Sparkle    |
-| **Wipe**       | 12       | Radial, Spiral, Clock, Iris, Diamond, Heart, Star |
-| **Zoom**       | 8        | Push, Pull, Dolly, Punch, Bounce, Elastic         |
-| **Blur**       | 8        | Gaussian, Motion, Radial, Directional, Spin       |
-| **Rotate**     | 8        | Flip, Spin, Cube, Fold, Swing                     |
-| **Light**      | 8        | Leak, Glow, Flare, Flash, Strobe                  |
-| **Prism**      | 8        | RGB Split, Spectral, Chromatic Aberration         |
-| **Glitch**     | 8        | Scan, Tear, Block, Digital, VHS, Static           |
-| **Morph**      | 8        | Warp, Liquify, Twist, Bulge, Wave, Ripple         |
-| **Pixelate**   | 8        | Mosaic, Dither, Retro, 8-bit, Halftone            |
-| **Refraction** | 8        | Glass, Water, Crystal, Heat Haze                  |
-| **Shutter**    | 8        | Motion Lines, Echo, Trail, Persistence            |
-| **Other**      | 12       | Kaleidoscope, Matrix, Film Burn, Comic            |
-
-### 🎬 Sweep Animations
-
-| Style            | Description                          |
-| ---------------- | ------------------------------------ |
-| Horizontal       | Left-to-right wipe reveal            |
-| Vertical         | Top-to-bottom wipe reveal            |
-| Diagonal         | Corner-to-corner reveal              |
-| Circle           | Expanding circular reveal            |
-| Rectangle        | Expanding rectangular reveal         |
-| Spotlight        | Bouncing rectangle (DVD screensaver) |
-| Spotlight Circle | Bouncing circle                      |
-
-### 📸 Screenshot Export
-
-- **Formats:** PNG, JPEG (with quality control)
-- **Resolutions:** 720p, 1080p, 4K
-- **Sources:** Current comparison view, A only, B only
-- **Clipboard:** One-click copy
-- **ProRes:** Current decoded frame is supported in screenshots and PDF reports
-
-> [!NOTE]
-> Animated Video/GIF, transition, and stitch export currently require browser-native video decoding.
-> ProRes sources are rejected for those export paths instead of producing stale or incorrect frames.
-
-Animated exports can be cancelled with **Cancel**. After cancellation or a failed export,
-resources are released before another export can start. MP4 and GIF do not require WebM support;
-GIF encoding uses the bundled local worker. Borrowed preview videos return to their paused position.
-
----
-
-<h2 id="shortcuts">⌨️ Keyboard Shortcuts</h2>
-
-DualView is built for speed. Master these shortcuts:
-
-### Playback
-
-| Key               | Action                            |
-| ----------------- | --------------------------------- |
-| `Space`           | Play / Pause                      |
-| `←` `→`           | Frame step (paused) or 1s seek    |
-| `Shift` + `←` `→` | 5s seek                           |
-| `J` `K` `L`       | Shuttle backward / stop / forward |
-| `Home`            | Jump to start                     |
-| `End`             | Jump to end                       |
-
-All transport controls share one playback clock. Repeated J or L presses shuttle at
-1×, 2×, 4×, then 8× in the selected direction. Space pauses or resumes that direction;
-K stops and resets the speed to 1× forward. Choosing a speed also selects forward
-playback. End stops on the final timeline frame, and loops wrap in either direction.
-Paused marker jumps and seeks refresh native and ProRes frames; reverse shuttle is
-silent because reverse audio is not synthesized.
-
-### Loop & Markers
-
-| Key      | Action                 |
-| -------- | ---------------------- |
-| `I`      | Set loop in-point      |
-| `O`      | Set loop out-point     |
-| `Escape` | Clear loop region      |
-| `M`      | Add marker at playhead |
-
-### Modes & Views
-
-| Key       | Action                          |
-| --------- | ------------------------------- |
-| `1` - `4` | Switch primary comparison modes |
-| `F`       | Flip A/B (in Difference mode)   |
-| `P`       | Toggle focus peaking            |
-| `Z`       | Toggle zebra stripes            |
-| `G`       | Toggle video scopes             |
-
-### Timeline Editing
-
-| Key      | Action                             |
-| -------- | ---------------------------------- |
-| `S`      | Split selected clip at playhead    |
-| `Q`      | Keep left of playhead (trim right) |
-| `W`      | Keep right of playhead (trim left) |
-| `R`      | Toggle ripple edit mode            |
-| `N`      | Toggle snapping                    |
-| `Delete` | Delete selected clips              |
-
-### Interface
-
-| Key                      | Action                 |
-| ------------------------ | ---------------------- |
-| `T`                      | Toggle timeline        |
-| `B`                      | Toggle sidebar         |
-| `E`                      | Open export dialog     |
-| `Shift` + `S`            | Quick screenshot       |
-| `Shift` + `M`            | Toggle quality metrics |
-| `Ctrl/⌘` + `Z`           | Undo                   |
-| `Ctrl/⌘` + `Shift` + `Z` | Redo                   |
-| `Ctrl/⌘` + `S`           | Save project           |
-| `?`                      | Show all shortcuts     |
-
----
-
-## 🎨 Video Scopes
-
-Professional broadcast-style monitoring tools:
-
-| Scope             | Purpose                         |
-| ----------------- | ------------------------------- |
-| **Histogram**     | RGB/Luma distribution           |
-| **Color Wheel**   | Vectorscope-style chrominance   |
-| **Gamut Warning** | Out-of-gamut pixel highlighting |
-
-Toggle with `G` key.
-
----
-
-## 💾 Project Management
-
-- **Auto-save:** 500ms debounced saves to IndexedDB
-- **Multiple projects:** Create, duplicate, delete
-- **Import/Export:** `.dualview` JSON files with embedded media
-- **Templates:** Built-in presets + custom templates
-- **Metadata:** Title, description, tags
-
-Local files added to DualView are processed in the browser and are not uploaded to the operator.
-Projects and media are saved in this browser so you can continue later.
-
-Auto-save includes all stored comparison, scope, export and timeline settings, project metadata,
-media replacements and keyframe edits. The indicator stays unsaved while newer edits are pending,
-shows saving during the latest write, and reports write failures. Playback position is included in
-the next save for restoration, but playback ticks, analysis progress, pointer information and
-selection changes alone do not schedule writes. The existing project file format is unchanged.
-
-Creating or opening a project first saves the outgoing edits. The current project stays available
-until the destination has been fully read and decoded; a save or load failure keeps your current
-edits and media, and the Projects dialog shows the error so you can retry. If several switches
-overlap, only the latest request can become active. Undo/Redo, selections, clip/keyframe clipboards,
-and playback are reset when a project is opened, created, or the active project is deleted.
-Undo/Redo continues to work for edits made within the current project session.
-
-### 素材の取り込みとフィルムストリップ
-
-ファイル選択、ドロップ、貼り付け、URLのいずれから素材を取り込む場合も、処理結果を追加する条件は共通です。
-取り込みや再試行の途中で素材を削除したり、素材一覧を全消去したり、プロジェクトを新規作成・読み込みしたりすると、
-その操作で無効になった処理結果は素材やクリップに追加されません。
-不要になったオブジェクトURLとデコード用のリソースは解放します。
-URLからの取り込み画面を閉じた場合も、その要求を中断します。
-ローカルファイルは、ブラウザー内に独立したコピーを作成してから処理します。
-
-フィルムストリップの抽出は、クリップの移動・トリム・表示切り替えに影響されずに完了します。
-同じ素材と設定で抽出した結果は再利用し、抽出に失敗した場合は通常のサムネイル表示に戻ります。
-素材を削除・置換すると、進行中の抽出処理と保存済みの抽出結果を破棄します。
-フィルムストリップの抽出にはブラウザー標準の動画デコードを使うため、ProResの抽出もブラウザーの対応範囲に限られます。
-タイムラインでは1秒間隔で最大60枚を採取します。詳細は[抽出処理](src/lib/filmstripExtractor.ts)と
-[タイムラインの設定](src/components/timeline/TimelineClip.tsx)を参照してください。
-
-URL import connects directly to the URL you enter to fetch that media. Other local files already
-loaded in DualView are not sent to that destination.
-
-A downloaded `.dualview` project includes the media itself, so share it with the same care as the
-source files.
-
-### A/B Frame Difference Lane
-
-Use **Analyze** in the timeline to compare the displayed video frames on tracks A and B. The
-analysis reads encoded frame timestamps, maps each frame interval through clip trims, playback speed,
-and reverse playback, then decodes and compares frames in a dedicated worker. Mediabunny handles
-video decoding, including ProRes through its ProRes decoder. The analysis does not seek or pause the
-shared preview. Click the lane to seek, or use the previous/next controls to visit each highlighted
-interval. Analysis requires browser Worker and OffscreenCanvas support.
-
-The default comparison size is at most 640 pixels on the longest image edge. **Full** compares at
-the source display dimensions and can use substantially more memory. Pixel threshold controls how
-different an individual pixel must be; area threshold controls the share of changed pixels needed to
-highlight an interval. The default values are 0.10 and 2%, respectively. Transparent pixels are
-compared by their visible color and opacity, while hidden RGB values under two fully transparent
-pixels do not create a difference.
-
-The lane marks missing frames or A/B gaps, unsupported media, and decode errors separately from
-frames with no detected difference, and distinguishes analyzed intervals from portions the analysis
-has not reached yet. Image clips are unsupported by this video-frame analysis.
-Analysis results are kept only in the current browser session and are discarded when the project,
-timeline, source media, pixel threshold, or resolution changes. Changing the area threshold updates
-highlights from the current frame scores without decoding again.
-
-### Current-frame Difference Regions
-
-Slider and Side by Side outline local differences on the current A/B frame by default; the setting
-can be turned off. Region highlighting runs only while playback is paused; starting playback hides
-the rectangles and stops this analysis path. Paused seeks and frame steps invalidate the previous
-result and analyze the newly displayed frame once both sides are ready.
-
-The region detector reuses the same pixel-difference semantics as the timeline analysis, then groups
-connected changed pixels into rectangles. Sensitivity, small-region filtering, and automatic or full
-common-resolution analysis can be adjusted independently for this view. The SVG overlays are for
-interactive inspection and are not included in screenshot or video exports.
-
-Published site information:
-[Privacy](https://dualview.yukiworks432.workers.dev/privacy/) ·
-[Terms](https://dualview.yukiworks432.workers.dev/terms/) ·
-[About](https://dualview.yukiworks432.workers.dev/about/) ·
-[Licenses](https://dualview.yukiworks432.workers.dev/licenses/)
-
----
-
-## 🛠️ Tech Stack
-
-<table>
-<tr>
-<td>
-
-| Core         | Version |
-| ------------ | ------- |
-| React        | 19.3.0  |
-| TypeScript   | 7.0.2   |
-| Vite         | 8.3.0   |
-| Zustand      | 5.0.15  |
-| Tailwind CSS | 4.3.3   |
-
-</td>
-<td>
-
-| Media               | Technology                |
-| ------------------- | ------------------------- |
-| Native video decode | Browser media pipeline    |
-| ProRes decode       | Mediabunny + TurboRes     |
-| Video encoding      | WebCodecs / MediaRecorder |
-| MP4 muxing          | Mediabunny                |
-| GIF encoding        | gif.js                    |
-| PDF export          | jsPDF                     |
-
-</td>
-</tr>
-</table>
-
-### Development Tooling
-
-| Tool       | Purpose                                     |
-| ---------- | ------------------------------------------- |
-| pnpm 12    | Package management and lockfile             |
-| Oxfmt      | Formatting and import sorting               |
-| Oxlint     | Type-aware linting                          |
-| Vitest 5   | Unit tests                                  |
-| Playwright | Chromium browser tests                      |
-| GitHub CI  | Frozen install + quality and browser checks |
-
-### Fluid Functionalism surfaces
-
-The relative elevation system is sourced from Fluid Functionalism's `@fluid/elevated` registry
-item. `components.json` registers `@fluid`; the upstream-owned implementation lives in
-`src/lib/surface-context.ts`, `src/lib/surface-provider.tsx`, `src/lib/surface-classes.ts`, and
-`src/lib/elevated.tsx`.
-DualView-specific `asChild` compatibility and control-surface variables stay isolated in
-`src/components/ui/surface.ts`.
-
-Review upstream changes before syncing:
+Node.jsは[.node-version](.node-version)の版（24.21.0）、pnpmは[package.json](package.json)の版（12.5.1）を使う。
+`fnm`を利用する場合は[公式の導入手順](https://github.com/Schniz/fnm#installation)で先に用意する。
 
 ```bash
-pnpm dlx shadcn@latest add @fluid/elevated --diff
-pnpm dlx shadcn@latest add @fluid/elevated --dry-run
-```
-
-After applying an accepted registry update, keep project-specific behavior in the compatibility
-adapter and run `pnpm check`.
-
-Heavy comparison modes and export tooling are split so they are loaded only when needed.
-
----
-
-<h2 id="getting-started">🚀 Getting Started</h2>
-
-```bash
-# Clone this fork
 git clone https://github.com/YukiWorks432/dualview.git
 cd dualview
-
-# Install and select the repository Node.js version with fnm
 fnm install
 fnm use
-
-# Install dependencies
-pnpm install
-
-# Start development server
+pnpm install --frozen-lockfile
 pnpm dev
-
-# Run formatting, linting, type checks, tests, and production build
-pnpm check
-
-# Build for production
-pnpm build
-
-# Preview production build
-pnpm preview
 ```
 
-### Requirements
+端末に表示された開発サーバーのURLをブラウザーで開く。
+品質検査は`pnpm check`、製品版のビルドは`pnpm build`で実行する。
+テスト、構成、依存コードの更新、Cloudflareへの公開は[開発・公開手順](docs/development.md)にまとめている。
 
-- `fnm` to install and select the repository's Node.js version ([installation guide](https://github.com/Schniz/fnm#installation))
-- Node.js 24.21+
-- pnpm 12+
-- Modern browser with WebGL 2.0 support
-- WebCodecs `VideoEncoder` support for MP4 export
+## ブラウザーと制約
 
-### Deployment
+基準とするブラウザーはChrome 111以降、Edge 111以降、Firefox 114以降、Safari 16.4以降。
+これは従来の対応目標であり、全機能が各版で検証済みという意味ではない。
+WebGL 2.0、WebCodecs、Worker、OffscreenCanvasなど、機能ごとに必要なAPIが異なる。
+ProResの再生にはMediabunny/TurboResを使う。機能別の条件は[利用ガイド](docs/user-guide.md#requirements)を参照。
 
-The maintained web app is deployed as Cloudflare Workers Static Assets at
-[dualview.yukiworks432.workers.dev](https://dualview.yukiworks432.workers.dev). There is no
-application Worker or backend API in the deployment path; Wrangler uploads the Vite `dist/` output
-directly.
+<h2 id="project-lineage">原プロジェクトとこのフォーク</h2>
 
-The production bundle does not include `ffmpeg.wasm`. Video export uses browser-native WebCodecs
-and MediaRecorder paths plus gif.js, so the former `ffmpeg-core.wasm` asset-size constraint does
-not apply to the deployed `dist/`.
+DualViewの原作者は[Gökay Aydoğan](https://github.com/gokayfem)。原プロジェクトは
+[gokayfem/dualview](https://github.com/gokayfem/dualview)、原サイトは[dualview.ai](https://dualview.ai)。
+このリポジトリと公開サイトは[花雪 / HanaYuki](https://github.com/YukiWorks432)が保守・開発している。
 
-```bash
-pnpm build
-pnpm deploy
-```
+- 原作者: [X](https://x.com/gokayfem) · [Hugging Face](https://huggingface.co/gokaygokay) · [ORCID](https://orcid.org/0000-0002-2343-9433)
+- フォークの保守者: [hanayuki.xyz](https://hanayuki.xyz) · [X](https://x.com/YuK1_Works)
+- 引用: GitHubの`Cite this repository`と[CITATION.cff](CITATION.cff)を利用できる。[引用例](docs/development.md#citation)も参照。
 
-Wrangler is installed as a project dev dependency so local and Cloudflare builds use the locked CLI version.
+## ライセンスと問い合わせ
 
-`wrangler.jsonc` enables the production `workers.dev` route and leaves Custom Domain assignment
-to the Cloudflare dashboard. This keeps optional custom domains reversible without a repository
-change. Missing paths use the static `404.html` page instead of falling back to the application
-shell.
+ソースコードは[MIT License](LICENSE)で公開する。第三者コードの通知と対応するソースコードは
+[ライセンスページ](https://dualview.yukiworks432.workers.dev/licenses/)に掲載する。
 
----
+不具合・改善提案は[Issues](https://github.com/YukiWorks432/dualview/issues)、変更提案は
+[Pull requests](https://github.com/YukiWorks432/dualview/pulls)で受け付ける。
+個人情報や非公開の素材を含む問い合わせは[保守者の窓口](https://hanayuki.xyz/contact/)を利用する。
 
-## 📁 Project Structure
-
-```
-src/
-├── components/
-│   ├── comparison/        # Image/video comparison and analysis modes
-│   │   ├── SliderComparison.tsx
-│   │   ├── SideBySide.tsx
-│   │   ├── WebGLComparison.tsx
-│   │   ├── AudioComparison.tsx
-│   │   ├── BlendModes.tsx
-│   │   └── DifferenceHeatmap.tsx
-│   ├── export/            # Export configuration panels
-│   ├── layout/            # Header, Sidebar, ExportDialog
-│   ├── media/             # Native/ProRes visual surfaces and import UI
-│   ├── preview/           # Main comparison capture surface
-│   ├── timeline/          # Timeline editor + clips
-│   ├── scopes/            # Video scopes
-│   └── ui/                # Reusable components
-├── stores/                # Zustand state management
-├── hooks/                 # Playback, ProRes and UI hooks
-├── lib/
-│   ├── audio/             # Loudness, waveform and stereo analysis
-│   ├── media/             # File probing, ProRes/audio decode, timeline mapping
-│   ├── webgl/             # Comparison and transition shaders
-│   ├── mp4Encoder.ts
-│   ├── gifEncoder.ts
-│   └── metrics.ts         # SSIM/PSNR calculation
-└── types/
-```
-
----
-
-## 🎯 Use Cases
-
-<table>
-<tr>
-<td width="50%">
-
-### 🎨 Creative Delivery
-
-- Client revision verification
-- Before/after retouching checks
-- Color grading comparison
-- VFX render and animation QA
-
-</td>
-<td width="50%">
-
-### 🔍 Quality Assurance
-
-- Accidental-change detection
-- Compression artifact inspection
-- Frame-by-frame verification
-- Screenshot/PDF evidence for review
-
-</td>
-</tr>
-<tr>
-<td width="50%">
-
-### 🎬 Video Finishing
-
-- ProRes source playback
-- Embedded audio loudness reference checks
-- Video scopes
-- A/B synchronization
-
-</td>
-<td width="50%">
-
-### 🤖 Generated Media Review
-
-- Image generation A/B comparison
-- Upscaling quality analysis
-- Video output comparison
-- Visual regression inspection
-
-</td>
-</tr>
-</table>
-
----
-
-## 🌐 Browser Support
-
-| Browser      | Baseline target |
-| ------------ | --------------- |
-| Chrome 111+  | Supported       |
-| Edge 111+    | Supported       |
-| Firefox 114+ | Supported       |
-| Safari 16.4+ | Supported       |
-
-MP4 export additionally depends on the browser exposing the WebCodecs `VideoEncoder` API.
-ProRes playback is decoded locally with Mediabunny/TurboRes; animated exports for ProRes are currently
-disabled, while current-frame Image and PDF export remain available.
-
----
-
-<details>
-<summary><strong>Cite this project</strong></summary>
-
-This repository is a maintained fork of the original
-[gokayfem/dualview](https://github.com/gokayfem/dualview) project. The citation metadata keeps
-credit to original creator Gökay Aydoğan while identifying 花雪 / HanaYuki as the maintainer of this
-fork.
-
-If your work depends on this maintained fork, GitHub's **Cite this repository** action uses
-[CITATION.cff](CITATION.cff). A matching BibTeX entry is:
-
-```bibtex
-@software{Aydogan_YukiWorks432_DualView_2026,
-  author  = {Aydoğan, Gökay and {花雪 / HanaYuki}},
-  title   = {DualView},
-  version = {1.0.0},
-  year    = {2026},
-  url     = {https://dualview.yukiworks432.workers.dev},
-  note    = {Maintained fork of https://github.com/gokayfem/dualview}
-}
-```
-
-[Original project](https://github.com/gokayfem/dualview) ·
-[Original author ORCID](https://orcid.org/0000-0002-2343-9433) ·
-[Fork citation metadata](CITATION.cff)
-
-</details>
-
-## Credits
-
-DualView's original work remains credited to **Gökay Aydoğan** and the
-[gokayfem/dualview](https://github.com/gokayfem/dualview) project. This fork is maintained by
-**花雪 / HanaYuki**.
-
-|                      | GitHub                                             | X                                       | Website                              |
-| -------------------- | -------------------------------------------------- | --------------------------------------- | ------------------------------------ |
-| **Original creator** | [gokayfem](https://github.com/gokayfem)            | [@gokayfem](https://x.com/gokayfem)     | [dualview.ai](https://dualview.ai)   |
-| **Fork maintainer**  | [花雪 / HanaYuki](https://github.com/YukiWorks432) | [@YuK1_Works](https://x.com/YuK1_Works) | [hanayuki.xyz](https://hanayuki.xyz) |
-
-## 📄 License
-
-MIT License - see [LICENSE](LICENSE) for details. Browser-distributed dependency notices and
-source links are published on the [Licenses page](https://dualview.yukiworks432.workers.dev/licenses/).
-
-Contributions are welcome on this fork. Feel free to [open an issue](https://github.com/YukiWorks432/dualview/issues) or [submit a pull request](https://github.com/YukiWorks432/dualview/pulls).
-
----
-
-<p align="center">
-  <sub>Built with love for creators who care about every pixel</sub>
-</p>
+[プライバシー](https://dualview.yukiworks432.workers.dev/privacy/) ·
+[利用条件](https://dualview.yukiworks432.workers.dev/terms/) ·
+[サイトについて](https://dualview.yukiworks432.workers.dev/about/)
