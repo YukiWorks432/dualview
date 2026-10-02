@@ -8,7 +8,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import {
   extractFilmstrip,
-  getCachedFilmstrip,
+  clearFilmstripCache,
   type FilmstripData,
   type FilmstripConfig,
 } from '../lib/filmstripExtractor'
@@ -51,11 +51,12 @@ export function useFilmstrip(
   const [error, setError] = useState<string | null>(null)
   const [reloadTrigger, setReloadTrigger] = useState(0)
 
-  const getFile = useMediaStore((state) => state.getFile)
+  const media = useMediaStore((state) => state.files.find((file) => file.id === mediaId))
 
   const reload = useCallback(() => {
+    if (mediaId) clearFilmstripCache(mediaId)
     setReloadTrigger((prev) => prev + 1)
-  }, [])
+  }, [mediaId])
 
   useEffect(() => {
     let cancelled = false
@@ -73,27 +74,25 @@ export function useFilmstrip(
         return
       }
 
-      const media = getFile(mediaId)
-      if (!media || media.type !== 'video') {
+      if (!media || media.type !== 'video' || !media.url) {
         setFilmstrip(null)
         setIsLoading(false)
         setError(null)
         return
       }
 
-      const cached = getCachedFilmstrip(mediaId)
-      if (cached) {
-        setFilmstrip(cached)
-        setIsLoading(false)
-        setError(null)
-        return
-      }
-
+      setFilmstrip(null)
       setIsLoading(true)
       setError(null)
 
       try {
-        const result = await extractFilmstrip(mediaId, media.url, media.duration || 10, config)
+        const result = await extractFilmstrip(
+          mediaId,
+          media.url,
+          media.duration || 10,
+          config,
+          media.file,
+        )
         if (cancelled) return
 
         setFilmstrip(result)
@@ -116,7 +115,7 @@ export function useFilmstrip(
     return () => {
       cancelled = true
     }
-  }, [mediaId, enabled, getFile, reloadTrigger, config])
+  }, [mediaId, media, enabled, reloadTrigger, config])
 
   return { filmstrip, isLoading, error, reload }
 }
@@ -132,7 +131,7 @@ export function useFilmstrips(
   const [filmstrips, setFilmstrips] = useState<Map<string, FilmstripData | null>>(new Map())
   const mediaIdsKey = JSON.stringify(mediaIds)
 
-  const getFile = useMediaStore((state) => state.getFile)
+  const files = useMediaStore((state) => state.files)
 
   useEffect(() => {
     let cancelled = false
@@ -150,20 +149,20 @@ export function useFilmstrips(
       const results = new Map<string, FilmstripData | null>()
 
       for (const mediaId of requestedMediaIds) {
-        const cached = getCachedFilmstrip(mediaId)
-        if (cached) {
-          results.set(mediaId, cached)
-          continue
-        }
-
-        const media = getFile(mediaId)
+        const media = files.find((file) => file.id === mediaId)
         if (!media || media.type !== 'video') {
           results.set(mediaId, null)
           continue
         }
 
         try {
-          const filmstrip = await extractFilmstrip(mediaId, media.url, media.duration || 10, config)
+          const filmstrip = await extractFilmstrip(
+            mediaId,
+            media.url,
+            media.duration || 10,
+            config,
+            media.file,
+          )
           if (cancelled) return
           results.set(mediaId, filmstrip)
         } catch {
@@ -182,7 +181,7 @@ export function useFilmstrips(
     return () => {
       cancelled = true
     }
-  }, [mediaIdsKey, enabled, getFile, config])
+  }, [mediaIdsKey, enabled, files, config])
 
   return filmstrips
 }

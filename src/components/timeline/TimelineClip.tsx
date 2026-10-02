@@ -7,7 +7,7 @@ import { Trash2, AlertTriangle } from 'lucide-react'
  */
 import { memo, useCallback } from 'react'
 
-import type { FilmstripData } from '../../lib/filmstripExtractor'
+import { useFilmstrip } from '../../hooks/useFilmstrip'
 import { cn } from '../../lib/utils'
 import type { TimelineClip as ClipType } from '../../types'
 import { ClipFilmstrip, FilmstripLoading } from './ClipFilmstrip'
@@ -28,8 +28,6 @@ interface TimelineClipProps {
   mediaType?: string
   waveformPeaks?: number[]
   // FILMSTRIP-001, FILMSTRIP-002: Filmstrip support
-  filmstrip?: FilmstripData | null
-  filmstripLoading?: boolean
   showFilmstrip?: boolean
   trimState: {
     clipId: string
@@ -62,8 +60,6 @@ export const TimelineClip = memo(function TimelineClip({
   mediaThumbnail,
   mediaType,
   waveformPeaks,
-  filmstrip,
-  filmstripLoading,
   showFilmstrip = true,
   trimState,
   onMouseDown,
@@ -72,6 +68,11 @@ export const TimelineClip = memo(function TimelineClip({
   onContextMenu,
   onDelete,
 }: TimelineClipProps) {
+  const { filmstrip, isLoading: filmstripLoading } = useFilmstrip(clip.mediaId, {
+    enabled: showFilmstrip && mediaType === 'video',
+    frameInterval: 1,
+    maxFrames: 60,
+  })
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
       onMouseDown(e, clip.id, clip.trackId, clip.startTime)

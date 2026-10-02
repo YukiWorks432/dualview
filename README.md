@@ -522,6 +522,15 @@ overlap, only the latest request can become active. Undo/Redo, selections, clip/
 and playback are reset when a project is opened, created, or the active project is deleted.
 Undo/Redo continues to work for edits made within the current project session.
 
+素材の取込はファイル選択・ドロップ・貼り付け・URLで同じ採用規則を使います。取込や再試行の途中で
+素材を削除、一覧を全消去、プロジェクトを新規作成・読込すると、失効した結果は素材やクリップへ追加されず、
+オブジェクトURLとデコード資源を解放します。URL取込画面を閉じた場合も、その要求を中断します。
+ローカルファイルはブラウザー内の独立したコピーへ切り離してから処理します。
+
+フィルムストリップ抽出はクリップ移動・トリミング・表示切替から独立して完了し、同じ素材と設定の結果を
+再利用します。失敗時は通常のサムネイル表示へ戻り、素材の削除・置換時には進行中処理と保持結果を破棄します。
+ProResの抽出対応範囲や、採取間隔・最大枚数は変更しません。
+
 URL import connects directly to the URL you enter to fetch that media. Other local files already
 loaded in DualView are not sent to that destination.
 

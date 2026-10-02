@@ -261,6 +261,46 @@ describe('transactional project switching', () => {
     },
   )
 
+  it.each(
+    ['new', 'load'].flatMap((operation) =>
+      ['import', 'retry'].map((work) => ({ operation, work })),
+    ),
+  )(
+    'invalidates pending $work when $operation adopts a different session',
+    async ({ operation, work }) => {
+      await openA()
+      storedProject('B')
+      let pendingImage: TestImage | undefined
+      imageControls.set('blob:pending.png', (image) => {
+        pendingImage = image
+      })
+      let pending: Promise<unknown> = media
+        .getState()
+        .addFile(new File(['image'], 'pending.png', { type: 'image/png' }))
+      await vi.waitFor(() => expect(pendingImage).toBeDefined())
+      const pendingId = media.getState().files.find((file) => file.name === 'pending.png')!.id
+      if (work === 'retry') {
+        const failed = pending.catch(() => undefined)
+        pendingImage!.onerror!()
+        await failed
+        pending = media.getState().retryProcessing(pendingId)
+      }
+      const staleLoad = pendingImage!.onload!
+      expect(
+        await (operation === 'new'
+          ? persistence.getState().createNewProject('B')
+          : persistence.getState().loadProject('B')),
+      ).toBeTruthy()
+      await pending
+      staleLoad()
+      expect(media.getState().getFile(pendingId)).toBeUndefined()
+      expect(clips().some((clip) => clip.mediaId === pendingId)).toBe(false)
+      expect(pendingImage!.onload).toBeNull()
+      expect(revoked).toHaveBeenCalledWith('blob:pending.png')
+      expect(persistence.getState().currentProjectId).not.toBe('A')
+    },
+  )
+
   it('does not replace the active project when saving the initial new project fails', async () => {
     await openA()
     db.save
