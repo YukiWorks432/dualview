@@ -159,7 +159,7 @@ test('calibrates compression-only differences on the default thresholds', async 
   const duration = await page
     .locator('video[data-track="a"]')
     .first()
-    .evaluate((video) => video.duration)
+    .evaluate((video: HTMLVideoElement) => video.duration)
   const laneWidth = await lane.evaluate((canvas) =>
     Number.parseFloat(canvas.parentElement?.style.width ?? '0'),
   )
@@ -221,19 +221,42 @@ test('recomputes compression-only highlights when the area threshold changes', a
   const laneWidth = await lane.evaluate((canvas) =>
     Number.parseFloat(canvas.parentElement?.style.width ?? '0'),
   )
-  const titles = await lane.evaluate(async (canvas, laneWidth) => {
-    const rect = canvas.getBoundingClientRect()
-    const sampledTitles: string[] = []
-    for (let index = 0; index < 12; index++) {
-      const clientX = rect.left + (index + 0.5) * (laneWidth / 12)
-      canvas.dispatchEvent(
-        new MouseEvent('mousemove', { bubbles: true, clientX, clientY: rect.top + 16 }),
-      )
-      await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
-      sampledTitles.push(canvas.title)
-    }
-    return sampledTitles
-  }, laneWidth)
+  const duration = await page
+    .locator('video[data-track="a"]')
+    .first()
+    .evaluate((video: HTMLVideoElement) => video.duration)
+  const frameCount = 12
+  const titles: string[] = []
+  for (let index = 0; index < frameCount; index++) {
+    await lane.evaluate(
+      (canvas, { index, frameCount, laneWidth }) => {
+        const rect = canvas.getBoundingClientRect()
+        const clientX = rect.left + (index + 0.5) * (laneWidth / frameCount)
+        canvas.dispatchEvent(
+          new MouseEvent('mousemove', { bubbles: true, clientX, clientY: rect.top + 16 }),
+        )
+      },
+      { index, frameCount, laneWidth },
+    )
+    // React may commit the hover result after more than one animation frame.
+    const sampleTime = ((index + 0.5) * duration) / frameCount
+    await expect
+      .poll(async () => {
+        const title = await lane.getAttribute('title')
+        const interval = /^(?<start>[\d.]+)–(?<end>[\d.]+)s.*Frame difference: [\d.]+%/.exec(
+          title ?? '',
+        )
+        return (
+          interval !== null &&
+          Number(interval.groups!.start) <= sampleTime &&
+          sampleTime < Number(interval.groups!.end)
+        )
+      })
+      .toBe(true)
+    titles.push((await lane.getAttribute('title'))!)
+  }
+  expect(titles).toHaveLength(frameCount)
+  expect(new Set(titles).size).toBe(frameCount)
   const measuredRates = titles.map((title) => {
     const match = /Frame difference: ([\d.]+)%/.exec(title)
     expect(match, title).not.toBeNull()
@@ -272,7 +295,7 @@ test('cancels a high-resolution analysis and keeps partial results', async ({ pa
   await expect(page.getByRole('button', { name: 'Analyze', exact: true })).toBeEnabled()
 
   const lane = page.getByRole('img', { name: /Read-only A\/B difference lane/ })
-  const pixelCounts = await lane.evaluate((canvas) => {
+  const pixelCounts = await lane.evaluate((canvas: HTMLCanvasElement) => {
     const context = canvas.getContext('2d')
     if (!context) throw new Error('Difference lane canvas was not available')
     const { data, width } = context.getImageData(0, 1, canvas.width, 1)
@@ -343,7 +366,7 @@ test('preserves a one-frame highlight after analyzing a long low-zoom sequence',
   await expect(page.getByRole('button', { name: 'Next highlighted interval' })).toBeEnabled()
 
   const lane = page.getByRole('img', { name: /Read-only A\/B difference lane/ })
-  await lane.evaluate((canvas) => {
+  await lane.evaluate((canvas: HTMLCanvasElement) => {
     const laneWidth = Number.parseFloat(canvas.parentElement?.style.width ?? '0')
     const pixelsPerSecond = laneWidth / 75
     const rect = canvas.getBoundingClientRect()
@@ -361,7 +384,7 @@ test('preserves a one-frame highlight after analyzing a long low-zoom sequence',
   for (let step = 0; step < 30; step++) await zoomOut.click()
   await expect
     .poll(() =>
-      lane.evaluate((canvas) => {
+      lane.evaluate((canvas: HTMLCanvasElement) => {
         const context = canvas.getContext('2d')
         if (!context) return 0
         const { data, width } = context.getImageData(0, 0, canvas.width, 1)
@@ -430,7 +453,7 @@ test('measures both resolutions on long high-resolution video and preserves lane
   })
   expect(scrollState.scrollLeft).toBeGreaterThan(0)
 
-  await lane.evaluate((canvas) => {
+  await lane.evaluate((canvas: HTMLCanvasElement) => {
     const laneWidth = Number.parseFloat(canvas.parentElement?.style.width ?? '0')
     const pixelsPerSecond = laneWidth / 4
     const rect = canvas.getBoundingClientRect()
@@ -448,7 +471,7 @@ test('measures both resolutions on long high-resolution video and preserves lane
   for (let step = 0; step < 30; step++) await zoomOut.click()
   await expect
     .poll(() =>
-      lane.evaluate((canvas) => {
+      lane.evaluate((canvas: HTMLCanvasElement) => {
         const context = canvas.getContext('2d')
         if (!context) return 0
         const { data, width } = context.getImageData(0, 0, canvas.width, 1)
