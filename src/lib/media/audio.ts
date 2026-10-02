@@ -260,7 +260,6 @@ export async function extractPrimaryAudioBuffer(
           output.length - destinationOffset,
           sample.numberOfFrames - sourceOffset,
         )
-        if (frames <= 0) continue
         const channelCount = Math.min(numberOfChannels, sample.numberOfChannels)
         for (let offset = 0; offset < frames; offset += 8192) {
           const frameCount = Math.min(8192, frames - offset)
@@ -282,6 +281,9 @@ export async function extractPrimaryAudioBuffer(
         // 出力範囲外、例外、取消でも取り出した標本を解放する。
         sample.close()
       }
+      // 範囲外の標本を連続して破棄する場合も、取消イベントへ処理を譲る。
+      const pending = yieldTask()
+      if (pending) await pending
     }
     throwIfAudioAborted(signal)
     return output

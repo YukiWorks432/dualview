@@ -196,6 +196,35 @@ describe('埋込音声の直接コピーと所有権', () => {
     expect(control.iteratorClosed).toBe(0)
   })
 
+  it('出力範囲外の標本が続いてもイベントを処理して途中で取り消す', async () => {
+    const controller = new AbortController()
+    let closed = 0
+    const outside = {
+      timestamp: 1,
+      numberOfFrames: 1,
+      numberOfChannels: 1,
+      copyTo: () => {
+        throw new Error('範囲外のコピー')
+      },
+      close: () => {
+        closed++
+      },
+    }
+    control.samples = Array.from({ length: 100_000 }, () => outside)
+    const timer = setTimeout(() => controller.abort(), 0)
+    try {
+      await expect(
+        extractPrimaryAudioBuffer(new File([], 'fixture.mov'), controller.signal),
+      ).rejects.toMatchObject({ name: 'AbortError' })
+      expect(closed).toBeGreaterThan(0)
+      expect(closed).toBeLessThan(control.samples.length)
+      expect(control.disposed).toBe(1)
+      expect(control.iteratorClosed).toBe(1)
+    } finally {
+      clearTimeout(timer)
+    }
+  })
+
   it('開始前の取消ではInputもAudioBufferも作らない', async () => {
     const controller = new AbortController()
     controller.abort()

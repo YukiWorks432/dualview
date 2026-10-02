@@ -102,6 +102,7 @@ test('mono通常動画と逆相stereo ProResを解析し、配置・trim・速�
   await expect(page.getByText('Sample Peak', { exact: true })).toHaveCount(2)
   await expect(page.getByText('-6.0 dB', { exact: true }).first()).toBeVisible()
   await page.getByRole('button', { name: 'B', exact: true }).click()
+  await page.getByRole('button', { name: 'Stereo', exact: true }).click()
   await expect(page.getByText('-1.00', { exact: true })).toBeVisible()
   await page.getByRole('button', { name: 'A+B', exact: true }).click()
   await page.evaluate(async () => {
@@ -172,10 +173,20 @@ test('長尺Aの処理中に同じIDの素材を交換し、旧Bのdecodeと旧�
     useProjectStore.getState().setComparisonMode('audio')
   })
   await expect(page.getByText('INTEGRATED', { exact: true })).toHaveCount(2, { timeout: 30000 })
-  await expect(page.getByText('-6.0 dB', { exact: true })).toHaveCount(2)
+  await expect(
+    page
+      .getByText('Sample Peak', { exact: true })
+      .locator('..')
+      .getByText('-6.0 dB', { exact: true }),
+  ).toHaveCount(2)
   expect(await page.evaluate(() => (window as AudioTestWindow).__largeAudioBuffers)).toBe(1)
   await page.waitForTimeout(200)
-  await expect(page.getByText('-6.0 dB', { exact: true })).toHaveCount(2)
+  await expect(
+    page
+      .getByText('Sample Peak', { exact: true })
+      .locator('..')
+      .getByText('-6.0 dB', { exact: true }),
+  ).toHaveCount(2)
   await page.evaluate(async () => {
     const { usePlaybackStore } = await import('/src/stores/playbackStore.ts')
     usePlaybackStore.getState().play()
