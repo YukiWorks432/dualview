@@ -50,3 +50,14 @@ and full resolution took 7.47 seconds. These timings depend on the browser and m
 
 The other tiny fixtures are generated black, white, or single-frame-change clips for deterministic
 browser tests.
+
+`playback-colors.webm` and `playback-colors.mov` are synthetic 64 × 64, 10 fps,
+4-second fixtures: red before 2 seconds and blue afterwards. The WebM contains
+440 Hz mono Opus audio at 48 kHz; the ProRes HQ MOV is silent. Playback tests inspect
+actual decoded pixels and audio-source timing across seeks, clip boundaries and reloads.
+They were generated using:
+
+```text
+ffmpeg -f lavfi -i "color=c=red:s=64x64:r=10:d=4" -f lavfi -i "sine=frequency=440:sample_rate=48000:duration=4" -vf "drawbox=x=0:y=0:w=iw:h=ih:color=blue:t=fill:enable='gte(t,2)'" -c:v libvpx-vp9 -deadline realtime -cpu-used 8 -crf 4 -b:v 0 -c:a libopus playback-colors.webm
+ffmpeg -f lavfi -i "color=c=red:s=64x64:r=10:d=4" -vf "drawbox=x=0:y=0:w=iw:h=ih:color=blue:t=fill:enable='gte(t,2)'" -an -c:v prores_ks -profile:v 3 -pix_fmt yuv422p10le playback-colors.mov
+```

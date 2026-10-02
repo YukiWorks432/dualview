@@ -184,6 +184,36 @@ afterEach(() => {
 })
 
 describe('transactional project switching', () => {
+  it('restores saved time and speed without carrying reverse playback into the loaded session', async () => {
+    await openA()
+    const b = storedProject('B')
+    b.timelineState = JSON.stringify({
+      ...JSON.parse(b.timelineState),
+      currentTime: 4,
+      playbackSpeed: 2,
+    })
+    playback.getState().seek(3)
+    timeline.getState().shuttleBackward()
+    timeline.getState().shuttleBackward()
+    expect(playback.getState().playbackDirection).toBe(-1)
+    const revision = playback.getState().seekRevision
+    expect(await persistence.getState().loadProject('B')).toBe(true)
+    expect(playback.getState()).toMatchObject({
+      currentTime: 4,
+      playbackSpeed: 2,
+      playbackDirection: 1,
+      isPlaying: false,
+      isShuttling: false,
+    })
+    expect(playback.getState().seekRevision).toBeGreaterThan(revision)
+    expect(timeline.getState()).toMatchObject({ currentTime: 4, playbackSpeed: 2, shuttleSpeed: 0 })
+    await persistence.getState().saveCurrentProject()
+    const saved = JSON.parse(db.records.get('B')!.timelineState)
+    expect(saved.currentTime).toBe(4)
+    expect(saved.playbackSpeed).toBe(2)
+    expect(saved.playbackDirection).toBeUndefined()
+  })
+
   it.each(['new', 'load'])(
     'saves outgoing edits before %s and isolates all session state',
     async (operation) => {

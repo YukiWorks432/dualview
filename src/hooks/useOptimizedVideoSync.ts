@@ -9,8 +9,7 @@
  */
 import { useRef, useEffect, useCallback } from 'react'
 
-import { VIDEO_FRAME_SEEK_REQUEST_EVENT } from '../lib/media/presentedVideoFrame'
-import { calculateMediaTime } from '../lib/media/timeline'
+import { seekNativeVideoTo, syncNativeClipPlayback } from '../lib/media/nativeClipPlayback'
 import { usePlaybackStore } from '../stores/playbackStore'
 import type { TimelineClip } from '../types'
 
@@ -27,209 +26,58 @@ interface SyncState {
 }
 
 /**
- * Get the effective playback rate for a clip
- */
-function getEffectivePlaybackRate(clip: TimelineClip | null, baseSpeed: number): number {
-  if (!clip) return baseSpeed
-  const clipSpeed = clip.speed || 1
-  // For reverse, we still use positive playback rate but calculate reversed time
-  return baseSpeed * clipSpeed
-}
-
-function seekNativeVideoTo(video: HTMLVideoElement, targetTime: number) {
-  if (!video.seeking && Math.abs(video.currentTime - targetTime) <= 0.000001) return
-  video.dispatchEvent(new CustomEvent(VIDEO_FRAME_SEEK_REQUEST_EVENT, { detail: { targetTime } }))
-  video.currentTime = targetTime
-}
-
-/**
- * Optimized clip-aware video sync that uses native playback
+ * Clip transport follows the shared playback snapshot. Discontinuous seeks are
+ * observed even when paused or when a newly mounted clip missed the DOM event.
  */
 export function useOptimizedClipSync(
   videoRef: React.RefObject<HTMLVideoElement | null>,
   clip: TimelineClip | null,
 ): void {
-  const syncStateRef = useRef<SyncState>({
-    isPlaying: false,
-    lastSyncTime: 0,
-    frameCallbackId: null,
-  })
-  const isVisibleRef = useRef(false)
-
-  // Initialize video
   useEffect(() => {
     const video = videoRef.current
-    if (!video) return
-
+    if (!video || !clip) return
     video.muted = true
     video.playsInline = true
     video.preload = 'auto'
-
-    // Optimize for smooth playback
     video.disableRemotePlayback = true
 
-    // Set initial position
-    if (clip) {
-      const { currentTime } = usePlaybackStore.getState()
-      const mediaTime = calculateMediaTime(currentTime, clip)
-      if (mediaTime !== null) {
-        seekNativeVideoTo(video, mediaTime)
-        isVisibleRef.current = true
-      }
-    }
-  }, [videoRef, clip])
+    const sync = (forceSeek = false) =>
+      syncNativeClipPlayback(video, clip, usePlaybackStore.getState(), forceSeek)
+    const unsubscribe = usePlaybackStore.subscribe((state, previous) => {
+      if (
+        state.currentTime !== previous.currentTime ||
+        state.isPlaying !== previous.isPlaying ||
+        state.playbackSpeed !== previous.playbackSpeed ||
+        state.playbackDirection !== previous.playbackDirection ||
+        state.seekRevision !== previous.seekRevision ||
+        state.isExporting !== previous.isExporting
+      )
+        sync(state.seekRevision !== previous.seekRevision)
+    })
+    const handleLoaded = () => sync(true)
+    video.addEventListener('loadeddata', handleLoaded)
+    sync(true)
 
-  // Frame-accurate sync using requestVideoFrameCallback
-  useEffect(() => {
-    const video = videoRef.current
-    if (!video || !clip) return
-
-    const hasRVFC = 'requestVideoFrameCallback' in HTMLVideoElement.prototype
-
-    const checkAndSync = () => {
-      const { currentTime: timelineTime, isPlaying, isExporting } = usePlaybackStore.getState()
-
-      // Don't interfere during export - export controls videos directly
-      if (isExporting) return
-
-      const mediaTime = calculateMediaTime(timelineTime, clip)
-
-      if (mediaTime === null) {
-        // Outside clip bounds
-        if (isVisibleRef.current) {
-          video.pause()
-          isVisibleRef.current = false
-        }
-        return
-      }
-
-      isVisibleRef.current = true
-      const drift = Math.abs(video.currentTime - mediaTime)
-
-      if (isPlaying) {
-        // Handle playback state
-        const baseSpeed = usePlaybackStore.getState().playbackSpeed
-        const effectiveRate = getEffectivePlaybackRate(clip, baseSpeed)
-
-        if (video.paused) {
-          seekNativeVideoTo(video, mediaTime)
-          video.playbackRate = effectiveRate
-          video.play().catch(() => {})
-        } else if (drift > HARD_SYNC_THRESHOLD) {
-          // Large drift - hard sync
-          seekNativeVideoTo(video, mediaTime)
-          video.playbackRate = effectiveRate
-        } else if (drift > DRIFT_THRESHOLD) {
-          // Small drift - gentle correction using playbackRate
-          // Speed up or slow down slightly to catch up
-          const correction = video.currentTime < mediaTime ? 1.05 : 0.95
-          video.playbackRate = effectiveRate * correction
-          syncStateRef.current.lastSyncTime = performance.now()
-        } else {
-          // In sync - restore normal playback rate
-          if (Math.abs(video.playbackRate - effectiveRate) > 0.01) {
-            video.playbackRate = effectiveRate
-          }
-        }
-      } else {
-        // Paused - seek to exact position
-        if (!video.paused) {
-          video.pause()
-        }
-        if (drift > 0.01) {
-          seekNativeVideoTo(video, mediaTime)
-        }
-      }
-    }
-
-    if (hasRVFC) {
-      // Use requestVideoFrameCallback for frame-accurate sync
-      const syncState = syncStateRef.current
+    let frameId: number | null = null
+    let intervalId: ReturnType<typeof setInterval> | null = null
+    if (typeof video.requestVideoFrameCallback === 'function') {
       const onFrame = () => {
-        checkAndSync()
-        syncState.frameCallbackId = video.requestVideoFrameCallback(onFrame)
+        sync()
+        frameId = video.requestVideoFrameCallback(onFrame)
       }
-      syncState.frameCallbackId = video.requestVideoFrameCallback(onFrame)
-
-      return () => {
-        if (syncState.frameCallbackId !== null) {
-          video.cancelVideoFrameCallback(syncState.frameCallbackId)
-        }
-      }
+      frameId = video.requestVideoFrameCallback(onFrame)
     } else {
-      // Fallback: use interval-based sync (less accurate but works everywhere)
-      const intervalId = setInterval(checkAndSync, 33) // ~30fps check rate
-      return () => clearInterval(intervalId)
+      intervalId = setInterval(sync, 33)
+    }
+
+    return () => {
+      unsubscribe()
+      video.removeEventListener('loadeddata', handleLoaded)
+      if (frameId !== null) video.cancelVideoFrameCallback(frameId)
+      if (intervalId !== null) clearInterval(intervalId)
+      video.pause()
     }
   }, [videoRef, clip])
-
-  // Handle seek events - immediate response needed
-  useEffect(() => {
-    const video = videoRef.current
-    if (!video || !clip) return
-
-    const handleSeek = (e: CustomEvent<{ time: number }>) => {
-      // Don't interfere during export
-      if (usePlaybackStore.getState().isExporting) return
-
-      const mediaTime = calculateMediaTime(e.detail.time, clip)
-      if (mediaTime !== null) {
-        seekNativeVideoTo(video, mediaTime)
-        isVisibleRef.current = true
-      } else {
-        isVisibleRef.current = false
-      }
-    }
-
-    window.addEventListener('playback-seek', handleSeek as EventListener)
-    return () => window.removeEventListener('playback-seek', handleSeek as EventListener)
-  }, [videoRef, clip])
-
-  // Handle play/pause events
-  useEffect(() => {
-    const video = videoRef.current
-    if (!video || !clip) return
-
-    const handleUpdate = (e: CustomEvent<{ time: number; isPlaying: boolean }>) => {
-      // Don't interfere during export
-      if (usePlaybackStore.getState().isExporting) return
-
-      const { isPlaying } = e.detail
-      const mediaTime = calculateMediaTime(e.detail.time, clip)
-
-      if (mediaTime === null) {
-        if (!video.paused) video.pause()
-        isVisibleRef.current = false
-        return
-      }
-
-      isVisibleRef.current = true
-
-      if (isPlaying && video.paused) {
-        seekNativeVideoTo(video, mediaTime)
-        video.play().catch(() => {})
-      } else if (!isPlaying && !video.paused) {
-        video.pause()
-        seekNativeVideoTo(video, mediaTime)
-      }
-    }
-
-    window.addEventListener('playback-update', handleUpdate as EventListener)
-    return () => window.removeEventListener('playback-update', handleUpdate as EventListener)
-  }, [videoRef, clip])
-
-  // Handle speed changes
-  useEffect(() => {
-    const video = videoRef.current
-    if (!video) return
-
-    const handleSpeed = (e: CustomEvent<{ speed: number }>) => {
-      video.playbackRate = e.detail.speed
-    }
-
-    window.addEventListener('playback-speed', handleSpeed as EventListener)
-    return () => window.removeEventListener('playback-speed', handleSpeed as EventListener)
-  }, [videoRef])
 }
 
 /**

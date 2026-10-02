@@ -434,6 +434,13 @@ DualView is built for speed. Master these shortcuts:
 | `Home`            | Jump to start                     |
 | `End`             | Jump to end                       |
 
+All transport controls share one playback clock. Repeated J or L presses shuttle at
+1×, 2×, 4×, then 8× in the selected direction. Space pauses or resumes that direction;
+K stops and resets the speed to 1× forward. Choosing a speed also selects forward
+playback. End stops on the final timeline frame, and loops wrap in either direction.
+Paused marker jumps and seeks refresh native and ProRes frames; reverse shuttle is
+silent because reverse audio is not synthesized.
+
 ### Loop & Markers
 
 | Key      | Action                 |

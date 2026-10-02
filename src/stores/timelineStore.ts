@@ -1,7 +1,8 @@
-import { create } from 'zustand'
+import { create, type StoreApi, type UseBoundStore } from 'zustand'
 
 import { generateId, snapTimeToFrame } from '../lib/utils'
 import type { TimelineTrack, TimelineClip, MediaType, TrackType } from '../types'
+import { usePlaybackStore } from './playbackStore'
 
 // Track colors for visual distinction
 const TRACK_COLORS: Record<TrackType, string> = {
@@ -40,6 +41,7 @@ export interface TimelineMarker {
 
 interface TimelineStore {
   tracks: TimelineTrack[]
+  // Read-only playback projection. Use playback actions to change these values.
   currentTime: number
   duration: number
   isPlaying: boolean
@@ -156,7 +158,9 @@ interface TimelineStore {
   getMarkerAtTime: (time: number) => TimelineMarker | undefined
 }
 
-export const useTimelineStore = create<TimelineStore>((set, get) => ({
+type TimelineHook = UseBoundStore<StoreApi<TimelineStore>>
+
+export const useTimelineStore: TimelineHook = create<TimelineStore>((set, get) => ({
   tracks: [
     {
       id: 'track-a',
@@ -193,40 +197,19 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
   rippleEnabled: false,
   clipboardClipId: null,
 
-  play: () => set({ isPlaying: true }),
-  pause: () => set({ isPlaying: false }),
-  togglePlay: () => set((state) => ({ isPlaying: !state.isPlaying })),
-
-  seek: (time: number) => {
-    const { duration, frameRate } = get()
-    // TL-002: Snap to frame boundary
-    const snappedTime = snapTimeToFrame(Math.max(0, Math.min(time, duration)), frameRate)
-    set({ currentTime: snappedTime })
-  },
-
-  setDuration: (duration: number) => set({ duration }),
-
-  // Frame navigation (VID-001)
-  stepFrame: (direction: 1 | -1) => {
-    const { currentTime, duration, frameRate } = get()
-    const frameTime = 1 / frameRate
-    const newTime = currentTime + direction * frameTime
-    set({ currentTime: Math.max(0, Math.min(newTime, duration)) })
-  },
-
-  getCurrentFrame: () => {
-    const { currentTime, frameRate } = get()
-    return Math.floor(currentTime * frameRate)
-  },
-
-  // Speed control (VID-002)
-  setPlaybackSpeed: (speed: number) => {
-    set({ playbackSpeed: Math.max(0.25, Math.min(4, speed)) })
-  },
+  play: () => usePlaybackStore.getState().play(),
+  pause: () => usePlaybackStore.getState().pause(),
+  togglePlay: () => usePlaybackStore.getState().togglePlay(),
+  seek: (time) => usePlaybackStore.getState().seek(time),
+  setDuration: (duration) => set({ duration }),
+  stepFrame: (direction) => usePlaybackStore.getState().stepFrame(direction),
+  getCurrentFrame: () => usePlaybackStore.getState().getCurrentFrame(),
+  setPlaybackSpeed: (speed) => usePlaybackStore.getState().setSpeed(speed),
 
   // Loop region (VID-003)
   setLoopIn: () => {
-    const { currentTime, loopRegion } = get()
+    const { loopRegion } = get()
+    const { currentTime } = usePlaybackStore.getState()
     if (loopRegion) {
       set({ loopRegion: { ...loopRegion, inPoint: currentTime } })
     } else {
@@ -235,7 +218,8 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
   },
 
   setLoopOut: () => {
-    const { currentTime, loopRegion } = get()
+    const { loopRegion } = get()
+    const { currentTime } = usePlaybackStore.getState()
     if (loopRegion) {
       set({ loopRegion: { ...loopRegion, outPoint: currentTime } })
     } else {
@@ -245,38 +229,9 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
 
   clearLoop: () => set({ loopRegion: null }),
 
-  // J/K/L Shuttle controls (TL-005)
-  shuttleForward: () => {
-    const { shuttleSpeed } = get()
-    // Speed progression: 1, 2, 4, 8
-    let newSpeed: number
-    if (shuttleSpeed <= 0) {
-      newSpeed = 1
-    } else if (shuttleSpeed < 8) {
-      newSpeed = shuttleSpeed * 2
-    } else {
-      newSpeed = 8
-    }
-    set({ shuttleSpeed: newSpeed, playbackSpeed: newSpeed, isPlaying: true })
-  },
-
-  shuttleBackward: () => {
-    const { shuttleSpeed } = get()
-    // Speed progression: -1, -2, -4, -8
-    let newSpeed: number
-    if (shuttleSpeed >= 0) {
-      newSpeed = -1
-    } else if (shuttleSpeed > -8) {
-      newSpeed = shuttleSpeed * 2
-    } else {
-      newSpeed = -8
-    }
-    set({ shuttleSpeed: newSpeed, playbackSpeed: Math.abs(newSpeed), isPlaying: true })
-  },
-
-  shuttleStop: () => {
-    set({ shuttleSpeed: 0, isPlaying: false, playbackSpeed: 1 })
-  },
+  shuttleForward: () => usePlaybackStore.getState().shuttleForward(),
+  shuttleBackward: () => usePlaybackStore.getState().shuttleBackward(),
+  shuttleStop: () => usePlaybackStore.getState().shuttleStop(),
 
   setZoom: (zoom: number) => set({ zoom: Math.max(0.1, Math.min(10, zoom)) }),
   zoomIn: () => set((state) => ({ zoom: Math.min(10, state.zoom * 1.2) })),
@@ -846,7 +801,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
       if (!targetTrack) return null
 
       const clipDuration = clip.endTime - clip.startTime
-      let pasteTime = state.currentTime
+      let pasteTime = usePlaybackStore.getState().currentTime
 
       // Check for overlaps and nudge forward if needed
       const overlappingClips = targetTrack.clips.filter(
@@ -993,7 +948,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
 
     const snapPoints: number[] = [
       0, // Start of timeline
-      state.currentTime, // Playhead
+      usePlaybackStore.getState().currentTime, // Playhead
       ...state.markers.map((m) => m.time), // Markers
     ]
 
@@ -1114,7 +1069,8 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
 
   // Markers (VID-006)
   addMarker: (label?: string) => {
-    const { currentTime, markers } = get()
+    const { markers } = get()
+    const { currentTime } = usePlaybackStore.getState()
     const marker: TimelineMarker = {
       id: generateId(),
       time: currentTime,

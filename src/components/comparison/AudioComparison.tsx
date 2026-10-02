@@ -671,7 +671,8 @@ export function AudioComparison() {
   const [showSettings, setShowSettings] = useState(false)
 
   // Store state
-  const { currentTime, isPlaying, playbackSpeed, seek, togglePlay } = usePlaybackStore()
+  const { currentTime, isPlaying, playbackSpeed, playbackDirection, seek, togglePlay } =
+    usePlaybackStore()
   const { tracks, duration: timelineDuration } = useTimelineStore()
   const { getFile } = useMediaStore()
 
@@ -882,6 +883,8 @@ export function AudioComparison() {
         stopAudioTrack(scope)
       }
 
+      if (playbackDirection < 0) return
+
       const currentAnalysisA = analysisARef.current
       const currentAnalysisB = analysisBRef.current
       if (!currentAnalysisA.buffer && !currentAnalysisB.buffer) return
@@ -898,7 +901,8 @@ export function AudioComparison() {
 
       if (
         !playbackRequestGateRef.current.isCurrent(requestGeneration) ||
-        !usePlaybackStore.getState().isPlaying
+        !usePlaybackStore.getState().isPlaying ||
+        usePlaybackStore.getState().playbackDirection < 0
       ) {
         return
       }
@@ -948,6 +952,7 @@ export function AudioComparison() {
     [
       activeAudio,
       playbackSpeed,
+      playbackDirection,
       stopAudioSources,
       stopAudioTrack,
       trackA,

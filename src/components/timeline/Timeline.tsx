@@ -134,7 +134,6 @@ export function Timeline() {
     // TL-007: Ripple
     rippleEnabled,
     toggleRipple,
-    pause,
     // Track management
     addTrack,
     removeTrack,
@@ -256,14 +255,6 @@ export function Timeline() {
     trackHeight: 64,
     rulerHeight: 58,
   })
-
-  // Loop back to start when reaching end
-  useEffect(() => {
-    if (currentTime >= duration && isPlaying) {
-      seek(0)
-      pause()
-    }
-  }, [currentTime, duration, isPlaying, seek, pause])
 
   // Handle playhead dragging
   const handlePlayheadMouseDown = (e: React.MouseEvent) => {

@@ -119,6 +119,7 @@ export function useProResClipSync(
     }
 
     const requestFrame = (timelineTime: number, invalidateInFlight = false) => {
+      if (disposed) return
       if (invalidateInFlight) {
         requestGeneration = requestGate.begin()
       }
@@ -150,6 +151,7 @@ export function useProResClipSync(
         })
 
         const track = await input.getPrimaryVideoTrack()
+        if (disposed) return
         if (!track) {
           throw new Error('No video track found')
         }
@@ -168,18 +170,14 @@ export function useProResClipSync(
     }
 
     const unsubscribe = usePlaybackStore.subscribe((state, previousState) => {
-      if (state.currentTime !== previousState.currentTime) {
-        requestFrame(state.currentTime, !state.isPlaying)
+      const didSeek = state.seekRevision !== previousState.seekRevision
+      if (didSeek || state.currentTime !== previousState.currentTime) {
+        requestFrame(state.currentTime, didSeek || !state.isPlaying)
       } else if (previousState.isPlaying && !state.isPlaying) {
         requestFrame(state.currentTime, true)
       }
     })
 
-    const handlePlaybackSeek = (event: CustomEvent<{ time: number }>) => {
-      requestFrame(event.detail.time, true)
-    }
-
-    window.addEventListener('playback-seek', handlePlaybackSeek as EventListener)
     void initialize()
 
     return () => {
@@ -187,7 +185,6 @@ export function useProResClipSync(
       requestGate.invalidate()
       queuedRequest = null
       unsubscribe()
-      window.removeEventListener('playback-seek', handlePlaybackSeek as EventListener)
       input?.dispose()
     }
   }, [canvasRef, media, clip, onFrameReady])
