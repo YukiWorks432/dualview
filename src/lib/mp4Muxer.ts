@@ -37,6 +37,7 @@ export async function createAvcMp4Muxer(): Promise<AvcMp4Muxer> {
   let writeQueue = Promise.resolve()
   let writeError: unknown
   let disposed = false
+  let finalization: Promise<ArrayBuffer> | undefined
 
   return {
     addChunk(chunk, meta) {
@@ -51,17 +52,21 @@ export async function createAvcMp4Muxer(): Promise<AvcMp4Muxer> {
         })
     },
 
-    async finalize() {
-      await writeQueue
-      if (writeError) throw writeError
-      source.close()
-      await output.finalize()
+    finalize() {
+      finalization ??= (async () => {
+        await writeQueue
+        if (writeError) throw writeError
+        if (disposed) throw new Error('MP4 export cancelled')
+        source.close()
+        await output.finalize()
 
-      if (!target.buffer) {
-        throw new Error('MP4 muxing completed without producing an output buffer')
-      }
+        if (!target.buffer) {
+          throw new Error('MP4 muxing completed without producing an output buffer')
+        }
 
-      return target.buffer
+        return target.buffer
+      })()
+      return finalization
     },
 
     async dispose() {
@@ -70,6 +75,9 @@ export async function createAvcMp4Muxer(): Promise<AvcMp4Muxer> {
       source.close()
       if (output.state !== 'finalized') await output.cancel()
       await writeQueue
+      // Mediabunny cannot cancel a finalization already in progress. Keep ownership
+      // until it settles, including its failure cleanup, before releasing the job.
+      await finalization?.catch(() => {})
     },
   }
 }

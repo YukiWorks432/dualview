@@ -92,7 +92,11 @@ export class WebGLTransitionRenderer {
   static isSupported(): boolean {
     try {
       const canvas = document.createElement('canvas')
-      return !!(canvas.getContext('webgl') || canvas.getContext('experimental-webgl'))
+      const gl = (canvas.getContext('webgl') ||
+        canvas.getContext('experimental-webgl')) as WebGLRenderingContext | null
+      if (!gl) return false
+      gl.getExtension('WEBGL_lose_context')?.loseContext()
+      return true
     } catch {
       return false
     }

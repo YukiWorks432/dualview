@@ -9,6 +9,7 @@ const harness = vi.hoisted(() => ({
   disposedMuxers: [] as Array<ReturnType<typeof vi.fn>>,
   drawFails: false,
   shaderFails: false,
+  stitchReady: false,
   renderers: [] as Array<{ disposed: boolean }>,
 }))
 vi.mock('react', async (importOriginal) => {
@@ -293,6 +294,7 @@ beforeEach(() => {
   harness.renderers = []
   harness.drawFails = false
   harness.shaderFails = false
+  harness.stitchReady = false
   encoders.length = 0
   frames.length = 0
   streams.length = 0
@@ -316,7 +318,7 @@ beforeEach(() => {
     createElement: (tag: string) => {
       if (tag === 'video') {
         ownedVideo = new TestVideo()
-        ownedVideo.readyState = 0
+        ownedVideo.readyState = harness.stitchReady ? 2 : 0
         return ownedVideo
       }
       return new TestCanvas()
@@ -429,6 +431,34 @@ describe('stitch source lifetime', () => {
     clips: [{ id: 'clip', mediaId: 'video', startTime: 0, inPoint: 0, outPoint: 1 }],
   } as TimelineTrack
   const getFile = () => ({ id: 'video', type: 'video', url: 'video', name: 'video' }) as MediaFile
+  it.each(['success', 'encode', 'flush'])(
+    'releases a decoded stitch source after %s and permits retry',
+    async (outcome) => {
+      harness.stitchReady = true
+      TestEncoder.failure = outcome === 'success' ? '' : outcome
+      const settings = {
+        trackId: 'track-a',
+        format: 'mp4',
+        resolution: '720p',
+        quality: 'low',
+        fps: 30,
+        includeAudio: false,
+      } as const
+      const result = await exportStitchedVideo(track, getFile, settings, () => {}).catch(
+        (error: unknown) => error,
+      )
+      expect(result instanceof Blob).toBe(outcome === 'success')
+      expect(ownedVideo!.src).toBe('')
+      expect(encoders[0].state).toBe('closed')
+      expect(frames.every((frame) => frame.closed)).toBe(true)
+      TestEncoder.failure = ''
+      const retry = await exportStitchedVideo(track, getFile, settings, () => {})
+      expect(retry?.type).toBe('video/mp4')
+      expect(await retry?.text()).toBe('encoded-mp4')
+      expect(ownedVideo!.src).toBe('')
+      expect(encoders[1].state).toBe('closed')
+    },
+  )
   it.each(['error', 'cancel'])('detaches a source when loading ends in %s', async (outcome) => {
     const controller = new AbortController()
     const pending = exportStitchedVideo(

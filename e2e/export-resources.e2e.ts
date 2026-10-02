@@ -227,6 +227,23 @@ test('MP4 and GIF artifacts do not depend on WebM and release resources on repea
     await dialog.getByRole('button', { name: 'Export Another' }).click()
   }
   await dialog.getByRole('button', { name: 'GIF', exact: true }).click()
+  await page.route('**/gif.worker.js', (route) => route.abort())
+  await dialog.getByRole('button', { name: 'Export', exact: true }).click()
+  await expect(dialog.getByRole('alert')).toContainText('GIF worker failed')
+  await released(page)
+  await page.unroute('**/gif.worker.js')
+  await page.route('**/gif.worker.js', (route) =>
+    route.fulfill({
+      contentType: 'application/javascript',
+      body: 'self.onmessage = () => {}',
+    }),
+  )
+  await dialog.getByRole('button', { name: 'Export', exact: true }).click()
+  await expect.poll(() => page.evaluate(() => window.__exportResources.workers.size)).toBe(2)
+  await dialog.getByRole('button', { name: 'Cancel', exact: true }).click()
+  await expect(dialog.getByRole('button', { name: 'Export', exact: true })).toBeEnabled()
+  await released(page)
+  await page.unroute('**/gif.worker.js')
   const gif = await download(page, 'Export', info, 'comparison.gif')
   expect(gif.toString('ascii', 0, 6)).toBe('GIF89a')
   const result = await page.evaluate(async (bytes) => {
@@ -341,6 +358,37 @@ test('ProRes retains Image/PDF output and refuses every animated path', async ({
   expect(png.subarray(0, 8).toString('hex')).toBe('89504e470d0a1a0a')
   expect(png.readUInt32BE(16)).toBe(1920)
   expect(png.readUInt32BE(20)).toBe(1080)
+  const pixelsMatch = await page.evaluate(async (bytes) => {
+    const bitmap = await createImageBitmap(new Blob([new Uint8Array(bytes)], { type: 'image/png' }))
+    try {
+      const output = document.createElement('canvas')
+      output.width = bitmap.width
+      output.height = bitmap.height
+      const out = output.getContext('2d')!
+      out.drawImage(bitmap, 0, 0)
+      const source = document.querySelector('canvas[data-track="b"]') as HTMLCanvasElement
+      const expected = document.createElement('canvas')
+      expected.width = output.width
+      expected.height = output.height
+      const reference = expected.getContext('2d')!
+      reference.fillStyle = '#000'
+      reference.fillRect(0, 0, expected.width, expected.height)
+      const scale = Math.min(expected.width / source.width, expected.height / source.height)
+      reference.drawImage(
+        source,
+        (expected.width - source.width * scale) / 2,
+        (expected.height - source.height * scale) / 2,
+        source.width * scale,
+        source.height * scale,
+      )
+      const actualPixels = out.getImageData(0, 0, output.width, output.height).data
+      const expectedPixels = reference.getImageData(0, 0, output.width, output.height).data
+      return actualPixels.every((channel, index) => channel === expectedPixels[index])
+    } finally {
+      bitmap.close()
+    }
+  }, Array.from(png))
+  expect(pixelsMatch).toBe(true)
   await dialog.getByRole('tab', { name: 'PDF', exact: true }).click()
   const pdf = await download(page, 'Generate PDF', info, 'prores.pdf')
   expect(pdf.toString('ascii', 0, 5)).toBe('%PDF-')

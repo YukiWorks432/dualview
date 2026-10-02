@@ -954,6 +954,7 @@ export function ExportDialog({ isOpen, onClose, canvasRef, captureFrame }: Expor
             [videoA, videoB].map(async (video) => {
               if (video) {
                 await seekVideoAndWait(video, 0)
+                throwIfAborted(resources.signal)
                 await video.play()
               }
             }),
