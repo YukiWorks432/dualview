@@ -150,7 +150,7 @@ test('shows difference regions only while playback is paused', async ({ page }) 
   await expect
     .poll(
       () =>
-        videoA.evaluate((video) => {
+        videoA.evaluate((video: HTMLVideoElement) => {
           const presentedTime = Number(video.dataset.framePresentedCurrentTime)
           return (
             video.dataset.frameReady === 'true' &&
@@ -214,7 +214,7 @@ test('shows difference regions only while playback is paused', async ({ page }) 
 
   await page.getByTitle('Toggle playback (Space)').click()
   await expect(page.getByTitle('Toggle playback (Space)')).toContainText('Play')
-  await expect.poll(() => videoA.evaluate((video) => video.paused)).toBe(true)
+  await expect.poll(() => videoA.evaluate((video: HTMLVideoElement) => video.paused)).toBe(true)
   await expect(overlay.first()).toBeVisible({ timeout: 10_000 })
   await page.keyboard.press('Escape')
 
@@ -237,7 +237,9 @@ test('shows difference regions only while playback is paused', async ({ page }) 
       JSON.stringify(
         await page.evaluate(() => ({
           sources: Array.from(
-            document.querySelectorAll('video[data-track], canvas[data-track]'),
+            document.querySelectorAll<HTMLVideoElement | HTMLCanvasElement>(
+              'video[data-track], canvas[data-track]',
+            ),
           ).map((source) => ({
             tag: source.tagName,
             track: source.dataset.track,
@@ -266,7 +268,7 @@ test('shows difference regions only while playback is paused', async ({ page }) 
   await expect(videoA).toHaveAttribute('data-frame-source-clip-id', /.+/)
   await expect
     .poll(() =>
-      videoA.evaluate((video) => {
+      videoA.evaluate((video: HTMLVideoElement) => {
         const generation = video.dataset.frameSeekGeneration
         return (
           video.currentTime === 0 &&

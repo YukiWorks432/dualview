@@ -10,6 +10,7 @@
 
 import { v4 as uuidv4 } from 'uuid'
 import { create } from 'zustand'
+import { shallow } from 'zustand/shallow'
 
 import {
   initDB,
@@ -30,7 +31,7 @@ import {
   type PreparedProject,
 } from '../lib/projectPreparation'
 import { projectSession } from '../lib/projectSession'
-import type { TimelineTrack } from '../types'
+import type { MediaFile, TimelineTrack } from '../types'
 import { useHistoryStore } from './historyStore'
 import { useKeyframeStore } from './keyframeStore'
 import { useMediaStore } from './mediaStore'
@@ -105,11 +106,10 @@ interface PersistenceStore {
   _captureProjectThumbnail: () => Promise<string | null>
 }
 
-// Serialize timeline state for storage
-function serializeTimelineState(state = useTimelineStore.getState()): string {
-  return JSON.stringify({
+// 保存と変更検知が同じ項目を使う。再生位置は復帰用に保存するが編集には数えない。
+function selectTimelineEdits(state: ReturnType<typeof useTimelineStore.getState>) {
+  return {
     tracks: state.tracks,
-    currentTime: state.currentTime,
     duration: state.duration,
     zoom: state.zoom,
     playbackSpeed: state.playbackSpeed,
@@ -119,13 +119,15 @@ function serializeTimelineState(state = useTimelineStore.getState()): string {
     snapEnabled: state.snapEnabled,
     snapThreshold: state.snapThreshold,
     rippleEnabled: state.rippleEnabled,
-  })
+  }
 }
 
-// Serialize project settings for storage
-function serializeProjectSettings(): string {
-  const state = useProjectStore.getState()
-  return JSON.stringify({
+function serializeTimelineState(state = useTimelineStore.getState()): string {
+  return JSON.stringify({ ...selectTimelineEdits(state), currentTime: state.currentTime })
+}
+
+function selectProjectSettings(state: ReturnType<typeof useProjectStore.getState>) {
+  return {
     comparisonMode: state.comparisonMode,
     blendMode: state.blendMode,
     splitLayout: state.splitLayout,
@@ -141,7 +143,11 @@ function serializeProjectSettings(): string {
     pixelGridSettings: state.pixelGridSettings,
     morphologicalSettings: state.morphologicalSettings,
     exportSettings: state.exportSettings,
-  })
+  }
+}
+
+function serializeProjectSettings(): string {
+  return JSON.stringify(selectProjectSettings(useProjectStore.getState()))
 }
 
 // KEYFRAME-001: Serialize keyframe data for storage
@@ -152,9 +158,8 @@ function serializeKeyframeData(): string {
   return JSON.stringify(entries)
 }
 
-// Get media manifest (metadata without blobs)
-function getMediaManifest(files = useMediaStore.getState().files): MediaManifestEntry[] {
-  return files.map((f) => ({
+function selectMediaManifestEntry(f: MediaFile): MediaManifestEntry {
+  return {
     id: f.id,
     name: f.name,
     type: f.type,
@@ -164,7 +169,28 @@ function getMediaManifest(files = useMediaStore.getState().files): MediaManifest
     waveformPeaks: f.waveformPeaks,
     // MEDIA-012: Include status (stored files should always be 'ready')
     status: f.status || 'ready',
-  }))
+  }
+}
+
+function getMediaManifest(files = useMediaStore.getState().files): MediaManifestEntry[] {
+  return files.map(selectMediaManifestEntry)
+}
+
+function samePersistedMedia(files: MediaFile[], previous: MediaFile[]): boolean {
+  return (
+    files === previous ||
+    (files.length === previous.length &&
+      files.every(
+        (file, index) =>
+          file === previous[index] ||
+          (file.file === previous[index].file &&
+            shallow(selectMediaManifestEntry(file), selectMediaManifestEntry(previous[index]))),
+      ))
+  )
+}
+
+function selectMetadataEdits(metadata: ProjectMetadata | null) {
+  return { name: metadata?.name, description: metadata?.description, tags: metadata?.tags }
 }
 
 let persistenceWriteQueue = Promise.resolve()
@@ -194,22 +220,25 @@ const switchRequests = new LatestRequestGate()
 let activeSwitch: { sourceId: string | null; targetId: string } | null = null
 let isApplyingProject = false
 
-// Include all stored edits even when their automatic-save subscriptions are incomplete.
-// Playback time keeps advancing while preparation runs and is not an editing revision.
-function editingFingerprint(): string {
-  const metadata = usePersistenceStore.getState().projectMetadata
-  const timeline = JSON.parse(serializeTimelineState())
-  delete timeline.currentTime
-  return JSON.stringify([
-    metadata?.id,
-    metadata?.name,
-    metadata?.description,
-    metadata?.tags,
-    timeline,
-    serializeProjectSettings(),
-    serializeKeyframeData(),
-    getMediaManifest(),
-  ])
+// 切替準備中の変更も、自動保存と同じ項目・参照で比較する。Blob の置換も取りこぼさない。
+function editingSnapshot() {
+  return {
+    metadata: selectMetadataEdits(usePersistenceStore.getState().projectMetadata),
+    timeline: selectTimelineEdits(useTimelineStore.getState()),
+    settings: selectProjectSettings(useProjectStore.getState()),
+    keyframes: useKeyframeStore.getState().clipKeyframes,
+    files: useMediaStore.getState().files,
+  }
+}
+
+function sameEdits(a: ReturnType<typeof editingSnapshot>, b: ReturnType<typeof editingSnapshot>) {
+  return (
+    shallow(a.metadata, b.metadata) &&
+    shallow(a.timeline, b.timeline) &&
+    shallow(a.settings, b.settings) &&
+    a.keyframes === b.keyframes &&
+    samePersistedMedia(a.files, b.files)
+  )
 }
 
 function resetProjectSession(prepared?: PreparedProject): void {
@@ -261,20 +290,20 @@ async function switchProject(
   usePersistenceStore.setState({ isLoading: true, error: null })
   let prepared: PreparedProject | null = null
   try {
-    const flushOutgoing = async (): Promise<string> => {
-      let fingerprint = editingFingerprint()
+    const flushOutgoing = async () => {
+      let snapshot = editingSnapshot()
       while (sourceId && isCurrent()) {
         if (!(await usePersistenceStore.getState().saveCurrentProject())) {
           throw new Error(usePersistenceStore.getState().error || 'Failed to save project')
         }
         if (!isCurrent()) break
-        const latest = editingFingerprint()
-        if (latest === fingerprint) break
-        fingerprint = latest
+        const latest = editingSnapshot()
+        if (sameEdits(latest, snapshot)) break
+        snapshot = latest
       }
-      return fingerprint
+      return snapshot
     }
-    let savedFingerprint = await flushOutgoing()
+    let savedSnapshot = await flushOutgoing()
     if (!isCurrent()) return false
     prepared = await prepare(isCurrent)
     if (!prepared || !isCurrent()) return false
@@ -286,8 +315,8 @@ async function switchProject(
       if (!isCurrent()) return false
     }
     // Editing remains enabled while decoding/saving. Flush again before the synchronous commit.
-    while (editingFingerprint() !== savedFingerprint) {
-      savedFingerprint = await flushOutgoing()
+    while (!sameEdits(editingSnapshot(), savedSnapshot)) {
+      savedSnapshot = await flushOutgoing()
       if (!isCurrent()) return false
       if (sourceId === targetId) {
         disposeProjectMedia(prepared.files)
@@ -465,7 +494,8 @@ export const usePersistenceStore = create<PersistenceStore>((set, get) => ({
       if (
         currentState.currentProjectId !== projectId ||
         deletingProjectIds.has(projectId) ||
-        !projectSession.isCurrent(session)
+        !projectSession.isCurrent(session) ||
+        sequence !== saveSequence
       )
         return true
 
@@ -492,6 +522,7 @@ export const usePersistenceStore = create<PersistenceStore>((set, get) => ({
         get().currentProjectId === projectId &&
         !deletingProjectIds.has(projectId) &&
         projectSession.isCurrent(session) &&
+        sequence === saveSequence &&
         (lastPersistedSequences.get(projectId) ?? 0) <= sequence
       ) {
         set({ saveStatus: 'error', error: 'Failed to save project' })
@@ -595,14 +626,9 @@ export const usePersistenceStore = create<PersistenceStore>((set, get) => ({
     const state = get()
     if (!state.projectMetadata) return
 
-    set({
-      projectMetadata: {
-        ...state.projectMetadata,
-        ...updates,
-      },
-    })
-
-    // Trigger auto-save
+    const metadata = { ...state.projectMetadata, ...updates }
+    if (shallow(selectMetadataEdits(metadata), selectMetadataEdits(state.projectMetadata))) return
+    set({ projectMetadata: metadata })
     state.triggerAutoSave()
   },
 
@@ -727,13 +753,11 @@ export const usePersistenceStore = create<PersistenceStore>((set, get) => ({
     })
 
     useTimelineStore.setState({ tracks: newTracks as any })
-
-    // Trigger a save after applying template
-    get().triggerAutoSave()
   },
 
   triggerAutoSave: () => {
     const state = get()
+    if (!state.currentProjectId || isApplyingProject) return
 
     if (state._autoSaveTimeoutId) {
       clearTimeout(state._autoSaveTimeoutId)
@@ -809,47 +833,27 @@ function base64ToBlob(base64: string, mimeType: string): Blob {
   return new Blob([byteArray], { type: mimeType })
 }
 
-// Subscribe to store changes to trigger auto-save
-// These subscriptions are set up when the module loads
-
-// Timeline changes
+// 参照・プリミティブ値だけを比較し、再生やポインター更新ごとに JSON 化しない。
 useTimelineStore.subscribe((state, prevState) => {
-  const persistence = usePersistenceStore.getState()
-  if (!persistence.currentProjectId || isApplyingProject) return
-
-  // Check for meaningful changes
-  if (
-    state.tracks !== prevState.tracks ||
-    state.markers !== prevState.markers ||
-    state.duration !== prevState.duration
-  ) {
-    persistence._markUnsaved()
+  if (!shallow(selectTimelineEdits(state), selectTimelineEdits(prevState))) {
+    usePersistenceStore.getState()._markUnsaved()
   }
 })
 
-// Project settings changes
 useProjectStore.subscribe((state, prevState) => {
-  const persistence = usePersistenceStore.getState()
-  if (!persistence.currentProjectId || isApplyingProject) return
-
-  // Check for meaningful changes (excluding transient state)
-  if (
-    state.comparisonMode !== prevState.comparisonMode ||
-    state.blendMode !== prevState.blendMode ||
-    state.sliderOrientation !== prevState.sliderOrientation ||
-    state.aspectRatioSettings !== prevState.aspectRatioSettings ||
-    state.exportSettings !== prevState.exportSettings
-  ) {
-    persistence._markUnsaved()
+  if (!shallow(selectProjectSettings(state), selectProjectSettings(prevState))) {
+    usePersistenceStore.getState()._markUnsaved()
   }
 })
 
-// Media library changes
 useMediaStore.subscribe((state, prevState) => {
-  const persistence = usePersistenceStore.getState()
-  if (!persistence.currentProjectId || isApplyingProject) return
+  if (!samePersistedMedia(state.files, prevState.files)) {
+    usePersistenceStore.getState()._markUnsaved()
+  }
+})
 
-  if (state.files.length !== prevState.files.length) {
-    persistence._markUnsaved()
+useKeyframeStore.subscribe((state, prevState) => {
+  if (state.clipKeyframes !== prevState.clipKeyframes) {
+    usePersistenceStore.getState()._markUnsaved()
   }
 })

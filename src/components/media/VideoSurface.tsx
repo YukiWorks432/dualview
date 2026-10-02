@@ -14,6 +14,7 @@ import { useProResClipSync } from '../../hooks/useProResClipSync'
 import type { VideoFrameElement } from '../../lib/media/frameSource'
 import {
   isPresentedVideoFrameCandidateCurrent,
+  isPresentedVideoFrameCurrent,
   isVideoFrameRequestCurrent,
   VIDEO_FRAME_SEEK_REQUEST_EVENT,
 } from '../../lib/media/presentedVideoFrame'
@@ -139,6 +140,20 @@ export const VideoSurface = forwardRef<VideoFrameElement, VideoSurfaceProps>(fun
     }
 
     const commitPresentedFrame = (frame: NonNullable<typeof seekingFrame>) => {
+      // シーク完了後に旧PTSの通知が遅れて届くことがある。停止位置と矛盾する
+      // 通知で準備済みにせず、既存の同世代のシーク完了判定を使える状態に保つ。
+      if (
+        video.paused &&
+        !isPresentedVideoFrameCurrent(frame, {
+          mediaId: media.id,
+          clipId: clip?.id ?? '',
+          mediaTime: video.currentTime,
+          currentTime: video.currentTime,
+          seekGeneration,
+        })
+      ) {
+        return
+      }
       video.dataset.frameReady = 'true'
       video.dataset.framePresentedMediaTime = String(frame.mediaTime)
       video.dataset.framePresentedCurrentTime = String(frame.currentTime)
@@ -289,10 +304,23 @@ export const VideoSurface = forwardRef<VideoFrameElement, VideoSurfaceProps>(fun
       delete event.currentTarget.dataset.framePresentedClipId
       delete event.currentTarget.dataset.framePresentedSeekGeneration
     }
+    if (event.currentTarget.dataset.framePresentedSupported === 'false') {
+      onFrameReadyRef.current?.()
+    }
   }, [])
 
   const handleNativeFrameReady = useCallback((event: SyntheticEvent<HTMLVideoElement>) => {
-    if (!onFrameReadyRef.current) event.currentTarget.dataset.frameReady = 'true'
+    const video = event.currentTarget
+    if (!onFrameReadyRef.current) {
+      video.dataset.frameReady = 'true'
+    } else if (video.dataset.framePresentedSupported === 'false') {
+      // フレーム通知APIがない環境でも、通常の比較プレビューを更新する。
+      // 厳密な提示フレームが必要な差分矩形は、別途API非対応を判定する。
+      video.dataset.frameReady = String(
+        !video.seeking && video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA,
+      )
+      onFrameReadyRef.current()
+    }
   }, [])
 
   if (useMediabunny) {
