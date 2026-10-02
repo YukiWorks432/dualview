@@ -260,7 +260,6 @@ export function ExportDialog({ isOpen, onClose, canvasRef, captureFrame }: Expor
 
     try {
       const { videoA, videoB } = getVideoElements()
-      preserveVideoPositions(resources, [videoA, videoB])
       const { mediaA, mediaB } = getVisualElements()
 
       if (!mediaA && !mediaB) {
@@ -286,6 +285,7 @@ export function ExportDialog({ isOpen, onClose, canvasRef, captureFrame }: Expor
         )
       }
 
+      preserveVideoPositions(resources, [videoA, videoB])
       const loopDuration = Math.max(fileA?.duration || duration, fileB?.duration || duration, 1)
 
       // Create canvas for rendering
@@ -1168,7 +1168,6 @@ export function ExportDialog({ isOpen, onClose, canvasRef, captureFrame }: Expor
 
     try {
       const { videoA, videoB } = getVideoElements()
-      preserveVideoPositions(resources, [videoA, videoB])
       const { mediaA, mediaB } = getVisualElements()
 
       if (!mediaA || !mediaB) {
@@ -1189,6 +1188,8 @@ export function ExportDialog({ isOpen, onClose, canvasRef, captureFrame }: Expor
       if (mediaA instanceof HTMLCanvasElement || mediaB instanceof HTMLCanvasElement) {
         throw new Error('Transition export requires browser-native video or image sources.')
       }
+
+      preserveVideoPositions(resources, [videoA, videoB])
 
       // Check WebGL support
       if (!WebGLTransitionRenderer.isSupported()) {

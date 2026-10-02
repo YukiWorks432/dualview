@@ -128,7 +128,7 @@ export function preserveVideoPositions(
     video.pause()
     resources.defer(() => {
       video.pause()
-      video.currentTime = time
+      if (Math.abs(video.currentTime - time) > 0.001) video.currentTime = time
     })
   }
 }

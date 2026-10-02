@@ -1,6 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { seekVideoAndWait, waitForMedia } from './exportResources'
+import {
+  ExportResources,
+  preserveVideoPositions,
+  seekVideoAndWait,
+  waitForMedia,
+} from './exportResources'
 import { WebGLTransitionRenderer } from './webgl/WebGLTransitionRenderer'
 
 class PendingMedia extends EventTarget {
@@ -77,4 +82,21 @@ it('releases temporary WebGL support-check contexts on repeated checks', () => {
   expect(WebGLTransitionRenderer.isSupported()).toBe(true)
   expect(WebGLTransitionRenderer.isSupported()).toBe(true)
   expect(loseContext).toHaveBeenCalledTimes(2)
+})
+
+it('does not invalidate an unchanged borrowed preview frame by seeking it again', async () => {
+  const seek = vi.fn<(time: number) => void>()
+  const video = {
+    get currentTime() {
+      return 0.25
+    },
+    set currentTime(time: number) {
+      seek(time)
+    },
+    pause() {},
+  }
+  const resources = new ExportResources()
+  preserveVideoPositions(resources, [video as HTMLVideoElement])
+  await resources.dispose()
+  expect(seek).not.toHaveBeenCalled()
 })
