@@ -172,7 +172,10 @@ test('paused markers, rapid seeks, clip crossings and project reload present the
   await seek(page, 0.5)
   await expectColor(page, 'a', 'red')
   await expectColor(page, 'b', 'red')
-  await page.getByTitle(/^Blue frame -/).click({ position: { x: 5, y: 20 } })
+  await page.getByRole('button', { name: 'Jump to marker Blue frame', exact: true }).click()
+  await expect(
+    page.getByRole('button', { name: 'Jump to marker Blue frame', exact: true }),
+  ).toBeVisible()
   expect((await snapshot(page)).time).toBe(2.5)
   await expectColor(page, 'a', 'blue')
   await expectColor(page, 'b', 'blue')
@@ -217,6 +220,11 @@ test('paused markers, rapid seeks, clip crossings and project reload present the
   })
   await expectColor(page, 'a', 'blue')
   await expectColor(page, 'b', 'blue')
+  const marker = page.getByRole('button', { name: 'Jump to marker Blue frame', exact: true })
+  await marker.hover()
+  await page.getByRole('button', { name: 'Remove marker Blue frame', exact: true }).click()
+  await expect(marker).toHaveCount(0)
+  expect((await snapshot(page)).time).toBe(2.5)
 })
 
 test('embedded audio keeps clip placement, trims and speed, and stops during reverse shuttle', async ({

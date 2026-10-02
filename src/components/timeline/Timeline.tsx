@@ -1081,21 +1081,27 @@ export function Timeline() {
               {markers.map((marker) => (
                 <div
                   key={marker.id}
-                  className="absolute top-0 h-full cursor-pointer group"
-                  style={{ left: marker.time * pixelsPerSecond - 6 }}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    jumpToMarker(marker.id)
-                  }}
-                  title={`${marker.label} - ${formatTime(marker.time)}`}
+                  className="absolute top-0 h-full group"
+                  style={{ left: marker.time * pixelsPerSecond - 14 }}
                 >
-                  <Flag className="w-3 h-3 text-warning fill-warning" />
                   <button
-                    className="absolute -top-1 -right-1 inline-flex h-4 w-4 items-center justify-center rounded-full bg-destructive p-0 opacity-0 group-hover:opacity-100"
+                    className="inline-flex h-full w-7 items-start justify-center text-warning"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      jumpToMarker(marker.id)
+                    }}
+                    aria-label={`Jump to marker ${marker.label}`}
+                    title={`${marker.label} - ${formatTime(marker.time)}`}
+                  >
+                    <Flag className="w-3 h-3 fill-warning" />
+                  </button>
+                  <button
+                    className="absolute left-full top-0 hidden h-7 w-7 items-center justify-center rounded-full bg-destructive p-0 group-hover:inline-flex group-focus-within:inline-flex"
                     onClick={(e) => {
                       e.stopPropagation()
                       removeMarker(marker.id)
                     }}
+                    aria-label={`Remove marker ${marker.label}`}
                     title="Remove marker"
                   >
                     <X className="w-2 h-2 text-white" />
