@@ -11,11 +11,11 @@ import { KeyboardShortcutsHelp } from './components/ui/KeyboardShortcutsHelp'
 import { getComparisonModeByKeyboardCode } from './config/comparisonModes'
 import { useKeyboardShortcutsHelp } from './hooks/useKeyboardShortcutsHelp'
 import { useTimelineDiffLifecycle } from './hooks/useTimelineDiff'
-import { detachFile } from './lib/media/detachFile'
 import { isSupportedMediaFile } from './lib/media/fileTypes'
+import { captureMediaImport } from './lib/media/importRequest'
 import { captureCanvasScreenshot, downloadBlob } from './lib/screenshotExport'
 import { useHistoryStore } from './stores/historyStore'
-import { useMediaStore } from './stores/mediaStore'
+import { isMediaImportCurrent, useMediaStore } from './stores/mediaStore'
 import { usePersistenceStore } from './stores/persistenceStore'
 import { usePlaybackStore } from './stores/playbackStore'
 import { useProjectStore } from './stores/projectStore'
@@ -74,7 +74,7 @@ export default function App() {
   } = useTimelineStore()
   const { togglePlay, seek, currentTime, isPlaying, stepFrame } = usePlaybackStore()
   const { addFile } = useMediaStore()
-  const { addClip, tracks } = useTimelineStore()
+  const { addClip } = useTimelineStore()
   const {
     toggleMetrics,
     setComparisonMode,
@@ -309,16 +309,19 @@ export default function App() {
   const handleDrop = useCallback(
     async (e: React.DragEvent) => {
       e.preventDefault()
+      const request = captureMediaImport()
       const files = e.dataTransfer.files
 
       for (let i = 0; i < files.length; i++) {
         const file = files[i]
         if (isSupportedMediaFile(file)) {
-          const mediaFile = await addFile(await detachFile(file))
+          const mediaFile = await addFile(file, request)
+          if (!isMediaImportCurrent(mediaFile, request)) return
 
           // Auto-add to timeline (respecting accepted types)
-          const trackA = tracks.find((t) => t.type === 'a')
-          const trackB = tracks.find((t) => t.type === 'b')
+          const currentTracks = useTimelineStore.getState().tracks
+          const trackA = currentTracks.find((t) => t.type === 'a')
+          const trackB = currentTracks.find((t) => t.type === 'b')
 
           if (
             i === 0 &&
@@ -338,7 +341,7 @@ export default function App() {
         }
       }
     },
-    [addFile, addClip, tracks],
+    [addFile, addClip],
   )
 
   const handleDragOver = (e: React.DragEvent) => {

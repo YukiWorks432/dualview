@@ -32,11 +32,6 @@ import type { DragEvent } from 'react'
 import { useEdgeAutoScroll } from '../../hooks/useEdgeAutoScroll'
 import { useMarqueeSelect } from '../../hooks/useMarqueeSelect'
 import { useTimelineDrag, useTimelineTrim } from '../../hooks/useTimelineDrag'
-import {
-  extractFilmstrip,
-  getCachedFilmstrip,
-  type FilmstripData,
-} from '../../lib/filmstripExtractor'
 import { MEDIA_DRAG_TYPE, type MediaDragData } from '../../lib/media/dragData'
 import { formatTime, cn } from '../../lib/utils'
 import { useHistoryStore } from '../../stores/historyStore'
@@ -73,8 +68,6 @@ export function Timeline() {
   const [dropIndicatorX, setDropIndicatorX] = useState<number | null>(null)
 
   // FILMSTRIP-001, FILMSTRIP-002: Filmstrip state
-  const [filmstrips, setFilmstrips] = useState<Map<string, FilmstripData>>(new Map())
-  const [filmstripLoading, setFilmstripLoading] = useState<Set<string>>(new Set())
   const [showFilmstrip, setShowFilmstrip] = useState(true)
 
   // Playback store for play/pause/seek
@@ -141,82 +134,11 @@ export function Timeline() {
     getOverlappingClips,
   } = useTimelineStore()
 
-  const { getFile, files } = useMediaStore()
+  const { getFile } = useMediaStore()
   const { pushState } = useHistoryStore()
 
   const pixelsPerSecond = 50 * zoom
   const timelineWidth = duration * pixelsPerSecond
-
-  // FILMSTRIP-001: Extract filmstrips for video clips
-  useEffect(() => {
-    if (!showFilmstrip) return
-
-    let isMounted = true
-
-    // Find all video clips that need filmstrip extraction
-    const videoMediaIds = new Set<string>()
-    for (const track of tracks) {
-      for (const clip of track.clips) {
-        const media = getFile(clip.mediaId)
-        if (media?.type === 'video') {
-          videoMediaIds.add(clip.mediaId)
-        }
-      }
-    }
-
-    // Start extraction for each video that isn't already loaded or loading
-    const extractAll = async () => {
-      for (const mediaId of videoMediaIds) {
-        // Skip if already extracted or loading
-        if (filmstrips.has(mediaId) || filmstripLoading.has(mediaId)) continue
-        if (!isMounted) break
-
-        const media = getFile(mediaId)
-        if (!media || !media.url) continue
-
-        // Check cache first
-        const cached = getCachedFilmstrip(mediaId)
-        if (cached) {
-          if (isMounted) {
-            setFilmstrips((prev) => new Map(prev).set(mediaId, cached))
-          }
-          continue
-        }
-
-        // Mark as loading
-        if (isMounted) {
-          setFilmstripLoading((prev) => new Set(prev).add(mediaId))
-        }
-
-        try {
-          const filmstrip = await extractFilmstrip(mediaId, media.url, media.duration || 10, {
-            frameInterval: 1,
-            maxFrames: 60,
-          })
-          if (isMounted && filmstrip) {
-            setFilmstrips((prev) => new Map(prev).set(mediaId, filmstrip))
-          }
-        } catch (error) {
-          console.warn('Failed to extract filmstrip:', error)
-        } finally {
-          if (isMounted) {
-            setFilmstripLoading((prev) => {
-              const next = new Set(prev)
-              next.delete(mediaId)
-              return next
-            })
-          }
-        }
-      }
-    }
-
-    extractAll()
-
-    return () => {
-      isMounted = false
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tracks, files, showFilmstrip]) // Note: filmstrips and filmstripLoading intentionally excluded to avoid infinite loops
 
   // TL-003: Enhanced drag state management (OpenCut pattern)
   const {
@@ -1169,8 +1091,6 @@ export function Timeline() {
                       mediaThumbnail={media?.thumbnail}
                       mediaType={media?.type}
                       waveformPeaks={media?.waveformPeaks}
-                      filmstrip={filmstrips.get(clip.mediaId) || null}
-                      filmstripLoading={filmstripLoading.has(clip.mediaId)}
                       showFilmstrip={showFilmstrip}
                       trimState={trimState}
                       onMouseDown={handleClipMouseDown}
