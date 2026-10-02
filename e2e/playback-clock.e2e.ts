@@ -189,7 +189,7 @@ test('paused markers, rapid seeks, clip crossings and project reload present the
   const prores = page.locator('canvas[data-track="b"]').first()
   await expect
     .poll(() =>
-      video.evaluate((element) => ({
+      video.evaluate((element: HTMLVideoElement) => ({
         time: element.currentTime,
         clip: element.dataset.framePresentedClipId,
       })),
