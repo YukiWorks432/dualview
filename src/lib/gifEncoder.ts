@@ -36,8 +36,14 @@ export async function createGifFromFrames(
     workerScript: `${import.meta.env.BASE_URL}gif.worker.js`,
   })
   try {
-    const frameDelay = Math.round(1000 / options.fps)
-    frames.forEach((frame) => gif.addFrame(frame, { delay: frameDelay }))
+    frames.forEach((frame, index) => {
+      // GIF stores centiseconds. Distribute rounding across frames so 12/15 fps
+      // presets retain their duration instead of accumulating the same error.
+      const delay =
+        (Math.round(((index + 1) * 100) / options.fps) - Math.round((index * 100) / options.fps)) *
+        10
+      gif.addFrame(frame, { delay })
+    })
     return await waitForExport(
       new Promise<Blob>((resolve, reject) => {
         gif.on('progress', (progress: number) => onProgress(progress * 100, 'Encoding GIF...'))

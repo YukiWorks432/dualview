@@ -221,7 +221,18 @@ async function inspectVideo(page: Page, bytes: Buffer, mime: string, time = 0.25
               1,
             ).data,
           )
+        const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data
+        let coloredPixels = 0
+        for (let offset = 0; offset < pixels.length; offset += 4) {
+          if (
+            Math.max(pixels[offset], pixels[offset + 1], pixels[offset + 2]) -
+              Math.min(pixels[offset], pixels[offset + 1], pixels[offset + 2]) >
+            30
+          )
+            coloredPixels++
+        }
         return {
+          coloredPixels,
           width: video.videoWidth,
           height: video.videoHeight,
           duration: video.duration,
@@ -236,6 +247,56 @@ async function inspectVideo(page: Page, bytes: Buffer, mime: string, time = 0.25
     },
     { bytes: Array.from(bytes), mime, time },
   )
+}
+async function inspectGif(page: Page, bytes: Buffer) {
+  return page.evaluate(async (bytes) => {
+    // Chromium's native decoder checks the actual encoded frames and their timing.
+    const ImageDecoder = (window as unknown as { ImageDecoder: new (config: object) => any })
+      .ImageDecoder
+    const decoder = new ImageDecoder({ data: new Uint8Array(bytes), type: 'image/gif' })
+    try {
+      await decoder.tracks.ready
+      const count = decoder.tracks.selectedTrack.frameCount
+      let duration = 0
+      let sample: number[] = []
+      let right: number[] = []
+      let first: number[] = []
+      let last: number[] = []
+      let width = 0
+      let height = 0
+      for (let index = 0; index < count; index++) {
+        const { image } = await decoder.decode({ frameIndex: index })
+        try {
+          duration += image.duration
+          width = image.displayWidth
+          height = image.displayHeight
+          if (index === 0 || index === 3 || index === count - 1) {
+            const canvas = document.createElement('canvas')
+            canvas.width = width
+            canvas.height = height
+            const context = canvas.getContext('2d')!
+            context.drawImage(image, 0, 0)
+            const pixel = Array.from(
+              context.getImageData(Math.round(width * 0.2), Math.round(height * 0.5), 1, 1).data,
+            )
+            if (index === 3) {
+              sample = pixel
+              right = Array.from(
+                context.getImageData(Math.round(width * 0.9), Math.round(height * 0.5), 1, 1).data,
+              )
+            }
+            if (index === 0) first = pixel
+            if (index === count - 1) last = pixel
+          }
+        } finally {
+          image.close()
+        }
+      }
+      return { count, duration, width, height, sample, right, first, last }
+    } finally {
+      decoder.close()
+    }
+  }, Array.from(bytes))
 }
 function isColor(pixel: number[], color: 'red' | 'blue') {
   const expected = color === 'red' ? [240, 32, 32] : [32, 32, 240]
@@ -283,44 +344,20 @@ test('MP4 and GIF artifacts do not depend on WebM and release resources on repea
   await page.unroute('**/gif.worker.js')
   const gif = await download(page, 'Export', info, 'comparison.gif')
   expect(gif.toString('ascii', 0, 6)).toBe('GIF89a')
-  const result = await page.evaluate(async (bytes) => {
-    // Chromium's native decoder checks the actual encoded frames and their timing.
-    const ImageDecoder = (window as unknown as { ImageDecoder: new (config: object) => any })
-      .ImageDecoder
-    const decoder = new ImageDecoder({ data: new Uint8Array(bytes), type: 'image/gif' })
-    try {
-      await decoder.tracks.ready
-      const count = decoder.tracks.selectedTrack.frameCount
-      let duration = 0
-      let sample: number[] = []
-      let width = 0
-      let height = 0
-      for (let index = 0; index < count; index++) {
-        const { image } = await decoder.decode({ frameIndex: index })
-        try {
-          duration += image.duration
-          width = image.displayWidth
-          height = image.displayHeight
-          if (index === 3) {
-            const canvas = document.createElement('canvas')
-            canvas.width = width
-            canvas.height = height
-            const context = canvas.getContext('2d')!
-            context.drawImage(image, 0, 0)
-            sample = Array.from(context.getImageData(32, 90, 1, 1).data)
-          }
-        } finally {
-          image.close()
-        }
-      }
-      return { count, duration, width, height, sample }
-    } finally {
-      decoder.close()
-    }
-  }, Array.from(gif))
+  const result = await inspectGif(page, gif)
   expect(result).toMatchObject({ count: 10, duration: 1_000_000, width: 320, height: 180 })
   isColor(result.sample, 'red')
   await released(page)
+  for (const source of ['A Only', 'B Only']) {
+    await dialog.getByRole('button', { name: 'Export Another' }).click()
+    await dialog.getByRole('button', { name: source, exact: true }).click()
+    const gif = await download(page, 'Export', info, `${source}.gif`)
+    const result = await inspectGif(page, gif)
+    expect(result).toMatchObject({ count: 10, duration: 1_000_000, width: 320, height: 180 })
+    isColor(result.sample, source === 'A Only' ? 'red' : 'blue')
+    isColor(result.right, source === 'A Only' ? 'red' : 'blue')
+    await released(page)
+  }
   expect(await page.evaluate(() => window.__exportResources.recorders.length)).toBe(0)
 })
 
@@ -351,6 +388,13 @@ test('cancelled WebM, transitions and stitch can be followed by valid exports', 
   expect(first.duration).toBeCloseTo(1.5, 1)
   isColor(first.left, 'red')
   isColor(last.left, 'blue')
+  await released(page)
+  await dialog.getByRole('button', { name: 'GIF', exact: true }).click()
+  const transitionGif = await download(page, 'Export FX', info, 'transition.gif')
+  const gifFrames = await inspectGif(page, transitionGif)
+  expect(gifFrames).toMatchObject({ width: 480, height: 270, count: 18, duration: 1_500_000 })
+  isColor(gifFrames.first, 'red')
+  isColor(gifFrames.last, 'blue')
   await released(page)
   await dialog.getByRole('tab', { name: 'Stitch', exact: true }).click()
   await dialog.getByRole('button', { name: '720P', exact: true }).click()
@@ -432,4 +476,51 @@ test('ProRes retains Image/PDF output and refuses every animated path', async ({
   expect(pdf.toString('ascii', 0, 5)).toBe('%PDF-')
   expect(pdf.toString('latin1')).toContain('/Subtype /Image')
   await released(page)
+})
+
+test('native video seeking preserves black-white-black frames and excludes paused difference rectangles', async ({
+  page,
+}, info) => {
+  await observeResources(page)
+  await page.setViewportSize({ width: 1440, height: 1100 })
+  await page.goto('/')
+  await waitForProject(page)
+  await page.getByRole('button', { name: 'Hide filmstrip' }).click()
+  await upload(page, 'A', path.join(process.cwd(), 'e2e/fixtures/difference-brief.webm'))
+  await upload(page, 'B', path.join(process.cwd(), 'e2e/fixtures/difference-a.webm'))
+  const nextDifference = page.getByRole('button', { name: 'Next highlighted interval' })
+  await expect(nextDifference).toBeEnabled({ timeout: 60_000 })
+  await nextDifference.click()
+  await waitForSurface(page, 'A')
+  await waitForSurface(page, 'B')
+  await expect(page.getByTestId('difference-regions-overlay').first()).toBeVisible()
+  const initialTime = await page
+    .locator('video[data-track="a"]')
+    .first()
+    .evaluate((video: HTMLVideoElement) => video.currentTime)
+  await page.getByTitle('Export (E)').click()
+  const dialog = page.getByRole('dialog')
+  await dialog.getByRole('button', { name: 'A Only', exact: true }).click()
+  await dialog.getByRole('button', { name: 'MP4', exact: true }).click()
+  const mp4 = await download(page, 'Export', info, 'native-frames.mp4')
+  for (const [time, expected] of [
+    [0.1, 0],
+    [0.35, 255],
+    [0.6, 0],
+  ]) {
+    const frame = await inspectVideo(page, mp4, 'video/mp4', time)
+    expect(frame.width).toBe(1920)
+    expect(frame.height).toBe(1080)
+    expect(Math.abs(frame.duration - 0.75)).toBeLessThan(0.04)
+    expect(frame.coloredPixels).toBe(0)
+    expect(Math.abs(frame.left[0] - expected)).toBeLessThan(10)
+  }
+  await released(page)
+  await waitForSurface(page, 'A')
+  expect(
+    await page
+      .locator('video[data-track="a"]')
+      .first()
+      .evaluate((video: HTMLVideoElement) => video.currentTime),
+  ).toBeCloseTo(initialTime, 3)
 })
