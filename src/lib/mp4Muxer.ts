@@ -9,6 +9,7 @@ import {
 interface AvcMp4Muxer {
   addChunk: (chunk: EncodedVideoChunk, meta?: EncodedVideoChunkMetadata) => void
   finalize: () => Promise<ArrayBuffer>
+  dispose: () => Promise<void>
 }
 
 /**
@@ -26,26 +27,57 @@ export async function createAvcMp4Muxer(): Promise<AvcMp4Muxer> {
   const source = new EncodedVideoPacketSource('avc')
 
   output.addVideoTrack(source)
-  await output.start()
+  try {
+    await output.start()
+  } catch (error) {
+    await output.cancel()
+    throw error
+  }
 
   let writeQueue = Promise.resolve()
+  let writeError: unknown
+  let disposed = false
+  let finalization: Promise<ArrayBuffer> | undefined
 
   return {
     addChunk(chunk, meta) {
       const packet = EncodedPacket.fromEncodedChunk(chunk)
-      writeQueue = writeQueue.then(() => source.add(packet, meta))
+      writeQueue = writeQueue
+        .then(async () => {
+          if (disposed || writeError) return
+          await source.add(packet, meta)
+        })
+        .catch((error) => {
+          writeError = error
+        })
     },
 
-    async finalize() {
-      await writeQueue
+    finalize() {
+      finalization ??= (async () => {
+        await writeQueue
+        if (writeError) throw writeError
+        if (disposed) throw new Error('MP4 export cancelled')
+        source.close()
+        await output.finalize()
+
+        if (!target.buffer) {
+          throw new Error('MP4 muxing completed without producing an output buffer')
+        }
+
+        return target.buffer
+      })()
+      return finalization
+    },
+
+    async dispose() {
+      if (disposed) return
+      disposed = true
       source.close()
-      await output.finalize()
-
-      if (!target.buffer) {
-        throw new Error('MP4 muxing completed without producing an output buffer')
-      }
-
-      return target.buffer
+      if (output.state !== 'finalized') await output.cancel()
+      await writeQueue
+      // Mediabunny cannot cancel a finalization already in progress. Keep ownership
+      // until it settles, including its failure cleanup, before releasing the job.
+      await finalization?.catch(() => {})
     },
   }
 }

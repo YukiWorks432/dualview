@@ -1,33 +1,7 @@
-/**
- * Lightweight GIF encoder using gif.js from CDN
- * No FFmpeg dependency - much faster to load
- */
+// @ts-expect-error - gif.js-upgrade does not publish TypeScript declarations
+import GIF from 'gif.js-upgrade'
 
-// Load gif.js from CDN
-let GIF: any = null
-let gifJsLoaded = false
-let loadingPromise: Promise<void> | null = null
-
-async function loadGifJs(): Promise<void> {
-  if (gifJsLoaded && GIF) return
-
-  if (loadingPromise) return loadingPromise
-
-  loadingPromise = new Promise((resolve, reject) => {
-    // Load gif.js from CDN
-    const script = document.createElement('script')
-    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js'
-    script.onload = () => {
-      GIF = (window as any).GIF
-      gifJsLoaded = true
-      resolve()
-    }
-    script.onerror = () => reject(new Error('Failed to load gif.js'))
-    document.head.appendChild(script)
-  })
-
-  return loadingPromise
-}
+import { throwIfAborted, waitForExport } from './exportResources'
 
 export interface GifExportOptions {
   width: number
@@ -50,48 +24,53 @@ export async function createGifFromFrames(
   frames: ImageData[],
   preset: 'small' | 'medium' | 'large' | 'hd',
   onProgress: (progress: number, message: string) => void,
+  signal?: AbortSignal,
 ): Promise<Blob> {
-  onProgress(0, 'Loading GIF encoder...')
-  await loadGifJs()
-
+  throwIfAborted(signal)
   const options = GIF_PRESETS[preset]
-
-  onProgress(5, 'Initializing GIF encoder...')
-
-  return new Promise((resolve, reject) => {
-    const gif = new GIF({
-      workers: 2,
-      quality: options.quality,
-      width: options.width,
-      height: options.height,
-      workerScript: 'https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.worker.js',
-    })
-
-    // Add frames
-    const frameDelay = Math.round(1000 / options.fps)
-    frames.forEach((frame, i) => {
-      gif.addFrame(frame, { delay: frameDelay })
-      if (i % 10 === 0) {
-        onProgress(5 + (i / frames.length) * 45, `Adding frame ${i + 1}/${frames.length}`)
-      }
-    })
-
-    gif.on('progress', (p: number) => {
-      onProgress(50 + p * 50, `Encoding GIF... ${Math.round(p * 100)}%`)
-    })
-
-    gif.on('finished', (blob: Blob) => {
-      onProgress(100, 'GIF created!')
-      resolve(blob)
-    })
-
-    gif.on('error', (err: Error) => {
-      reject(err)
-    })
-
-    onProgress(50, 'Encoding GIF...')
-    gif.render()
+  const gif = new GIF({
+    workers: 2,
+    quality: options.quality,
+    width: options.width,
+    height: options.height,
+    workerScript: `${import.meta.env.BASE_URL}gif.worker.js`,
   })
+  try {
+    frames.forEach((frame, index) => {
+      // GIF stores centiseconds. Distribute rounding across frames so 12/15 fps
+      // presets retain their duration instead of accumulating the same error.
+      const delay =
+        (Math.round(((index + 1) * 100) / options.fps) - Math.round((index * 100) / options.fps)) *
+        10
+      gif.addFrame(frame, { delay })
+    })
+    return await waitForExport(
+      new Promise<Blob>((resolve, reject) => {
+        gif.on('progress', (progress: number) => onProgress(progress * 100, 'Encoding GIF...'))
+        gif.on('finished', resolve)
+        gif.on('error', reject)
+        gif.render()
+        // gif.js exposes no worker-disposal API and abort() only stops active workers.
+        // Register native worker errors as well, otherwise a failed worker never settles.
+        for (const worker of [...gif.activeWorkers, ...gif.freeWorkers] as Worker[]) {
+          worker.onerror = () => reject(new Error('GIF worker failed'))
+        }
+      }),
+      signal,
+    )
+  } finally {
+    gif.removeAllListeners()
+    const workers = new Set<Worker>([...gif.activeWorkers, ...gif.freeWorkers])
+    gif.abort()
+    for (const worker of workers) {
+      worker.onmessage = null
+      worker.onerror = null
+      worker.terminate()
+    }
+    gif.activeWorkers.length = 0
+    gif.freeWorkers.length = 0
+    gif.frames.length = 0
+  }
 }
 
 /**
