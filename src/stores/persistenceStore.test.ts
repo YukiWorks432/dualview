@@ -45,6 +45,18 @@ const metadata = {
 describe('project persistence ordering', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.stubGlobal('window', { dispatchEvent: vi.fn<(event: unknown) => void>() })
+    vi.stubGlobal(
+      'CustomEvent',
+      class {
+        type: string
+        detail: unknown
+        constructor(type: string, detail: unknown) {
+          this.type = type
+          this.detail = detail
+        }
+      },
+    )
     usePersistenceStore.getState().cancelAutoSave()
     useMediaStore.setState({ files: [], selectedIds: [] })
     usePersistenceStore.setState({
@@ -63,6 +75,7 @@ describe('project persistence ordering', () => {
   })
 
   afterEach(() => {
+    vi.unstubAllGlobals()
     usePersistenceStore.getState().cancelAutoSave()
   })
 

@@ -55,6 +55,7 @@ export function ProjectSelector({ isOpen, onClose }: ProjectSelectorProps) {
     projects,
     currentProjectId,
     isLoading,
+    error,
     storageUsage,
     createNewProject,
     loadProject,
@@ -78,13 +79,11 @@ export function ProjectSelector({ isOpen, onClose }: ProjectSelectorProps) {
   )
 
   const handleNewProject = async () => {
-    await createNewProject()
-    onClose()
+    if (await createNewProject()) onClose()
   }
 
   const handleLoadProject = async (projectId: string) => {
-    await loadProject(projectId)
-    onClose()
+    if (await loadProject(projectId)) onClose()
   }
 
   const handleDeleteProject = async (projectId: string) => {
@@ -157,6 +156,12 @@ export function ProjectSelector({ isOpen, onClose }: ProjectSelectorProps) {
             </div>
           </div>
         </div>
+
+        {error && (
+          <p role="alert" className="px-6 py-3 text-sm text-red-400">
+            {error}. Please retry.
+          </p>
+        )}
 
         <div className="flex flex-wrap items-center gap-3 border-b border-border px-6 py-3">
           <ButtonWithIcon

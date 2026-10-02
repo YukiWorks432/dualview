@@ -505,6 +505,13 @@ Toggle with `G` key.
 Local files added to DualView are processed in the browser and are not uploaded to the operator.
 Projects and media are saved in this browser so you can continue later.
 
+Creating or opening a project first saves the outgoing edits. The current project stays available
+until the destination has been fully read and decoded; a save or load failure keeps your current
+edits and media, and the Projects dialog shows the error so you can retry. If several switches
+overlap, only the latest request can become active. Undo/Redo, selections, clip/keyframe clipboards,
+and playback are reset when a project is opened, created, or the active project is deleted.
+Undo/Redo continues to work for edits made within the current project session.
+
 URL import connects directly to the URL you enter to fetch that media. Other local files already
 loaded in DualView are not sent to that destination.
 
