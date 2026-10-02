@@ -100,3 +100,79 @@ it('does not invalidate an unchanged borrowed preview frame by seeking it again'
   await resources.dispose()
   expect(seek).not.toHaveBeenCalled()
 })
+
+it('keeps cleanup pending until the restored seek and preview presentation both finish', async () => {
+  let notify: () => void = () => {}
+  const disconnect = vi.fn<() => void>()
+  vi.stubGlobal(
+    'MutationObserver',
+    class {
+      constructor(callback: () => void) {
+        notify = callback
+      }
+      observe() {}
+      disconnect = disconnect
+    },
+  )
+  const video = Object.assign(new PendingMedia(), {
+    src: 'borrowed-video',
+    isConnected: true,
+    dataset: { frameReady: 'true' },
+    pause() {},
+  })
+  video.currentTime = 0.25
+  const resources = new ExportResources()
+  preserveVideoPositions(resources, [video as unknown as HTMLVideoElement])
+  video.currentTime = 0.75
+  video.dataset.frameReady = 'false'
+  let disposed = false
+  const disposal = resources.dispose().then(() => {
+    disposed = true
+  })
+  expect(video.currentTime).toBe(0.25)
+  expect(disposed).toBe(false)
+  video.dispatchEvent(new Event('seeked'))
+  await Promise.resolve()
+  await Promise.resolve()
+  expect(disposed).toBe(false)
+  video.dataset.frameReady = 'true'
+  notify()
+  await disposal
+  expect(disposed).toBe(true)
+  expect(disconnect).toHaveBeenCalledTimes(1)
+  expect(video.listeners.size).toBe(0)
+})
+
+it.each(['error', 'timeout'])(
+  'releases the restoration observer and timer after %s',
+  async (outcome) => {
+    vi.useFakeTimers()
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const disconnect = vi.fn<() => void>()
+    vi.stubGlobal(
+      'MutationObserver',
+      class {
+        observe() {}
+        disconnect = disconnect
+      },
+    )
+    const video = Object.assign(new PendingMedia(), {
+      src: 'borrowed-video',
+      dataset: { frameReady: 'false' },
+      pause() {},
+    })
+    const resources = new ExportResources()
+    preserveVideoPositions(resources, [video as unknown as HTMLVideoElement])
+    const pending = resources.dispose()
+    await Promise.resolve()
+    await Promise.resolve()
+    if (outcome === 'error') video.dispatchEvent(new Event('error'))
+    else await vi.advanceTimersByTimeAsync(10_000)
+    await pending
+    expect(disconnect).toHaveBeenCalledTimes(1)
+    expect(vi.getTimerCount()).toBe(0)
+    expect(video.listeners.size).toBe(0)
+    expect(log).toHaveBeenCalledTimes(1)
+    log.mockRestore()
+  },
+)

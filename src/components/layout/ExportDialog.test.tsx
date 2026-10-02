@@ -143,9 +143,20 @@ class TestVideo extends EventTarget {
   src = 'test-video'
   failSeek = false
   stallSeek = false
+  stallRestore = false
   private time = 0.2
   set currentTime(time: number) {
     this.time = time
+    if (time === 0.2) {
+      if (this.stallRestore && encoders.every((encoder) => encoder.state === 'closed')) {
+        this.seeking = true
+        this.dataset = { frameReady: 'false' }
+        return
+      }
+      this.seeking = false
+      queueMicrotask(() => this.dispatchEvent(new Event('seeked')))
+      return
+    }
     if (!this.stallSeek)
       queueMicrotask(() => this.dispatchEvent(new Event(this.failSeek ? 'error' : 'seeked')))
   }
@@ -398,6 +409,55 @@ describe('animated export ownership at the dialog boundary', () => {
       expect(video.paused).toBe(true)
       expect(video.src).toBe('test-video')
       expect(harness.download).not.toHaveBeenCalled()
+    },
+  )
+  it.each(['success', 'failure', 'cancel'])(
+    'holds the dialog lock through preview restoration after %s',
+    async (outcome) => {
+      let present: () => void = () => {}
+      let observing = false
+      vi.stubGlobal(
+        'MutationObserver',
+        class {
+          constructor(callback: () => void) {
+            present = callback
+          }
+          observe() {
+            observing = true
+          }
+          disconnect() {
+            observing = false
+          }
+        },
+      )
+      video = new TestVideo()
+      video.stallRestore = true
+      TestEncoder.failure = outcome === 'failure' ? 'encode' : ''
+      TestEncoder.stallFlush = outcome === 'cancel'
+      panel().onExport()
+      await vi.waitFor(() => expect(encoders[0]?.encoded).toBe(outcome === 'failure' ? 0 : 30))
+      if (outcome === 'cancel') panel().onClose()
+      await vi.waitFor(() => {
+        expect(video!.currentTime).toBe(0.2)
+        expect(video!.seeking).toBe(true)
+      })
+      expect(panel().isExporting).toBe(true)
+      expect(usePlaybackStore.getState().isExporting).toBe(true)
+      panel().onExport()
+      expect(encoders).toHaveLength(1)
+      video.seeking = false
+      video.dispatchEvent(new Event('seeked'))
+      await vi.waitFor(() => expect(observing).toBe(true))
+      expect(panel().isExporting).toBe(true)
+      video.dataset = { frameReady: 'true' }
+      present()
+      await finished(outcome === 'success' ? 'done' : outcome === 'failure' ? 'error' : 'idle')
+      video.stallRestore = false
+      TestEncoder.failure = ''
+      TestEncoder.stallFlush = false
+      panel().onExport()
+      await finished('done')
+      expect(encoders).toHaveLength(2)
     },
   )
   it('stops WebM recording and its tracks on cancellation', async () => {

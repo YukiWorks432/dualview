@@ -1,3 +1,4 @@
+import { VIDEO_FRAME_SEEK_REQUEST_EVENT } from './media/presentedVideoFrame'
 import { createAvcMp4Muxer } from './mp4Muxer'
 
 /** Resources and cancellable waits owned by one animated export. */
@@ -111,10 +112,34 @@ export async function seekVideoAndWait(
     video,
     'seeked',
     () => {
+      video.dispatchEvent(
+        new CustomEvent(VIDEO_FRAME_SEEK_REQUEST_EVENT, { detail: { targetTime: target } }),
+      )
       video.currentTime = target
     },
     signal,
   )
+}
+
+/** Wait for the existing preview observer to accept the restored frame. */
+function waitForPreviewFrame(video: HTMLVideoElement): Promise<void> {
+  if (video.dataset.frameReady !== 'false') return Promise.resolve()
+  return new Promise((resolve, reject) => {
+    const finish = (error?: Error) => {
+      clearTimeout(timer)
+      observer.disconnect()
+      video.removeEventListener('error', onError)
+      if (error) reject(error)
+      else resolve()
+    }
+    const onError = () => finish(new Error('Failed to restore the preview frame'))
+    const observer = new MutationObserver(() => {
+      if (video.dataset.frameReady === 'true') finish()
+    })
+    const timer = setTimeout(() => finish(new Error('Preview frame restore timeout')), 10_000)
+    observer.observe(video, { attributes: true, attributeFilter: ['data-frame-ready'] })
+    video.addEventListener('error', onError, { once: true })
+  })
 }
 
 /** The preview owns these elements; restore their paused position, never detach them. */
@@ -122,13 +147,18 @@ export function preserveVideoPositions(
   resources: ExportResources,
   videos: Array<HTMLVideoElement | null>,
 ) {
-  for (const video of videos) {
+  for (const video of new Set(videos)) {
     if (!video) continue
     const time = video.currentTime
+    const source = video.src
     video.pause()
-    resources.defer(() => {
+    resources.defer(async () => {
+      // The element can be removed/reassigned when the dialog is unmounted.
+      if (video.isConnected === false || video.src !== source) return
       video.pause()
-      if (Math.abs(video.currentTime - time) > 0.001) video.currentTime = time
+      // Cleanup owns this wait independently of the cancelled encoding signal.
+      await seekVideoAndWait(video, time)
+      await waitForPreviewFrame(video)
     })
   }
 }

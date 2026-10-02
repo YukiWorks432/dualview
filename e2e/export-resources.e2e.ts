@@ -372,18 +372,31 @@ test('cancelled WebM, transitions and stitch can be followed by valid exports', 
   await prepareColors(page)
   const dialog = page.getByRole('dialog')
   await dialog.getByRole('button', { name: 'WebM', exact: true }).click()
+  await page.evaluate(async () => {
+    const module = '/src/stores/projectStore.ts'
+    const { useProjectStore } = await import(module)
+    useProjectStore.getState().setExportSettings({ videoLoops: 30 })
+  })
   await dialog.getByRole('button', { name: 'Export', exact: true }).click()
-  await expect(dialog.getByRole('button', { name: 'Exporting...' })).toBeVisible()
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        window.__exportResources.recorders.some((recorder) => recorder.state === 'recording'),
+      ),
+    )
+    .toBe(true)
   await dialog.getByRole('button', { name: 'Cancel', exact: true }).click()
   await expect(dialog.getByRole('button', { name: 'Export', exact: true })).toBeEnabled()
   await released(page)
-  const webm = await download(page, 'Export', info, 'comparison.webm')
+  // A constant source makes pixel assertions independent of real-time recorder startup latency.
+  await dialog.getByRole('button', { name: 'A Only', exact: true }).click()
+  const webm = await download(page, 'Export', info, 'a-only.webm')
   expect(webm.subarray(0, 4).toString('hex')).toBe('1a45dfa3')
   const recorded = await inspectVideo(page, webm, 'video/webm')
   expect(recorded.width).toBe(1920)
   expect(recorded.height).toBe(1080)
   isColor(recorded.left, 'red')
-  isColor(recorded.right, 'blue')
+  isColor(recorded.right, 'red')
   await released(page)
   await dialog.getByRole('tab', { name: 'FX', exact: true }).click()
   await dialog.getByRole('button', { name: 'Trans Only' }).click()
@@ -516,6 +529,44 @@ test('native video seeking preserves black-white-black frames and excludes pause
   await dialog.getByRole('button', { name: 'A Only', exact: true }).click()
   await dialog.getByRole('button', { name: 'MP4', exact: true }).click()
   const mp4 = await download(page, 'Export', info, 'native-frames.mp4')
+  await dialog.getByRole('button', { name: 'Export Another' }).click()
+  const repeated = await download(page, 'Export', info, 'native-immediate-repeat.mp4')
+  expect(repeated.toString('ascii', 4, 8)).toBe('ftyp')
+
+  await dialog.getByRole('button', { name: 'Export Another' }).click()
+  await page.evaluate(() => {
+    const encode = VideoEncoder.prototype.encode
+    VideoEncoder.prototype.encode = function () {
+      VideoEncoder.prototype.encode = encode
+      throw new Error('Injected encode failure')
+    }
+  })
+  await dialog.getByRole('button', { name: 'Export', exact: true }).click()
+  await expect(dialog.getByRole('alert')).toContainText('Injected encode failure')
+  const afterFailure = await download(page, 'Export', info, 'native-after-failure.mp4')
+  expect(afterFailure.toString('ascii', 4, 8)).toBe('ftyp')
+
+  await dialog.getByRole('button', { name: 'Export Another' }).click()
+  await page.evaluate(() => {
+    const flush = VideoEncoder.prototype.flush
+    VideoEncoder.prototype.flush = function () {
+      VideoEncoder.prototype.flush = flush
+      document.documentElement.dataset.exportFlushPending = 'true'
+      return new Promise(() => {})
+    }
+  })
+  await dialog.getByRole('button', { name: 'Export', exact: true }).click()
+  await expect(page.locator('html')).toHaveAttribute('data-export-flush-pending', 'true')
+  await dialog.getByRole('button', { name: 'Cancel', exact: true }).click()
+  const afterCancel = await download(page, 'Export', info, 'native-after-cancel.mp4')
+  expect(afterCancel.toString('ascii', 4, 8)).toBe('ftyp')
+
+  for (const output of [repeated, afterFailure, afterCancel]) {
+    const frame = await inspectVideo(page, output, 'video/mp4', 0.35)
+    expect(frame.coloredPixels).toBe(0)
+    expect(frame.left[0]).toBeGreaterThan(245)
+    expect(Math.abs(frame.duration - 0.75)).toBeLessThan(0.04)
+  }
   for (const [time, expected] of [
     [0.1, 0],
     [0.35, 255],
