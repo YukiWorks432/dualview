@@ -1,8 +1,8 @@
 import { useState, useCallback, useRef } from 'react'
 
-import { detachFile } from '../lib/media/detachFile'
 import { isSupportedMediaFile } from '../lib/media/fileTypes'
-import { useMediaStore } from '../stores/mediaStore'
+import { captureMediaImport } from '../lib/media/importRequest'
+import { isMediaImportCurrent, useMediaStore } from '../stores/mediaStore'
 import { useTimelineStore } from '../stores/timelineStore'
 
 interface UseDropZoneOptions {
@@ -45,6 +45,7 @@ export function useDropZone({ trackType }: UseDropZoneOptions) {
       e.stopPropagation()
       setIsDragOver(false)
 
+      const request = captureMediaImport()
       const files = e.dataTransfer.files
       if (!files || files.length === 0) return
 
@@ -61,7 +62,8 @@ export function useDropZone({ trackType }: UseDropZoneOptions) {
         if (!isSupportedMediaFile(file)) continue
 
         try {
-          const mediaFile = await addFile(await detachFile(file))
+          const mediaFile = await addFile(file, request)
+          if (!isMediaImportCurrent(mediaFile, request)) continue
           const duration = mediaFile.duration || 10
 
           addClip(track.id, mediaFile.id, nextStartTime, duration)
@@ -79,6 +81,7 @@ export function useDropZone({ trackType }: UseDropZoneOptions) {
   // Handle file input change (for click-to-upload) - supports multiple files
   const handleFileInputChange = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const request = captureMediaImport()
       const files = e.target.files
       if (!files || files.length === 0) return
 
@@ -95,7 +98,8 @@ export function useDropZone({ trackType }: UseDropZoneOptions) {
         if (!isSupportedMediaFile(file)) continue
 
         try {
-          const mediaFile = await addFile(await detachFile(file))
+          const mediaFile = await addFile(file, request)
+          if (!isMediaImportCurrent(mediaFile, request)) continue
           const duration = mediaFile.duration || 10
 
           addClip(track.id, mediaFile.id, nextStartTime, duration)

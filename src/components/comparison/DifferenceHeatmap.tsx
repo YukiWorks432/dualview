@@ -4,7 +4,11 @@
  */
 import { useRef, useEffect, useCallback, useState } from 'react'
 
-import { isVisualFrameReady, type VisualFrameElement } from '../../lib/media/frameSource'
+import {
+  isPausedVisualFrameReady,
+  isVisualFrameReady,
+  type VisualFrameElement,
+} from '../../lib/media/frameSource'
 import { findActiveClip } from '../../lib/media/timeline'
 import { calculateAverageRgbaDifference } from '../../lib/pixelDifference'
 import { cn } from '../../lib/utils'
@@ -19,7 +23,11 @@ export function DifferenceHeatmap() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const mediaARef = useRef<VisualFrameElement>(null)
   const mediaBRef = useRef<VisualFrameElement>(null)
-  const animationRef = useRef<number | undefined>(undefined)
+  const buffersRef = useRef<{
+    a: HTMLCanvasElement
+    b: HTMLCanvasElement
+    output: ImageData | null
+  } | null>(null)
 
   const [mode, setMode] = useState<HeatmapMode>('amplified')
   const [frameRevision, setFrameRevision] = useState(0)
@@ -45,7 +53,7 @@ export function DifferenceHeatmap() {
 
   // Render the difference heatmap
   const renderFrame = useCallback(
-    function renderLoop() {
+    function drawFrame() {
       const canvas = canvasRef.current
       const ctx = canvas?.getContext('2d', { willReadFrequently: true })
       if (!canvas || !ctx) return
@@ -58,33 +66,53 @@ export function DifferenceHeatmap() {
       // Clear canvas
       ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-      if (!isVisualFrameReady(sourceA) || !isVisualFrameReady(sourceB)) {
-        if (isPlaying) {
-          animationRef.current = requestAnimationFrame(renderLoop)
-        }
+      const playback = usePlaybackStore.getState()
+      if (
+        canvas.width === 0 ||
+        canvas.height === 0 ||
+        !mediaA ||
+        !mediaB ||
+        !activeClipA ||
+        !activeClipB ||
+        !sourceA ||
+        !sourceB
+      )
         return
+      if (
+        playback.isPlaying
+          ? !isVisualFrameReady(sourceA) || !isVisualFrameReady(sourceB)
+          : !isPausedVisualFrameReady(sourceA, activeClipA, playback.currentTime) ||
+            !isPausedVisualFrameReady(sourceB, activeClipB, playback.currentTime)
+      )
+        return
+
+      // 入力用Canvasと出力配列は表示中だけ保持し、寸法変更時にだけ確保し直す。
+      const buffers = (buffersRef.current ??= {
+        a: document.createElement('canvas'),
+        b: document.createElement('canvas'),
+        output: null,
+      })
+      for (const temporary of [buffers.a, buffers.b]) {
+        if (temporary.width !== canvas.width || temporary.height !== canvas.height) {
+          temporary.width = canvas.width
+          temporary.height = canvas.height
+        }
       }
-
-      // Create temporary canvases to read pixel data
-      const tempCanvasA = document.createElement('canvas')
-      const tempCanvasB = document.createElement('canvas')
-      tempCanvasA.width = canvas.width
-      tempCanvasA.height = canvas.height
-      tempCanvasB.width = canvas.width
-      tempCanvasB.height = canvas.height
-
-      const ctxA = tempCanvasA.getContext('2d', { willReadFrequently: true })
-      const ctxB = tempCanvasB.getContext('2d', { willReadFrequently: true })
+      const ctxA = buffers.a.getContext('2d', { willReadFrequently: true })
+      const ctxB = buffers.b.getContext('2d', { willReadFrequently: true })
       if (!ctxA || !ctxB) return
 
-      // Draw videos to temp canvases
+      // 再利用時にも透明画素の下へ前のフレームを残さない。
+      ctxA.clearRect(0, 0, canvas.width, canvas.height)
+      ctxB.clearRect(0, 0, canvas.width, canvas.height)
       ctxA.drawImage(sourceA, 0, 0, canvas.width, canvas.height)
       ctxB.drawImage(sourceB, 0, 0, canvas.width, canvas.height)
-
-      // Get pixel data
       const dataA = ctxA.getImageData(0, 0, canvas.width, canvas.height)
       const dataB = ctxB.getImageData(0, 0, canvas.width, canvas.height)
-      const output = ctx.createImageData(canvas.width, canvas.height)
+      if (buffers.output?.width !== canvas.width || buffers.output.height !== canvas.height) {
+        buffers.output = ctx.createImageData(canvas.width, canvas.height)
+      }
+      const output = buffers.output
 
       // Calculate difference for each pixel
       for (let i = 0; i < dataA.data.length; i += 4) {
@@ -139,28 +167,39 @@ export function DifferenceHeatmap() {
 
       ctx.putImageData(output, 0, 0)
       canvas.dataset.frameReady = 'true'
-
-      if (isPlaying) {
-        animationRef.current = requestAnimationFrame(renderLoop)
-      }
     },
-    [isPlaying, mode, threshold, amplification],
+    [activeClipA, activeClipB, mediaA, mediaB, mode, threshold, amplification],
   )
 
   const handleFrameReady = useCallback(() => {
     setFrameRevision((revision) => revision + 1)
   }, [])
 
-  // Start render loop
+  // 繰り返し予約の所有者はこのeffectだけ。サイズ・設定・フレーム通知から
+  // 一回描画を呼んでも、別の予約連鎖を開始しない。
   useEffect(() => {
-    renderFrame()
-
-    return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current)
-      }
+    let animation: number | undefined
+    const tick = () => {
+      renderFrame()
+      if (isPlaying) animation = requestAnimationFrame(tick)
     }
-  }, [renderFrame, frameRevision])
+    tick()
+    return () => {
+      if (animation !== undefined) cancelAnimationFrame(animation)
+    }
+  }, [renderFrame, frameRevision, isPlaying])
+
+  useEffect(
+    () => () => {
+      const buffers = buffersRef.current
+      if (buffers) {
+        buffers.a.width = buffers.a.height = 0
+        buffers.b.width = buffers.b.height = 0
+      }
+      buffersRef.current = null
+    },
+    [],
+  )
 
   // Handle canvas resize
   useEffect(() => {
@@ -170,8 +209,10 @@ export function DifferenceHeatmap() {
     const resizeCanvas = () => {
       const parent = canvas.parentElement
       if (parent) {
-        canvas.width = parent.clientWidth
-        canvas.height = parent.clientHeight
+        if (canvas.width !== parent.clientWidth || canvas.height !== parent.clientHeight) {
+          canvas.width = parent.clientWidth
+          canvas.height = parent.clientHeight
+        }
         renderFrame()
       }
     }
@@ -186,14 +227,20 @@ export function DifferenceHeatmap() {
 
   return (
     <div className="relative w-full h-full bg-black">
-      <canvas ref={canvasRef} className="w-full h-full" data-frame-ready="false" />
+      <canvas
+        ref={canvasRef}
+        className="w-full h-full"
+        data-frame-ready="false"
+        data-testid="difference-heatmap"
+      />
 
       {/* Hidden visual surfaces for canvas drawing */}
       {mediaA && (
         <VisualSurface
+          key={`a:${mediaA.id}`}
           ref={mediaARef}
           media={mediaA}
-          clip={activeClipA ?? firstClipA}
+          clip={displayClipA}
           className="hidden"
           dataTrack="a"
           alt="Track A"
@@ -202,9 +249,10 @@ export function DifferenceHeatmap() {
       )}
       {mediaB && (
         <VisualSurface
+          key={`b:${mediaB.id}`}
           ref={mediaBRef}
           media={mediaB}
-          clip={activeClipB ?? firstClipB}
+          clip={displayClipB}
           className="hidden"
           dataTrack="b"
           alt="Track B"

@@ -31,7 +31,6 @@ import { useEffect, useRef, useCallback, useState, useMemo } from 'react'
 
 import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts'
 import { isPlainShortcut } from '../../lib/keyboardShortcuts'
-import { detachFile } from '../../lib/media/detachFile'
 import { SUPPORTED_MEDIA_ACCEPT } from '../../lib/media/fileTypes'
 import {
   getVisualFrameDimensions,
@@ -39,6 +38,7 @@ import {
   type VideoFrameElement,
   type VisualFrameElement,
 } from '../../lib/media/frameSource'
+import { captureMediaImport } from '../../lib/media/importRequest'
 import {
   generatePDFReport,
   downloadBlob,
@@ -47,7 +47,7 @@ import {
 import { getComparisonModeInfo } from '../../lib/webgl/comparison-shaders'
 import { computeMetricsFromWebGLCanvas } from '../../lib/webgl/metricsComputation'
 import { WebGLComparisonRenderer } from '../../lib/webgl/WebGLComparisonRenderer'
-import { useMediaStore } from '../../stores/mediaStore'
+import { isMediaImportCurrent, useMediaStore } from '../../stores/mediaStore'
 import { usePlaybackStore } from '../../stores/playbackStore'
 import { useProjectStore } from '../../stores/projectStore'
 import { useTimelineStore } from '../../stores/timelineStore'
@@ -810,9 +810,11 @@ export function WebGLComparison() {
     async (files: FileList | null, targetTrack: 'a' | 'b') => {
       if (!files || files.length === 0) return
 
+      const request = captureMediaImport()
       const file = files[0]
       try {
-        const mediaFile = await addFile(await detachFile(file))
+        const mediaFile = await addFile(file, request)
+        if (!isMediaImportCurrent(mediaFile, request)) return
         // Get fresh track references from the store to avoid stale closures
         const currentTracks = useTimelineStore.getState().tracks
         const track = currentTracks.find((t) => t.type === targetTrack)

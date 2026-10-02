@@ -222,6 +222,12 @@ DualView currently exposes **12 comparison modes**:
 | **Grid Tile**     | Checkerboard A/B comparison                           |
 | **Morphological** | Morphological difference operations                   |
 
+Heatmapは一回の描画と再生中の繰り返し予約を分け、入力用Canvasと出力画素配列を再利用する。
+停止中はフレーム・設定・表示サイズの変更時だけ描画し、比較画面を離れると予約と作業用バッファを解放する。
+WebGLのSplit Viewは左右に表示する通常動画・ProRes・画像を中央の解析にも使い、共有の再生位置、トリム、速度、逆再生に従う。
+連続シークでは進行中のシーク完了後に最新の要求位置を反映し、空白区間と停止シークのフレーム待ちでは中央の古い解析結果を消す。停止中の繰り返し描画は、点滅検出と2種類のゼブラ表示のアニメーションに限る。
+フレーム通知APIが使えない環境でも比較プレビューは読み込み・シーク完了から更新する。差分矩形のAPI必須条件、停止中限定・既定ON・書き出し非混入、およびタイムライン全体の独立した解析は変更しない。
+
 ---
 
 <h2 id="webgl-analysis">🔥 WebGL Analysis Engine</h2>
@@ -534,12 +540,27 @@ Toggle with `G` key.
 Local files added to DualView are processed in the browser and are not uploaded to the operator.
 Projects and media are saved in this browser so you can continue later.
 
+Auto-save includes all stored comparison, scope, export and timeline settings, project metadata,
+media replacements and keyframe edits. The indicator stays unsaved while newer edits are pending,
+shows saving during the latest write, and reports write failures. Playback position is included in
+the next save for restoration, but playback ticks, analysis progress, pointer information and
+selection changes alone do not schedule writes. The existing project file format is unchanged.
+
 Creating or opening a project first saves the outgoing edits. The current project stays available
 until the destination has been fully read and decoded; a save or load failure keeps your current
 edits and media, and the Projects dialog shows the error so you can retry. If several switches
 overlap, only the latest request can become active. Undo/Redo, selections, clip/keyframe clipboards,
 and playback are reset when a project is opened, created, or the active project is deleted.
 Undo/Redo continues to work for edits made within the current project session.
+
+素材の取込はファイル選択・ドロップ・貼り付け・URLで同じ採用規則を使います。取込や再試行の途中で
+素材を削除、一覧を全消去、プロジェクトを新規作成・読込すると、失効した結果は素材やクリップへ追加されず、
+オブジェクトURLとデコード資源を解放します。URL取込画面を閉じた場合も、その要求を中断します。
+ローカルファイルはブラウザー内の独立したコピーへ切り離してから処理します。
+
+フィルムストリップ抽出はクリップ移動・トリミング・表示切替から独立して完了し、同じ素材と設定の結果を
+再利用します。失敗時は通常のサムネイル表示へ戻り、素材の削除・置換時には進行中処理と保持結果を破棄します。
+ProResの抽出対応範囲や、採取間隔・最大枚数は変更しません。
 
 URL import connects directly to the URL you enter to fetch that media. Other local files already
 loaded in DualView are not sent to that destination.

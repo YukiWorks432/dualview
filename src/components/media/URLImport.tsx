@@ -1,9 +1,10 @@
 import { Link, X, Loader2, AlertCircle, CheckCircle, ExternalLink } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { getFileNameFromUrl, isSupportedMediaFile } from '../../lib/media/fileTypes'
+import { captureMediaImport } from '../../lib/media/importRequest'
 import { cn } from '../../lib/utils'
-import { useMediaStore } from '../../stores/mediaStore'
+import { isMediaImportCurrent, useMediaStore } from '../../stores/mediaStore'
 import { useTimelineStore } from '../../stores/timelineStore'
 import { Button, Dialog, DialogContent, DialogTitle } from '../ui'
 
@@ -19,7 +20,24 @@ export function URLImport({ isOpen, onClose }: URLImportProps) {
   const [success, setSuccess] = useState(false)
 
   const { addFile } = useMediaStore()
-  const { addClip, tracks } = useTimelineStore()
+  const { addClip } = useTimelineStore()
+
+  const activeRequest = useRef<AbortController | null>(null)
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const cancelImport = () => {
+    activeRequest.current?.abort()
+    activeRequest.current = null
+    if (closeTimer.current !== null) clearTimeout(closeTimer.current)
+    closeTimer.current = null
+  }
+  useEffect(() => cancelImport, [isOpen])
+
+  const handleClose = () => {
+    cancelImport()
+    setIsLoading(false)
+    setSuccess(false)
+    onClose()
+  }
 
   const validateUrl = (url: string): boolean => {
     try {
@@ -31,6 +49,7 @@ export function URLImport({ isOpen, onClose }: URLImportProps) {
   }
 
   const handleImport = async () => {
+    if (activeRequest.current) return
     if (!url.trim()) {
       setError('Please enter a URL')
       return
@@ -41,6 +60,11 @@ export function URLImport({ isOpen, onClose }: URLImportProps) {
       return
     }
 
+    if (closeTimer.current !== null) clearTimeout(closeTimer.current)
+    closeTimer.current = null
+    const controller = new AbortController()
+    const request = captureMediaImport(controller.signal)
+    activeRequest.current = controller
     setIsLoading(true)
     setError(null)
     setSuccess(false)
@@ -48,6 +72,7 @@ export function URLImport({ isOpen, onClose }: URLImportProps) {
     try {
       // Fetch the media
       const response = await fetch(url, {
+        signal: request,
         mode: 'cors',
         credentials: 'omit',
         referrerPolicy: 'no-referrer',
@@ -59,6 +84,7 @@ export function URLImport({ isOpen, onClose }: URLImportProps) {
 
       const contentType = response.headers.get('content-type') || ''
       const blob = await response.blob()
+      if (request.aborted) return
 
       // Apply the same MIME/extension policy as local imports. URL.pathname avoids
       // query/hash suffixes interfering with extension detection.
@@ -69,9 +95,11 @@ export function URLImport({ isOpen, onClose }: URLImportProps) {
       }
 
       // Add to media store
-      const mediaFile = await addFile(file)
+      const mediaFile = await addFile(file, request)
+      if (!isMediaImportCurrent(mediaFile, request)) return
 
       // Auto-add to timeline if tracks are empty
+      const tracks = useTimelineStore.getState().tracks
       const trackA = tracks.find((t) => t.type === 'a')
       const trackB = tracks.find((t) => t.type === 'b')
 
@@ -87,22 +115,25 @@ export function URLImport({ isOpen, onClose }: URLImportProps) {
 
       setSuccess(true)
       setUrl('')
-      setTimeout(() => {
-        onClose()
-        setSuccess(false)
+      closeTimer.current = setTimeout(() => {
+        if (!request.aborted) handleClose()
       }, 1000)
     } catch (err) {
+      if (request.aborted) return
       console.error('URL import error:', err)
       setError(err instanceof Error ? err.message : 'Failed to import from URL')
     } finally {
-      setIsLoading(false)
+      if (activeRequest.current === controller) {
+        activeRequest.current = null
+        setIsLoading(false)
+      }
     }
   }
 
   if (!isOpen) return null
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()} disablePointerDismissal>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()} disablePointerDismissal>
       <DialogContent
         showCloseButton={false}
         className="p-6 w-full max-w-md"
@@ -115,7 +146,7 @@ export function URLImport({ isOpen, onClose }: URLImportProps) {
           </DialogTitle>
           <button
             aria-label="Close URL import"
-            onClick={onClose}
+            onClick={handleClose}
             className="surface-control ui-radius-sm border p-1"
           >
             <X className="w-5 h-5 text-text-muted" />
@@ -171,7 +202,7 @@ export function URLImport({ isOpen, onClose }: URLImportProps) {
           )}
 
           <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={onClose} disabled={isLoading}>
+            <Button variant="outline" onClick={handleClose}>
               Cancel
             </Button>
             <Button onClick={handleImport} disabled={isLoading || !url.trim()}>

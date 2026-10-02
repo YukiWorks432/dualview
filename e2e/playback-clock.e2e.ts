@@ -292,6 +292,7 @@ test('embedded audio keeps clip placement, trims and speed, and stops during rev
       const id = ++nextId
       ids.set(this, id)
       events.push({ id, type: 'start', rate: this.playbackRate.value, offset, duration })
+      this.addEventListener('ended', () => events.push({ id, type: 'ended' }), { once: true })
       if (duration === undefined) start.call(this, when, offset)
       else start.call(this, when, offset, duration)
     }
@@ -357,9 +358,22 @@ test('embedded audio keeps clip placement, trims and speed, and stops during rev
       const events = await audioEvents()
       return events
         .filter((event) => event.type === 'start')
-        .every((event) => events.some((stop) => stop.type === 'stop' && stop.id === event.id))
+        .every((event) =>
+          events.some(
+            (terminal) =>
+              terminal.id === event.id && (terminal.type === 'stop' || terminal.type === 'ended'),
+          ),
+        )
     })
     .toBe(true)
+  await expect
+    .poll(() =>
+      page.evaluate(async () => {
+        const { usePlaybackStore } = await import('/src/stores/playbackStore.ts')
+        return usePlaybackStore.getState().playbackDirection
+      }),
+    )
+    .toBe(-1)
   const count = (await audioEvents()).filter((event) => event.type === 'start').length
   await page.waitForTimeout(150)
   expect((await audioEvents()).filter((event) => event.type === 'start')).toHaveLength(count)
