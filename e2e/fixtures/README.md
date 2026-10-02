@@ -61,3 +61,10 @@ They were generated using:
 ffmpeg -f lavfi -i "color=c=red:s=64x64:r=10:d=4" -f lavfi -i "sine=frequency=440:sample_rate=48000:duration=4" -vf "drawbox=x=0:y=0:w=iw:h=ih:color=blue:t=fill:enable='gte(t,2)'" -c:v libvpx-vp9 -deadline realtime -cpu-used 8 -crf 4 -b:v 0 -c:a libopus playback-colors.webm
 ffmpeg -f lavfi -i "color=c=red:s=64x64:r=10:d=4" -vf "drawbox=x=0:y=0:w=iw:h=ih:color=blue:t=fill:enable='gte(t,2)'" -an -c:v prores_ks -profile:v 3 -pix_fmt yuv422p10le playback-colors.mov
 ```
+
+`audio-stereo.mov` は4秒、48 kHz、997 Hz、振幅0.5の逆相ステレオPCMを含む16 × 16のProRes動画である。音声QAのProRes抽出、標本ピーク、位相、再生時刻と解放を確認する。`audio-long.webm` は120秒、同じ周波数、振幅0.25の逆相ステレオOpusを含み、長尺処理中の素材差替えと待機中の取消を確認する。どちらも合成素材である。
+
+```text
+ffmpeg -f lavfi -i "color=c=black:s=16x16:r=10:d=4" -f lavfi -i "aevalsrc=0.5*sin(2*PI*997*t)|-0.5*sin(2*PI*997*t):s=48000:d=4" -c:v prores_ks -threads 1 -profile:v 0 -pix_fmt yuv422p10le -c:a pcm_f32le -t 4 audio-stereo.mov
+ffmpeg -f lavfi -i "color=c=black:s=16x16:r=1:d=120" -f lavfi -i "aevalsrc=0.25*sin(2*PI*997*t)|-0.25*sin(2*PI*997*t):s=48000:d=120" -c:v libvpx-vp9 -threads 1 -deadline realtime -cpu-used 8 -crf 40 -b:v 0 -c:a libopus -b:a 64k -t 120 audio-long.webm
+```

@@ -358,7 +358,9 @@ The audio player follows timeline clip placement, trim in-points, and playback s
 
 Reference targets include Spotify, YouTube, Apple Music, EBU R128 (-23 LUFS), and ATSC A/85 (-24 LUFS). The ±1 LU indicator is a convenience comparison, not a certification of platform or broadcast compliance.
 
-To avoid exhausting browser memory on long or high-channel-count sources, embedded-audio analysis refuses decoded PCM estimates above 512 MiB and reports the reason in the Audio QA view.
+Embedded-audio analysis keeps the existing 512 MiB decoded-PCM limit per input, with at most 1 GiB retained for A/B playback. Decode and analysis jobs run one at a time. Before allocation, the application checks a 2 GiB estimate that includes the other side's retained PCM, the new output PCM, an additional output-sized decoder allowance, and the analysis workspace. This is a planning limit for PCM and analysis resources, not a guarantee about browser process memory: encoded input, video resources, native decoder overhead, and garbage-collection timing are outside that estimate.
+
+Analysis keeps filter state and loudness-window results instead of full-length intermediate PCM arrays, and regularly yields to handle input and cancellation. Changing a source or leaving Audio QA cancels active and queued work, stops its playback sources, and releases the old PCM references. Inputs above the limits report the reason in the Audio QA view.
 
 ### Audio Shortcuts
 
