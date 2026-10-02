@@ -188,6 +188,12 @@ test('shows difference regions only while playback is paused', async ({ page }) 
     .toBe(true)
   await expect(overlay.first()).toBeVisible({ timeout: 10_000 })
 
+  // The current position is eight frames into this short fixture. Keep playback inside it
+  // while measuring; slow browser round trips must not let the clip stop at its end.
+  await page.keyboard.press('o')
+  await page.getByTitle('Toggle advanced tools').click()
+  await expect(page.getByTitle('Clear loop (Esc)')).toBeVisible()
+  await page.getByTitle('Toggle advanced tools').click()
   await page.getByTitle('Go to start (Home)').click()
   await expect(overlay.first()).toBeVisible({ timeout: 10_000 })
 
@@ -196,24 +202,21 @@ test('shows difference regions only while playback is paused', async ({ page }) 
     page.getByText('Pause playback to highlight differences on the current frame'),
   ).toBeVisible()
   await expect(overlay).toHaveCount(0)
-  const frameDrawsDuringPlayback = await page.evaluate(
-    () => window.__differenceRegionsTestCounters.mediaSourceDraws,
-  )
-  const analysisRequestsDuringPlayback = await page.evaluate(
-    () => window.__differenceRegionsTestCounters.analysisRequests,
-  )
+  await expect(page.getByTitle('Toggle playback (Space)')).toContainText('Pause')
+  const countersDuringPlayback = await page.evaluate(() => ({
+    ...window.__differenceRegionsTestCounters,
+  }))
   await page.waitForTimeout(200)
-  expect(await page.evaluate(() => window.__differenceRegionsTestCounters.mediaSourceDraws)).toBe(
-    frameDrawsDuringPlayback,
-  )
-  expect(await page.evaluate(() => window.__differenceRegionsTestCounters.analysisRequests)).toBe(
-    analysisRequestsDuringPlayback,
+  await expect(page.getByTitle('Toggle playback (Space)')).toContainText('Pause')
+  expect(await page.evaluate(() => window.__differenceRegionsTestCounters)).toEqual(
+    countersDuringPlayback,
   )
 
   await page.getByTitle('Toggle playback (Space)').click()
   await expect(page.getByTitle('Toggle playback (Space)')).toContainText('Play')
   await expect.poll(() => videoA.evaluate((video) => video.paused)).toBe(true)
   await expect(overlay.first()).toBeVisible({ timeout: 10_000 })
+  await page.keyboard.press('Escape')
 
   await page.getByTitle('Go to start (Home)').click()
   await expect(overlay.first()).toBeVisible({ timeout: 10_000 })
