@@ -103,7 +103,10 @@ test('Audio QAのA/B/Sが音声だけを選び、修飾キー付き編集と通�
   await page.keyboard.press('Meta+z')
   await expect(page.locator('[data-clip]')).toHaveCount(2)
   await page.keyboard.press('Digit1')
-  await page.locator('[data-clip]').first().click()
+  await page
+    .locator('[data-clip]')
+    .first()
+    .click({ position: { x: 20, y: 20 } })
   await page.keyboard.press('s')
   await expect(page.locator('[data-clip]')).toHaveCount(3)
   await page.keyboard.press('b')
@@ -343,7 +346,8 @@ test('モード固有G・Shift数字とAlt絞り込みは一つの操作だけ�
     useProjectStore.getState().setQuadViewSettings({ sources: [first, first, first, first] })
     useProjectStore.getState().setComparisonMode('quad')
   })
-  await expect(page.getByText('Quad View', { exact: true }).first()).toBeVisible()
+  await expect(page.getByRole('img', { name: 'Quadrant 1', exact: true })).toBeVisible()
+  await expect(page.getByRole('img', { name: /^Quadrant [1-4]$/ })).toHaveCount(4)
   const sources = await page.evaluate(
     async () =>
       (await import('/src/stores/projectStore.ts')).useProjectStore.getState().quadViewSettings

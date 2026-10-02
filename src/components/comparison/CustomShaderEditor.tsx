@@ -87,6 +87,7 @@ export function CustomShaderEditor({ isOpen, onClose, onApplyShader }: CustomSha
   const [compileStatus, setCompileStatus] = useState<'idle' | 'success' | 'error'>('idle')
   const [compileError, setCompileError] = useState<string | null>(null)
   const [showSaveDialog, setShowSaveDialog] = useState(false)
+  const saveButtonRef = useRef<HTMLButtonElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const lineNumbersRef = useRef<HTMLDivElement>(null)
 
@@ -358,6 +359,7 @@ export function CustomShaderEditor({ isOpen, onClose, onApplyShader }: CustomSha
               <div className="w-px h-6 bg-border mx-2" />
 
               <button
+                ref={saveButtonRef}
                 onClick={() => setShowSaveDialog(true)}
                 className="surface-control ui-radius-md flex items-center gap-1 border px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary"
               >
@@ -455,6 +457,7 @@ export function CustomShaderEditor({ isOpen, onClose, onApplyShader }: CustomSha
           >
             <DialogContent
               showCloseButton={false}
+              finalFocus={saveButtonRef}
               className="bg-surface-alt rounded-lg p-4 w-80"
               backdropClassName="bg-black/50"
             >
