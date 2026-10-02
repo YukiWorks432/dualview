@@ -1,10 +1,12 @@
+import { useRef, useState, useEffect, useCallback, useMemo } from 'react'
+
 /**
  * IMG-001: Flicker Comparison Mode
  * Alternates between images/videos A and B for spotting differences
  */
-import { useRef, useState, useEffect, useCallback, useMemo } from 'react'
-
+import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts'
 import { useSyncedZoom } from '../../hooks/useSyncedZoom'
+import { isPlainShortcut } from '../../lib/keyboardShortcuts'
 import type { VideoFrameElement } from '../../lib/media/frameSource'
 import { cn } from '../../lib/utils'
 import { useMediaStore } from '../../stores/mediaStore'
@@ -65,24 +67,16 @@ export function FlickerComparison() {
     return () => clearInterval(interval)
   }, [autoFlicker, flickerSpeed, toggle])
 
-  // Keyboard shortcuts (F or Tab to toggle)
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
-        return
-      }
+  useKeyboardShortcuts('flicker', (e) => {
+    if (!isPlainShortcut(e)) return
 
-      if (e.key === 'f' || e.key === 'F' || e.key === 'Tab') {
-        e.preventDefault()
-        toggle()
-        // Pause auto flicker when manually toggling
-        setAutoFlicker(false)
-      }
+    if (e.key === 'f' || e.key === 'F' || e.key === 'Tab') {
+      e.preventDefault()
+      toggle()
+      // Pause auto flicker when manually toggling
+      setAutoFlicker(false)
     }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [toggle])
+  })
 
   // Video sync is now handled by useClipAwareVideoSync hook
 

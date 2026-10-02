@@ -5,7 +5,7 @@ import { getFileNameFromUrl, isSupportedMediaFile } from '../../lib/media/fileTy
 import { cn } from '../../lib/utils'
 import { useMediaStore } from '../../stores/mediaStore'
 import { useTimelineStore } from '../../stores/timelineStore'
-import { Button, ElevatedSurface } from '../ui'
+import { Button, Dialog, DialogContent, DialogTitle } from '../ui'
 
 interface URLImportProps {
   isOpen: boolean
@@ -102,85 +102,91 @@ export function URLImport({ isOpen, onClose }: URLImportProps) {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <ElevatedSurface asChild offset={3}>
-        <div className="ui-radius-lg border border-transparent p-6 w-full max-w-md">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-text-primary flex items-center gap-2">
-              <Link className="w-5 h-5" />
-              Import from URL
-            </h2>
-            <button onClick={onClose} className="surface-control ui-radius-sm border p-1">
-              <X className="w-5 h-5 text-text-muted" />
-            </button>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()} disablePointerDismissal>
+      <DialogContent
+        showCloseButton={false}
+        className="p-6 w-full max-w-md"
+        backdropClassName="bg-black/50"
+      >
+        <div className="flex items-center justify-between mb-4">
+          <DialogTitle className="text-lg font-semibold text-text-primary flex items-center gap-2">
+            <Link className="w-5 h-5" />
+            Import from URL
+          </DialogTitle>
+          <button
+            aria-label="Close URL import"
+            onClick={onClose}
+            className="surface-control ui-radius-sm border p-1"
+          >
+            <X className="w-5 h-5 text-text-muted" />
+          </button>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm text-text-secondary mb-1">Media URL</label>
+            <input
+              type="url"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              placeholder="https://example.com/image.jpg"
+              className={cn(
+                'surface-control ui-radius-md w-full border px-3 py-2 text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2',
+                error ? '!border-error focus:ring-error' : 'focus:ring-accent',
+              )}
+              disabled={isLoading}
+              onKeyDown={(e) => e.key === 'Enter' && handleImport()}
+            />
+            <p className="text-xs text-text-muted mt-1">
+              Direct HTTP(S) media URLs only. Some sites may block direct browser access.
+            </p>
+            <div className="ui-radius-md mt-3 border border-border/60 p-3 text-xs leading-relaxed text-text-muted">
+              URL import connects directly to the site you enter to fetch that media. The imported
+              media is processed locally, and your other local files are not sent there.
+              <a
+                href="/privacy/#external-communication"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="URL import privacy details (opens in a new tab)"
+                className="mt-2 inline-flex items-center gap-1 text-accent hover:underline"
+              >
+                Privacy details
+                <ExternalLink className="h-3 w-3" aria-hidden="true" />
+              </a>
+            </div>
           </div>
 
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm text-text-secondary mb-1">Media URL</label>
-              <input
-                type="url"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                placeholder="https://example.com/image.jpg"
-                className={cn(
-                  'surface-control ui-radius-md w-full border px-3 py-2 text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2',
-                  error ? '!border-error focus:ring-error' : 'focus:ring-accent',
-                )}
-                disabled={isLoading}
-                onKeyDown={(e) => e.key === 'Enter' && handleImport()}
-              />
-              <p className="text-xs text-text-muted mt-1">
-                Direct HTTP(S) media URLs only. Some sites may block direct browser access.
-              </p>
-              <div className="ui-radius-md mt-3 border border-border/60 p-3 text-xs leading-relaxed text-text-muted">
-                URL import connects directly to the site you enter to fetch that media. The imported
-                media is processed locally, and your other local files are not sent there.
-                <a
-                  href="/privacy/#external-communication"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="URL import privacy details (opens in a new tab)"
-                  className="mt-2 inline-flex items-center gap-1 text-accent hover:underline"
-                >
-                  Privacy details
-                  <ExternalLink className="h-3 w-3" aria-hidden="true" />
-                </a>
-              </div>
+          {error && (
+            <div className="flex items-center gap-2 text-error text-sm">
+              <AlertCircle className="w-4 h-4" />
+              {error}
             </div>
+          )}
 
-            {error && (
-              <div className="flex items-center gap-2 text-error text-sm">
-                <AlertCircle className="w-4 h-4" />
-                {error}
-              </div>
-            )}
-
-            {success && (
-              <div className="flex items-center gap-2 text-green-500 text-sm">
-                <CheckCircle className="w-4 h-4" />
-                Successfully imported!
-              </div>
-            )}
-
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={onClose} disabled={isLoading}>
-                Cancel
-              </Button>
-              <Button onClick={handleImport} disabled={isLoading || !url.trim()}>
-                {isLoading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Importing...
-                  </>
-                ) : (
-                  'Import'
-                )}
-              </Button>
+          {success && (
+            <div className="flex items-center gap-2 text-green-500 text-sm">
+              <CheckCircle className="w-4 h-4" />
+              Successfully imported!
             </div>
+          )}
+
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={onClose} disabled={isLoading}>
+              Cancel
+            </Button>
+            <Button onClick={handleImport} disabled={isLoading || !url.trim()}>
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Importing...
+                </>
+              ) : (
+                'Import'
+              )}
+            </Button>
           </div>
         </div>
-      </ElevatedSurface>
-    </div>
+      </DialogContent>
+    </Dialog>
   )
 }

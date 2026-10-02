@@ -19,7 +19,7 @@ import {
 import { useState, useCallback, useRef } from 'react'
 
 import { COMPARISON_COMMON } from '../../lib/webgl/comparison-shaders/common'
-import { ElevatedSurface } from '../ui'
+import { Dialog, DialogContent, DialogTitle } from '../ui'
 
 interface CustomShader {
   id: string
@@ -264,22 +264,24 @@ export function CustomShaderEditor({ isOpen, onClose, onApplyShader }: CustomSha
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-      <ElevatedSurface
-        offset={3}
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()} disablePointerDismissal>
+      <DialogContent
+        showCloseButton={false}
+        backdropClassName="bg-black/80"
         className="ui-radius-lg w-full max-w-5xl max-h-[90vh] flex flex-col border border-transparent"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border">
           <div className="flex items-center gap-3">
             <Code size={20} className="text-accent" />
-            <h2 className="text-lg font-semibold text-text-primary">
+            <DialogTitle className="text-lg font-semibold text-text-primary">
               Custom Shader Editor (WEBGL-014)
-            </h2>
+            </DialogTitle>
             <span className="text-sm text-text-muted">•</span>
             <span className="text-sm text-text-secondary">{currentShaderName}</span>
           </div>
           <button
+            aria-label="Close shader editor"
             onClick={onClose}
             className="surface-control ui-radius-sm border p-2 text-text-secondary hover:text-text-primary"
           >
@@ -446,9 +448,17 @@ export function CustomShaderEditor({ isOpen, onClose, onApplyShader }: CustomSha
 
         {/* Save Dialog */}
         {showSaveDialog && (
-          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-            <div className="bg-surface-alt rounded-lg p-4 w-80">
-              <div className="text-sm text-text-secondary mb-2">Save Shader</div>
+          <Dialog
+            open
+            onOpenChange={(open) => !open && setShowSaveDialog(false)}
+            disablePointerDismissal
+          >
+            <DialogContent
+              showCloseButton={false}
+              className="bg-surface-alt rounded-lg p-4 w-80"
+              backdropClassName="bg-black/50"
+            >
+              <DialogTitle className="text-sm text-text-secondary mb-2">Save Shader</DialogTitle>
               <input
                 type="text"
                 value={currentShaderName}
@@ -472,11 +482,11 @@ export function CustomShaderEditor({ isOpen, onClose, onApplyShader }: CustomSha
                   Cancel
                 </button>
               </div>
-            </div>
-          </div>
+            </DialogContent>
+          </Dialog>
         )}
-      </ElevatedSurface>
-    </div>
+      </DialogContent>
+    </Dialog>
   )
 }
 

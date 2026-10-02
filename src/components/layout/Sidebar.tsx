@@ -166,7 +166,7 @@ export function Sidebar({ onCollapse, isMobileOpen, onMobileClose, onOpenProject
           <button
             onClick={onCollapse}
             className="surface-control ui-radius-md inline-flex items-center justify-center border px-2 text-muted-foreground hover:text-foreground transition-all duration-150 group hide-mobile"
-            title="Collapse Sidebar (B)"
+            title={comparisonMode === 'audio' ? 'Collapse Sidebar' : 'Collapse Sidebar (B)'}
           >
             <ChevronLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
           </button>

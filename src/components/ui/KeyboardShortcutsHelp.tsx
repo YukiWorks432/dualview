@@ -1,6 +1,6 @@
 import { Keyboard, X } from 'lucide-react'
 
-import { primaryComparisonModes } from '../../config/comparisonModes'
+import { comparisonModeDefinitions, primaryComparisonModes } from '../../config/comparisonModes'
 import { Button } from './button'
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from './dialog'
 import { Kbd } from './kbd'
@@ -24,6 +24,15 @@ const SHORTCUT_CATEGORIES: ShortcutCategory[] = [
         : [],
     ),
   },
+  ...comparisonModeDefinitions
+    .filter((definition) => definition.localShortcuts)
+    .map((definition) => ({
+      title: `${definition.label} only`,
+      shortcuts: definition.localShortcuts!.map((shortcut) => ({
+        keys: shortcut.shift ? ['Shift', shortcut.key] : [shortcut.key],
+        description: shortcut.description,
+      })),
+    })),
   {
     title: 'Playback',
     shortcuts: [
@@ -42,14 +51,14 @@ const SHORTCUT_CATEGORIES: ShortcutCategory[] = [
   {
     title: 'Timeline Editing',
     shortcuts: [
-      { keys: ['S'], description: 'Split selected clip at playhead' },
+      { keys: ['S'], description: 'Split selected clip (outside Audio QA)' },
       { keys: ['Q'], description: 'Keep left of playhead (trim right)' },
       { keys: ['W'], description: 'Keep right of playhead (trim left)' },
       { keys: ['Delete'], description: 'Delete selected clips' },
-      { keys: ['Ctrl', 'A'], description: 'Select all clips' },
-      { keys: ['Ctrl', 'D'], description: 'Duplicate selected clip' },
-      { keys: ['Ctrl', 'C'], description: 'Copy selected clip' },
-      { keys: ['Ctrl', 'V'], description: 'Paste at playhead' },
+      { keys: ['Ctrl/⌘', 'A'], description: 'Select all clips' },
+      { keys: ['Ctrl/⌘', 'D'], description: 'Duplicate selected clip' },
+      { keys: ['Ctrl/⌘', 'C'], description: 'Copy selected clip' },
+      { keys: ['Ctrl/⌘', 'V'], description: 'Paste at playhead' },
       { keys: ['N'], description: 'Toggle snapping' },
       { keys: ['R'], description: 'Toggle ripple edit mode' },
     ],
@@ -59,23 +68,23 @@ const SHORTCUT_CATEGORIES: ShortcutCategory[] = [
     shortcuts: [
       { keys: ['I'], description: 'Set loop in-point' },
       { keys: ['O'], description: 'Set loop out-point' },
-      { keys: ['Esc'], description: 'Clear loop region' },
+      { keys: ['Esc'], description: 'Clear loop region (outside dialogs)' },
     ],
   },
   {
     title: 'History',
     shortcuts: [
-      { keys: ['Ctrl', 'Z'], description: 'Undo' },
-      { keys: ['Ctrl', 'Shift', 'Z'], description: 'Redo' },
+      { keys: ['Ctrl/⌘', 'Z'], description: 'Undo' },
+      { keys: ['Ctrl/⌘', 'Shift', 'Z'], description: 'Redo' },
     ],
   },
   {
     title: 'View',
     shortcuts: [
-      { keys: ['Ctrl', '+'], description: 'Zoom in timeline' },
-      { keys: ['Ctrl', '-'], description: 'Zoom out timeline' },
+      { keys: ['Ctrl/⌘', '+'], description: 'Zoom in timeline' },
+      { keys: ['Ctrl/⌘', '-'], description: 'Zoom out timeline' },
       { keys: ['T'], description: 'Toggle timeline visibility' },
-      { keys: ['B'], description: 'Toggle sidebar visibility' },
+      { keys: ['B'], description: 'Toggle sidebar (outside Audio QA)' },
       { keys: ['E'], description: 'Open export dialog' },
     ],
   },
@@ -93,7 +102,7 @@ const SHORTCUT_CATEGORIES: ShortcutCategory[] = [
       { keys: ['P'], description: 'Toggle Focus Peaking overlay' },
       { keys: ['Z'], description: 'Toggle Zebra Stripes overlay' },
       { keys: ['F'], description: 'Flip A/B sources in Difference mode' },
-      { keys: ['G'], description: 'Toggle video scopes' },
+      { keys: ['G'], description: 'Toggle video scopes (outside Difference)' },
     ],
   },
 ]
@@ -130,6 +139,11 @@ export function KeyboardShortcutsHelp({ isOpen, onClose }: KeyboardShortcutsHelp
         </div>
 
         <div className="max-h-[calc(80vh-80px)] overflow-y-auto p-4">
+          <p className="mb-4 text-sm text-text-secondary">
+            Comparison-mode shortcuts take priority over timeline and global shortcuts. While
+            typing, composing text, or using a dialog, global shortcuts are paused. Escape closes
+            the dialog and returns focus without clearing the loop.
+          </p>
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             {SHORTCUT_CATEGORIES.map((category) => (
               <section key={category.title}>
@@ -161,7 +175,7 @@ export function KeyboardShortcutsHelp({ isOpen, onClose }: KeyboardShortcutsHelp
 
         <div className="border-t border-border bg-surface-hover p-3">
           <p className="text-center text-xs text-text-muted">
-            Press <Kbd>?</Kbd> to toggle this help.
+            Press <Kbd>?</Kbd> to open this help and <Kbd>Esc</Kbd> to close it.
           </p>
         </div>
       </DialogContent>
