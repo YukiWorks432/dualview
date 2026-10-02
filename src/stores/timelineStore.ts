@@ -463,7 +463,13 @@ const createTimelineState: StateCreator<TimelineStore> = (set, get) => ({
     if (updates.mediaId !== undefined && !useMediaStore.getState().getFile(updates.mediaId)) return
     const updated = { ...original, ...updates, id: original.id, trackId: original.trackId }
     if (updates.speed !== undefined && updates.endTime === undefined) {
-      updated.endTime = updated.startTime + (updated.outPoint - updated.inPoint) / updated.speed!
+      const sourceDuration = updated.outPoint - updated.inPoint
+      // 旧データの末尾静止区間は素材幅が0でも正の表示時間を持つ。
+      updated.endTime =
+        updated.startTime +
+        (sourceDuration > 0
+          ? sourceDuration / updated.speed!
+          : original.endTime - original.startTime)
     }
     set({ tracks: replaceEditedClip(state.tracks, original, updated, state.rippleEnabled) })
   },

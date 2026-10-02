@@ -302,3 +302,65 @@ test('既存形式から読んだキーフレーム付きクリップで3操作�
   await expect(page.locator('[data-clip]')).toHaveCount(2)
   expect((await snapshot(page)).keyframes).toHaveLength(2)
 })
+
+test('末尾静止区間を分割して速度変更・リセットしてもフレームと表示時間が残る', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Hide filmstrip' }).click()
+  await upload(page, 'Media A', 'playback-colors.webm')
+  const original = (await snapshot(page)).clips[0]
+  for (const reverse of [false, true]) {
+    await page.evaluate(
+      async ({ original, reverse }) => {
+        const { useTimelineStore } = await import('/src/stores/timelineStore.ts')
+        const { useHistoryStore } = await import('/src/stores/historyStore.ts')
+        useTimelineStore.setState({
+          tracks: useTimelineStore.getState().tracks.map((track) => ({
+            ...track,
+            clips:
+              track.id === original.trackId
+                ? [
+                    {
+                      ...original,
+                      startTime: 0,
+                      endTime: 6,
+                      inPoint: 0.5,
+                      outPoint: 3.5,
+                      speed: 2,
+                      reverse,
+                    },
+                  ]
+                : [],
+          })),
+          duration: 6,
+        })
+        useHistoryStore.getState().clear()
+        useTimelineStore.getState().selectClip(original.id)
+        if (document.activeElement instanceof HTMLElement) document.activeElement.blur()
+      },
+      { original, reverse },
+    )
+    await seek(page, 4)
+    await page.keyboard.press('s')
+    await expect(page.locator('[data-clip]')).toHaveCount(2)
+    await page.locator('[data-clip]').nth(1).click({ button: 'right' })
+    if (reverse) await page.getByRole('button', { name: 'Reset to Original', exact: true }).click()
+    else {
+      await page.getByRole('button', { name: 'Speed 2x', exact: true }).hover()
+      await page.getByRole('button', { name: '1x (Normal)', exact: true }).click()
+    }
+    const changed = await snapshot(page)
+    expect(changed.clips[1]).toMatchObject({ startTime: 4, endTime: 6, speed: 1 })
+    expect(changed.duration).toBe(6)
+    await seek(page, 4.5)
+    await expectColor(page, 'a', reverse ? 'red' : 'blue')
+    await page.getByRole('button', { name: 'Undo', exact: true }).click()
+    await page.getByRole('button', { name: 'Undo', exact: true }).click()
+    await expect(page.locator('[data-clip]')).toHaveCount(1)
+    await page.getByRole('button', { name: 'Redo', exact: true }).click()
+    await page.getByRole('button', { name: 'Redo', exact: true }).click()
+    expect((await snapshot(page)).clips).toEqual(changed.clips)
+    await seek(page, 4.5)
+    await expectColor(page, 'a', reverse ? 'red' : 'blue')
+  }
+})

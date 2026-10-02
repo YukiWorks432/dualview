@@ -177,6 +177,62 @@ describe('クリップの素材時刻を保つ編集', () => {
     expect([at(11), at(12), at(16)]).toEqual([6, 8, 12])
   })
 
+  it.each([
+    { reverse: false, reset: false, frame: 12 },
+    { reverse: true, reset: false, frame: 4 },
+    { reverse: false, reset: true, frame: 12 },
+    { reverse: true, reset: true, frame: 4 },
+  ])(
+    '末尾静止区間の分割・速度変更・Undo/Redoで表示時間を保持する（逆再生 $reverse、リセット $reset）',
+    ({ reverse, reset, frame }) => {
+      seed({ startTime: 0, endTime: 8, inPoint: 4, outPoint: 12, speed: 2, reverse })
+      let right: TimelineClip | null = null
+      history.getState().runWithHistory(() => {
+        right = timeline.getState().splitClip('clip', 6)
+      })
+      const rightId = right!.id
+      expect(clips().find((clip) => clip.id === rightId)).toMatchObject({
+        startTime: 6,
+        endTime: 8,
+        inPoint: frame,
+        outPoint: frame,
+      })
+      history
+        .getState()
+        .runWithHistory(() =>
+          timeline
+            .getState()
+            .updateClip(rightId, reset ? { speed: 1, reverse: false } : { speed: 1 }),
+        )
+      expect(clips().find((clip) => clip.id === rightId)).toMatchObject({
+        startTime: 6,
+        endTime: 8,
+        speed: 1,
+      })
+      expect(at(6.5)).toBe(frame)
+      expect(timeline.getState().duration).toBe(8)
+      history.getState().undo()
+      expect(clips().find((clip) => clip.id === rightId)).toMatchObject({
+        endTime: 8,
+        speed: 2,
+        reverse,
+      })
+      expect(at(6.5)).toBe(frame)
+      history.getState().undo()
+      expect(clips()).toHaveLength(1)
+      expect(at(6.5)).toBe(frame)
+      history.getState().redo()
+      history.getState().redo()
+      expect(clips().find((clip) => clip.id === rightId)).toMatchObject({
+        startTime: 6,
+        endTime: 8,
+        speed: 1,
+      })
+      expect(at(6.5)).toBe(frame)
+      expect(timeline.getState().duration).toBe(8)
+    },
+  )
+
   it.each(['duplicate', 'paste', 'playhead'] as const)(
     '複製経路 %s は属性・相対時刻のキーフレームを保持しUndo/Redoできる',
     (operation) => {
