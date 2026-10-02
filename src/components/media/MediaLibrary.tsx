@@ -203,6 +203,8 @@ export function MediaLibrary() {
   useKeyboardShortcuts('media', (e) => {
     // Only handle Alt+key shortcuts
     if (!e.altKey || e.shiftKey) return
+    // 狭幅で併存する非表示の一覧は、表示中の一覧のキーを消費しない。
+    if (!searchInputRef.current?.getClientRects().length) return
 
     // Find matching filter config
     const config = FILTER_CONFIG.find((f) => f.shortcut === e.key)

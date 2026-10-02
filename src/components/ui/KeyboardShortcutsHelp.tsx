@@ -142,7 +142,9 @@ export function KeyboardShortcutsHelp({ isOpen, onClose }: KeyboardShortcutsHelp
           <p className="mb-4 text-sm text-text-secondary">
             Comparison-mode shortcuts take priority over timeline and global shortcuts. While
             typing, composing text, or using a dialog, global shortcuts are paused. Escape closes
-            the dialog and returns focus without clearing the loop.
+            the dialog and returns focus without clearing the loop. Outside dialogs and text
+            composition, Escape cancels an active clip drag or closes its menu, even if a text field
+            still has focus. Alt+1/2 filters the visible media library.
           </p>
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             {SHORTCUT_CATEGORIES.map((category) => (

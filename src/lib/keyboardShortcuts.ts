@@ -8,6 +8,7 @@ type ShortcutHandler = (event: KeyboardEvent) => void
 export function createShortcutDispatcher(getMode: () => ComparisonMode) {
   const handlers = new Map<ShortcutScope, Set<ShortcutHandler>>()
   const blockedEvents = new WeakSet<KeyboardEvent>()
+  const editingEvents = new WeakSet<KeyboardEvent>()
   let composing = false
 
   const onCompositionStart = () => {
@@ -33,12 +34,12 @@ export function createShortcutDispatcher(getMode: () => ComparisonMode) {
     )
     const control =
       event.target instanceof Element && event.target.closest('[role="slider"], [role="combobox"]')
+    if (modal || composing || event.isComposing || event.keyCode === 229) {
+      // Escapeでダイアログが消えた後も、その同じキーを全体操作へ渡さない。
+      blockedEvents.add(event)
+    }
     if (
       editing ||
-      modal ||
-      composing ||
-      event.isComposing ||
-      event.keyCode === 229 ||
       (control &&
         [
           'Space',
@@ -51,12 +52,19 @@ export function createShortcutDispatcher(getMode: () => ComparisonMode) {
           'End',
         ].includes(event.code))
     ) {
-      // Escapeでダイアログが消えた後も、その同じキーを全体操作へ渡さない。
-      blockedEvents.add(event)
+      editingEvents.add(event)
     }
   }
   const dispatch = (event: KeyboardEvent) => {
     if (blockedEvents.has(event) || event.defaultPrevented) return
+    // 入力欄に焦点が残っていても、開始済みのドラッグやメニューを先に取り消す。
+    if (event.key === 'Escape') {
+      for (const handler of handlers.get('interaction') ?? []) {
+        handler(event)
+        if (event.defaultPrevented) return
+      }
+    }
+    if (editingEvents.has(event)) return
     const definition = getComparisonModeDefinition(getMode())
     const localShortcut =
       !event.ctrlKey &&
@@ -74,7 +82,7 @@ export function createShortcutDispatcher(getMode: () => ComparisonMode) {
       event.preventDefault()
       return
     }
-    for (const scope of ['interaction', 'timeline', 'media', 'help', 'app'] as const) {
+    for (const scope of ['timeline', 'media', 'help', 'app'] as const) {
       for (const handler of handlers.get(scope) ?? []) {
         handler(event)
         if (event.defaultPrevented) return

@@ -374,3 +374,92 @@ test('モード固有G・Shift数字とAlt絞り込みは一つの操作だけ�
   await page.keyboard.press('Digit2')
   expect((await state(page)).mode).toBe('side-by-side')
 })
+
+test('検索欄に焦点を残したドラッグをEscapeで取り消し、位置と入力とループを保つ', async ({
+  page,
+}) => {
+  await seed(page)
+  await setLoop(page)
+  const before = await state(page)
+  const search = page.getByPlaceholder('Search files...')
+  await search.fill('red')
+  const clip = page.locator('[data-clip]').first()
+  const original = await clip.boundingBox()
+  if (!original) throw new Error('ドラッグ対象のクリップが表示されていません')
+  await page.mouse.move(original.x + 20, original.y + 20)
+  await page.mouse.down()
+  await page.mouse.move(original.x + 140, original.y + 20, { steps: 5 })
+  await expect(search).toBeFocused()
+  // 位置が動くまで待ち、開始済みのドラッグを実際のEscapeとmouseupで取り消す。
+  await expect
+    .poll(async () => (await clip.boundingBox())?.x ?? -1)
+    .toBeGreaterThan(original.x + 50)
+  await page.keyboard.press('Escape')
+  await page.mouse.up()
+  expect((await state(page)).clips).toEqual(before.clips)
+  await expect.poll(async () => (await clip.boundingBox())?.x ?? -1).toBeCloseTo(original.x, 0)
+  await expect(search).toBeFocused()
+  await expect(search).toHaveValue('red')
+  expect((await state(page)).loop).toEqual(before.loop)
+  // 操作を取り消した後のEscapeは入力欄に留まり、ループ解除へ漏れない。
+  await page.keyboard.press('Escape')
+  expect((await state(page)).loop).toEqual(before.loop)
+})
+
+test('検索欄に焦点を残したクリップメニューのEscapeは入力とループを保つ', async ({ page }) => {
+  await seed(page)
+  await setLoop(page)
+  const before = await state(page)
+  const search = page.getByPlaceholder('Search files...')
+  await search.fill('red')
+  await page
+    .locator('[data-clip]')
+    .first()
+    .click({ button: 'right', position: { x: 20, y: 20 } })
+  const menu = page.getByRole('button', { name: 'Split at Playhead S', exact: true })
+  await expect(menu).toBeVisible()
+  await expect(search).toBeFocused()
+  // 変換中は、開始済みの操作よりIMEがEscapeを所有する。
+  await search.evaluate((element) =>
+    element.dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true })),
+  )
+  await page.keyboard.press('Escape')
+  await expect(menu).toBeVisible()
+  await search.evaluate((element) =>
+    element.dispatchEvent(new CompositionEvent('compositionend', { bubbles: true })),
+  )
+  await page.keyboard.press('Escape')
+  await expect(menu).toHaveCount(0)
+  await expect(search).toBeFocused()
+  await expect(search).toHaveValue('red')
+  expect((await state(page)).clips).toEqual(before.clips)
+  expect((await state(page)).loop).toEqual(before.loop)
+})
+
+test('狭幅ドロワーのAlt絞り込みは表示中の素材一覧だけを変更する', async ({ page }) => {
+  await seed(page)
+  await page.setViewportSize({ width: 768, height: 900 })
+  await expect(page.getByPlaceholder('Search files...')).toBeHidden()
+  await page.getByRole('button', { name: 'Toggle sidebar', exact: true }).click()
+  const library = page.getByRole('complementary')
+  await expect(library.getByPlaceholder('Search files...')).toBeVisible()
+  await expect(library.getByText('red.png', { exact: true })).toBeVisible()
+  await expect(library.getByText('blue.png', { exact: true })).toBeVisible()
+  await page.keyboard.press('Alt+1')
+  await expect(library.getByText('No matching media', { exact: true })).toBeVisible()
+  await expect(library.getByText('red.png', { exact: true })).toHaveCount(0)
+  await expect(library.getByText('blue.png', { exact: true })).toHaveCount(0)
+  await page.keyboard.press('Alt+2')
+  await expect(library.getByText('No matching media', { exact: true })).toHaveCount(0)
+  await expect(library.getByText('red.png', { exact: true })).toBeVisible()
+  await expect(library.getByText('blue.png', { exact: true })).toBeVisible()
+  expect((await state(page)).mode).toBe('slider')
+  // ドロワーの操作が、裏で残るデスクトップ一覧の絞り込みを変更していない。
+  await page.keyboard.press('Alt+1')
+  await expect(library.getByText('No matching media', { exact: true })).toBeVisible()
+  await library.getByTitle('Close Sidebar', { exact: true }).click()
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await expect(library.getByText('No matching media', { exact: true })).toHaveCount(0)
+  await expect(library.getByText('red.png', { exact: true })).toBeVisible()
+  await expect(library.getByText('blue.png', { exact: true })).toBeVisible()
+})
