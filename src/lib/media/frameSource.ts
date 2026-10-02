@@ -1,5 +1,9 @@
 import type { TimelineClip } from '../../types'
-import { isPresentedVideoFrameCurrent, type PresentedVideoFrame } from './presentedVideoFrame'
+import {
+  isPresentedVideoFrameCurrent,
+  NATIVE_SEEK_SETTLE_EPSILON_SECONDS,
+  type PresentedVideoFrame,
+} from './presentedVideoFrame'
 import { calculateMediaTime } from './timeline'
 
 export type VideoFrameElement = HTMLVideoElement | HTMLCanvasElement
@@ -62,7 +66,7 @@ export function isPausedVisualFrameReady(
       !source.seeking &&
       source.dataset.frameSourceMediaId === clip.mediaId &&
       source.dataset.frameSourceClipId === clip.id &&
-      Math.abs(source.currentTime - expectedMediaTime) <= 0.000001
+      Math.abs(source.currentTime - expectedMediaTime) <= NATIVE_SEEK_SETTLE_EPSILON_SECONDS
     )
   }
 
@@ -74,7 +78,7 @@ export function isPausedVisualFrameReady(
       source.paused &&
       !source.seeking &&
       source.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA &&
-      Math.abs(source.currentTime - expectedMediaTime) <= 0.000001 &&
+      Math.abs(source.currentTime - expectedMediaTime) <= NATIVE_SEEK_SETTLE_EPSILON_SECONDS &&
       source.dataset.frameSourceMediaId === clip.mediaId &&
       source.dataset.frameSourceClipId === clip.id &&
       Number.isFinite(Number(seekGeneration)) &&

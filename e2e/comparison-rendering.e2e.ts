@@ -7,6 +7,7 @@ declare global {
       split: { callbacks: number; pending: Set<number>; peak: number }
       canvases: HTMLCanvasElement[]
       outputs: number
+      nativeSeeks: number
       resources: Set<object>
     }
   }
@@ -19,9 +20,18 @@ async function measure(page: Page) {
       split: { callbacks: 0, pending: new Set<number>(), peak: 0 },
       canvases: [] as HTMLCanvasElement[],
       outputs: 0,
+      nativeSeeks: 0,
       resources: new Set<object>(),
     }
     window.__comparisonCounters = state
+    const nativeTime = Object.getOwnPropertyDescriptor(HTMLMediaElement.prototype, 'currentTime')!
+    Object.defineProperty(HTMLMediaElement.prototype, 'currentTime', {
+      ...nativeTime,
+      set(this: HTMLMediaElement, value: number) {
+        if (this.dataset.track) state.nativeSeeks++
+        nativeTime.set!.call(this, value)
+      },
+    })
     const request = window.requestAnimationFrame.bind(window)
     const cancel = window.cancelAnimationFrame.bind(window)
     window.requestAnimationFrame = (callback) => {
@@ -105,6 +115,7 @@ async function counters(page: Page) {
       canvases: s.canvases.length,
       allocatedCanvases: s.canvases.filter((c) => c.width > 0 && c.height > 0).length,
       outputs: s.outputs,
+      nativeSeeks: s.nativeSeeks,
       resources: s.resources.size,
     }
   })
@@ -173,18 +184,48 @@ async function pixel(source: Locator) {
 }
 
 async function expectPixel(source: Locator, expected: number[], tolerance = 8) {
-  await expect
-    .poll(
-      async () => {
-        const value = await pixel(source)
-        return (
-          value !== null &&
-          value.every((channel, i) => Math.abs(channel - expected[i]) <= tolerance)
-        )
-      },
-      { timeout: 15_000 },
-    )
-    .toBe(true)
+  try {
+    await expect
+      .poll(
+        async () => {
+          const value = await pixel(source)
+          return (
+            value !== null &&
+            value.every((channel, i) => Math.abs(channel - expected[i]) <= tolerance)
+          )
+        },
+        { timeout: 15_000 },
+      )
+      .toBe(true)
+  } catch (error) {
+    const snapshot = await source.evaluate(async (element) => {
+      const { usePlaybackStore } = await import('/src/stores/playbackStore.ts')
+      const canvas = document.querySelector<HTMLCanvasElement>('[data-testid="split-analysis"]')
+      const gl = canvas?.getContext('webgl')
+      const color = new Uint8Array(4)
+      if (canvas && gl)
+        gl.readPixels(canvas.width >> 1, canvas.height >> 1, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, color)
+      return {
+        playback: usePlaybackStore.getState(),
+        source: { tag: element.tagName, data: { ...(element as HTMLElement).dataset } },
+        videos: Array.from(document.querySelectorAll('video')).map((video) => ({
+          currentTime: video.currentTime,
+          seeking: video.seeking,
+          paused: video.paused,
+          readyState: video.readyState,
+          data: { ...video.dataset },
+        })),
+        analysis: {
+          data: canvas ? { ...canvas.dataset } : null,
+          color: Array.from(color),
+          lost: gl?.isContextLost(),
+          error: gl?.getError(),
+        },
+      }
+    })
+    console.log('COMPARISON_FRAME_FAILURE', JSON.stringify({ expected, tolerance, snapshot }))
+    throw error
+  }
 }
 
 async function splitView(page: Page) {
@@ -553,7 +594,20 @@ test('フレーム通知APIがない環境でも比較プレビューを保ち�
     await expectPixel(split.locator('video[data-track="b"]'), [...expected])
     await expectPixel(split.getByTestId('split-analysis'), [...expected])
   }
+  // 実際のpauseが生成した、フレーム境界に丸められていない停止時刻を再現する。
+  await page.evaluate(async () => {
+    const { usePlaybackStore } = await import('/src/stores/playbackStore.ts')
+    usePlaybackStore.setState({
+      currentTime: 2.032539999999106,
+      seekRevision: usePlaybackStore.getState().seekRevision + 1,
+    })
+  })
+  await expectPixel(split.getByTestId('split-analysis'), [0, 0, 255, 255])
+  const settled = await counters(page)
+  await page.waitForTimeout(500)
+  expect((await counters(page)).nativeSeeks).toBe(settled.nativeSeeks)
   await seek(page, 1.8)
+  await expectPixel(split.getByTestId('split-analysis'), [255, 0, 0, 255])
   await page.evaluate(async () => {
     const { usePlaybackStore } = await import('/src/stores/playbackStore.ts')
     usePlaybackStore.getState().play()

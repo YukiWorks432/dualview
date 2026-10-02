@@ -65,7 +65,9 @@ export function useOptimizedClipSync(
         state.seekRevision !== previous.seekRevision ||
         state.isExporting !== previous.isExporting
       )
-        sync(state.seekRevision !== previous.seekRevision)
+        sync(
+          state.seekRevision !== previous.seekRevision || (previous.isPlaying && !state.isPlaying),
+        )
     })
     const handleLoaded = () => sync(true)
     const handleSeeked = () => sync()
