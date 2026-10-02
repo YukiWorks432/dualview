@@ -123,6 +123,14 @@ test('Audio QAのA/B/Sが音声だけを選び、修飾キー付き編集と通�
     await expect(page.locator('[data-clip]')).toHaveCount(3)
     await page.keyboard.press('Digit1')
   }
+  // 速度を選んだボタンに焦点が残っていても、Spaceは従来通り再生を所有する。
+  const speed = page.getByRole('button', { name: '0.5×', exact: true })
+  await speed.click()
+  await expect(speed).toBeFocused()
+  await page.keyboard.press('Space')
+  expect((await state(page)).playing).toBe(true)
+  await page.keyboard.press('Space')
+  expect((await state(page)).playing).toBe(false)
 })
 
 test('入力欄と編集可能要素、IME変換から全体キーへ漏らさない', async ({ page }) => {

@@ -32,8 +32,7 @@ export function createShortcutDispatcher(getMode: () => ComparisonMode) {
       '[role="dialog"][aria-modal="true"], [role="alertdialog"][aria-modal="true"], dialog[open]',
     )
     const control =
-      event.target instanceof Element &&
-      event.target.closest('button, a[href], [role="button"], [role="slider"], [role="combobox"]')
+      event.target instanceof Element && event.target.closest('[role="slider"], [role="combobox"]')
     if (
       editing ||
       modal ||
