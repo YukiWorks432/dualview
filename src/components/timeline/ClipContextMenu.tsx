@@ -235,7 +235,7 @@ export function ClipContextMenu({ x, y, clipId, trackId, onClose }: ClipContextM
             onMouseLeave={() => setShowReplaceSubmenu(false)}
           >
             <button
-              className={`w-full ui-radius-sm px-3 py-2 flex items-center gap-2 text-sm text-foreground hover:bg-surface-hover ${isLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
+              className={`w-full ui-radius-sm px-3 py-2 flex items-center gap-2 text-sm text-foreground surface-menu-item ${isLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
               disabled={isLocked}
             >
               <Replace className="w-4 h-4" />
@@ -250,7 +250,7 @@ export function ClipContextMenu({ x, y, clipId, trackId, onClose }: ClipContextM
                   {compatibleMedia.map((media) => (
                     <button
                       key={media.id}
-                      className="w-full ui-radius-sm px-3 py-1.5 flex items-center gap-2 text-sm text-foreground hover:bg-surface-hover"
+                      className="w-full ui-radius-sm px-3 py-1.5 flex items-center gap-2 text-sm text-foreground surface-menu-item"
                       onClick={() => {
                         runWithHistory(() => replaceClipMedia(clipId, media.id, media.duration))
                         onClose()
@@ -296,7 +296,7 @@ export function ClipContextMenu({ x, y, clipId, trackId, onClose }: ClipContextM
           onMouseLeave={() => setShowSpeedSubmenu(false)}
         >
           <button
-            className={`w-full ui-radius-sm px-3 py-2 flex items-center gap-2 text-sm text-foreground hover:bg-surface-hover ${isLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
+            className={`w-full ui-radius-sm px-3 py-2 flex items-center gap-2 text-sm text-foreground surface-menu-item ${isLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
             disabled={isLocked}
           >
             <Gauge className="w-4 h-4" />
@@ -312,14 +312,14 @@ export function ClipContextMenu({ x, y, clipId, trackId, onClose }: ClipContextM
                 {speedOptions.map((opt) => (
                   <button
                     key={opt.value}
-                    className={`w-full ui-radius-sm px-3 py-1.5 flex items-center justify-between text-sm hover:bg-surface-hover ${
-                      currentSpeed === opt.value ? 'text-primary bg-primary/10' : 'text-foreground'
-                    }`}
+                    data-checked={currentSpeed === opt.value ? '' : undefined}
+                    aria-pressed={currentSpeed === opt.value}
+                    className="w-full ui-radius-sm px-3 py-1.5 flex items-center justify-between text-sm surface-menu-item text-foreground"
                     onClick={() => setSpeed(opt.value)}
                   >
                     <span>{opt.label}</span>
                     {currentSpeed === opt.value && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-foreground" />
                     )}
                   </button>
                 ))}
@@ -393,11 +393,11 @@ function MenuButton({
             ? 'text-muted-foreground cursor-not-allowed'
             : danger
               ? 'text-destructive hover:bg-destructive/10'
-              : active
-                ? 'text-primary bg-primary/10'
-                : 'text-foreground hover:bg-surface-hover'
+              : 'text-foreground surface-menu-item'
         }
       `}
+      data-checked={active ? '' : undefined}
+      aria-pressed={active === undefined ? undefined : active}
       disabled={disabled}
       onClick={onClick}
     >

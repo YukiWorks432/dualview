@@ -475,9 +475,13 @@ function SettingsPanel({
           {/* Category selector */}
           <Select
             label="Category"
-            value={webglComparisonSettings.mode.split('-')[0]}
-            onChange={(e) => {
-              const category = e.target.value
+            value={
+              getAllComparisonCategories().find((category) =>
+                category.modes.includes(webglComparisonSettings.mode),
+              )?.id ?? ''
+            }
+            onValueChange={(value) => {
+              const category = value
               const categories = getAllComparisonCategories()
               const cat = categories.find(
                 (c) => c.id === category || c.modes[0]?.startsWith(category),
@@ -496,7 +500,7 @@ function SettingsPanel({
           <Select
             label="Analysis Mode"
             value={webglComparisonSettings.mode}
-            onChange={(e) => setWebGLComparisonMode(e.target.value as WebGLComparisonMode)}
+            onValueChange={(value) => setWebGLComparisonMode(value as WebGLComparisonMode)}
             options={(() => {
               const categories = getAllComparisonCategories()
               const currentCategory = webglComparisonSettings.mode.split('-')[0]
@@ -551,7 +555,7 @@ function SettingsPanel({
             <Select
               label="Block Size"
               value={String(webglComparisonSettings.blockSize)}
-              onChange={(e) => setWebGLComparisonSettings({ blockSize: Number(e.target.value) })}
+              onValueChange={(value) => setWebGLComparisonSettings({ blockSize: Number(value) })}
               options={[
                 { value: '4', label: '4x4' },
                 { value: '8', label: '8x8' },
@@ -600,7 +604,7 @@ function SettingsPanel({
             <Select
               label="Scale"
               value={String(webglComparisonSettings.blockSize)}
-              onChange={(e) => setWebGLComparisonSettings({ blockSize: Number(e.target.value) })}
+              onValueChange={(value) => setWebGLComparisonSettings({ blockSize: Number(value) })}
               options={[
                 { value: '1', label: 'Fine (1px) - Texture detail, noise' },
                 { value: '4', label: 'Medium (4px) - Object edges' },
@@ -615,7 +619,7 @@ function SettingsPanel({
             <Select
               label="Analysis Radius"
               value={String(webglComparisonSettings.blockSize)}
-              onChange={(e) => setWebGLComparisonSettings({ blockSize: Number(e.target.value) })}
+              onValueChange={(value) => setWebGLComparisonSettings({ blockSize: Number(value) })}
               options={[
                 { value: '4', label: '4px - Fine detail' },
                 { value: '8', label: '8px - Standard' },
@@ -630,7 +634,7 @@ function SettingsPanel({
             <Select
               label="View Mode"
               value={String(webglComparisonSettings.blockSize)}
-              onChange={(e) => setWebGLComparisonSettings({ blockSize: Number(e.target.value) })}
+              onValueChange={(value) => setWebGLComparisonSettings({ blockSize: Number(value) })}
               options={[
                 { value: '4', label: 'Source A direction' },
                 { value: '8', label: 'Source B direction' },
@@ -652,8 +656,8 @@ function SettingsPanel({
                     ? 'cinematic'
                     : 'custom'
               }
-              onChange={(e) => {
-                const preset = e.target.value
+              onValueChange={(value) => {
+                const preset = value
                 if (preset === 'broadcast') setWebGLComparisonSettings({ amplification: 1 })
                 else if (preset === 'cinematic') setWebGLComparisonSettings({ amplification: 50 })
                 else setWebGLComparisonSettings({ amplification: 80 })
@@ -683,8 +687,8 @@ function SettingsPanel({
                           ? 'yellow'
                           : 'white'
                 }
-                onChange={(e) => {
-                  const color = e.target.value
+                onValueChange={(value) => {
+                  const color = value
                   if (color === 'red') setWebGLComparisonSettings({ amplification: 1 })
                   else if (color === 'green') setWebGLComparisonSettings({ amplification: 30 })
                   else if (color === 'blue') setWebGLComparisonSettings({ amplification: 50 })
@@ -726,8 +730,8 @@ function SettingsPanel({
                       ? '95'
                       : '100'
                 }
-                onChange={(e) => {
-                  const level = e.target.value
+                onValueChange={(value) => {
+                  const level = value
                   if (level === '90') setWebGLComparisonSettings({ amplification: 1 })
                   else if (level === '95') setWebGLComparisonSettings({ amplification: 50 })
                   else setWebGLComparisonSettings({ amplification: 80 })
@@ -824,7 +828,7 @@ function SettingsPanel({
           <Select
             label="Orientation"
             value={sliderOrientation}
-            onChange={(e) => setSliderOrientation(e.target.value as 'vertical' | 'horizontal')}
+            onValueChange={(value) => setSliderOrientation(value as 'vertical' | 'horizontal')}
             options={[
               { value: 'vertical', label: 'Vertical (Left/Right)' },
               { value: 'horizontal', label: 'Horizontal (Top/Bottom)' },
@@ -848,7 +852,7 @@ function SettingsPanel({
           <Select
             label="Blend Mode"
             value={blendMode}
-            onChange={(e) => setBlendMode(e.target.value as BlendMode)}
+            onValueChange={(value) => setBlendMode(value as BlendMode)}
             options={[
               { value: 'difference', label: 'Difference (highlights changes)' },
               { value: 'overlay', label: 'Overlay (enhanced contrast)' },
@@ -871,7 +875,7 @@ function SettingsPanel({
           <Select
             label="Layout"
             value={splitLayout}
-            onChange={(e) => setSplitLayout(e.target.value as SplitLayout)}
+            onValueChange={(value) => setSplitLayout(value as SplitLayout)}
             options={[
               { value: '2x1', label: 'Horizontal (A | B)' },
               { value: '1x2', label: 'Vertical (A above B)' },
@@ -894,8 +898,8 @@ function SettingsPanel({
           <Select
             label="Format"
             value={exportSettings.format}
-            onChange={(e) =>
-              setExportSettings({ format: e.target.value as 'mp4' | 'webm' | 'gif' })
+            onValueChange={(value) =>
+              setExportSettings({ format: value as 'mp4' | 'webm' | 'gif' })
             }
             options={[
               { value: 'mp4', label: 'MP4' },
@@ -906,8 +910,8 @@ function SettingsPanel({
           <Select
             label="Quality"
             value={exportSettings.quality}
-            onChange={(e) =>
-              setExportSettings({ quality: e.target.value as 'low' | 'medium' | 'high' })
+            onValueChange={(value) =>
+              setExportSettings({ quality: value as 'low' | 'medium' | 'high' })
             }
             options={[
               { value: 'low', label: 'Low' },
@@ -919,8 +923,8 @@ function SettingsPanel({
         <Select
           label="Resolution"
           value={exportSettings.resolution}
-          onChange={(e) =>
-            setExportSettings({ resolution: e.target.value as '720p' | '1080p' | '4k' })
+          onValueChange={(value) =>
+            setExportSettings({ resolution: value as '720p' | '1080p' | '4k' })
           }
           options={[
             { value: '720p', label: '720p (HD)' },

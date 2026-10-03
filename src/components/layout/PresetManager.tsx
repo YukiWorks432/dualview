@@ -1,10 +1,10 @@
-import { Bookmark, Plus, Trash2, Edit2, Check, X, ChevronDown } from 'lucide-react'
+import { Bookmark, Plus, Trash2, Edit2, Check, X } from 'lucide-react'
 import { useState } from 'react'
 
 import { cn } from '../../lib/utils'
 import { usePresetStore, type ComparisonPreset } from '../../stores/presetStore'
 import { useProjectStore } from '../../stores/projectStore'
-import { Button, ElevatedSurface } from '../ui'
+import { Button, ElevatedSurface, Select } from '../ui'
 
 interface PresetManagerProps {
   isOpen: boolean
@@ -284,7 +284,6 @@ function PresetItem({
 
 // Quick preset selector for header
 export function PresetSelector() {
-  const [isOpen, setIsOpen] = useState(false)
   const { presets, activePresetId, setActivePreset } = usePresetStore()
   const {
     setComparisonMode,
@@ -297,8 +296,6 @@ export function PresetSelector() {
     toggleMetrics,
     togglePixelInspector,
   } = useProjectStore()
-
-  const activePreset = presets.find((p) => p.id === activePresetId)
 
   const applyPreset = (preset: ComparisonPreset) => {
     setComparisonMode(preset.settings.comparisonMode)
@@ -315,44 +312,19 @@ export function PresetSelector() {
     }
 
     setActivePreset(preset.id)
-    setIsOpen(false)
   }
 
   return (
-    <div className="relative">
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="surface-control ui-radius-md flex items-center gap-1 border px-2 py-1 text-xs text-text-secondary hover:text-text-primary"
-      >
-        <Bookmark className="w-3 h-3" />
-        {activePreset?.name || 'Presets'}
-        <ChevronDown className="w-3 h-3" />
-      </button>
-
-      {isOpen && (
-        <>
-          <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-          <ElevatedSurface asChild offset={1}>
-            <div className="ui-radius-md absolute top-full right-0 mt-1 w-48 border border-transparent z-50">
-              {presets.map((preset) => (
-                <button
-                  key={preset.id}
-                  onClick={() => applyPreset(preset)}
-                  className={cn(
-                    'w-full text-left px-3 py-2 text-sm flex items-center gap-2',
-                    activePresetId === preset.id
-                      ? 'bg-accent/20 text-accent'
-                      : 'surface-interactive',
-                  )}
-                >
-                  <Bookmark className="w-3 h-3" />
-                  {preset.name}
-                </button>
-              ))}
-            </div>
-          </ElevatedSurface>
-        </>
-      )}
-    </div>
+    <Select
+      aria-label="Comparison preset"
+      value={activePresetId ?? ''}
+      onValueChange={(value) => {
+        const preset = presets.find((item) => item.id === value)
+        if (preset) applyPreset(preset)
+      }}
+      options={presets.map((preset) => ({ value: preset.id, label: preset.name }))}
+      placeholder="Presets"
+      className="w-auto text-xs"
+    />
   )
 }

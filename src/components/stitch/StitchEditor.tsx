@@ -28,6 +28,7 @@ import { DEFAULT_SPEED_RAMP } from '../../lib/stitch/speedRamp'
 import { DEFAULT_TRANSITION } from '../../lib/stitch/transitions'
 import { useMediaStore } from '../../stores/mediaStore'
 import type { ClipTransition, EaseCurve, SpeedRamp } from '../../types'
+import { Select } from '../ui/select'
 import { EaseCurveEditor } from './EaseCurveEditor'
 import { SpeedRampEditor } from './SpeedRampEditor'
 import { TransitionEditor } from './TransitionEditor'
@@ -580,40 +581,44 @@ export function StitchEditor({ isOpen, onClose, onExport }: StitchEditorProps) {
                   <Ratio size={14} />
                   Aspect Ratio
                 </label>
-                <select
+                <Select
+                  aria-label="Aspect Ratio"
                   value={settings.outputAspectRatio}
-                  onChange={(e) =>
+                  onValueChange={(value) =>
                     setSettings((prev) => ({
                       ...prev,
-                      outputAspectRatio: e.target.value as StitchSettings['outputAspectRatio'],
+                      outputAspectRatio: value as StitchSettings['outputAspectRatio'],
                     }))
                   }
-                  className="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 text-sm text-white"
-                >
-                  <option value="original">Original (varied)</option>
-                  <option value="16:9">16:9 Landscape</option>
-                  <option value="9:16">9:16 Portrait</option>
-                  <option value="1:1">1:1 Square</option>
-                  <option value="4:3">4:3 Standard</option>
-                </select>
+                  options={[
+                    { value: 'original', label: 'Original (varied)' },
+                    { value: '16:9', label: '16:9 Landscape' },
+                    { value: '9:16', label: '9:16 Portrait' },
+                    { value: '1:1', label: '1:1 Square' },
+                    { value: '4:3', label: '4:3 Standard' },
+                  ]}
+                  className="h-auto w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 text-sm text-white"
+                />
               </div>
 
               <div>
                 <label className="text-sm text-gray-400 mb-2 block">Fit Mode</label>
-                <select
+                <Select
+                  aria-label="Fit Mode"
                   value={settings.fitMode}
-                  onChange={(e) =>
+                  onValueChange={(value) =>
                     setSettings((prev) => ({
                       ...prev,
-                      fitMode: e.target.value as StitchSettings['fitMode'],
+                      fitMode: value as StitchSettings['fitMode'],
                     }))
                   }
-                  className="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 text-sm text-white"
-                >
-                  <option value="fit">Fit (letterbox)</option>
-                  <option value="fill">Fill (crop)</option>
-                  <option value="stretch">Stretch</option>
-                </select>
+                  options={[
+                    { value: 'fit', label: 'Fit (letterbox)' },
+                    { value: 'fill', label: 'Fill (crop)' },
+                    { value: 'stretch', label: 'Stretch' },
+                  ]}
+                  className="h-auto w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 text-sm text-white"
+                />
               </div>
 
               <div>
@@ -621,22 +626,22 @@ export function StitchEditor({ isOpen, onClose, onExport }: StitchEditorProps) {
                   <Clock size={14} />
                   Frame Rate
                 </label>
-                <select
-                  value={settings.outputFrameRate}
-                  onChange={(e) =>
+                <Select
+                  aria-label="Frame Rate"
+                  value={String(settings.outputFrameRate)}
+                  onValueChange={(value) =>
                     setSettings((prev) => ({
                       ...prev,
-                      outputFrameRate: parseInt(
-                        e.target.value,
-                      ) as StitchSettings['outputFrameRate'],
+                      outputFrameRate: Number(value) as StitchSettings['outputFrameRate'],
                     }))
                   }
-                  className="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 text-sm text-white"
-                >
-                  <option value={24}>24 fps (Film)</option>
-                  <option value={30}>30 fps (Standard)</option>
-                  <option value={60}>60 fps (Smooth)</option>
-                </select>
+                  options={[
+                    { value: '24', label: '24 fps (Film)' },
+                    { value: '30', label: '30 fps (Standard)' },
+                    { value: '60', label: '60 fps (Smooth)' },
+                  ]}
+                  className="h-auto w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 text-sm text-white"
+                />
               </div>
             </div>
 

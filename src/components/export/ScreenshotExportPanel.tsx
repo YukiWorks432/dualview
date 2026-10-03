@@ -100,7 +100,7 @@ export function ScreenshotExportPanel({
       <Select
         label="Format"
         value={format}
-        onChange={(event) => onFormatChange(event.target.value as ScreenshotFormat)}
+        onValueChange={(value) => onFormatChange(value as ScreenshotFormat)}
         options={[
           { value: 'png', label: 'PNG (lossless)' },
           { value: 'jpg', label: 'JPEG (smaller file)' },

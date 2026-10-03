@@ -7,16 +7,12 @@
 import { Diamond, ChevronDown, ChevronRight, RotateCcw, Copy, Clipboard } from 'lucide-react'
 import { useState, useMemo } from 'react'
 
-import {
-  PROPERTY_CONFIGS,
-  EASING_PRESETS,
-  type AnimatableProperty,
-  type EasingType,
-} from '../../lib/keyframes'
+import { PROPERTY_CONFIGS, EASING_PRESETS, type AnimatableProperty } from '../../lib/keyframes'
 import { cn } from '../../lib/utils'
 import { useKeyframeStore } from '../../stores/keyframeStore'
 import { usePlaybackStore } from '../../stores/playbackStore'
 import { useTimelineStore } from '../../stores/timelineStore'
+import { Select } from '../ui/select'
 
 interface KeyframeEditorProps {
   clipId: string
@@ -32,7 +28,8 @@ const PROPERTY_GROUPS: Record<string, AnimatableProperty[]> = {
 
 export function KeyframeEditor({ clipId, className }: KeyframeEditorProps) {
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(['Effects']))
-  const [selectedEasing, setSelectedEasing] = useState<EasingType>('ease-in-out')
+  const [selectedEasingPreset, setSelectedEasingPreset] = useState('easeInOut')
+  const selectedEasing = EASING_PRESETS[selectedEasingPreset].easing
 
   const currentTime = usePlaybackStore((state) => state.currentTime)
   const clip = useTimelineStore((state) =>
@@ -156,17 +153,16 @@ export function KeyframeEditor({ clipId, className }: KeyframeEditorProps) {
       {/* Easing selector */}
       <div className="px-3 py-2 border-b border-zinc-800 flex items-center gap-2">
         <span className="text-[10px] text-zinc-500 uppercase">Easing:</span>
-        <select
-          value={selectedEasing}
-          onChange={(e) => setSelectedEasing(e.target.value as EasingType)}
-          className="flex-1 bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-blue-500"
-        >
-          {Object.entries(EASING_PRESETS).map(([key, preset]) => (
-            <option key={key} value={preset.easing}>
-              {preset.label}
-            </option>
-          ))}
-        </select>
+        <Select
+          aria-label="Easing"
+          value={selectedEasingPreset}
+          onValueChange={setSelectedEasingPreset}
+          options={Object.entries(EASING_PRESETS).map(([key, preset]) => ({
+            value: key,
+            label: preset.label,
+          }))}
+          className="h-auto flex-1 bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-blue-500"
+        />
       </div>
 
       {/* Property groups */}

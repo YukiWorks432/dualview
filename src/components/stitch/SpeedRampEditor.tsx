@@ -9,6 +9,7 @@ import { useState, useCallback, useRef, useEffect } from 'react'
 import { EASE_PRESETS } from '../../lib/stitch/easeCurve'
 import { DEFAULT_SPEED_RAMP, getSpeedAtTime } from '../../lib/stitch/speedRamp'
 import type { SpeedRamp, SpeedKeyframe } from '../../types'
+import { Select } from '../ui/select'
 
 // Re-export types for convenience
 export type { SpeedRamp, SpeedKeyframe } from '../../types'
@@ -545,17 +546,16 @@ export function SpeedRampEditor({
 
                 <div>
                   <label className="text-sm text-gray-400 mb-2 block">Ease Curve</label>
-                  <select
+                  <Select
+                    aria-label="Ease Curve"
                     value={selectedKeyframe.easeCurve.id}
-                    onChange={(e) => updateSelectedEase(e.target.value)}
-                    className="w-full bg-[#1a1a1a] border border-gray-600 rounded px-3 py-2 text-sm text-white"
-                  >
-                    {EASE_PRESETS.map((preset) => (
-                      <option key={preset.id} value={preset.id}>
-                        {preset.name}
-                      </option>
-                    ))}
-                  </select>
+                    onValueChange={updateSelectedEase}
+                    options={EASE_PRESETS.map((preset) => ({
+                      value: preset.id,
+                      label: preset.name,
+                    }))}
+                    className="h-auto w-full bg-[#1a1a1a] border border-gray-600 rounded px-3 py-2 text-sm text-white"
+                  />
                 </div>
               </div>
 

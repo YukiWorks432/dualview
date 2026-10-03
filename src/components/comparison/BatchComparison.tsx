@@ -19,6 +19,7 @@ import { useState, useCallback, useRef } from 'react'
 
 import { useMediaStore } from '../../stores/mediaStore'
 import { ElevatedSurface } from '../ui'
+import { Select } from '../ui/select'
 
 interface BatchResult {
   idA: string
@@ -438,15 +439,17 @@ export function BatchComparison({ isOpen, onClose }: BatchComparisonProps) {
             <div className="px-6 py-3 border-b border-border flex items-center gap-4">
               <div className="flex items-center gap-2">
                 <span className="text-sm text-text-secondary">Sort by:</span>
-                <select
+                <Select
+                  aria-label="Sort by"
                   value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-                  className="surface-control ui-radius-md border px-2 py-1 text-sm text-text-primary"
-                >
-                  <option value="ssim">SSIM</option>
-                  <option value="deltaE">Delta E</option>
-                  <option value="diffPixelPercent">Diff %</option>
-                </select>
+                  onValueChange={(value) => setSortBy(value as typeof sortBy)}
+                  options={[
+                    { value: 'ssim', label: 'SSIM' },
+                    { value: 'deltaE', label: 'Delta E' },
+                    { value: 'diffPixelPercent', label: 'Diff %' },
+                  ]}
+                  className="surface-control h-auto w-auto ui-radius-md border px-2 py-1 text-sm text-text-primary"
+                />
                 <button
                   onClick={() => setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'))}
                   className="surface-control ui-radius-sm border p-1 text-text-secondary hover:text-text-primary"

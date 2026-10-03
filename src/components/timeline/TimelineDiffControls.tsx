@@ -7,6 +7,7 @@ import { usePlaybackStore } from '../../stores/playbackStore'
 import { useTimelineDiffStore } from '../../stores/timelineDiffStore'
 import { useTimelineStore } from '../../stores/timelineStore'
 import { Slider } from '../ui'
+import { Select } from '../ui/select'
 
 function statusLabel(status: string): string {
   switch (status) {
@@ -124,15 +125,16 @@ export function TimelineDiffControls() {
       </label>
       <label className="flex items-center gap-1 text-text-muted">
         Resolution
-        <select
+        <Select
           aria-label="Analysis resolution"
           value={resolution}
-          onChange={(event) => setResolution(event.target.value as 'standard' | 'detailed')}
-          className="surface-control h-6 ui-radius-sm border px-1 text-text-secondary"
-        >
-          <option value="standard">640 px</option>
-          <option value="detailed">Full</option>
-        </select>
+          onValueChange={(value) => setResolution(value as 'standard' | 'detailed')}
+          options={[
+            { value: 'standard', label: '640 px' },
+            { value: 'detailed', label: 'Full' },
+          ]}
+          className="surface-control h-6 w-auto ui-radius-sm border px-1 text-[10px] text-text-secondary"
+        />
       </label>
       <span className="flex items-center gap-1 text-text-muted" aria-label="Difference lane legend">
         <i className="h-2 w-2 bg-[#ff6974]" /> Diff

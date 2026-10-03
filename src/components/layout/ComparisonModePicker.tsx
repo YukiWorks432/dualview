@@ -192,16 +192,13 @@ export function ComparisonModePicker() {
                     <DropdownMenuItem
                       key={mode}
                       onClick={() => setComparisonMode(mode)}
-                      className={
-                        comparisonMode === mode
-                          ? 'surface-active text-foreground hover:surface-active'
-                          : undefined
-                      }
+                      data-checked={comparisonMode === mode ? '' : undefined}
+                      aria-current={comparisonMode === mode ? 'true' : undefined}
                     >
                       <span
                         className={`flex h-8 w-8 items-center justify-center ui-radius-sm ${
                           comparisonMode === mode
-                            ? 'surface-active text-primary'
+                            ? 'surface-active text-foreground'
                             : 'surface-control text-muted-foreground'
                         }`}
                       >
