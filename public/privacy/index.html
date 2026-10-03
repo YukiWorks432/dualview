@@ -7,7 +7,7 @@
     <title>プライバシーとデータの取り扱い | DualView</title>
     <meta
       name="description"
-      content="DualViewで読み込んだ素材の処理、ブラウザー内の保存、必要な通信について説明します。"
+      content="素材を処理する場所、ブラウザー内の保存、サイト利用時に発生する通信について説明します。"
     />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="stylesheet" href="/site-info.css" />
@@ -16,186 +16,192 @@
     <header class="site-header">
       <div class="site-header__inner">
         <a class="brand" href="/">DualView</a>
-        <nav class="site-nav" aria-label="Site information">
-          <a href="/privacy/" aria-current="page">Privacy</a>
-          <a href="/terms/">Terms</a>
-          <a href="/about/">About</a>
-          <a href="/licenses/">Licenses</a>
+        <nav class="site-nav" aria-label="サイト情報 / Site information">
+          <a href="/privacy/" aria-current="page">Privacy</a><a href="/terms/">Terms</a
+          ><a href="/about/">About</a><a href="/licenses/">Licenses</a>
         </nav>
       </div>
     </header>
-
     <main>
       <div class="hero">
-        <p class="eyebrow">Privacy &amp; data handling</p>
         <h1>プライバシーとデータの取り扱い</h1>
         <p>
-          DualViewは、安心して素材を比較できるよう、読み込んだファイルをサーバーへアップロードせず、
-          ブラウザー内で処理します。ここでは、保存と通信について必要な範囲で説明します。
+          素材を処理する場所、ブラウザー内の保存、サイト利用時に発生する通信について説明します。
         </p>
-        <p class="meta">施行日・最終更新日: 2026年9月29日</p>
+        <nav aria-label="言語 / Language">
+          <a href="#japanese" lang="ja">日本語</a> · <a href="#english" lang="en">English</a>
+        </nav>
+        <p class="meta">施行日: 2026年9月29日 · 文書更新日: 2026年10月2日</p>
       </div>
-
-      <section class="language-block" lang="ja">
-        <span class="language-label">日本語</span>
-
-        <section class="card notice" id="local-processing">
-          <h2>読み込んだ素材について</h2>
+      <section class="language-block" lang="ja" id="japanese">
+        <h2 class="language-label">日本語</h2>
+        <section class="card" id="local-processing">
+          <h3>素材はブラウザー内で処理する</h3>
+          <p>読み込んだファイルはサーバーへアップロードせず、ブラウザー内で処理します。</p>
           <p>
-            ファイル選択、ドラッグ＆ドロップ、画像貼り付け、画面キャプチャで読み込んだ画像・動画は、
-            比較・解析・書き出しのために、この端末のブラウザー内で処理されます。
-            これらの素材を運営者へアップロードする機能はありません。
+            ファイル選択、ドラッグ＆ドロップ、画像貼り付け、画面キャプチャで読み込んだ画像・動画は、この端末のブラウザー内で比較・解析・書き出しを行います。これらのローカル素材を運営者へアップロードする機能はありません。
           </p>
         </section>
-
         <section class="card" id="local-storage">
-          <h2>保存について</h2>
+          <h3>保存と削除</h3>
           <p>
-            プロジェクトと素材は、作業を続きから再開できるよう、このブラウザー内に自動保存されます。
-            タブを閉じても保存済みデータは残ります。
+            プロジェクトと素材は、このブラウザー内に自動保存します。保存済みのデータはタブを閉じても残り、後から作業を再開できます。
           </p>
           <p>
-            プロジェクトはProjects画面から削除できます。サイトに保存されたデータ全体を消したい場合は、
-            ブラウザーのサイトデータ削除機能を利用してください。
-            重要な素材やプロジェクトは、必要に応じて別途バックアップしてください。
+            個別のプロジェクトはProjects画面から削除できます。サイト内の保存データをすべて消す場合は、ブラウザーのサイトデータ削除機能を使ってください。重要な素材とプロジェクトは、必要に応じて別途バックアップしてください。
           </p>
           <p>
-            書き出した<code>.dualview</code>ファイルには素材も含まれます。
-            第三者へ送る場合は、元の素材と同様に取り扱ってください。
+            書き出した<code>.dualview</code>ファイルには素材そのものも含まれます。第三者へ共有する際は、元の素材と同じ注意で取り扱ってください。
           </p>
         </section>
-
         <section class="card" id="external-communication">
-          <h2>サイト利用時の通信について</h2>
+          <h3>サイト利用時の通信</h3>
           <p>
-            サイトの表示や安全な配信のため、配信基盤であるCloudflareとの通常の通信が発生します。
-            その際、IPアドレスなど、ウェブサイトの利用に伴う一般的な通信情報が取り扱われる場合があります。
+            サイトの表示と安全な配信には、配信基盤のCloudflareとの通常の通信が必要になります。この過程で、IPアドレスなど一般的なウェブ通信情報が取り扱われる場合があります。
           </p>
           <p>
-            URLから素材を取り込む機能を使った場合は、入力したURLのサイトへブラウザーから直接接続します。
-            取得した素材の比較・解析はこの端末内で行い、別に読み込んでいるローカル素材を取得先へ送信することはありません。
+            URL取り込みでは、入力したURLへブラウザーから直接接続します。取得後の素材の比較・解析は端末内で行い、別に読み込んでいるローカル素材を取得先へ送信することはありません。
           </p>
           <p>
             書体の表示にはAdobe
-            Fontsを利用しており、フォントデータの取得時にAdobeのサーバーとの通信が発生します。
+            Fontsを使います。フォントデータを取得する際にAdobeのサーバーへ接続します。
           </p>
-          <div class="link-list">
+          <p>
             <a
               href="https://www.cloudflare.com/privacypolicy/"
               target="_blank"
               rel="noopener noreferrer"
+              >Cloudflare Privacy Policy</a
             >
-              Cloudflare Privacy Policy ↗
-            </a>
+            ·
             <a
               href="https://www.adobe.com/privacy/policies/adobe-fonts.html"
               target="_blank"
               rel="noopener noreferrer"
+              >Adobe Fonts Privacy</a
             >
-              Adobe Fonts Privacy ↗
-            </a>
-          </div>
+          </p>
         </section>
-
         <section class="card" id="contact">
-          <h2>運営・問い合わせ</h2>
+          <h3>運営者と問い合わせ情報の用途</h3>
           <p>
-            この公開サイトは <strong>花雪 / HanaYuki</strong> が運営しています。 通常の不具合報告は
+            この公開サイトは<strong>花雪 / HanaYuki</strong>が運営します。通常の不具合報告は<a
+              href="https://github.com/YukiWorks432/dualview/issues"
+              target="_blank"
+              rel="noopener noreferrer"
+              >GitHub Issues</a
+            >へ、個人情報を含む相談や公開に適さない問い合わせは<a
+              href="https://hanayuki.xyz/contact/"
+              target="_blank"
+              rel="noopener noreferrer"
+              >hanayuki.xyzの問い合わせ窓口</a
+            >へご連絡ください。
+          </p>
+          <p>
+            問い合わせで受け取った情報は、回答、必要な調査、法令に基づく対応のために利用します。
+          </p>
+        </section>
+        <section class="card">
+          <h3>適用範囲</h3>
+          <p>
+            この説明は、花雪 /
+            HanaYukiが公開するDualViewを対象とします。データの取り扱いに重要な変更がある場合は、このページを更新します。
+          </p>
+        </section>
+      </section>
+      <section class="language-block" lang="en" id="english">
+        <h2 class="language-label">English</h2>
+        <p class="meta">Effective: September 29, 2026 · Document updated: October 2, 2026</p>
+        <section class="card">
+          <h3>Local processing</h3>
+          <p>Loaded files are processed in the browser without being uploaded to a server.</p>
+          <p>
+            Images and videos added by file selection, drag and drop, image paste, or screen capture
+            are compared, analyzed, and exported in this browser on your device. The application has
+            no feature that uploads these local sources to the operator.
+          </p>
+        </section>
+        <section class="card">
+          <h3>Storage and deletion</h3>
+          <p>
+            Projects and media are saved automatically in this browser. Saved data remains after the
+            tab closes so work can be resumed.
+          </p>
+          <p>
+            Delete individual projects in Projects, or use your browser’s site-data controls to
+            remove all data stored for this site. Keep separate backups of important media and
+            projects as needed.
+          </p>
+          <p>
+            An exported <code>.dualview</code> file includes the media itself. Share it with the
+            same care as the original sources.
+          </p>
+        </section>
+        <section class="card">
+          <h3>Network connections</h3>
+          <p>
+            Loading and securely delivering the site requires normal connections to Cloudflare.
+            Standard web connection information, including an IP address, may be processed by that
+            service.
+          </p>
+          <p>
+            URL import connects the browser directly to the entered URL. Comparison and analysis
+            then happen on this device; other local sources already loaded in DualView are not sent
+            to that destination.
+          </p>
+          <p>
+            Adobe Fonts supplies the interface typefaces. Fetching font data connects the browser to
+            Adobe’s servers.
+          </p>
+          <p>
+            <a
+              href="https://www.cloudflare.com/privacypolicy/"
+              target="_blank"
+              rel="noopener noreferrer"
+              >Cloudflare Privacy Policy</a
+            >
+            ·
+            <a
+              href="https://www.adobe.com/privacy/policies/adobe-fonts.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              >Adobe Fonts Privacy</a
+            >
+          </p>
+        </section>
+        <section class="card">
+          <h3>Operator and inquiry information</h3>
+          <p>
+            <strong>花雪 / HanaYuki</strong> operates this public site. Send ordinary bugs to
             <a
               href="https://github.com/YukiWorks432/dualview/issues"
               target="_blank"
               rel="noopener noreferrer"
-              >GitHub Issues ↗</a
+              >GitHub Issues</a
             >
-            へ、個人情報を含む相談や公開に適さない問い合わせは
+            and private or personal-information inquiries to the
             <a href="https://hanayuki.xyz/contact/" target="_blank" rel="noopener noreferrer"
-              >hanayuki.xyz の問い合わせ窓口 ↗</a
-            >
-            へ連絡してください。
+              >contact page</a
+            >.
           </p>
           <p>
-            問い合わせで受け取った情報は、問い合わせへの回答、必要な調査、
-            法令に基づく対応のために利用します。
+            Information received through inquiries is used to answer them, conduct necessary
+            investigations, and meet applicable legal obligations.
           </p>
         </section>
-
         <section class="card">
-          <h2>この説明の対象</h2>
+          <h3>Scope</h3>
           <p>
-            この説明は、花雪 / HanaYuki が公開しているDualViewを対象とします。
-            データの取り扱いに重要な変更がある場合は、このページを更新します。
+            This explanation applies to DualView published by 花雪 / HanaYuki. The page will be
+            updated if data handling changes materially.
           </p>
-        </section>
-      </section>
-
-      <section class="language-block" lang="en">
-        <span class="language-label">English</span>
-
-        <section class="card notice">
-          <h2>Your media stays on your device</h2>
-          <p>
-            Images and videos added through file selection, drag and drop, image paste, or screen
-            capture are processed in this browser for comparison, analysis, and export. DualView
-            does not provide a feature that uploads those local media files to the operator.
-          </p>
-        </section>
-
-        <section class="card">
-          <h2>Storage</h2>
-          <p>
-            Projects and media are saved automatically in this browser so you can continue your work
-            later. Closing the tab does not remove saved data. You can delete individual projects
-            from the Projects screen or clear this site's data through your browser.
-          </p>
-          <p>
-            Exported <code>.dualview</code> files include the media itself. Treat them with the same
-            care as the original media when sharing them.
-          </p>
-        </section>
-
-        <section class="card">
-          <h2>Network connections</h2>
-          <p>
-            Normal connections to Cloudflare, the site's delivery provider, are required to load and
-            securely deliver the site. Standard connection information such as an IP address may be
-            processed as part of that service.
-          </p>
-          <p>
-            URL import connects your browser directly to the URL you enter. The imported media is
-            then compared and analyzed on this device. Other local media already loaded in DualView
-            is not sent to that destination.
-          </p>
-          <p>
-            DualView uses Adobe Fonts for its interface typefaces. Loading the font data creates a
-            connection from your browser to Adobe's servers.
-          </p>
-          <div class="link-list">
-            <a
-              href="https://www.adobe.com/privacy/policies/adobe-fonts.html"
-              target="_blank"
-              rel="noopener noreferrer"
-              >Adobe Fonts Privacy ↗</a
-            >
-          </div>
-        </section>
-
-        <section class="card">
-          <h2>Operator and contact</h2>
-          <p>
-            This public site is operated by <strong>花雪 / HanaYuki</strong>. Use GitHub Issues for
-            ordinary bug reports and the contact page at hanayuki.xyz for inquiries that include
-            personal information or should not be public. Information sent through an inquiry is
-            used to respond, investigate where necessary, and meet applicable legal obligations.
-          </p>
-          <p class="meta">Effective and last updated: September 29, 2026</p>
         </section>
       </section>
     </main>
-
     <footer class="site-footer">
-      <a href="/">Open DualView</a> ·
+      <a href="/">DualViewを開く / Open DualView</a> ·
       <a href="https://github.com/YukiWorks432/dualview" target="_blank" rel="noopener noreferrer"
-        >Source ↗</a
+        >ソースコード / Source</a
       >
     </footer>
   </body>
