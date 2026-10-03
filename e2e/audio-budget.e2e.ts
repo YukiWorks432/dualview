@@ -212,7 +212,10 @@ test('長尺Aの処理中に同じIDの素材を交換し、旧Bのdecodeと旧�
   await expect.poll(async () => (await started(page)).every((source) => source.released)).toBe(true)
 })
 
-test('実ブラウザーの長尺解析がイベントを処理し、取消後に結果を返さない', async ({ page }) => {
+test('実ブラウザーの長尺解析がイベントを処理し、取消後に結果を返さない', async ({
+  page,
+  browser,
+}, testInfo) => {
   await page.goto('/')
   const result = await page.evaluate(async () => {
     const { analyzeAudio } = await import('/src/lib/audio/AudioAnalyzer.ts')
@@ -220,20 +223,47 @@ test('実ブラウザーの長尺解析がイベントを処理し、取消後�
     buffer.getChannelData(0).fill(0.25)
     buffer.getChannelData(1).fill(-0.25)
     const controller = new AbortController()
+    const requestedDelayMs = 10
     const start = performance.now()
-    const timer = setTimeout(() => controller.abort(), 10)
+    let abortAt: number | null = null
+    let settled = false
+    let abortBeforeSettlement = false
+    let outcome = 'fulfilled'
+    let errorName: string | null = null
+    const timer = setTimeout(() => {
+      abortAt = performance.now()
+      abortBeforeSettlement = !settled
+      controller.abort()
+    }, requestedDelayMs)
     try {
       await analyzeAudio(buffer, controller.signal)
-      return { cancelled: false, elapsedMs: performance.now() - start }
     } catch (error) {
-      return {
-        cancelled: error instanceof Error && error.name === 'AbortError',
-        elapsedMs: performance.now() - start,
-      }
+      outcome = 'rejected'
+      errorName = error instanceof Error ? error.name : String(error)
     } finally {
+      settled = true
       clearTimeout(timer)
     }
+    const end = performance.now()
+    return {
+      outcome,
+      errorName,
+      abortBeforeSettlement,
+      requestedDelayMs,
+      timerDelayMs: abortAt === null ? null : abortAt - start - requestedDelayMs,
+      abortResponseMs: abortAt === null ? null : end - abortAt,
+      totalMs: end - start,
+      // 旧100ms値は診断専用。環境・負荷を定めた性能基準の達成とは扱わない。
+      exceededPrevious100ms: end - start >= 100,
+    }
   })
-  expect(result.cancelled).toBe(true)
-  expect(result.elapsedMs).toBeLessThan(100)
+  const diagnostic = { browser: browser.version(), ...result }
+  console.info('audio-cancellation:', JSON.stringify(diagnostic))
+  await testInfo.attach('audio-cancellation', {
+    body: JSON.stringify(diagnostic, null, 2),
+    contentType: 'application/json',
+  })
+  expect(result.abortBeforeSettlement).toBe(true)
+  expect(result.outcome).toBe('rejected')
+  expect(result.errorName).toBe('AbortError')
 })
