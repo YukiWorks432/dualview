@@ -65,7 +65,7 @@ function DropdownMenuRadioItem({
   return (
     <MenuPrimitive.RadioItem
       className={cn(
-        'surface-highlighted relative mx-1 flex cursor-default select-none items-center gap-2 ui-radius-sm py-1.5 pl-7 pr-2 text-sm outline-none data-[checked]:bg-accent/10 data-[checked]:text-accent data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+        'surface-highlighted relative mx-1 flex cursor-default select-none items-center gap-2 ui-radius-sm py-1.5 pl-7 pr-2 text-sm outline-none data-[checked]:bg-accent/10 data-[checked]:text-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
         className,
       )}
       {...props}
