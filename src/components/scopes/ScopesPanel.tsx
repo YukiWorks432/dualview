@@ -25,6 +25,7 @@ import { useMediaStore } from '../../stores/mediaStore'
 import { useProjectStore } from '../../stores/projectStore'
 import { useTimelineStore } from '../../stores/timelineStore'
 import { ElevatedSurface } from '../ui'
+import { Select } from '../ui/select'
 
 interface ScopeCanvasProps {
   type: 'waveform' | 'vectorscope' | 'parade'
@@ -253,14 +254,16 @@ export function ScopesPanel() {
             {!isCollapsed && (
               <>
                 {/* Source selector */}
-                <select
+                <Select
+                  aria-label="Scope source"
                   value={scopesSettings.scopeSource}
-                  onChange={(e) => setScopeSource(e.target.value as 'a' | 'b' | 'comparison')}
-                  className="surface-control ui-radius-md border text-foreground text-xs px-2 py-1"
-                >
-                  <option value="a">Source A</option>
-                  <option value="b">Source B</option>
-                </select>
+                  onValueChange={(value) => setScopeSource(value as 'a' | 'b' | 'comparison')}
+                  options={[
+                    { value: 'a', label: 'Source A' },
+                    { value: 'b', label: 'Source B' },
+                  ]}
+                  className="surface-control h-auto w-auto ui-radius-md border text-foreground text-xs px-2 py-1"
+                />
 
                 {/* Settings toggle */}
                 <button
@@ -315,16 +318,18 @@ export function ScopesPanel() {
             {scopesSettings.showVectorscope && (
               <div className="flex items-center gap-2">
                 <span className="text-xs text-muted-foreground">V-Scope Zoom:</span>
-                <select
-                  value={scopesSettings.vectorscopeZoom}
-                  onChange={(e) => setVectorscopeZoom(Number(e.target.value))}
-                  className="surface-control ui-radius-md border text-foreground text-xs px-2 py-1"
-                >
-                  <option value="1">1x</option>
-                  <option value="2">2x</option>
-                  <option value="3">3x</option>
-                  <option value="4">4x</option>
-                </select>
+                <Select
+                  aria-label="V-Scope Zoom"
+                  value={String(scopesSettings.vectorscopeZoom)}
+                  onValueChange={(value) => setVectorscopeZoom(Number(value))}
+                  options={[
+                    { value: '1', label: '1x' },
+                    { value: '2', label: '2x' },
+                    { value: '3', label: '3x' },
+                    { value: '4', label: '4x' },
+                  ]}
+                  className="surface-control h-auto w-auto ui-radius-md border text-foreground text-xs px-2 py-1"
+                />
               </div>
             )}
 

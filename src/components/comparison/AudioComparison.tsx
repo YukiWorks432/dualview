@@ -53,6 +53,7 @@ import { useMediaStore } from '../../stores/mediaStore'
 import { usePlaybackStore } from '../../stores/playbackStore'
 import { useTimelineStore } from '../../stores/timelineStore'
 import { ElevatedSurface } from '../ui'
+import { Select } from '../ui/select'
 
 type AudioViewMode = 'spectrogram' | 'spectrum' | 'goniometer' | 'loudness' | 'waveform' | 'all'
 type ActiveAudio = 'both' | 'a' | 'b'
@@ -1181,19 +1182,18 @@ export function AudioComparison() {
         <div className="bg-surface border-b border-border px-4 py-3 flex items-center gap-6 text-xs shrink-0">
           <div className="flex items-center gap-2">
             <span className="text-muted-foreground">Loudness reference:</span>
-            <select
+            <Select
+              aria-label="Loudness reference"
               value={targetPlatform}
-              onChange={(e) => setTargetPlatform(e.target.value as keyof typeof LOUDNESS_TARGETS)}
-              className="surface-control ui-radius-md border px-2 py-1 text-xs"
-            >
-              {(Object.keys(LOUDNESS_TARGETS) as Array<keyof typeof LOUDNESS_TARGETS>).map(
-                (key) => (
-                  <option key={key} value={key}>
-                    {LOUDNESS_TARGET_LABELS[key]} ({LOUDNESS_TARGETS[key]} LUFS)
-                  </option>
-                ),
+              onValueChange={(value) => setTargetPlatform(value as keyof typeof LOUDNESS_TARGETS)}
+              options={(Object.keys(LOUDNESS_TARGETS) as Array<keyof typeof LOUDNESS_TARGETS>).map(
+                (key) => ({
+                  value: key,
+                  label: `${LOUDNESS_TARGET_LABELS[key]} (${LOUDNESS_TARGETS[key]} LUFS)`,
+                }),
               )}
-            </select>
+              className="surface-control h-auto w-auto ui-radius-md border px-2 py-1 text-xs"
+            />
           </div>
           <span className="text-muted-foreground">
             Integrated loudness and stereo metrics describe the decoded source file. Tail meters

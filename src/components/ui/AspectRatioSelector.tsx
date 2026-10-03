@@ -129,11 +129,11 @@ export function AspectRatioSelector({
                     return (
                       <button
                         key={preset}
+                        data-checked={isActive ? '' : undefined}
+                        aria-pressed={isActive}
                         className={cn(
                           'w-full flex items-center gap-2 px-3 py-2 text-xs text-left transition-colors',
-                          isActive
-                            ? 'bg-accent/10 text-accent hover:bg-accent/20'
-                            : 'surface-interactive',
+                          'surface-menu-item text-foreground',
                         )}
                         onClick={() => handlePresetSelect(preset)}
                       >
