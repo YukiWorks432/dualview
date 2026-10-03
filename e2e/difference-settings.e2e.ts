@@ -127,7 +127,8 @@ test('uses readable shared menus for orientation and every Quick Export selector
 
 test('preserves source and numeric scope settings through shared menus', async ({ page }) => {
   await page.goto('/')
-  await expect(page.getByTitle('Export (E)')).toBeVisible()
+  // Project initialization replaces view settings; wait until its commit is visible.
+  await expect(page.getByTitle('Save Project (Ctrl+S)')).toBeEnabled()
   await page.keyboard.press('g')
   const source = page.getByRole('button', { name: 'Scope source', exact: true })
   await source.click()
