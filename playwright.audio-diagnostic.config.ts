@@ -3,7 +3,7 @@ import { defineConfig, devices } from '@playwright/test'
 // This does not modify playwright.config.ts or the original audio-budget assertions.
 export default defineConfig({
   testDir: './e2e/diagnostics',
-  testMatch: 'audio-responsiveness.spec.ts',
+  testMatch: 'audio-responsiveness.diagnostic.ts',
   fullyParallel: false,
   workers: 1,
   retries: 0,

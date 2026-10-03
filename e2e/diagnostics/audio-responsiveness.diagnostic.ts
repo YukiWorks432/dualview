@@ -383,12 +383,10 @@ test('current UI: synthetic same-ID replacement rejects stale display and playba
     const observer = await import(/* @vite-ignore */ modulePath)
     const mediaPath = '/src/stores/mediaStore.ts'
     const { useMediaStore } = await import(/* @vite-ignore */ mediaPath)
-    const originalIds = useMediaStore
-      .getState()
-      .files.map((media: { id: string; file: File }) => ({
-        mediaId: media.id,
-        fileId: observer.objectId(media.file),
-      }))
+    const originalIds = useMediaStore.getState().files.map((media: { id: string; file: File }) => ({
+      mediaId: media.id,
+      fileId: observer.objectId(media.file),
+    }))
     const file = new File(
       [await (await fetch('/e2e/fixtures/audio-stereo.mov')).blob()],
       'replacement.mov',
@@ -406,16 +404,14 @@ test('current UI: synthetic same-ID replacement rejects stale display and playba
           replacementFileId,
         })
         useMediaStore.setState({
-          files: useMediaStore
-            .getState()
-            .files.map((media: Record<string, unknown>) => ({
-              ...media,
-              file,
-              name: file.name,
-              duration: 4,
-              playbackBackend: 'mediabunny',
-              videoCodec: 'prores',
-            })),
+          files: useMediaStore.getState().files.map((media: Record<string, unknown>) => ({
+            ...media,
+            file,
+            name: file.name,
+            duration: 4,
+            playbackBackend: 'mediabunny',
+            videoCodec: 'prores',
+          })),
         })
         observer.mark('synthetic:store-replacement-returned')
       }, 0)
