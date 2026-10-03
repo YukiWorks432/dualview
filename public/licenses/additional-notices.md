@@ -1,8 +1,8 @@
 # 追加の配布通知 / Additional distributed notices
 
-ブラウザーへ配布するコードのうち、同梱・コピー・別経路での読み込みによって通常の依存関係情報だけでは扱えないものを記載する。
-Viteの製品版ビルドは、バンドルした依存コードの通知を`licenses/third-party.md`へ別途生成する。
-以下のライセンス本文と著作権表示は原文を掲載する。
+ブラウザーへ配布するコードのうち、同梱・コピー・別経路での読み込みによって通常の依存関係情報だけでは扱えないものを記載します。
+Viteの製品版ビルドは、バンドルした依存コードの通知を`licenses/third-party.md`へ別途生成します。
+以下のライセンス本文と著作権表示は原文を掲載します。
 
 This page records notices for browser-distributed code that is vendored, copied, or loaded outside
 ordinary dependency metadata. Vite generates `licenses/third-party.md` separately for bundled
@@ -10,7 +10,7 @@ dependencies. License texts and copyright notices below are reproduced in their 
 
 ## gif.worker.js / gif.js-upgrade 0.2.1
 
-`public/gif.worker.js`は製品版へコピーされる。Worker内の表記は`gif.worker.js 0.2.1`で、原プロジェクトのgif.jsを参照している。
+`public/gif.worker.js`は製品版へコピーされます。Worker内の表記は`gif.worker.js 0.2.1`で、原プロジェクトのgif.jsを参照しています。
 
 The production build includes `public/gif.worker.js`. Its header identifies version `gif.worker.js 0.2.1`
 and refers to the original gif.js project.
@@ -41,7 +41,7 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 
 ## @mediabunny/prores 1.59.0
 
-ブラウザーアプリに同梱するProResデコーダー。配布版の対応ソースとライセンスは以下のとおり。
+ブラウザーアプリに同梱するProResデコーダーです。配布版の対応ソースとライセンスは以下のとおりです。
 
 This ProRes decoder is distributed with the browser application. The links below identify its
 corresponding source and license.
@@ -52,15 +52,15 @@ corresponding source and license.
   https://github.com/Vanilagy/mediabunny/tree/v1.59.0/packages/prores
 - MPL 2.0 license text: https://www.mozilla.org/MPL/2.0/
 
-ProResコンポーネントのMPL対象部分にはMPL-2.0が適用される。DualView本体のMIT Licenseは変わらず、
-各コンポーネントとファイルにはそれぞれのライセンスが適用される。
+ProResコンポーネントのMPL対象部分にはMPL-2.0が適用されます。DualView本体のMIT Licenseは変わらず、
+各コンポーネントとファイルにはそれぞれのライセンスが適用されます。
 
 MPL-covered ProRes code remains under MPL-2.0. DualView itself remains MIT-licensed; the applicable
 license is determined for each component and file.
 
 ## pixelmatch 7.2.0
 
-別ファイルとして出力する差分解析Workerは、フレームの画素比較に`pixelmatch`を同梱する。
+別ファイルとして出力する差分解析Workerは、フレームの画素比較に`pixelmatch`を同梱します。
 
 The separately emitted difference-analysis Workers include `pixelmatch` to compare frame pixels.
 
@@ -86,7 +86,7 @@ THIS SOFTWARE.
 ## Fluid Functionalism surface system
 
 Fluid Functionalismの`@fluid/elevated` shadcnレジストリ項目から、面のコンテキスト、クラスの参照、
-高さの基本部品を取り込んでいる。`src/components/ui/surface.ts`の互換層のコードはDualView側に帰属する。
+高さの基本部品を取り込んでいます。`src/components/ui/surface.ts`の互換層のコードはDualView側に帰属します。
 
 The surface context, class lookup, and elevation primitive are vendored from Fluid Functionalism's
 `@fluid/elevated` shadcn registry item. DualView owns the adapter in `src/components/ui/surface.ts`.
