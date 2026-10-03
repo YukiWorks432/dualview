@@ -230,7 +230,7 @@ export function TransitionExportPanel({
         <Select
           label="Quality"
           value={quality}
-          onChange={(event) => onQualityChange(event.target.value as TransitionExportQuality)}
+          onValueChange={(value) => onQualityChange(value as TransitionExportQuality)}
           options={[
             { value: 'low', label: 'Low (faster, smaller file)' },
             { value: 'medium', label: 'Medium (balanced)' },

@@ -27,6 +27,7 @@ import {
 } from '../../lib/webgl/presets'
 import { useProjectStore } from '../../stores/projectStore'
 import { ElevatedSurface } from '../ui'
+import { Select } from '../ui/select'
 
 interface WebGLPresetsPanelProps {
   isOpen: boolean
@@ -216,16 +217,18 @@ export function WebGLPresetsPanel({ isOpen, onClose }: WebGLPresetsPanelProps) {
             placeholder="Description (optional)"
             className="surface-control w-full ui-radius-md border px-3 py-2 text-sm text-text-primary mb-2"
           />
-          <select
+          <Select
+            aria-label="Preset category"
             value={newPresetCategory}
-            onChange={(e) => setNewPresetCategory(e.target.value as 'qa' | 'ai' | 'vfx' | 'custom')}
-            className="surface-control w-full ui-radius-md border px-3 py-2 text-sm text-text-primary mb-3"
-          >
-            <option value="custom">Custom</option>
-            <option value="qa">QA & Testing</option>
-            <option value="ai">AI Comparison</option>
-            <option value="vfx">VFX & Post</option>
-          </select>
+            onValueChange={(value) => setNewPresetCategory(value as 'qa' | 'ai' | 'vfx' | 'custom')}
+            options={[
+              { value: 'custom', label: 'Custom' },
+              { value: 'qa', label: 'QA & Testing' },
+              { value: 'ai', label: 'AI Comparison' },
+              { value: 'vfx', label: 'VFX & Post' },
+            ]}
+            className="surface-control h-auto w-full ui-radius-md border px-3 py-2 text-sm text-text-primary mb-3"
+          />
           <div className="flex gap-2">
             <button
               onClick={handleSavePreset}

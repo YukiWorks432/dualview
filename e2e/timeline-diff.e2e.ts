@@ -74,7 +74,8 @@ test('restarts automatic analysis after a comparison track is emptied and restor
   await page.getByRole('button', { name: 'Hide filmstrip' }).click()
 
   await uploadToTrack(page, 'Media A', 'long-quality-high.webm')
-  await page.getByLabel('Analysis resolution').selectOption('detailed')
+  await page.getByRole('button', { name: 'Analysis resolution', exact: true }).click()
+  await page.getByRole('menuitemradio', { name: 'Full', exact: true }).click()
   await uploadToTrack(page, 'Media B', 'long-quality-low.webm')
 
   await expect(page.getByRole('button', { name: 'Cancel' })).toBeVisible()
@@ -100,7 +101,8 @@ test('restarts manual analysis after a comparison track is emptied and restored'
   await page.getByRole('button', { name: 'Hide filmstrip' }).click()
 
   await uploadToTrack(page, 'Media A', 'long-quality-high.webm')
-  await page.getByLabel('Analysis resolution').selectOption('detailed')
+  await page.getByRole('button', { name: 'Analysis resolution', exact: true }).click()
+  await page.getByRole('menuitemradio', { name: 'Full', exact: true }).click()
   await uploadToTrack(page, 'Media B', 'long-quality-low.webm')
   await expect(page.getByText('Complete', { exact: true }).first()).toBeVisible({
     timeout: 60_000,
@@ -282,7 +284,8 @@ test('cancels a high-resolution analysis and keeps partial results', async ({ pa
   await page.getByRole('button', { name: 'Hide filmstrip' }).click()
 
   await uploadToTrack(page, 'Media A', 'long-quality-high.webm')
-  await page.getByLabel('Analysis resolution').selectOption('detailed')
+  await page.getByRole('button', { name: 'Analysis resolution', exact: true }).click()
+  await page.getByRole('menuitemradio', { name: 'Full', exact: true }).click()
   await uploadToTrack(page, 'Media B', 'long-quality-low.webm')
 
   const cancelButton = page.getByRole('button', { name: 'Cancel' })
@@ -324,7 +327,8 @@ test('marks results outdated when clip media is replaced during analysis', async
   await page.getByRole('button', { name: 'Hide filmstrip' }).click()
 
   await uploadToTrack(page, 'Media A', 'long-quality-high.webm')
-  await page.getByLabel('Analysis resolution').selectOption('detailed')
+  await page.getByRole('button', { name: 'Analysis resolution', exact: true }).click()
+  await page.getByRole('menuitemradio', { name: 'Full', exact: true }).click()
   await uploadToTrack(page, 'Media B', 'long-quality-low.webm')
   await waitForAnalysisProgress(page)
 
@@ -341,7 +345,8 @@ test('clears session results after switching projects during analysis', async ({
   await page.getByRole('button', { name: 'Hide filmstrip' }).click()
 
   await uploadToTrack(page, 'Media A', 'long-quality-high.webm')
-  await page.getByLabel('Analysis resolution').selectOption('detailed')
+  await page.getByRole('button', { name: 'Analysis resolution', exact: true }).click()
+  await page.getByRole('menuitemradio', { name: 'Full', exact: true }).click()
   await uploadToTrack(page, 'Media B', 'long-quality-low.webm')
   await waitForAnalysisProgress(page)
 
@@ -411,7 +416,7 @@ test('measures both resolutions on long high-resolution video and preserves lane
   for (let step = 0; step < 4; step++) await areaThreshold.press('ArrowLeft')
   await expect(areaThreshold).toHaveValue('0')
 
-  const resolution = page.getByLabel('Analysis resolution')
+  const resolution = page.getByRole('button', { name: 'Analysis resolution', exact: true })
   const analyze = page.getByRole('button', { name: 'Analyze', exact: true })
   const timings: Record<'standard' | 'detailed', number> = { standard: 0, detailed: 0 }
 
@@ -422,7 +427,8 @@ test('measures both resolutions on long high-resolution video and preserves lane
   })
   timings.standard = Date.now() - standardStartedAt
 
-  await resolution.selectOption('detailed')
+  await resolution.click()
+  await page.getByRole('menuitemradio', { name: 'Full', exact: true }).click()
   const detailedStartedAt = Date.now()
   await analyze.click()
   await expect(page.getByText('Complete', { exact: true }).first()).toBeVisible({

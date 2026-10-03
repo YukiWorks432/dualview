@@ -9,6 +9,7 @@ import { useState, useCallback, useRef, useEffect } from 'react'
 import { EASE_PRESETS, evaluateEaseCurve } from '../../lib/stitch/easeCurve'
 import { getEffectsByCategory, TRANSITION_EFFECTS } from '../../lib/stitch/transitions'
 import type { ClipTransition } from '../../types'
+import { Select } from '../ui/select'
 
 // Re-export types for convenience
 export type { ClipTransition } from '../../types'
@@ -332,22 +333,21 @@ export function TransitionEditor({
 
                 <div>
                   <label className="text-sm text-gray-400 mb-2 block">Ease Curve</label>
-                  <select
+                  <Select
+                    aria-label="Ease Curve"
                     value={localTransition.easeCurve.id}
-                    onChange={(e) => {
-                      const preset = EASE_PRESETS.find((p) => p.id === e.target.value)
+                    onValueChange={(value) => {
+                      const preset = EASE_PRESETS.find((p) => p.id === value)
                       if (preset) {
                         setLocalTransition((prev) => ({ ...prev, easeCurve: preset }))
                       }
                     }}
-                    className="w-full bg-[#1a1a1a] border border-gray-600 rounded px-3 py-2 text-sm text-white"
-                  >
-                    {EASE_PRESETS.map((preset) => (
-                      <option key={preset.id} value={preset.id}>
-                        {preset.name}
-                      </option>
-                    ))}
-                  </select>
+                    options={EASE_PRESETS.map((preset) => ({
+                      value: preset.id,
+                      label: preset.name,
+                    }))}
+                    className="h-auto w-full bg-[#1a1a1a] border border-gray-600 rounded px-3 py-2 text-sm text-white"
+                  />
                 </div>
               </div>
             </div>

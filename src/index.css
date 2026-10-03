@@ -272,6 +272,27 @@
   }
 }
 
+/* Fluid Functionalism layers a 6% hover wash over the 10% selected wash.
+ * Keep the combined state explicit so a selected row still brightens on hover.
+ */
+@utility surface-menu-item {
+  &[data-checked] {
+    background-color: var(--surface-active);
+  }
+
+  &:hover:not(:disabled):not([data-disabled]),
+  &:focus-visible,
+  &[data-highlighted]:not([data-disabled]) {
+    background-color: var(--surface-hover);
+  }
+
+  &[data-checked]:hover:not(:disabled):not([data-disabled]),
+  &[data-checked]:focus-visible,
+  &[data-checked][data-highlighted]:not([data-disabled]) {
+    background-color: rgba(var(--surface-overlay-rgb), 0.154);
+  }
+}
+
 @utility surface-slider {
   background-color: var(--surface-control);
   box-shadow: inset 0 0 0 1px var(--surface-control-border);

@@ -298,9 +298,9 @@ export function VideoExportPanel({
         <Select
           label="GIF Size"
           value={settings.gifPreset || 'medium'}
-          onChange={(event) =>
+          onValueChange={(value) =>
             onSettingsChange({
-              gifPreset: event.target.value as NonNullable<ExportSettings['gifPreset']>,
+              gifPreset: value as NonNullable<ExportSettings['gifPreset']>,
             })
           }
           options={[
@@ -316,8 +316,8 @@ export function VideoExportPanel({
         <Select
           label="Quality"
           value={settings.quality}
-          onChange={(event) =>
-            onSettingsChange({ quality: event.target.value as ExportSettings['quality'] })
+          onValueChange={(value) =>
+            onSettingsChange({ quality: value as ExportSettings['quality'] })
           }
           options={[
             { value: 'low', label: 'Low (faster, smaller file)' },

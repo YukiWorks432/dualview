@@ -3,7 +3,7 @@
  * Out-of-gamut color detection for different color spaces
  */
 
-import { AlertTriangle, X, ChevronDown } from 'lucide-react'
+import { AlertTriangle, X } from 'lucide-react'
 import { useEffect, useRef, useState, useCallback } from 'react'
 
 import {
@@ -12,7 +12,7 @@ import {
   type VideoFrameElement,
   type VisualFrameElement,
 } from '../../lib/media/frameSource'
-import { ElevatedSurface } from '../ui'
+import { ElevatedSurface, Select } from '../ui'
 
 interface GamutWarningOverlayProps {
   videoARef: React.RefObject<VideoFrameElement | null>
@@ -102,7 +102,6 @@ export function GamutWarningOverlay({
   const [targetGamut, setTargetGamut] = useState<string>('srgb')
   const [statsA, setStatsA] = useState<GamutStats | null>(null)
   const [statsB, setStatsB] = useState<GamutStats | null>(null)
-  const [showDropdown, setShowDropdown] = useState(false)
   const [overlayOpacity, setOverlayOpacity] = useState(0.7)
 
   // Convert sRGB to linear RGB
@@ -320,40 +319,15 @@ export function GamutWarningOverlay({
 
           {/* Gamut selector */}
           <div className="p-2 border-b border-border">
-            <label className="text-xs text-text-muted block mb-1">Target Gamut</label>
-            <div className="relative">
-              <button
-                onClick={() => setShowDropdown(!showDropdown)}
-                className="surface-control ui-radius-md w-full flex items-center justify-between px-2 py-1.5 border text-sm text-text-primary"
-              >
-                <span>{currentGamut.label}</span>
-                <ChevronDown
-                  className={`w-4 h-4 transition-transform ${showDropdown ? 'rotate-180' : ''}`}
-                />
-              </button>
-              {showDropdown && (
-                <ElevatedSurface asChild offset={1}>
-                  <div className="ui-radius-md absolute top-full left-0 right-0 mt-1 border border-transparent z-10">
-                    {Object.values(COLOR_SPACES).map((space) => (
-                      <button
-                        key={space.name}
-                        onClick={() => {
-                          setTargetGamut(space.name)
-                          setShowDropdown(false)
-                        }}
-                        className={`w-full ui-radius-sm px-3 py-2 text-left text-sm hover:bg-surface-hover ${
-                          targetGamut === space.name
-                            ? 'bg-accent/20 text-accent'
-                            : 'text-text-primary'
-                        }`}
-                      >
-                        {space.label}
-                      </button>
-                    ))}
-                  </div>
-                </ElevatedSurface>
-              )}
-            </div>
+            <Select
+              label="Target Gamut"
+              value={targetGamut}
+              onValueChange={setTargetGamut}
+              options={Object.values(COLOR_SPACES).map((space) => ({
+                value: space.name,
+                label: space.label,
+              }))}
+            />
           </div>
 
           {/* Opacity slider */}

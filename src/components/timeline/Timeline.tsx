@@ -858,7 +858,7 @@ export function Timeline() {
                       return (
                         <label
                           key={type}
-                          className="flex items-center gap-2 ui-radius-sm py-1 cursor-pointer hover:bg-surface-hover px-1"
+                          className="flex items-center gap-2 ui-radius-sm py-1 cursor-pointer surface-menu-item px-1"
                         >
                           <input
                             type="checkbox"
@@ -938,7 +938,7 @@ export function Timeline() {
                       addTrack('media')
                       setShowAddTrackMenu(false)
                     }}
-                    className="w-full flex items-center gap-2 ui-radius-sm px-3 py-2 text-sm text-foreground hover:bg-surface-hover"
+                    className="w-full flex items-center gap-2 ui-radius-sm px-3 py-2 text-sm text-foreground surface-menu-item"
                   >
                     <Video className="w-4 h-4 text-green-400" />
                     <span>Media Track</span>
@@ -949,7 +949,7 @@ export function Timeline() {
                       addTrack('audio')
                       setShowAddTrackMenu(false)
                     }}
-                    className="w-full flex items-center gap-2 ui-radius-sm px-3 py-2 text-sm text-foreground hover:bg-surface-hover"
+                    className="w-full flex items-center gap-2 ui-radius-sm px-3 py-2 text-sm text-foreground surface-menu-item"
                   >
                     <Music className="w-4 h-4 text-blue-400" />
                     <span>Audio Track</span>
@@ -960,7 +960,7 @@ export function Timeline() {
                       addTrack('text')
                       setShowAddTrackMenu(false)
                     }}
-                    className="w-full flex items-center gap-2 ui-radius-sm px-3 py-2 text-sm text-foreground hover:bg-surface-hover"
+                    className="w-full flex items-center gap-2 ui-radius-sm px-3 py-2 text-sm text-foreground surface-menu-item"
                   >
                     <Type className="w-4 h-4 text-purple-400" />
                     <span>Text Track</span>

@@ -17,6 +17,7 @@ function qualityTrigger(page: Page) {
 // and modern color() serialization are measured against the actual popup surface.
 async function expectReadableItems(menu: Locator) {
   const items = menu.getByRole('menuitemradio')
+  let selectedBackground = 0
   for (const item of await items.all()) {
     const contrast = await item.evaluate((element) => {
       const popup = element.closest('[role="menu"]')!
@@ -50,6 +51,7 @@ async function expectReadableItems(menu: Locator) {
       const indicator = element.querySelector('svg')
       return {
         opaquePopup,
+        background,
         label: ratio(getComputedStyle(element).color),
         indicator: indicator ? ratio(getComputedStyle(indicator).stroke) : null,
       }
@@ -57,11 +59,13 @@ async function expectReadableItems(menu: Locator) {
     expect(contrast.opaquePopup).toBe(true)
     expect(contrast.label, await item.innerText()).toBeGreaterThanOrEqual(4.5)
     if ((await item.getAttribute('aria-checked')) === 'true') {
+      selectedBackground = contrast.background
       await expect(item.locator('svg')).toBeVisible()
       expect(contrast.indicator).not.toBeNull()
       expect(contrast.indicator!).toBeGreaterThanOrEqual(3)
     }
   }
+  return selectedBackground
 }
 
 // The app currently has one dark palette; it must stay readable under either
@@ -78,9 +82,11 @@ for (const colorScheme of ['dark', 'light'] as const) {
       const checked = menu.getByRole('menuitemradio', { checked: true })
       const unchecked = menu.getByRole('menuitemradio', { checked: false }).first()
       await expect(checked).toHaveCount(1)
-      await expectReadableItems(menu)
+      await unchecked.hover()
+      const resting = await expectReadableItems(menu)
       await checked.hover()
-      await expectReadableItems(menu)
+      const hovered = await expectReadableItems(menu)
+      expect(hovered, 'Selected option must brighten on hover').toBeGreaterThan(resting)
       await unchecked.hover()
       await expectReadableItems(menu)
       await unchecked.click()
@@ -90,6 +96,74 @@ for (const colorScheme of ['dark', 'light'] as const) {
     }
   })
 }
+
+test('uses readable shared menus for orientation and every Quick Export selector', async ({
+  page,
+}) => {
+  await openSettings(page)
+  for (const [label, option] of [
+    ['Orientation', 'Horizontal (Top/Bottom)'],
+    ['Format', 'GIF'],
+    ['Quality', 'Low'],
+    ['Resolution', '4K (Ultra HD)'],
+  ]) {
+    const trigger = page.getByRole('button', { name: new RegExp(`^${label} `) })
+    await trigger.click()
+    const menu = page.getByRole('menu')
+    await expectReadableItems(menu)
+    await menu.getByRole('menuitemradio', { name: option, exact: true }).click()
+    await expect(trigger).toContainText(option)
+    await expect(trigger).toBeFocused()
+    await trigger.press('Enter')
+    await expect(menu.getByRole('menuitemradio', { name: option, exact: true })).toBeChecked()
+    await expectReadableItems(menu)
+    await page.keyboard.press('Escape')
+  }
+  await page.getByRole('button', { name: 'Settings', exact: true }).click()
+  await page.getByRole('button', { name: 'Settings', exact: true }).click()
+  await expect(page.getByRole('button', { name: /^Resolution / })).toContainText('4K (Ultra HD)')
+  await expect(page.locator('select')).toHaveCount(0)
+})
+
+test('preserves source and numeric scope settings through shared menus', async ({ page }) => {
+  await page.goto('/')
+  await expect(page.getByTitle('Export (E)')).toBeVisible()
+  await page.keyboard.press('g')
+  const source = page.getByRole('button', { name: 'Scope source', exact: true })
+  await source.click()
+  await page.getByRole('menuitemradio', { name: 'Source B', exact: true }).click()
+  await expect(source).toContainText('Source B')
+  await page.getByTitle('Settings', { exact: true }).click()
+  const zoom = page.getByRole('button', { name: 'V-Scope Zoom', exact: true })
+  await zoom.click()
+  await page.getByRole('menuitemradio', { name: '3x', exact: true }).click()
+  await expect(zoom).toContainText('3x')
+  await page.getByTitle('Close Scopes').click()
+  await page.keyboard.press('g')
+  await expect(source).toContainText('Source B')
+  await expect(zoom).toContainText('3x')
+})
+
+test('keeps an export-dialog select accessible above its modal surface', async ({ page }) => {
+  await page.goto('/')
+  await page.getByTitle('Export (E)').click()
+  const dialog = page.getByRole('dialog')
+  await dialog.getByRole('tab', { name: 'Image', exact: true }).click()
+  const format = dialog.getByRole('button', { name: /^Format / })
+  await format.click()
+  const menu = page.getByRole('menu')
+  await expectReadableItems(menu)
+  await menu.getByRole('menuitemradio', { name: 'JPEG (smaller file)', exact: true }).click()
+  await expect(format).toContainText('JPEG')
+  await expect(dialog.getByRole('slider', { name: /Quality/ })).toBeVisible()
+  await format.press('Enter')
+  await expect(
+    menu.getByRole('menuitemradio', { name: 'JPEG (smaller file)', exact: true }),
+  ).toBeChecked()
+  await page.keyboard.press('Escape')
+  await expect(dialog).toBeVisible()
+  await expect(format).toBeFocused()
+})
 
 test('selects filter and quality values, preserving them when reopened', async ({
   page,
