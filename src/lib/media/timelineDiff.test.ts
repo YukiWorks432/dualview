@@ -218,15 +218,19 @@ describe('highlighted interval grouping', () => {
       }),
       score({ startTime: 1.5, endTime: 2, sampleTime: 1.75, differenceRate: 0.5 }),
     ]
-    const firstBatch = frames.slice(0, 2)
+    const firstBatch = frames.slice(0, 1)
     const firstSegments = buildTimelineDiffSegments(firstBatch, 0.1)
     const appendedSegments = appendTimelineDiffSegments(
       firstSegments,
       firstBatch,
-      frames.slice(2),
+      frames.slice(1),
       0.1,
     )
 
+    expect(appendedSegments).toEqual([
+      { startTime: 0, endTime: 1, maxDifferenceRate: 0.4, maxDifferenceTime: 0.75 },
+      { startTime: 1.5, endTime: 2, maxDifferenceRate: 0.5, maxDifferenceTime: 1.75 },
+    ])
     expect(appendedSegments).toEqual(buildTimelineDiffSegments(frames, 0.1))
   })
 })

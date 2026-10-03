@@ -1,4 +1,5 @@
 import { Menu as MenuPrimitive } from '@base-ui/react/menu'
+import { Check } from 'lucide-react'
 import * as React from 'react'
 
 import { cn } from '../../lib/utils'
@@ -7,6 +8,7 @@ import { ElevatedSurface } from './surface'
 const DropdownMenu = MenuPrimitive.Root
 const DropdownMenuTrigger = MenuPrimitive.Trigger
 const DropdownMenuGroup = MenuPrimitive.Group
+const DropdownMenuRadioGroup = MenuPrimitive.RadioGroup
 
 type PositionerProps = React.ComponentProps<typeof MenuPrimitive.Positioner>
 
@@ -55,6 +57,27 @@ function DropdownMenuItem({
   )
 }
 
+function DropdownMenuRadioItem({
+  className,
+  children,
+  ...props
+}: React.ComponentProps<typeof MenuPrimitive.RadioItem>) {
+  return (
+    <MenuPrimitive.RadioItem
+      className={cn(
+        'surface-highlighted relative mx-1 flex cursor-default select-none items-center gap-2 ui-radius-sm py-1.5 pl-7 pr-2 text-sm outline-none data-[checked]:bg-accent/10 data-[checked]:text-accent data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+        className,
+      )}
+      {...props}
+    >
+      <MenuPrimitive.RadioItemIndicator className="absolute left-2 flex items-center">
+        <Check className="h-3.5 w-3.5" aria-hidden="true" />
+      </MenuPrimitive.RadioItemIndicator>
+      {children}
+    </MenuPrimitive.RadioItem>
+  )
+}
+
 function DropdownMenuLabel({
   className,
   ...props
@@ -84,6 +107,8 @@ export {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuShortcut,
   DropdownMenuTrigger,
