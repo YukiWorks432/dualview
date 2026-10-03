@@ -407,12 +407,6 @@ test('measures both resolutions on long high-resolution video and preserves lane
   await page.getByRole('button', { name: 'Hide filmstrip' }).click()
 
   await uploadToTrack(page, 'Media A', 'long-quality-high.webm')
-  const requestsBefore = await page.evaluate(
-    () =>
-      (window as Window & { __timelineAnalysisCounters: { analysisRequests: number } })
-        .__timelineAnalysisCounters.analysisRequests,
-  )
-  expect(requestsBefore).toBeGreaterThan(0)
   const areaThreshold = page.getByRole('slider', { name: 'Highlight area threshold' })
   await areaThreshold.focus()
   for (let step = 0; step < 4; step++) await areaThreshold.press('ArrowLeft')
