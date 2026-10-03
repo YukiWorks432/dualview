@@ -29,3 +29,6 @@ test-results/
 *.njsproj
 *.sln
 *.sw?
+
+# Reproducible social-card intermediates
+/tmp/pdfs/
