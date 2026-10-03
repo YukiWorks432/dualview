@@ -31,6 +31,52 @@ async function waitForAnalysisProgress(page: import('@playwright/test').Page) {
   return progress
 }
 
+async function sampleFrameDifferenceRates(
+  lane: import('@playwright/test').Locator,
+  duration: number,
+  frameCount: number,
+) {
+  const laneWidth = await lane.evaluate((canvas) =>
+    Number.parseFloat(canvas.parentElement?.style.width ?? '0'),
+  )
+  const titles: string[] = []
+  for (let index = 0; index < frameCount; index++) {
+    await lane.evaluate(
+      (canvas, { index, frameCount, laneWidth }) => {
+        const rect = canvas.getBoundingClientRect()
+        const clientX = rect.left + (index + 0.5) * (laneWidth / frameCount)
+        canvas.dispatchEvent(
+          new MouseEvent('mousemove', { bubbles: true, clientX, clientY: rect.top + 16 }),
+        )
+      },
+      { index, frameCount, laneWidth },
+    )
+    // Wait for the requested interval, not just a generic or previous frame's title.
+    const sampleTime = ((index + 0.5) * duration) / frameCount
+    await expect
+      .poll(async () => {
+        const title = await lane.getAttribute('title')
+        const interval = /^(?<start>[\d.]+)–(?<end>[\d.]+)s.*Frame difference: [\d.]+%/.exec(
+          title ?? '',
+        )
+        return (
+          interval !== null &&
+          Number(interval.groups!.start) <= sampleTime &&
+          sampleTime < Number(interval.groups!.end)
+        )
+      })
+      .toBe(true)
+    titles.push((await lane.getAttribute('title'))!)
+  }
+  expect(titles).toHaveLength(frameCount)
+  expect(new Set(titles).size).toBe(frameCount)
+  return titles.map((title) => {
+    const match = /Frame difference: ([\d.]+)%/.exec(title)
+    expect(match, title).not.toBeNull()
+    return Number(match?.[1] ?? 0)
+  })
+}
+
 test('compares uploaded A/B video frames without moving the shared playhead during analysis', async ({
   page,
 }) => {
@@ -160,46 +206,8 @@ test('calibrates compression-only differences on the default thresholds', async 
     .locator('video[data-track="a"]')
     .first()
     .evaluate((video: HTMLVideoElement) => video.duration)
-  const laneWidth = await lane.evaluate((canvas) =>
-    Number.parseFloat(canvas.parentElement?.style.width ?? '0'),
-  )
   const frameCount = 45
-  const titles: string[] = []
-  for (let index = 0; index < frameCount; index++) {
-    await lane.evaluate(
-      (canvas, { index, frameCount, laneWidth }) => {
-        const rect = canvas.getBoundingClientRect()
-        const clientX = rect.left + (index + 0.5) * (laneWidth / frameCount)
-        canvas.dispatchEvent(
-          new MouseEvent('mousemove', { bubbles: true, clientX, clientY: rect.top + 16 }),
-        )
-      },
-      { index, frameCount, laneWidth },
-    )
-    // Wait for the requested interval, not just a generic or previous frame's title.
-    const sampleTime = ((index + 0.5) * duration) / frameCount
-    await expect
-      .poll(async () => {
-        const title = await lane.getAttribute('title')
-        const interval = /^(?<start>[\d.]+)–(?<end>[\d.]+)s.*Frame difference: [\d.]+%/.exec(
-          title ?? '',
-        )
-        return (
-          interval !== null &&
-          Number(interval.groups!.start) <= sampleTime &&
-          sampleTime < Number(interval.groups!.end)
-        )
-      })
-      .toBe(true)
-    titles.push((await lane.getAttribute('title'))!)
-  }
-  expect(titles).toHaveLength(frameCount)
-  expect(new Set(titles).size).toBe(frameCount)
-  const measuredRates = titles.map((title) => {
-    const match = /Frame difference: ([\d.]+)%/.exec(title)
-    expect(match, title).not.toBeNull()
-    return Number(match?.[1] ?? 0)
-  })
+  const measuredRates = await sampleFrameDifferenceRates(lane, duration, frameCount)
   const peakRate = Math.max(...measuredRates)
   console.log(
     `Compression calibration peak across ${frameCount} source frames: ${peakRate.toFixed(2)}%`,
@@ -209,6 +217,23 @@ test('calibrates compression-only differences on the default thresholds', async 
 })
 
 test('recomputes compression-only highlights when the area threshold changes', async ({ page }) => {
+  await page.addInitScript(() => {
+    const counters = { analysisRequests: 0 }
+    Object.defineProperty(window, '__timelineAnalysisCounters', { value: counters })
+    const workers = new WeakSet<Worker>()
+    window.Worker = new Proxy(window.Worker, {
+      construct(target, args, newTarget) {
+        const worker = Reflect.construct(target, args, newTarget) as Worker
+        if (String(args[0]).includes('timelineDiff.worker')) workers.add(worker)
+        return worker
+      },
+    })
+    const original = Worker.prototype.postMessage
+    Worker.prototype.postMessage = function (message, ...transfer) {
+      if (workers.has(this) && message?.type === 'analyze') counters.analysisRequests++
+      return Reflect.apply(original, this, [message, ...transfer])
+    }
+  })
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.goto('/')
   await page.getByRole('button', { name: 'Hide filmstrip' }).click()
@@ -218,62 +243,38 @@ test('recomputes compression-only highlights when the area threshold changes', a
   await expect(page.getByText('Complete', { exact: true }).first()).toBeVisible({ timeout: 60_000 })
 
   const lane = page.getByRole('img', { name: /Read-only A\/B difference lane/ })
-  const laneWidth = await lane.evaluate((canvas) =>
-    Number.parseFloat(canvas.parentElement?.style.width ?? '0'),
-  )
   const duration = await page
     .locator('video[data-track="a"]')
     .first()
     .evaluate((video: HTMLVideoElement) => video.duration)
-  const frameCount = 12
-  const titles: string[] = []
-  for (let index = 0; index < frameCount; index++) {
-    await lane.evaluate(
-      (canvas, { index, frameCount, laneWidth }) => {
-        const rect = canvas.getBoundingClientRect()
-        const clientX = rect.left + (index + 0.5) * (laneWidth / frameCount)
-        canvas.dispatchEvent(
-          new MouseEvent('mousemove', { bubbles: true, clientX, clientY: rect.top + 16 }),
-        )
-      },
-      { index, frameCount, laneWidth },
-    )
-    // React may commit the hover result after more than one animation frame.
-    const sampleTime = ((index + 0.5) * duration) / frameCount
-    await expect
-      .poll(async () => {
-        const title = await lane.getAttribute('title')
-        const interval = /^(?<start>[\d.]+)–(?<end>[\d.]+)s.*Frame difference: [\d.]+%/.exec(
-          title ?? '',
-        )
-        return (
-          interval !== null &&
-          Number(interval.groups!.start) <= sampleTime &&
-          sampleTime < Number(interval.groups!.end)
-        )
-      })
-      .toBe(true)
-    titles.push((await lane.getAttribute('title'))!)
-  }
-  expect(titles).toHaveLength(frameCount)
-  expect(new Set(titles).size).toBe(frameCount)
-  const measuredRates = titles.map((title) => {
-    const match = /Frame difference: ([\d.]+)%/.exec(title)
-    expect(match, title).not.toBeNull()
-    return Number(match?.[1] ?? 0)
-  })
+  const measuredRates = await sampleFrameDifferenceRates(lane, duration, 12)
   const peakRate = Math.max(...measuredRates)
   console.log(`Generated-pattern compression calibration peak: ${peakRate.toFixed(2)}%`)
   expect(peakRate).toBeGreaterThan(2)
   const nextInterval = page.getByRole('button', { name: 'Next highlighted interval' })
   await expect(nextInterval).toBeEnabled()
 
+  const requestsBefore = await page.evaluate(
+    () =>
+      (window as Window & { __timelineAnalysisCounters: { analysisRequests: number } })
+        .__timelineAnalysisCounters.analysisRequests,
+  )
+  expect(requestsBefore).toBeGreaterThan(0)
   const areaThreshold = page.getByRole('slider', { name: 'Highlight area threshold' })
   await areaThreshold.focus()
   for (let step = 0; step < 6; step++) await areaThreshold.press('ArrowRight')
   await expect(areaThreshold).toHaveValue('0.05')
   await expect(page.getByText('Complete', { exact: true }).first()).toBeVisible()
   await expect(nextInterval).toBeDisabled()
+  // Wait beyond the automatic-analysis debounce; a restart must not hide behind Complete.
+  await page.waitForTimeout(500)
+  expect(
+    await page.evaluate(
+      () =>
+        (window as Window & { __timelineAnalysisCounters: { analysisRequests: number } })
+          .__timelineAnalysisCounters.analysisRequests,
+    ),
+  ).toBe(requestsBefore)
 })
 
 test('cancels a high-resolution analysis and keeps partial results', async ({ page }) => {

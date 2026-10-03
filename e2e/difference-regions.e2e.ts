@@ -216,6 +216,8 @@ test('shows difference regions only while playback is paused', async ({ page }) 
   await expect(page.getByTitle('Toggle playback (Space)')).toContainText('Play')
   await expect.poll(() => videoA.evaluate((video: HTMLVideoElement) => video.paused)).toBe(true)
   await expect(overlay.first()).toBeVisible({ timeout: 10_000 })
+  await expect(page.getByText(/highlighted regions on the current frame/)).toBeVisible()
+  await expect(page.getByText('Playback preview')).toHaveCount(0)
   await page.keyboard.press('Escape')
 
   await page.getByTitle('Go to start (Home)').click()
@@ -316,4 +318,17 @@ test('shows difference regions only while playback is paused', async ({ page }) 
   await page.mouse.move(centerX + 35, centerY + 20, { steps: 3 })
   await page.mouse.up()
   expect(await overlaysStayAlignedWithSources(page)).toBe(true)
+})
+
+// The displayed message must come from real analysis, not a test-supplied runtime object.
+test('shows the current-frame result for identical paused sources', async ({ page }) => {
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Hide filmstrip' }).click()
+  await uploadToTrack(page, 'Media A', 'difference-a.webm')
+  await uploadToTrack(page, 'Media B', 'difference-a.webm')
+  await page.getByRole('button', { name: 'Settings', exact: true }).click()
+  await expect(
+    page.getByText('No highlighted differences on the current frame', { exact: true }),
+  ).toBeVisible({ timeout: 30_000 })
+  await expect(page.getByText('Playback preview')).toHaveCount(0)
 })
