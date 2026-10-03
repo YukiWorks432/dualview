@@ -6,7 +6,8 @@ import {
   type DifferenceNoiseFilter,
   type DifferenceRuntimeState,
 } from '../../stores/differenceHighlightStore'
-import { ElevatedSurface, Select, Slider } from '../ui'
+import { ElevatedSurface, Slider } from '../ui'
+import { DropdownSelect } from '../ui/dropdown-select'
 
 export function DifferenceRuntimeMessage({ runtime }: { runtime: DifferenceRuntimeState }) {
   return (
@@ -67,10 +68,10 @@ export function DifferenceHighlightSettings() {
             Higher sensitivity includes smaller pixel differences.
           </p>
 
-          <Select
+          <DropdownSelect
             label="Small-region filter"
             value={noiseFilter}
-            onChange={(event) => setNoiseFilter(event.target.value as DifferenceNoiseFilter)}
+            onValueChange={(value: DifferenceNoiseFilter) => setNoiseFilter(value)}
             options={[
               { value: 'off', label: 'Off' },
               { value: 'low', label: 'Low' },
@@ -79,12 +80,10 @@ export function DifferenceHighlightSettings() {
             ]}
           />
 
-          <Select
+          <DropdownSelect
             label="Analysis quality"
             value={analysisQuality}
-            onChange={(event) =>
-              setAnalysisQuality(event.target.value as DifferenceAnalysisQuality)
-            }
+            onValueChange={(value: DifferenceAnalysisQuality) => setAnalysisQuality(value)}
             options={[
               { value: 'auto', label: 'Auto (up to 1920 px)' },
               { value: 'full', label: 'Full common resolution' },
