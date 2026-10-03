@@ -1,3 +1,5 @@
+import { createAudioTaskYield, throwIfAudioAborted } from './audioTask'
+
 /**
  * Professional Audio Analysis Library
  *
@@ -83,52 +85,34 @@ const K_WEIGHT_HIGH_PASS = {
   a2: 0.99007225036621,
 }
 
-/**
- * Apply biquad filter to audio data
- */
-function applyBiquadFilter(
-  data: Float32Array,
-  coeffs: { b0: number; b1: number; b2: number; a1: number; a2: number },
-): Float32Array {
-  const output = new Float32Array(data.length)
-  let x1 = 0,
-    x2 = 0,
-    y1 = 0,
-    y2 = 0
-
-  for (let i = 0; i < data.length; i++) {
-    const x0 = data[i]
-    const y0 = coeffs.b0 * x0 + coeffs.b1 * x1 + coeffs.b2 * x2 - coeffs.a1 * y1 - coeffs.a2 * y2
-
-    output[i] = y0
-    x2 = x1
-    x1 = x0
-    y2 = y1
-    y1 = y0
-  }
-
-  return output
+interface BiquadState {
+  x1: number
+  x2: number
+  y1: number
+  y2: number
 }
 
-/**
- * Apply K-weighting filter for LUFS measurement
- */
-function applyKWeighting(data: Float32Array): Float32Array {
-  // Stage 1: High shelf filter
-  const stage1 = applyBiquadFilter(data, K_WEIGHT_HIGH_SHELF)
-  // Stage 2: High pass filter
-  return applyBiquadFilter(stage1, K_WEIGHT_HIGH_PASS)
+function createBiquadState(): BiquadState {
+  return { x1: 0, x2: 0, y1: 0, y2: 0 }
 }
 
-/**
- * Calculate mean square of audio data
- */
-function calculateMeanSquare(data: Float32Array): number {
-  let sum = 0
-  for (let i = 0; i < data.length; i++) {
-    sum += data[i] * data[i]
-  }
-  return sum / data.length
+function filterSample(
+  value: number,
+  state: BiquadState,
+  coeffs: typeof K_WEIGHT_HIGH_SHELF,
+): number {
+  const filtered =
+    coeffs.b0 * value +
+    coeffs.b1 * state.x1 +
+    coeffs.b2 * state.x2 -
+    coeffs.a1 * state.y1 -
+    coeffs.a2 * state.y2
+  state.x2 = state.x1
+  state.x1 = value
+  state.y2 = state.y1
+  state.y1 = filtered
+  // 元の各段のFloat32Arrayへの書込み位置だけで丸める。帰還状態は倍精度を保つ。
+  return Math.fround(filtered)
 }
 
 /**
@@ -143,76 +127,6 @@ function linearToDb(value: number): number {
  */
 function meanSquareToLUFS(meanSquare: number): number {
   return meanSquare > 0 ? -0.691 + 10 * Math.log10(meanSquare) : -Infinity
-}
-
-/**
- * Calculate phase correlation between two channels
- */
-function calculateCorrelation(left: Float32Array, right: Float32Array): number {
-  const length = Math.min(left.length, right.length)
-
-  let sumLR = 0
-  let sumLL = 0
-  let sumRR = 0
-
-  for (let i = 0; i < length; i++) {
-    sumLR += left[i] * right[i]
-    sumLL += left[i] * left[i]
-    sumRR += right[i] * right[i]
-  }
-
-  const denominator = Math.sqrt(sumLL * sumRR)
-  return denominator > 0 ? sumLR / denominator : 0
-}
-
-/**
- * Calculate stereo width using mid/side analysis
- */
-function calculateStereoWidth(
-  left: Float32Array,
-  right: Float32Array,
-): {
-  width: number
-  balance: number
-  midLevel: number
-  sideLevel: number
-} {
-  const length = Math.min(left.length, right.length)
-
-  let midSum = 0
-  let sideSum = 0
-  let leftSum = 0
-  let rightSum = 0
-
-  for (let i = 0; i < length; i++) {
-    const mid = (left[i] + right[i]) / 2
-    const side = (left[i] - right[i]) / 2
-
-    midSum += mid * mid
-    sideSum += side * side
-    leftSum += left[i] * left[i]
-    rightSum += right[i] * right[i]
-  }
-
-  const midRms = Math.sqrt(midSum / length)
-  const sideRms = Math.sqrt(sideSum / length)
-  const leftRms = Math.sqrt(leftSum / length)
-  const rightRms = Math.sqrt(rightSum / length)
-
-  // Width: ratio of side to total energy
-  const totalEnergy = midRms + sideRms
-  const width = totalEnergy > 0 ? sideRms / totalEnergy : 0
-
-  // Balance: difference between left and right levels
-  const maxLR = Math.max(leftRms, rightRms)
-  const balance = maxLR > 0 ? (rightRms - leftRms) / maxLR : 0
-
-  return {
-    width,
-    balance,
-    midLevel: linearToDb(midRms),
-    sideLevel: linearToDb(sideRms),
-  }
 }
 
 /**
@@ -246,175 +160,203 @@ export function generateWaveformPeaks(
   return peaks
 }
 
-/**
- * Calculate LUFS with different time windows
- */
-function calculateLUFS(audioBuffer: AudioBuffer): {
-  momentary: number
-  shortTerm: number
-  integrated: number
-  loudnessRange: number
-} {
-  const sampleRate = audioBuffer.sampleRate
-  const momentaryWindow = Math.floor(0.4 * sampleRate) // 400ms
-  const shortTermWindow = Math.floor(3 * sampleRate) // 3s
+function loudnessWindowSizes(sampleRate: number) {
+  const blockSize = Math.max(1, Math.floor(0.4 * sampleRate))
+  return { blockSize, hopSize: Math.max(1, Math.floor(blockSize * 0.25)) }
+}
 
-  // Get all channels and apply K-weighting
-  const channels: Float32Array[] = []
-  for (let c = 0; c < audioBuffer.numberOfChannels; c++) {
-    channels.push(applyKWeighting(audioBuffer.getChannelData(c)))
-  }
-
-  // Sum the squared values across all channels (for stereo, each channel has weight 1.0)
-  const length = channels[0].length
-  const summedSquares = new Float32Array(length)
-
-  for (let i = 0; i < length; i++) {
-    let sum = 0
-    for (const channel of channels) {
-      sum += channel[i] * channel[i]
-    }
-    summedSquares[i] = sum
-  }
-
-  // Calculate gated loudness values for LRA
-  const blockSize = Math.floor(0.4 * sampleRate) // 400ms blocks with 75% overlap
-  const hopSize = Math.floor(blockSize * 0.25)
-  const blockLoudness: number[] = []
-
-  for (let start = 0; start + blockSize <= length; start += hopSize) {
-    let blockSum = 0
-    for (let i = start; i < start + blockSize; i++) {
-      blockSum += summedSquares[i]
-    }
-    const blockMean = blockSum / blockSize
-    const lufs = meanSquareToLUFS(blockMean)
-    if (lufs > -70) {
-      // Absolute gate
-      blockLoudness.push(lufs)
-    }
-  }
-
-  // Integrated loudness (with relative gating)
-  let integrated = -Infinity
-  if (blockLoudness.length > 0) {
-    const ungatedMean =
-      blockLoudness.reduce((a, b) => a + Math.pow(10, b / 10), 0) / blockLoudness.length
-    const ungatedLUFS = 10 * Math.log10(ungatedMean)
-    const relativeThreshold = ungatedLUFS - 10
-
-    const gatedBlocks = blockLoudness.filter((l) => l > relativeThreshold)
-    if (gatedBlocks.length > 0) {
-      const gatedMean =
-        gatedBlocks.reduce((a, b) => a + Math.pow(10, b / 10), 0) / gatedBlocks.length
-      integrated = 10 * Math.log10(gatedMean)
-    }
-  }
-
-  // Momentary (last 400ms or average if short)
-  const momentarySamples = Math.min(momentaryWindow, length)
-  let momentarySum = 0
-  for (let i = length - momentarySamples; i < length; i++) {
-    momentarySum += summedSquares[i]
-  }
-  const momentary = meanSquareToLUFS(momentarySum / momentarySamples)
-
-  // Short-term (last 3s or average if short)
-  const shortTermSamples = Math.min(shortTermWindow, length)
-  let shortTermSum = 0
-  for (let i = length - shortTermSamples; i < length; i++) {
-    shortTermSum += summedSquares[i]
-  }
-  const shortTerm = meanSquareToLUFS(shortTermSum / shortTermSamples)
-
-  // Loudness Range (LRA)
-  let loudnessRange = 0
-  if (blockLoudness.length > 10) {
-    const sorted = [...blockLoudness].sort((a, b) => a - b)
-    const low = sorted[Math.floor(sorted.length * 0.1)] // 10th percentile
-    const high = sorted[Math.floor(sorted.length * 0.95)] // 95th percentile
-    loudnessRange = high - low
-  }
-
-  return { momentary, shortTerm, integrated, loudnessRange }
+// PCMの全長ではなく、重複窓の結果だけを保持する。LRAの並べ替えも同じ領域を使う。
+export function estimateAudioAnalysisBytes(
+  length: number,
+  sampleRate: number,
+  channels: number,
+): number {
+  const { blockSize, hopSize } = loudnessWindowSizes(sampleRate)
+  const blocks = Math.max(0, Math.floor((length - blockSize) / hopSize) + 1)
+  return blocks * Float64Array.BYTES_PER_ELEMENT + channels * 8 * 8 + 500 * 4 + 256
 }
 
 /**
- * Analyze audio buffer and return comprehensive metrics
+ * Analyze audio buffer and return comprehensive metrics.
+ * 取消を確認しながら処理を譲り、全長のフィルター済みPCMや二乗和配列は保持しない。
  */
-export async function analyzeAudio(audioBuffer: AudioBuffer): Promise<AudioAnalysisResult> {
+export async function analyzeAudio(
+  audioBuffer: AudioBuffer,
+  signal?: AbortSignal,
+): Promise<AudioAnalysisResult> {
+  throwIfAudioAborted(signal)
   const sampleRate = audioBuffer.sampleRate
   const channels = audioBuffer.numberOfChannels
   const duration = audioBuffer.duration
-
-  // Get channel data
-  const leftChannel = audioBuffer.getChannelData(0)
-  const rightChannel = channels > 1 ? audioBuffer.getChannelData(1) : leftChannel
-
-  // Calculate LUFS
-  const lufs = calculateLUFS(audioBuffer)
-
-  // Calculate peaks - use loop instead of spread operator to avoid stack overflow
-  let samplePeak = 0
-  for (let i = 0; i < leftChannel.length; i++) {
-    const absLeft = Math.abs(leftChannel[i])
-    if (absLeft > samplePeak) samplePeak = absLeft
-  }
-  for (let i = 0; i < rightChannel.length; i++) {
-    const absRight = Math.abs(rightChannel[i])
-    if (absRight > samplePeak) samplePeak = absRight
-  }
-  // A standards-compliant true-peak estimator requires a proper oversampling filter.
-  // Until that is implemented, keep the legacy field equal to sample peak and do not label it dBTP.
-  const truePeak = samplePeak
-
-  // Calculate RMS
-  const leftRms = Math.sqrt(calculateMeanSquare(leftChannel))
-  const rightRms = Math.sqrt(calculateMeanSquare(rightChannel))
-  const rms = Math.sqrt((leftRms * leftRms + rightRms * rightRms) / 2)
-
-  // Calculate stereo metrics
-  const correlation = calculateCorrelation(leftChannel, rightChannel)
-  const stereoWidth = calculateStereoWidth(leftChannel, rightChannel)
-
-  // Calculate crest factor
-  const crestFactor = linearToDb(samplePeak) - linearToDb(rms)
-
-  // Preserve energy from every channel so anti-phase stereo material does not disappear.
-  const waveformChannels = Array.from({ length: channels }, (_, index) =>
-    audioBuffer.getChannelData(index),
+  const length = audioBuffer.length
+  const channelData = Array.from({ length: channels }, (_, channel) =>
+    audioBuffer.getChannelData(channel),
   )
-  const waveformPeaks = generateWaveformPeaks(waveformChannels, 500)
+  const leftChannel = channelData[0]
+  const rightChannel = channels > 1 ? channelData[1] : leftChannel
+  const filters = channelData.map(() => ({
+    shelf: createBiquadState(),
+    highPass: createBiquadState(),
+  }))
+  const yieldTask = createAudioTaskYield(signal)
+  const { blockSize, hopSize } = loudnessWindowSizes(sampleRate)
+  const blockCount = Math.max(0, Math.floor((length - blockSize) / hopSize) + 1)
+  const blockLoudness = new Float64Array(blockCount)
+  const overlap = Math.ceil(blockSize / hopSize)
+  const blockSums = new Float64Array(overlap)
+  const blockEnds = new Float64Array(overlap)
+  let firstBlock = 0,
+    activeBlocks = 0,
+    nextBlockStart = 0,
+    acceptedBlocks = 0
+  const momentarySamples = Math.min(Math.floor(0.4 * sampleRate), length)
+  const shortTermSamples = Math.min(Math.floor(3 * sampleRate), length)
+  let momentarySum = 0,
+    shortTermSum = 0
+  let samplePeak = 0,
+    leftSum = 0,
+    rightSum = 0,
+    sumLR = 0,
+    midSum = 0,
+    sideSum = 0
+  const waveformPeaks = new Float32Array(500)
+  let peakIndex = 0
+  let peakEnd = Math.floor(length / waveformPeaks.length)
 
-  // Spectral analysis (placeholder - will be done in real-time by WebGL)
-  const spectral: SpectralData = {
-    frequencies: new Float32Array(0),
-    magnitudes: new Float32Array(0),
-    phases: new Float32Array(0),
-    binCount: 0,
-    sampleRate,
-    fftSize: 2048,
+  for (let start = 0; start < length; start += 1024) {
+    const end = Math.min(length, start + 1024)
+    for (let index = start; index < end; index++) {
+      let squared = 0
+      let peak = 0
+      for (let channel = 0; channel < channels; channel++) {
+        const value = channelData[channel][index]
+        const state = filters[channel]
+        const weighted = filterSample(
+          filterSample(value, state.shelf, K_WEIGHT_HIGH_SHELF),
+          state.highPass,
+          K_WEIGHT_HIGH_PASS,
+        )
+        squared += weighted * weighted
+        peak = Math.max(peak, Math.abs(value))
+      }
+      // 元の全チャンネル二乗和配列もFloat32だった。
+      squared = Math.fround(squared)
+      if (index === nextBlockStart && index + blockSize <= length) {
+        const slot = (firstBlock + activeBlocks) % overlap
+        blockSums[slot] = 0
+        blockEnds[slot] = index + blockSize
+        activeBlocks++
+        nextBlockStart += hopSize
+      }
+      for (let block = 0; block < activeBlocks; block++) {
+        blockSums[(firstBlock + block) % overlap] += squared
+      }
+      if (activeBlocks > 0 && index + 1 === blockEnds[firstBlock]) {
+        const lufs = meanSquareToLUFS(blockSums[firstBlock] / blockSize)
+        if (lufs > -70) blockLoudness[acceptedBlocks++] = lufs
+        firstBlock = (firstBlock + 1) % overlap
+        activeBlocks--
+      }
+      if (index >= length - momentarySamples) momentarySum += squared
+      if (index >= length - shortTermSamples) shortTermSum += squared
+
+      const left = leftChannel[index],
+        right = rightChannel[index]
+      const absLeft = Math.abs(left),
+        absRight = Math.abs(right)
+      if (absLeft > samplePeak) samplePeak = absLeft
+      if (absRight > samplePeak) samplePeak = absRight
+      leftSum += left * left
+      rightSum += right * right
+      sumLR += left * right
+      const mid = (left + right) / 2,
+        side = (left - right) / 2
+      midSum += mid * mid
+      sideSum += side * side
+      if (length >= waveformPeaks.length) {
+        if (index === peakEnd) {
+          peakIndex++
+          peakEnd = Math.floor(((peakIndex + 1) * length) / waveformPeaks.length)
+        }
+        waveformPeaks[peakIndex] = Math.max(waveformPeaks[peakIndex], peak)
+      }
+    }
+    const pending = yieldTask()
+    if (pending) await pending
   }
+
+  let integrated = -Infinity
+  if (acceptedBlocks > 0) {
+    let ungatedSum = 0
+    for (let index = 0; index < acceptedBlocks; index++) {
+      ungatedSum += Math.pow(10, blockLoudness[index] / 10)
+      if (index % 1024 === 0) {
+        const pending = yieldTask()
+        if (pending) await pending
+      }
+    }
+    const relativeThreshold = 10 * Math.log10(ungatedSum / acceptedBlocks) - 10
+    let gatedSum = 0,
+      gatedCount = 0
+    for (let index = 0; index < acceptedBlocks; index++) {
+      if (blockLoudness[index] > relativeThreshold) {
+        gatedSum += Math.pow(10, blockLoudness[index] / 10)
+        gatedCount++
+      }
+      if (index % 1024 === 0) {
+        const pending = yieldTask()
+        if (pending) await pending
+      }
+    }
+    if (gatedCount > 0) integrated = 10 * Math.log10(gatedSum / gatedCount)
+  }
+
+  let loudnessRange = 0
+  if (acceptedBlocks > 10) {
+    // 1入力512MiBでは小さな窓表に収まり、全長PCMの複製を作らない。
+    const sorted = blockLoudness.subarray(0, acceptedBlocks).sort()
+    loudnessRange =
+      sorted[Math.floor(sorted.length * 0.95)] - sorted[Math.floor(sorted.length * 0.1)]
+  }
+  if (length < waveformPeaks.length) waveformPeaks.set(generateWaveformPeaks(channelData, 500))
+  throwIfAudioAborted(signal)
+
+  const leftRms = Math.sqrt(leftSum / length),
+    rightRms = Math.sqrt(rightSum / length)
+  const rms = Math.sqrt((leftRms * leftRms + rightRms * rightRms) / 2)
+  const denominator = Math.sqrt(leftSum * rightSum)
+  const midRms = Math.sqrt(midSum / length),
+    sideRms = Math.sqrt(sideSum / length)
+  const totalEnergy = midRms + sideRms,
+    maxLR = Math.max(leftRms, rightRms)
 
   return {
     loudness: {
-      momentary: lufs.momentary,
-      shortTerm: lufs.shortTerm,
-      integrated: lufs.integrated,
-      loudnessRange: lufs.loudnessRange,
-      truePeak: linearToDb(truePeak),
+      momentary: meanSquareToLUFS(momentarySum / momentarySamples),
+      shortTerm: meanSquareToLUFS(shortTermSum / shortTermSamples),
+      integrated,
+      loudnessRange,
+      // 標本ピークの互換フィールド。標準準拠のdBTP値ではない。
+      truePeak: linearToDb(samplePeak),
       samplePeak: linearToDb(samplePeak),
       rms: linearToDb(rms),
-      crestFactor,
+      crestFactor: linearToDb(samplePeak) - linearToDb(rms),
     },
     stereo: {
-      correlation,
-      width: stereoWidth.width,
-      balance: stereoWidth.balance,
-      midLevel: stereoWidth.midLevel,
-      sideLevel: stereoWidth.sideLevel,
+      correlation: denominator > 0 ? sumLR / denominator : 0,
+      width: totalEnergy > 0 ? sideRms / totalEnergy : 0,
+      balance: maxLR > 0 ? (rightRms - leftRms) / maxLR : 0,
+      midLevel: linearToDb(midRms),
+      sideLevel: linearToDb(sideRms),
     },
-    spectral,
+    spectral: {
+      frequencies: new Float32Array(0),
+      magnitudes: new Float32Array(0),
+      phases: new Float32Array(0),
+      binCount: 0,
+      sampleRate,
+      fftSize: 2048,
+    },
     waveformPeaks,
     duration,
     sampleRate,
