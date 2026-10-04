@@ -96,6 +96,23 @@ describe('shared playback transport', () => {
     expect(playback.getState().currentTime).toBeCloseTo(5.05)
   })
 
+  it('does not count command-time progress twice when a queued frame has an older timestamp', () => {
+    playback.getState().seek(1)
+    playback.getState().play()
+    now = 100
+    playback.getState().setSpeed(2)
+    expect(playback.getState().currentTime).toBeCloseTo(1.1)
+    const pending = [...callbacks.values()]
+    callbacks.clear()
+    // A frame timestamp is captured before callbacks run; a transport command
+    // can already have advanced the clock beyond it in the same rendering turn.
+    pending.forEach((callback) => callback(80))
+    advanceBy(100)
+    playback.getState().pause()
+    expect(playback.getState().currentTime).toBeCloseTo(1.3)
+    expectProjection()
+  })
+
   it('pauses and resumes reverse playback, while K resets the next playback to normal speed', () => {
     playback.getState().seek(5)
     timeline.getState().shuttleBackward()

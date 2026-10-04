@@ -491,6 +491,9 @@ input restriction as animated video/GIF and transition exports.
 - **Clipboard:** One-click copy
 - **ProRes:** Current decoded frame is supported in screenshots and PDF reports
 
+PDF reports preserve the comparison image aspect ratio and wrap settings, media information, and notes
+onto additional pages as needed.
+
 > [!NOTE]
 > Animated Video/GIF, transition, and stitch export currently require browser-native video decoding.
 > ProRes sources are rejected for those export paths instead of producing stale or incorrect frames.
