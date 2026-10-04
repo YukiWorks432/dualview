@@ -7,13 +7,13 @@
 import { GripVertical, Maximize2, Minimize2 } from 'lucide-react'
 import { useEffect, useRef, useState, useCallback } from 'react'
 
+import { resolveVisualTrackSource } from '../../lib/media/comparisonSource'
 import {
   getVisualFrameDimensions,
   isPausedVisualFrameReady,
   isVisualFrameReady,
   type VisualFrameElement,
 } from '../../lib/media/frameSource'
-import { findActiveClip } from '../../lib/media/timeline'
 import { getComparisonModeInfo } from '../../lib/webgl/comparison-shaders'
 import { WebGLComparisonRenderer } from '../../lib/webgl/WebGLComparisonRenderer'
 import { useMediaStore } from '../../stores/mediaStore'
@@ -45,22 +45,16 @@ export function WebGLSplitView({ isVisible, onToggle }: WebGLSplitViewProps) {
   const { tracks } = useTimelineStore()
   const { currentTime, isPlaying } = usePlaybackStore()
 
-  // Get active media from tracks
-  const trackA = tracks.find((t) => t.type === 'a')
-  const trackB = tracks.find((t) => t.type === 'b')
-  const firstClipA = trackA?.clips[0] || null
-  const firstClipB = trackB?.clips[0] || null
-
-  const activeClipA = findActiveClip(trackA?.clips ?? [], currentTime)
-  const activeClipB = findActiveClip(trackB?.clips ?? [], currentTime)
-
-  // Get media files - use active clip (clip at current time), fallback to first clip
-  const displayClipA = activeClipA || firstClipA
-  const displayClipB = activeClipB || firstClipB
-  const rawMediaA = displayClipA ? getFile(displayClipA.mediaId) : null
-  const rawMediaB = displayClipB ? getFile(displayClipB.mediaId) : null
-  const mediaA = rawMediaA?.type === 'video' || rawMediaA?.type === 'image' ? rawMediaA : null
-  const mediaB = rawMediaB?.type === 'video' || rawMediaB?.type === 'image' ? rawMediaB : null
+  const {
+    activeClip: activeClipA,
+    displayClip: displayClipA,
+    media: mediaA,
+  } = resolveVisualTrackSource(tracks, 'a', currentTime, getFile)
+  const {
+    activeClip: activeClipB,
+    displayClip: displayClipB,
+    media: mediaB,
+  } = resolveVisualTrackSource(tracks, 'b', currentTime, getFile)
 
   const handleFrameReady = useCallback(() => {
     setFrameRevision((revision) => revision + 1)
