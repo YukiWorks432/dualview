@@ -89,7 +89,10 @@ export const usePlaybackStore: PlaybackHook = create<PlaybackStore>((set, get) =
   const advance = (now: number) => {
     const state = get()
     if (!state.isPlaying) return
-    const delta = Math.max(0, now - (state._lastUpdateTime ?? now)) / 1000
+    // A queued animation frame can predate a transport command in this turn.
+    // Keep the baseline monotonic so the next frame does not count time twice.
+    now = Math.max(now, state._lastUpdateTime ?? now)
+    const delta = (now - (state._lastUpdateTime ?? now)) / 1000
     let time = state.currentTime + delta * state.playbackSpeed * state.playbackDirection
     const loop = activeLoop()
     let wrapped = false
