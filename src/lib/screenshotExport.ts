@@ -154,195 +154,128 @@ export async function generatePDFReport(
   const pageHeight = doc.internal.pageSize.getHeight()
   const margin = 15
 
-  // Title
-  doc.setFontSize(20)
-  doc.setFont('helvetica', 'bold')
-  doc.text(options.title || 'DualView Comparison Report', margin, margin + 10)
+  const contentWidth = pageWidth - margin * 2
+  const contentBottom = pageHeight - margin
+  let yPos = margin + 7
 
-  // Date
-  doc.setFontSize(10)
-  doc.setFont('helvetica', 'normal')
-  doc.text(`Generated: ${new Date().toLocaleString()}`, margin, margin + 18)
+  const ensureSpace = (height: number) => {
+    if (yPos + height > contentBottom) {
+      doc.addPage()
+      yPos = margin + 7
+    }
+  }
+  const writeText = (text: string, size = 10, bold = false) => {
+    doc.setFontSize(size)
+    doc.setFont('helvetica', bold ? 'bold' : 'normal')
+    const lineHeight = (size * 1.4) / doc.internal.scaleFactor
+    const lines: string[] = doc.splitTextToSize(text, contentWidth)
+    for (const line of lines) {
+      ensureSpace(lineHeight)
+      doc.text(line, margin, yPos)
+      yPos += lineHeight
+    }
+  }
+  const heading = (text: string) => {
+    yPos += 5
+    // 見出しだけが前のページ末尾に残らないよう、本文1行分も確保する。
+    ensureSpace(12)
+    writeText(text, 12, true)
+  }
 
-  // Screenshot
-  const imgWidth = pageWidth - margin * 2
-  const imgHeight = imgWidth * (9 / 16) // 16:9 aspect ratio
-  const imgY = margin + 25
+  writeText(options.title || 'DualView Comparison Report', 20, true)
+  writeText(`Generated: ${new Date().toLocaleString()}`)
+  yPos += 7
 
   try {
     const imgData = await blobToBase64(options.screenshotBlob)
-    doc.addImage(imgData, 'PNG', margin, imgY, imgWidth, imgHeight)
+    const image = doc.getImageProperties(imgData)
+    const scale = Math.min(contentWidth / image.width, (contentBottom - margin - 7) / image.height)
+    const imgWidth = image.width * scale
+    const imgHeight = image.height * scale
+    ensureSpace(imgHeight)
+    doc.addImage(imgData, 'PNG', margin + (contentWidth - imgWidth) / 2, yPos, imgWidth, imgHeight)
+    yPos += imgHeight + 5
   } catch (e) {
     console.error('Failed to add screenshot to PDF:', e)
   }
 
-  // Metadata section
-  let yPos = imgY + imgHeight + 10
-
   if (options.includeSettings) {
-    doc.setFontSize(12)
-    doc.setFont('helvetica', 'bold')
-    doc.text('Comparison Settings', margin, yPos)
-    yPos += 6
-
-    doc.setFontSize(10)
-    doc.setFont('helvetica', 'normal')
-    doc.text(`Mode: ${options.comparisonMode}`, margin, yPos)
-    yPos += 5
-
-    if (options.webglMode) {
-      doc.text(`Analysis Mode: ${options.webglMode}`, margin, yPos)
-      yPos += 5
-    }
-
-    if (options.threshold !== undefined) {
-      doc.text(`Threshold: ${(options.threshold * 100).toFixed(0)}%`, margin, yPos)
-      yPos += 5
-    }
-
-    if (options.metrics?.ssim !== undefined) {
-      doc.text(`SSIM: ${options.metrics.ssim.toFixed(4)}`, margin, yPos)
-      yPos += 5
-    }
-    if (options.metrics?.psnr !== undefined) {
-      doc.text(`PSNR: ${options.metrics.psnr.toFixed(2)} dB`, margin, yPos)
-      yPos += 5
-    }
+    heading('Comparison Settings')
+    writeText(`Mode: ${options.comparisonMode}`)
+    if (options.webglMode) writeText(`Analysis Mode: ${options.webglMode}`)
+    if (options.threshold !== undefined)
+      writeText(`Threshold: ${(options.threshold * 100).toFixed(0)}%`)
+    if (options.metrics?.ssim !== undefined) writeText(`SSIM: ${options.metrics.ssim.toFixed(4)}`)
+    if (options.metrics?.psnr !== undefined)
+      writeText(`PSNR: ${options.metrics.psnr.toFixed(2)} dB`)
   }
 
-  // WEBGL-010: WebGL Analysis Metrics Section
   if (options.webglMetrics) {
-    yPos += 5
-    doc.setFontSize(12)
-    doc.setFont('helvetica', 'bold')
-    doc.text('WebGL Analysis Metrics', margin, yPos)
-    yPos += 6
-
-    doc.setFontSize(10)
-    doc.setFont('helvetica', 'normal')
-
-    // SSIM with quality assessment
+    heading('WebGL Analysis Metrics')
+    const metrics = options.webglMetrics
     const ssimQuality =
-      options.webglMetrics.ssim > 0.95
+      metrics.ssim > 0.95
         ? 'Excellent'
-        : options.webglMetrics.ssim > 0.8
+        : metrics.ssim > 0.8
           ? 'Good'
-          : options.webglMetrics.ssim > 0.5
+          : metrics.ssim > 0.5
             ? 'Fair'
             : 'Poor'
-    doc.text(
-      `Structural Similarity (SSIM): ${options.webglMetrics.ssim.toFixed(4)} (${ssimQuality})`,
-      margin,
-      yPos,
-    )
-    yPos += 5
-
-    // Delta E with interpretation
+    writeText(`Structural Similarity (SSIM): ${metrics.ssim.toFixed(4)} (${ssimQuality})`)
     const deltaEInterpretation =
-      options.webglMetrics.deltaE < 1
+      metrics.deltaE < 1
         ? 'Imperceptible'
-        : options.webglMetrics.deltaE < 2
+        : metrics.deltaE < 2
           ? 'Barely perceptible'
-          : options.webglMetrics.deltaE < 5
+          : metrics.deltaE < 5
             ? 'Noticeable'
             : 'Obvious'
-    doc.text(
-      `Perceptual Difference (Delta E CIE94): ${options.webglMetrics.deltaE.toFixed(2)} (${deltaEInterpretation})`,
-      margin,
-      yPos,
+    writeText(
+      `Perceptual Difference (Delta E CIE94): ${metrics.deltaE.toFixed(2)} (${deltaEInterpretation})`,
     )
-    yPos += 5
-
-    doc.text(
-      `Different Pixels: ${options.webglMetrics.diffPixelPercent.toFixed(1)}% (${options.webglMetrics.failPixelCount.toLocaleString()} of ${options.webglMetrics.totalPixelCount.toLocaleString()})`,
-      margin,
-      yPos,
+    writeText(
+      `Different Pixels: ${metrics.diffPixelPercent.toFixed(1)}% (${metrics.failPixelCount.toLocaleString()} of ${metrics.totalPixelCount.toLocaleString()})`,
     )
-    yPos += 5
-
-    doc.text(
-      `Peak Pixel Difference: ${options.webglMetrics.peakDifference.toFixed(0)} / 255`,
-      margin,
-      yPos,
+    writeText(`Peak Pixel Difference: ${metrics.peakDifference.toFixed(0)} / 255`)
+    writeText(`Mean Pixel Difference: ${metrics.meanDifference.toFixed(2)} / 255`)
+    const passRate = ((metrics.passPixelCount / metrics.totalPixelCount) * 100).toFixed(1)
+    writeText(
+      `Threshold Pass Rate: ${passRate}% (${metrics.passPixelCount.toLocaleString()} pixels)`,
     )
-    yPos += 5
-
-    doc.text(
-      `Mean Pixel Difference: ${options.webglMetrics.meanDifference.toFixed(2)} / 255`,
-      margin,
-      yPos,
-    )
-    yPos += 5
-
-    // Pass/Fail summary
-    const passRate = (
-      (options.webglMetrics.passPixelCount / options.webglMetrics.totalPixelCount) *
-      100
-    ).toFixed(1)
-    doc.text(
-      `Threshold Pass Rate: ${passRate}% (${options.webglMetrics.passPixelCount.toLocaleString()} pixels)`,
-      margin,
-      yPos,
-    )
-    yPos += 5
   }
 
   if (options.includeMetadata) {
-    yPos += 5
-    doc.setFontSize(12)
-    doc.setFont('helvetica', 'bold')
-    doc.text('Media Information', margin, yPos)
-    yPos += 6
-
-    doc.setFontSize(10)
-    doc.setFont('helvetica', 'normal')
-
-    if (options.mediaA) {
-      doc.text(`Track A: ${options.mediaA.name}`, margin, yPos)
-      yPos += 5
-      doc.text(`  Type: ${options.mediaA.type}, Size: ${options.mediaA.size}`, margin, yPos)
-      if (options.mediaA.dimensions) {
-        yPos += 5
-        doc.text(`  Dimensions: ${options.mediaA.dimensions}`, margin, yPos)
-      }
-      yPos += 5
-    }
-
-    if (options.mediaB) {
-      doc.text(`Track B: ${options.mediaB.name}`, margin, yPos)
-      yPos += 5
-      doc.text(`  Type: ${options.mediaB.type}, Size: ${options.mediaB.size}`, margin, yPos)
-      if (options.mediaB.dimensions) {
-        yPos += 5
-        doc.text(`  Dimensions: ${options.mediaB.dimensions}`, margin, yPos)
-      }
+    heading('Media Information')
+    for (const [track, media] of [
+      ['A', options.mediaA],
+      ['B', options.mediaB],
+    ] as const) {
+      if (!media) continue
+      writeText(`Track ${track}: ${media.name}`)
+      writeText(`  Type: ${media.type}, Size: ${media.size}`)
+      if (media.dimensions) writeText(`  Dimensions: ${media.dimensions}`)
+      yPos += 3
     }
   }
 
-  if (options.includeAnnotations && options.annotations && options.annotations.length > 0) {
-    yPos += 10
-    doc.setFontSize(12)
-    doc.setFont('helvetica', 'bold')
-    doc.text('Notes', margin, yPos)
-    yPos += 6
-
-    doc.setFontSize(10)
-    doc.setFont('helvetica', 'normal')
-    for (const note of options.annotations) {
-      doc.text(`• ${note}`, margin, yPos)
-      yPos += 5
-    }
+  if (options.includeAnnotations && options.annotations?.length) {
+    heading('Notes')
+    for (const note of options.annotations) writeText(`• ${note}`)
   }
 
-  // Footer
-  doc.setFontSize(8)
-  doc.setTextColor(128)
-  doc.text(
-    'Generated with DualView - github.com/gokayfem/dualview',
-    pageWidth / 2,
-    pageHeight - 5,
-    { align: 'center' },
-  )
+  // 本文の改ページが完了してから、すべてのページにフッターを置く。
+  for (let page = 1; page <= doc.getNumberOfPages(); page++) {
+    doc.setPage(page)
+    doc.setFontSize(8)
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(128)
+    doc.text(
+      'Generated with DualView - github.com/gokayfem/dualview',
+      pageWidth / 2,
+      pageHeight - 5,
+      { align: 'center' },
+    )
+  }
 
   return doc.output('blob')
 }
