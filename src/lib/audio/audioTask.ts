@@ -9,7 +9,23 @@ export function createAudioTaskYield(signal?: AbortSignal): () => Promise<void> 
   return () => {
     throwIfAudioAborted(signal)
     if (performance.now() - lastYield < 8) return
-    return new Promise<void>((resolve) => setTimeout(resolve, 0)).then(() => {
+    return new Promise<void>((resolve, reject) => {
+      // 取消の配送後は、処理再開用タイマーが届くまで待たない。
+      const onAbort = () => {
+        try {
+          throwIfAudioAborted(signal)
+        } catch (error) {
+          clearTimeout(timer)
+          signal?.removeEventListener('abort', onAbort)
+          reject(error)
+        }
+      }
+      const timer = setTimeout(() => {
+        signal?.removeEventListener('abort', onAbort)
+        resolve()
+      }, 0)
+      signal?.addEventListener('abort', onAbort)
+    }).then(() => {
       throwIfAudioAborted(signal)
       lastYield = performance.now()
     })

@@ -9,6 +9,17 @@ not establish the overall responsiveness or performance acceptance items in #51.
 Those require an agreed environment, load, measurement window, and criterion. This
 diagnostic retains its broader observations without adding a latency threshold.
 
+## #73の部分修正と残る測定
+
+`createAudioTaskYield` は、処理を譲っている間に取消通知を受けると、再開用タイマーを解除して待機を拒否する。
+取消通知が届いた後にタイマーの配送を待つ必要はない。正常再開時と取消時のどちらでも購読を解除し、
+解析・抽出の後片付けと待ち列の枠解放は、従来どおり実作業の終了を待つ。
+
+`audioTask.test.ts` はタイマーの配送だけを保留して取消を通知し、拒否が先に確定することを検査する。
+取消理由、開始前の取消、タイマー配送直後の競合、正常再開後の購読解放も確認する。
+この試験には時間の合否閾値を設けていない。要求到達前の遅れ、実画面での応答時間、全工程時間・資源使用の
+改善は別途測定する必要があり、#73の測定条件・性能基準の合意と改善前後の確認は引き続き未完了である。
+
 ## Run
 
 Use the repository's pinned Node 24.21.0 / pnpm 12.5.1 environment and locked
