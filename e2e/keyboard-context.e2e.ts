@@ -206,7 +206,9 @@ test('入力欄と編集可能要素、IME変換から全体キーへ漏らさ�
   await expect(page.getByTitle('Open Sidebar (B)')).toBeVisible()
 })
 
-test('ヘルプとプロジェクトと書き出しのEscapeがループを保ちフォーカスを戻す', async ({ page }) => {
+test('ヘルプとプロジェクトと書き出しのEscapeがループを保ちフォーカスを戻す', async ({
+  page,
+}, testInfo) => {
   await seed(page)
   await setLoop(page)
   const loop = (await state(page)).loop
@@ -219,11 +221,51 @@ test('ヘルプとプロジェクトと書き出しのEscapeがループを保�
     await button.click()
     const dialog = page.getByRole('dialog')
     await expect(dialog).toBeVisible()
-    for (const key of ['Tab', 'Tab', 'Shift+Tab']) {
-      await page.keyboard.press(key)
-      expect(await dialog.evaluate((element) => element.contains(document.activeElement))).toBe(
-        true,
+    const focusHistory = await dialog.evaluateHandle((element) => {
+      // このダイアログに隣接する境界だけを識別する。全画面の境界を許可しない。
+      // 境界の個数や生成方法は検査せず、実際の焦点循環と背景への逸脱を検査する。
+      const boundaries = [element.previousElementSibling, element.nextElementSibling].filter(
+        (sibling) => sibling?.hasAttribute('data-base-ui-focus-guard'),
       )
+      const events: { location: string; target: string }[] = []
+      const onFocus = (event: FocusEvent) => {
+        const target = event.target
+        if (!(target instanceof Element)) return
+        events.push({
+          location: element.contains(target)
+            ? 'dialog'
+            : boundaries.includes(target)
+              ? 'boundary'
+              : 'background',
+          target: `${target.tagName}#${target.id}[${target.getAttribute('aria-label') ?? ''}]`,
+        })
+      }
+      document.addEventListener('focusin', onFocus, true)
+      return {
+        events,
+        stop: () => document.removeEventListener('focusin', onFocus, true),
+      }
+    })
+    try {
+      for (const key of ['Tab', 'Tab', 'Shift+Tab']) {
+        await page.keyboard.press(key)
+        // 境界で次フレームを待つことは許すが、そこに留まることは許さない。
+        await expect
+          .poll(() => dialog.evaluate((element) => element.contains(document.activeElement)))
+          .toBe(true)
+        expect(
+          await focusHistory.evaluate(({ events }) =>
+            events.filter((event) => event.location === 'background'),
+          ),
+        ).toEqual([])
+      }
+    } finally {
+      await focusHistory.evaluate(({ stop }) => stop())
+      await testInfo.attach('dialog-focus-history', {
+        body: JSON.stringify(await focusHistory.evaluate(({ events }) => events), null, 2),
+        contentType: 'application/json',
+      })
+      await focusHistory.dispose()
     }
     await dialog.focus()
     for (const key of [

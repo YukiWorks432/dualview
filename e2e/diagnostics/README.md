@@ -1,10 +1,13 @@
 # PR60 audio responsiveness diagnostic
 
-This opt-in diagnostic does not change production source or the existing
-`audio-budget.e2e.ts` assertions. Its existing 100 ms assertion was assistant-added
-and is not a user-approved latency requirement; it is retained unchanged. Ordinary
-CI passing does not establish all PR acceptance items. This diagnostic adds
-correctness checks and records timing without introducing a new latency threshold.
+This opt-in diagnostic does not change production source. Following the approved
+test correction in #71, `audio-budget.e2e.ts` checks cancellation before settlement,
+rejection with `AbortError`, and no successful result. It records timer delay,
+abort-to-settlement response, and total elapsed time even on success. The former
+assistant-added 100 ms assertion is now diagnostic only. Ordinary CI passing does
+not establish the overall responsiveness or performance acceptance items in #51.
+Those require an agreed environment, load, measurement window, and criterion. This
+diagnostic retains its broader observations without adding a latency threshold.
 
 ## Run
 

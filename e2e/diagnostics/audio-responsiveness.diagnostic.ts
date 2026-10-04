@@ -182,8 +182,8 @@ for (const pair of [1, 2, 3]) {
         body: Buffer.from(JSON.stringify(result, null, 2)),
         contentType: 'application/json',
       })
-      // Correctness only. The existing assistant-added <100 ms assertion is unchanged elsewhere;
-      // it is not a user-approved latency requirement.
+      // 正しさだけを検査する。#71で旧100ms判定は通常E2Eでも診断値へ分離した。
+      // 全体の応答性の基準は、環境・負荷・測定区間と合わせて別途決める。
       if (variant === 'current') {
         expect(result.outcome).toBe('AbortError')
         expect(result.returnedResult).toBe(false)
