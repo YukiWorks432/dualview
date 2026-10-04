@@ -56,7 +56,7 @@ try {
     writeFileSync(path.join(generated, path.basename(file)), baselineBytes)
   }
   for (const [file, expected] of [
-    ['src/lib/audio/audioTask.ts', '9771fcac110c34629f77308414373f5862144988'],
+    ['src/lib/audio/audioTask.ts', '2ff73de50f14ae2f6eac2f64e7303d7839e284ff'],
     ['src/lib/audio/AudioJobQueue.ts', '8d65655469e0161b842aaf22f6ea1db1c22087ee'],
   ]) {
     const actual = git('hash-object', file)
