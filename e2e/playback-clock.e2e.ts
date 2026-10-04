@@ -20,7 +20,29 @@ async function snapshot(page: Page) {
   })
 }
 
+async function clockSample(page: Page) {
+  return page.evaluate(
+    () =>
+      (
+        window as typeof window & {
+          __clockSample: { time: number; wall: number; playing: boolean }
+        }
+      ).__clockSample,
+  )
+}
+
 async function preparePair(page: Page) {
+  await page.addInitScript(() => {
+    // Observe position and wall time at the same transport notification. Reading
+    // state after a browser round trip would include time spent already paused.
+    window.addEventListener('playback-update', (event) => {
+      const { time, isPlaying } = (event as CustomEvent<{ time: number; isPlaying: boolean }>)
+        .detail
+      Object.assign(window, {
+        __clockSample: { time, playing: isPlaying, wall: performance.now() },
+      })
+    })
+  })
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.goto('/')
   await page.getByRole('button', { name: 'Hide filmstrip' }).click()
@@ -39,27 +61,27 @@ test('J/K/L, Space and speed selection advance the real clock and both displayed
   await expectColor(page, 'b', 'blue')
   await page.keyboard.press('j')
   await expect.poll(async () => (await snapshot(page)).shuttle).toBe(-1)
-  const reverseStart = await snapshot(page)
+  const reverseStart = await clockSample(page)
   await page.waitForTimeout(300)
   await page.keyboard.press('Space')
-  const reverseEnd = await snapshot(page)
+  const reverseEnd = await clockSample(page)
   expect(reverseEnd.playing).toBe(false)
   expect(
     Math.abs(
       (reverseStart.time - reverseEnd.time) / ((reverseEnd.wall - reverseStart.wall) / 1000) - 1,
     ),
   ).toBeLessThan(0.3)
-  expect(reverseEnd.projectedTime).toBe(reverseEnd.time)
+  expect((await snapshot(page)).projectedTime).toBe(reverseEnd.time)
   expect(reverseEnd.time).toBeLessThan(reverseStart.time - 0.2)
   await page.keyboard.press('k')
   await seek(page, 0.5)
   await page.keyboard.press('l')
   await page.keyboard.press('l')
   await expect(page.getByText('▶▶ 2×', { exact: true })).toBeVisible()
-  const forwardStart = await snapshot(page)
+  const forwardStart = await clockSample(page)
   await page.waitForTimeout(300)
   await page.keyboard.press('Space')
-  const forwardEnd = await snapshot(page)
+  const forwardEnd = await clockSample(page)
   expect(forwardEnd.time - forwardStart.time).toBeGreaterThan(0.45)
   expect(
     Math.abs(
@@ -150,12 +172,21 @@ test('paused markers, rapid seeks, clip crossings and project reload present the
   const prores = page.locator('canvas[data-track="b"]').first()
   await expect
     .poll(() =>
-      video.evaluate((element: HTMLVideoElement) => ({
-        time: element.currentTime,
-        clip: element.dataset.framePresentedClipId,
-      })),
+      video.evaluate(async (element: HTMLVideoElement) => {
+        const { isPausedVisualFrameReady } = await import('/src/lib/media/frameSource.ts')
+        const { useTimelineStore } = await import('/src/stores/timelineStore.ts')
+        const clip = useTimelineStore
+          .getState()
+          .tracks.find((track) => track.type === 'a')!
+          .clips.find((clip) => clip.id.endsWith('-second'))!
+        return {
+          time: element.currentTime,
+          clip: element.dataset.frameSourceClipId,
+          current: isPausedVisualFrameReady(element, clip, 2.5),
+        }
+      }),
     )
-    .toMatchObject({ time: 2.5, clip: expect.stringMatching(/-second$/) })
+    .toMatchObject({ time: 2.5, clip: expect.stringMatching(/-second$/), current: true })
   await expect
     .poll(() =>
       prores.evaluate((element) => ({
