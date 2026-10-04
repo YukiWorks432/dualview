@@ -4,12 +4,12 @@
  */
 import { useRef, useEffect, useCallback, useState } from 'react'
 
+import { resolveVisualTrackSource } from '../../lib/media/comparisonSource'
 import {
   isPausedVisualFrameReady,
   isVisualFrameReady,
   type VisualFrameElement,
 } from '../../lib/media/frameSource'
-import { findActiveClip } from '../../lib/media/timeline'
 import { calculateAverageRgbaDifference } from '../../lib/pixelDifference'
 import { cn } from '../../lib/utils'
 import { useMediaStore } from '../../stores/mediaStore'
@@ -38,18 +38,16 @@ export function DifferenceHeatmap() {
   const { currentTime, isPlaying } = usePlaybackStore()
   const { getFile } = useMediaStore()
 
-  const trackA = tracks.find((track) => track.type === 'a')
-  const trackB = tracks.find((track) => track.type === 'b')
-  const firstClipA = trackA?.clips[0] ?? null
-  const firstClipB = trackB?.clips[0] ?? null
-  const activeClipA = findActiveClip(trackA?.clips ?? [], currentTime)
-  const activeClipB = findActiveClip(trackB?.clips ?? [], currentTime)
-  const displayClipA = activeClipA ?? firstClipA
-  const displayClipB = activeClipB ?? firstClipB
-  const rawMediaA = displayClipA ? getFile(displayClipA.mediaId) : null
-  const rawMediaB = displayClipB ? getFile(displayClipB.mediaId) : null
-  const mediaA = rawMediaA?.type === 'video' || rawMediaA?.type === 'image' ? rawMediaA : null
-  const mediaB = rawMediaB?.type === 'video' || rawMediaB?.type === 'image' ? rawMediaB : null
+  const {
+    activeClip: activeClipA,
+    displayClip: displayClipA,
+    media: mediaA,
+  } = resolveVisualTrackSource(tracks, 'a', currentTime, getFile)
+  const {
+    activeClip: activeClipB,
+    displayClip: displayClipB,
+    media: mediaB,
+  } = resolveVisualTrackSource(tracks, 'b', currentTime, getFile)
 
   // Render the difference heatmap
   const renderFrame = useCallback(
