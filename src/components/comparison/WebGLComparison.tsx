@@ -29,6 +29,8 @@ import {
 } from 'lucide-react'
 import { useEffect, useRef, useCallback, useState, useMemo } from 'react'
 
+import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts'
+import { isPlainShortcut } from '../../lib/keyboardShortcuts'
 import { SUPPORTED_MEDIA_ACCEPT } from '../../lib/media/fileTypes'
 import {
   getVisualFrameDimensions,
@@ -631,23 +633,12 @@ export function WebGLComparison() {
     resetWebGLZoom()
   }, [resetWebGLZoom])
 
-  // SCOPE-010: Handle G key for gamut warning toggle
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Ignore if typing in an input
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
-        return
-      }
-
-      if (e.code === 'KeyG' && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
-        e.preventDefault()
-        setShowGamutWarning((prev) => !prev)
-      }
+  useKeyboardShortcuts('webgl-compare', (e) => {
+    if (e.code === 'KeyG' && isPlainShortcut(e)) {
+      e.preventDefault()
+      setShowGamutWarning((prev) => !prev)
     }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [])
+  })
 
   // WEBGL-005: Export Analysis Screenshot
   const exportScreenshot = useCallback(

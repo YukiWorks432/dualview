@@ -57,6 +57,15 @@ ffmpeg -f lavfi -i "color=c=red:s=64x64:r=10:d=4" -f lavfi -i "sine=frequency=44
 ffmpeg -f lavfi -i "color=c=red:s=64x64:r=10:d=4" -vf "drawbox=x=0:y=0:w=iw:h=ih:color=blue:t=fill:enable='gte(t,2)'" -an -c:v prores_ks -profile:v 3 -pix_fmt yuv422p10le playback-colors.mov
 ```
 
+### 動画内音声の解析と取り消し
+
+`audio-stereo.mov` は4秒、48 kHz、997 Hz、振幅0.5の逆相ステレオPCMを含む16 × 16のProRes動画です。音声QAのProRes抽出、標本ピーク、位相、再生時刻と解放を確認します。`audio-long.webm` は120秒、同じ周波数、振幅0.25の逆相ステレオOpusを含み、長尺処理中の素材差替えと待機中の取消を確認します。どちらも合成素材です。
+
+```text
+ffmpeg -f lavfi -i "color=c=black:s=16x16:r=10:d=4" -f lavfi -i "aevalsrc=0.5*sin(2*PI*997*t)|-0.5*sin(2*PI*997*t):s=48000:d=4" -c:v prores_ks -threads 1 -profile:v 0 -pix_fmt yuv422p10le -c:a pcm_f32le -t 4 audio-stereo.mov
+ffmpeg -f lavfi -i "color=c=black:s=16x16:r=1:d=120" -f lavfi -i "aevalsrc=0.25*sin(2*PI*997*t)|-0.25*sin(2*PI*997*t):s=48000:d=120" -c:v libvpx-vp9 -threads 1 -deadline realtime -cpu-used 8 -crf 40 -b:v 0 -c:a libopus -b:a 64k -t 120 audio-long.webm
+```
+
 ## 過去の測定記録
 
 次の値は素材を導入した際のChromiumでの測定記録であり、性能保証や最新のテスト結果ではない。
@@ -96,6 +105,12 @@ remaining visible at low zoom while many later unchanged intervals share its lan
 seconds, blue afterwards. WebM contains 440 Hz mono Opus audio at 48 kHz; the ProRes HQ MOV is silent.
 The final command pair creates them. Tests inspect decoded pixels and audio-source timing through
 seeks, clip boundaries, and reloads. Other tiny fixtures are generated black, white, or single-change clips.
+
+`audio-stereo.mov` is a generated four-second 16×16 ProRes video with 48 kHz, 997 Hz,
+amplitude-0.5 antiphase stereo PCM. It checks extraction, sample peak, phase, playback timing,
+and resource release. `audio-long.webm` contains 120 seconds of antiphase stereo Opus at
+the same frequency and amplitude 0.25. It exercises source replacement during long processing
+and cancellation of queued work. Both are synthetic; their generation commands appear above.
 
 ### Historical measurements
 

@@ -9,6 +9,7 @@ import { Timeline } from './components/timeline/Timeline'
 import { SurfaceProvider } from './components/ui'
 import { KeyboardShortcutsHelp } from './components/ui/KeyboardShortcutsHelp'
 import { getComparisonModeByKeyboardCode } from './config/comparisonModes'
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts'
 import { useKeyboardShortcutsHelp } from './hooks/useKeyboardShortcutsHelp'
 import { useTimelineDiffLifecycle } from './hooks/useTimelineDiff'
 import { isSupportedMediaFile } from './lib/media/fileTypes'
@@ -86,224 +87,186 @@ export default function App() {
   } = useProjectStore()
   const { undo, redo } = useHistoryStore()
 
-  // Keyboard shortcuts
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Ignore if typing in an input
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
-        return
-      }
+  useKeyboardShortcuts('app', (e) => {
+    if (e.altKey) return
 
-      // PERSIST-002: Save project (Ctrl+S)
-      if ((e.ctrlKey || e.metaKey) && e.code === 'KeyS') {
-        e.preventDefault()
-        saveCurrentProject()
-        return
-      }
-
-      // Undo/Redo (FIX-001)
-      if ((e.ctrlKey || e.metaKey) && e.code === 'KeyZ') {
-        e.preventDefault()
-        if (e.shiftKey) {
-          redo()
-        } else {
-          undo()
-        }
-        return
-      }
-
-      const shortcutMode = getComparisonModeByKeyboardCode(e.code)
-      if (shortcutMode) {
-        e.preventDefault()
-        setComparisonMode(shortcutMode)
-        return
-      }
-
-      switch (e.code) {
-        case 'Space':
-          e.preventDefault()
-          togglePlay()
-          break
-        case 'ArrowLeft':
-          e.preventDefault()
-          if (!isPlaying && !e.shiftKey) {
-            // Frame step when paused (VID-001)
-            stepFrame(-1)
-          } else {
-            seek(Math.max(0, currentTime - (e.shiftKey ? 5 : 1)))
-          }
-          break
-        case 'ArrowRight':
-          e.preventDefault()
-          if (!isPlaying && !e.shiftKey) {
-            // Frame step when paused (VID-001)
-            stepFrame(1)
-          } else {
-            seek(Math.min(duration, currentTime + (e.shiftKey ? 5 : 1)))
-          }
-          break
-        case 'KeyI':
-          // Set loop in point (VID-003)
-          e.preventDefault()
-          setLoopIn()
-          break
-        case 'KeyO':
-          // Set loop out point (VID-003)
-          e.preventDefault()
-          setLoopOut()
-          break
-        case 'Escape':
-          // Clear loop region (VID-003)
-          clearLoop()
-          break
-        case 'Home':
-          e.preventDefault()
-          seek(0)
-          break
-        case 'End':
-          e.preventDefault()
-          seek(duration)
-          break
-        case 'Equal':
-        case 'NumpadAdd':
-          if (e.ctrlKey || e.metaKey) {
-            e.preventDefault()
-            zoomIn()
-          }
-          break
-        case 'Minus':
-        case 'NumpadSubtract':
-          if (e.ctrlKey || e.metaKey) {
-            e.preventDefault()
-            zoomOut()
-          }
-          break
-        case 'KeyE':
-          e.preventDefault()
-          setIsExportOpen(true)
-          break
-        case 'KeyT':
-          e.preventDefault()
-          setIsTimelineVisible((v) => !v)
-          break
-        case 'KeyB':
-          e.preventDefault()
-          setIsSidebarVisible((v) => !v)
-          break
-        case 'KeyM':
-          // Toggle quality metrics (VID-004) with Shift, add marker without
-          e.preventDefault()
-          if (e.shiftKey) {
-            toggleMetrics()
-          } else {
-            addMarker()
-          }
-          break
-        case 'KeyS':
-          // Quick screenshot (Shift+S)
-          if (e.shiftKey) {
-            e.preventDefault()
-            const frame = previewRef.current?.captureFrame() ?? null
-            if (!frame) {
-              console.warn(
-                'Quick screenshot skipped because the current comparison frame is not ready',
-              )
-              break
-            }
-            captureCanvasScreenshot(frame, 'png').then((blob) => {
-              if (blob) {
-                downloadBlob(blob, `dualview-screenshot-${Date.now()}.png`)
-              }
-            })
-          }
-          break
-        // J/K/L Shuttle controls (TL-005)
-        case 'KeyJ':
-          e.preventDefault()
-          shuttleBackward()
-          break
-        case 'KeyK':
-          e.preventDefault()
-          shuttleStop()
-          break
-        case 'KeyL':
-          e.preventDefault()
-          shuttleForward()
-          break
-        // WEBGL-008: Flip A/B in WebGL comparison mode
-        case 'KeyF':
-          if (comparisonMode === 'webgl-compare') {
-            e.preventDefault()
-            toggleWebGLFlipAB()
-          }
-          break
-        // SCOPE-005: Focus Peaking toggle (P key)
-        case 'KeyP':
-          e.preventDefault()
-          // If already in focus-peak mode, switch back to perceptual diff
-          if (
-            comparisonMode === 'webgl-compare' &&
-            webglComparisonSettings.mode === 'exposure-focus-peak'
-          ) {
-            setWebGLComparisonMode('diff-perceptual')
-          } else {
-            // Switch to webgl-compare mode with focus-peak
-            setComparisonMode('webgl-compare')
-            setWebGLComparisonMode('exposure-focus-peak')
-          }
-          break
-        // SCOPE-006: Zebra Stripes toggle (Z key)
-        case 'KeyZ':
-          e.preventDefault()
-          // If already in zebra mode, switch back to perceptual diff
-          if (
-            comparisonMode === 'webgl-compare' &&
-            webglComparisonSettings.mode === 'exposure-zebra'
-          ) {
-            setWebGLComparisonMode('diff-perceptual')
-          } else {
-            // Switch to webgl-compare mode with zebra
-            setComparisonMode('webgl-compare')
-            setWebGLComparisonMode('exposure-zebra')
-          }
-          break
-        // SCOPE-001/002/003: Toggle video scopes panel (G key)
-        case 'KeyG':
-          e.preventDefault()
-          toggleScopes()
-          break
-      }
+    // PERSIST-002: Save project (Ctrl+S)
+    if ((e.ctrlKey || e.metaKey) && e.code === 'KeyS') {
+      e.preventDefault()
+      saveCurrentProject()
+      return
     }
 
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [
-    togglePlay,
-    seek,
-    currentTime,
-    duration,
-    setLoopIn,
-    setLoopOut,
-    clearLoop,
-    zoomIn,
-    zoomOut,
-    toggleMetrics,
-    addMarker,
-    shuttleForward,
-    shuttleBackward,
-    shuttleStop,
-    undo,
-    redo,
-    stepFrame,
-    isPlaying,
-    setComparisonMode,
-    toggleWebGLFlipAB,
-    comparisonMode,
-    setWebGLComparisonMode,
-    webglComparisonSettings.mode,
-    toggleScopes,
-    saveCurrentProject,
-  ])
+    // Undo/Redo (FIX-001)
+    if ((e.ctrlKey || e.metaKey) && e.code === 'KeyZ') {
+      e.preventDefault()
+      if (e.shiftKey) {
+        redo()
+      } else {
+        undo()
+      }
+      return
+    }
+
+    if (e.ctrlKey || e.metaKey) {
+      if (['Equal', 'NumpadAdd', 'Minus', 'NumpadSubtract'].includes(e.code)) {
+        e.preventDefault()
+        if (e.code === 'Equal' || e.code === 'NumpadAdd') zoomIn()
+        else zoomOut()
+      }
+      return
+    }
+    if (e.shiftKey && !['KeyM', 'KeyS', 'ArrowLeft', 'ArrowRight'].includes(e.code)) return
+
+    const shortcutMode = getComparisonModeByKeyboardCode(e.code)
+    if (shortcutMode) {
+      e.preventDefault()
+      setComparisonMode(shortcutMode)
+      return
+    }
+
+    switch (e.code) {
+      case 'Space':
+        e.preventDefault()
+        togglePlay()
+        break
+      case 'ArrowLeft':
+        e.preventDefault()
+        if (!isPlaying && !e.shiftKey) {
+          // Frame step when paused (VID-001)
+          stepFrame(-1)
+        } else {
+          seek(Math.max(0, currentTime - (e.shiftKey ? 5 : 1)))
+        }
+        break
+      case 'ArrowRight':
+        e.preventDefault()
+        if (!isPlaying && !e.shiftKey) {
+          // Frame step when paused (VID-001)
+          stepFrame(1)
+        } else {
+          seek(Math.min(duration, currentTime + (e.shiftKey ? 5 : 1)))
+        }
+        break
+      case 'KeyI':
+        // Set loop in point (VID-003)
+        e.preventDefault()
+        setLoopIn()
+        break
+      case 'KeyO':
+        // Set loop out point (VID-003)
+        e.preventDefault()
+        setLoopOut()
+        break
+      case 'Escape':
+        // Clear loop region (VID-003)
+        e.preventDefault()
+        clearLoop()
+        break
+      case 'Home':
+        e.preventDefault()
+        seek(0)
+        break
+      case 'End':
+        e.preventDefault()
+        seek(duration)
+        break
+      case 'KeyE':
+        e.preventDefault()
+        setIsExportOpen(true)
+        break
+      case 'KeyT':
+        e.preventDefault()
+        setIsTimelineVisible((v) => !v)
+        break
+      case 'KeyB':
+        e.preventDefault()
+        setIsSidebarVisible((v) => !v)
+        break
+      case 'KeyM':
+        // Toggle quality metrics (VID-004) with Shift, add marker without
+        e.preventDefault()
+        if (e.shiftKey) {
+          toggleMetrics()
+        } else {
+          addMarker()
+        }
+        break
+      case 'KeyS':
+        // Quick screenshot (Shift+S)
+        if (e.shiftKey) {
+          e.preventDefault()
+          const frame = previewRef.current?.captureFrame() ?? null
+          if (!frame) {
+            console.warn(
+              'Quick screenshot skipped because the current comparison frame is not ready',
+            )
+            break
+          }
+          captureCanvasScreenshot(frame, 'png').then((blob) => {
+            if (blob) {
+              downloadBlob(blob, `dualview-screenshot-${Date.now()}.png`)
+            }
+          })
+        }
+        break
+      // J/K/L Shuttle controls (TL-005)
+      case 'KeyJ':
+        e.preventDefault()
+        shuttleBackward()
+        break
+      case 'KeyK':
+        e.preventDefault()
+        shuttleStop()
+        break
+      case 'KeyL':
+        e.preventDefault()
+        shuttleForward()
+        break
+      // WEBGL-008: Flip A/B in WebGL comparison mode
+      case 'KeyF':
+        if (comparisonMode === 'webgl-compare') {
+          e.preventDefault()
+          toggleWebGLFlipAB()
+        }
+        break
+      // SCOPE-005: Focus Peaking toggle (P key)
+      case 'KeyP':
+        e.preventDefault()
+        // If already in focus-peak mode, switch back to perceptual diff
+        if (
+          comparisonMode === 'webgl-compare' &&
+          webglComparisonSettings.mode === 'exposure-focus-peak'
+        ) {
+          setWebGLComparisonMode('diff-perceptual')
+        } else {
+          // Switch to webgl-compare mode with focus-peak
+          setComparisonMode('webgl-compare')
+          setWebGLComparisonMode('exposure-focus-peak')
+        }
+        break
+      // SCOPE-006: Zebra Stripes toggle (Z key)
+      case 'KeyZ':
+        e.preventDefault()
+        // If already in zebra mode, switch back to perceptual diff
+        if (
+          comparisonMode === 'webgl-compare' &&
+          webglComparisonSettings.mode === 'exposure-zebra'
+        ) {
+          setWebGLComparisonMode('diff-perceptual')
+        } else {
+          // Switch to webgl-compare mode with zebra
+          setComparisonMode('webgl-compare')
+          setWebGLComparisonMode('exposure-zebra')
+        }
+        break
+      // SCOPE-001/002/003: Toggle video scopes panel (G key)
+      case 'KeyG':
+        e.preventDefault()
+        toggleScopes()
+        break
+    }
+  })
 
   // Global drag and drop
   const handleDrop = useCallback(
@@ -383,7 +346,7 @@ export default function App() {
             <div
               onClick={() => setIsSidebarVisible(true)}
               className="surface-control w-8 border-r border-border cursor-pointer flex items-center justify-center group transition-colors hide-mobile"
-              title="Open Sidebar (B)"
+              title={comparisonMode === 'audio' ? 'Open Sidebar' : 'Open Sidebar (B)'}
             >
               <span className="text-text-muted group-hover:text-text-primary text-lg">→</span>
             </div>

@@ -13,6 +13,7 @@ import { useState, useRef, useCallback, useEffect } from 'react'
 import { snapTimeToFrame } from '../lib/utils'
 import { useHistoryStore } from '../stores/historyStore'
 import { useTimelineStore } from '../stores/timelineStore'
+import { useKeyboardShortcuts } from './useKeyboardShortcuts'
 
 // Minimum mouse movement to distinguish drag from click
 const DRAG_THRESHOLD = 5
@@ -55,6 +56,15 @@ export function useTimelineDrag(options: UseTimelineDragOptions) {
 
   const { moveClip, frameRate, tracks, getSnapPoint } = useTimelineStore()
   const { pushState } = useHistoryStore()
+
+  useKeyboardShortcuts('interaction', (event) => {
+    if (event.key === 'Escape' && dragState && isDraggingRef.current) {
+      event.preventDefault()
+      setDragState(null)
+      isDraggingRef.current = false
+      onDragEnd?.(dragState.clipId, false)
+    }
+  })
 
   // Convert pixels to time
   const pixelsToTime = useCallback(
@@ -188,24 +198,12 @@ export function useTimelineDrag(options: UseTimelineDragOptions) {
       isDraggingRef.current = false
     }
 
-    // Handle escape to cancel drag
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && dragState && isDraggingRef.current) {
-        // Revert to original position
-        setDragState(null)
-        isDraggingRef.current = false
-        onDragEnd?.(dragState.clipId, false)
-      }
-    }
-
     document.addEventListener('mousemove', handleMouseMove)
     document.addEventListener('mouseup', handleMouseUp)
-    document.addEventListener('keydown', handleKeyDown)
 
     return () => {
       document.removeEventListener('mousemove', handleMouseMove)
       document.removeEventListener('mouseup', handleMouseUp)
-      document.removeEventListener('keydown', handleKeyDown)
     }
   }, [
     dragState,

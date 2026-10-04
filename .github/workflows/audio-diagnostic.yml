@@ -1,0 +1,75 @@
+name: Audio responsiveness diagnostic
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'src/lib/audio/**'
+      - 'src/lib/media/audio.ts'
+      - 'src/components/comparison/AudioComparison.tsx'
+      - 'e2e/diagnostics/**'
+      - '*audio-diagnostic.config.ts'
+      - 'tsconfig.audio-diagnostic.json'
+      - '.github/workflows/audio-diagnostic.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  audio-diagnostic:
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.number == 60
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout exact current head
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Fetch exact comparison baseline
+        run: git fetch --no-tags --depth=1 origin daf3ac0111486b1233d21bac0c53144375779acb
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 12.5.1
+          run_install: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Prepare verified sources and fixture manifest
+        run: node e2e/diagnostics/prepare.mjs
+
+      - name: Typecheck diagnostic files
+        run: pnpm exec tsc -p tsconfig.audio-diagnostic.json
+
+      - name: Record runtime versions
+        run: |
+          node --version
+          pnpm --version
+          pnpm exec playwright --version
+          node -e 'const fs=require("node:fs"); const path=require("node:path"); const {createRequire}=require("node:module"); const testRequire=createRequire(require.resolve("@playwright/test/package.json")); const pwRequire=createRequire(testRequire.resolve("playwright/package.json")); const core=path.dirname(pwRequire.resolve("playwright-core/package.json")); fs.copyFileSync(path.join(core,"browsers.json"),"test-results/audio-diagnostic-browser-builds.json")'
+
+      - name: Run every prespecified diagnostic once
+        run: |
+          set -o pipefail
+          pnpm exec playwright test --config playwright.audio-diagnostic.config.ts 2>&1 | tee test-results/audio-diagnostic-run.log
+
+      - name: Preserve all outcomes and full traces
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: audio-diagnostic-${{ github.run_id }}-${{ github.run_attempt }}
+          path: test-results/
+          if-no-files-found: warn
+          retention-days: 7
