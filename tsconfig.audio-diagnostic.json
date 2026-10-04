@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "ES2023",
+    "lib": ["ES2023", "DOM"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "types": ["node"],
+    "strict": true,
+    "skipLibCheck": true,
+    "noEmit": true
+  },
+  "include": [
+    "e2e/diagnostics/*.ts",
+    "playwright.audio-diagnostic.config.ts",
+    "vite.audio-diagnostic.config.ts"
+  ]
+}

@@ -28,6 +28,7 @@ import {
  */
 import { useRef, useEffect, useState, useCallback } from 'react'
 
+import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts'
 import {
   analyzeAudio,
   formatLUFS,
@@ -37,6 +38,8 @@ import {
   type AudioAnalysisResult,
   type LoudnessMetrics,
 } from '../../lib/audio'
+import { audioAnalysisQueue } from '../../lib/audio/AudioJobQueue'
+import { isPlainShortcut } from '../../lib/keyboardShortcuts'
 import {
   AudioSourceRegistry,
   createAudioPlaybackSource,
@@ -56,23 +59,38 @@ type AudioViewMode = 'spectrogram' | 'spectrum' | 'goniometer' | 'loudness' | 'w
 type ActiveAudio = 'both' | 'a' | 'b'
 type AudioRestartScope = 'both' | AudioTrackKey
 
-interface AudioAnalysisState {
+interface AudioAnalysisView {
   mediaId: string | null
-  buffer: AudioBuffer | null
+  file: File | null
   analysis: AudioAnalysisResult | null
   peaks: number[]
   error: string | null
 }
 
+interface AudioAnalysisState extends AudioAnalysisView {
+  buffer: AudioBuffer | null
+}
+
+// Reactの旧描画状態が大きなPCMを保持し続けないよう、表示用の状態へは載せない。
+function analysisView(state: AudioAnalysisState): AudioAnalysisView {
+  return {
+    mediaId: state.mediaId,
+    file: state.file,
+    analysis: state.analysis,
+    peaks: state.peaks,
+    error: state.error,
+  }
+}
+
 function createEmptyAudioAnalysisState(): AudioAnalysisState {
-  return { mediaId: null, buffer: null, analysis: null, peaks: [], error: null }
+  return { mediaId: null, file: null, buffer: null, analysis: null, peaks: [], error: null }
 }
 
-function createAudioErrorState(mediaId: string, error: string): AudioAnalysisState {
-  return { mediaId, buffer: null, analysis: null, peaks: [], error }
+function createAudioErrorState(mediaId: string, file: File, error: string): AudioAnalysisState {
+  return { mediaId, file, buffer: null, analysis: null, peaks: [], error }
 }
 
-const EMPTY_AUDIO_ANALYSIS_VIEW = createEmptyAudioAnalysisState()
+const EMPTY_AUDIO_ANALYSIS_VIEW = analysisView(createEmptyAudioAnalysisState())
 
 // Loudness meter component
 function LoudnessMeter({
@@ -419,8 +437,8 @@ function SpectrogramCanvas({
   currentTime,
   duration,
 }: {
-  analysisA: AudioAnalysisState
-  analysisB: AudioAnalysisState
+  analysisA: AudioAnalysisView
+  analysisB: AudioAnalysisView
   currentTime: number
   duration: number
 }) {
@@ -538,8 +556,8 @@ function GoniometerCanvas({
   analysisB,
   activeAudio,
 }: {
-  analysisA: AudioAnalysisState
-  analysisB: AudioAnalysisState
+  analysisA: AudioAnalysisView
+  analysisB: AudioAnalysisView
   activeAudio: ActiveAudio
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -664,10 +682,10 @@ export function AudioComparison() {
   const [volumeB] = useState(1)
   const [isAnalyzingA, setIsAnalyzingA] = useState(false)
   const [isAnalyzingB, setIsAnalyzingB] = useState(false)
-  const [analysisA, setAnalysisA] = useState<AudioAnalysisState>(createEmptyAudioAnalysisState)
-  const [analysisB, setAnalysisB] = useState<AudioAnalysisState>(createEmptyAudioAnalysisState)
-  const analysisARef = useRef(analysisA)
-  const analysisBRef = useRef(analysisB)
+  const [analysisA, setAnalysisA] = useState<AudioAnalysisView>(EMPTY_AUDIO_ANALYSIS_VIEW)
+  const [analysisB, setAnalysisB] = useState<AudioAnalysisView>(EMPTY_AUDIO_ANALYSIS_VIEW)
+  const analysisARef = useRef<AudioAnalysisState>(createEmptyAudioAnalysisState())
+  const analysisBRef = useRef<AudioAnalysisState>(createEmptyAudioAnalysisState())
   const [targetPlatform, setTargetPlatform] = useState<keyof typeof LOUDNESS_TARGETS>('spotify')
   const [showSettings, setShowSettings] = useState(false)
 
@@ -686,11 +704,11 @@ export function AudioComparison() {
   const mediaA = analysisClipA ? getFile(analysisClipA.mediaId) : null
   const mediaB = analysisClipB ? getFile(analysisClipB.mediaId) : null
 
-  const analysisAIsCurrent = analysisA.mediaId === mediaA?.id
-  const analysisBIsCurrent = analysisB.mediaId === mediaB?.id
+  const analysisAIsCurrent = analysisA.mediaId === mediaA?.id && analysisA.file === mediaA?.file
+  const analysisBIsCurrent = analysisB.mediaId === mediaB?.id && analysisB.file === mediaB?.file
   const displayAnalysisA = analysisAIsCurrent ? analysisA : EMPTY_AUDIO_ANALYSIS_VIEW
   const displayAnalysisB = analysisBIsCurrent ? analysisB : EMPTY_AUDIO_ANALYSIS_VIEW
-  const hasAudio = displayAnalysisA.buffer !== null || displayAnalysisB.buffer !== null
+  const hasAudio = displayAnalysisA.analysis !== null || displayAnalysisB.analysis !== null
   const isAnalyzing = isAnalyzingA || isAnalyzingB
   const audioErrors = [
     analysisAIsCurrent && analysisA.error ? `A: ${analysisA.error}` : null,
@@ -720,27 +738,44 @@ export function AudioComparison() {
   // Extract the primary embedded audio track through Mediabunny so this also works for
   // containers/codecs that the browser cannot play natively (for example ProRes MOV).
   const loadAudio = useCallback(
-    async (mediaId: string, file: File, signal: AbortSignal): Promise<AudioAnalysisState> => {
+    async (
+      mediaId: string,
+      file: File,
+      signal: AbortSignal,
+      track: AudioTrackKey,
+    ): Promise<AudioAnalysisState> => {
       try {
-        const buffer = await extractPrimaryAudioBuffer(file, signal)
-        if (!buffer || signal.aborted) return createEmptyAudioAnalysisState()
-
-        const analysis = await analyzeAudio(buffer)
-        if (signal.aborted) return createEmptyAudioAnalysisState()
-
-        return {
-          mediaId,
-          buffer,
-          analysis,
-          peaks: Array.from(analysis.waveformPeaks),
-          error: null,
-        }
+        return await audioAnalysisQueue.run(signal, async () => {
+          const retainedPcmBytes = [
+            analysisARef.current.buffer,
+            analysisBRef.current.buffer,
+          ].reduce(
+            (sum, buffer) => sum + (buffer ? buffer.length * buffer.numberOfChannels * 4 : 0),
+            0,
+          )
+          const buffer = await extractPrimaryAudioBuffer(file, signal, retainedPcmBytes)
+          if (!buffer || signal.aborted) return createEmptyAudioAnalysisState()
+          const analysis = await analyzeAudio(buffer, signal)
+          if (signal.aborted) return createEmptyAudioAnalysisState()
+          const next = {
+            mediaId,
+            file,
+            buffer,
+            analysis,
+            peaks: Array.from(analysis.waveformPeaks),
+            error: null,
+          }
+          // 次の要求の事前予算へ、直前に完成したPCMも確実に含める。
+          if (track === 'a') analysisARef.current = next
+          else analysisBRef.current = next
+          return next
+        })
       } catch (error) {
         if (signal.aborted) return createEmptyAudioAnalysisState()
 
         const message = error instanceof Error ? error.message : 'Embedded audio analysis failed'
         console.error('Failed to load embedded video audio:', error)
-        return createAudioErrorState(mediaId, message)
+        return createAudioErrorState(mediaId, file, message)
       }
     },
     [],
@@ -771,12 +806,12 @@ export function AudioComparison() {
 
   const updateAnalysisA = useCallback((next: AudioAnalysisState) => {
     analysisARef.current = next
-    setAnalysisA(next)
+    setAnalysisA(analysisView(next))
   }, [])
 
   const updateAnalysisB = useCallback((next: AudioAnalysisState) => {
     analysisBRef.current = next
-    setAnalysisB(next)
+    setAnalysisB(analysisView(next))
   }, [])
 
   useEffect(() => {
@@ -790,6 +825,8 @@ export function AudioComparison() {
     const loadFile = async () => {
       await Promise.resolve()
       if (cancelled) return
+      // 新しいPCMを確保する前に、旧素材の再生・表示用参照を手放す。
+      updateAnalysisA(createEmptyAudioAnalysisState())
 
       if (!mediaAId || !mediaAFile) {
         updateAnalysisA(createEmptyAudioAnalysisState())
@@ -798,7 +835,7 @@ export function AudioComparison() {
       }
 
       setIsAnalyzingA(true)
-      const next = await loadAudio(mediaAId, mediaAFile, abortController.signal)
+      const next = await loadAudio(mediaAId, mediaAFile, abortController.signal, 'a')
       if (cancelled || abortController.signal.aborted) return
 
       updateAnalysisA(next)
@@ -817,6 +854,8 @@ export function AudioComparison() {
     return () => {
       cancelled = true
       abortController.abort()
+      stopAudioTrack('a')
+      analysisARef.current = createEmptyAudioAnalysisState()
     }
   }, [
     invalidatePendingAudioPlayback,
@@ -838,6 +877,8 @@ export function AudioComparison() {
     const loadFile = async () => {
       await Promise.resolve()
       if (cancelled) return
+      // 新しいPCMを確保する前に、旧素材の再生・表示用参照を手放す。
+      updateAnalysisB(createEmptyAudioAnalysisState())
 
       if (!mediaBId || !mediaBFile) {
         updateAnalysisB(createEmptyAudioAnalysisState())
@@ -846,7 +887,7 @@ export function AudioComparison() {
       }
 
       setIsAnalyzingB(true)
-      const next = await loadAudio(mediaBId, mediaBFile, abortController.signal)
+      const next = await loadAudio(mediaBId, mediaBFile, abortController.signal, 'b')
       if (cancelled || abortController.signal.aborted) return
 
       updateAnalysisB(next)
@@ -865,6 +906,8 @@ export function AudioComparison() {
     return () => {
       cancelled = true
       abortController.abort()
+      stopAudioTrack('b')
+      analysisBRef.current = createEmptyAudioAnalysisState()
     }
   }, [
     invalidatePendingAudioPlayback,
@@ -886,9 +929,7 @@ export function AudioComparison() {
 
       if (playbackDirection < 0) return
 
-      const currentAnalysisA = analysisARef.current
-      const currentAnalysisB = analysisBRef.current
-      if (!currentAnalysisA.buffer && !currentAnalysisB.buffer) return
+      if (!analysisARef.current.buffer && !analysisBRef.current.buffer) return
 
       const context = playbackContextRef.current ?? new AudioContext()
       playbackContextRef.current = context
@@ -908,6 +949,9 @@ export function AudioComparison() {
         return
       }
 
+      // resumeの待機中は旧PCMをローカルへ保持せず、世代確認後に現在の所有者を読む。
+      const currentAnalysisA = analysisARef.current
+      const currentAnalysisB = analysisBRef.current
       const clipA = findActiveClip(trackA?.clips ?? [], time)
       const clipB = findActiveClip(trackB?.clips ?? [], time)
 
@@ -1022,27 +1066,24 @@ export function AudioComparison() {
     [invalidateAudioPlayback],
   )
 
-  // Keyboard shortcuts
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement) return
+  useKeyboardShortcuts('audio', (e) => {
+    if (!isPlainShortcut(e)) return
 
-      switch (e.key.toLowerCase()) {
-        case 'a':
-          setActiveAudio('a')
-          break
-        case 'b':
-          setActiveAudio('b')
-          break
-        case 's':
-          setActiveAudio('both')
-          break
-      }
+    switch (e.code) {
+      case 'KeyA':
+        e.preventDefault()
+        setActiveAudio('a')
+        break
+      case 'KeyB':
+        e.preventDefault()
+        setActiveAudio('b')
+        break
+      case 'KeyS':
+        e.preventDefault()
+        setActiveAudio('both')
+        break
     }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [])
+  })
 
   return (
     <div className="w-full h-full bg-background flex flex-col overflow-hidden">
@@ -1107,6 +1148,7 @@ export function AudioComparison() {
               <button
                 key={mode}
                 onClick={() => setActiveAudio(mode)}
+                aria-pressed={activeAudio === mode}
                 className={cn(
                   'surface-control-elevation ui-radius-sm border px-3 py-1 text-xs font-medium transition-all',
                   activeAudio === mode

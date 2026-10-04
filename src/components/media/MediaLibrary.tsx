@@ -11,9 +11,10 @@ import {
   RotateCcw,
   Clock,
 } from 'lucide-react'
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
+import { useState, useMemo, useCallback, useRef } from 'react'
 import type { DragEvent } from 'react'
 
+import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts'
 import { MEDIA_DRAG_TYPE, type MediaDragData } from '../../lib/media/dragData'
 import { cn, formatTime } from '../../lib/utils'
 import { useMediaStore } from '../../stores/mediaStore'
@@ -199,23 +200,19 @@ export function MediaLibrary() {
     })
   }, [])
 
-  // Keyboard shortcuts for filters (Alt+1,2,3...)
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Only handle Alt+key shortcuts
-      if (!e.altKey) return
+  useKeyboardShortcuts('media', (e) => {
+    // Only handle Alt+key shortcuts
+    if (!e.altKey || e.shiftKey) return
+    // 狭幅で併存する非表示の一覧は、表示中の一覧のキーを消費しない。
+    if (!searchInputRef.current?.getClientRects().length) return
 
-      // Find matching filter config
-      const config = FILTER_CONFIG.find((f) => f.shortcut === e.key)
-      if (config) {
-        e.preventDefault()
-        handleFilterClick(config.type, e.ctrlKey || e.metaKey)
-      }
+    // Find matching filter config
+    const config = FILTER_CONFIG.find((f) => f.shortcut === e.key)
+    if (config) {
+      e.preventDefault()
+      handleFilterClick(config.type, e.ctrlKey || e.metaKey)
     }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [handleFilterClick])
+  })
 
   const handleAddToTimeline = (mediaId: string, trackType: 'a' | 'b') => {
     const media = files.find((f) => f.id === mediaId)

@@ -258,8 +258,8 @@ test('recomputes compression-only highlights when the area threshold changes', a
 
   const requestsBefore = await page.evaluate(
     () =>
-      (window as Window & { __timelineAnalysisCounters: { analysisRequests: number } })
-        .__timelineAnalysisCounters.analysisRequests,
+      (window as Window & { __timelineAnalysisCounters?: { analysisRequests: number } })
+        .__timelineAnalysisCounters!.analysisRequests,
   )
   expect(requestsBefore).toBeGreaterThan(0)
   const areaThreshold = page.getByRole('slider', { name: 'Highlight area threshold' })
@@ -273,8 +273,8 @@ test('recomputes compression-only highlights when the area threshold changes', a
   expect(
     await page.evaluate(
       () =>
-        (window as Window & { __timelineAnalysisCounters: { analysisRequests: number } })
-          .__timelineAnalysisCounters.analysisRequests,
+        (window as Window & { __timelineAnalysisCounters?: { analysisRequests: number } })
+          .__timelineAnalysisCounters!.analysisRequests,
     ),
   ).toBe(requestsBefore)
 })

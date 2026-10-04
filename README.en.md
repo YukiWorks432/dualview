@@ -414,7 +414,9 @@ The audio player follows timeline clip placement, trim in-points, and playback s
 
 Reference targets include Spotify, YouTube, Apple Music, EBU R128 (-23 LUFS), and ATSC A/85 (-24 LUFS). The ±1 LU indicator is a convenience comparison, not a certification of platform or broadcast compliance.
 
-To avoid exhausting browser memory on long or high-channel-count sources, embedded-audio analysis refuses decoded PCM estimates above 512 MiB and reports the reason in the Audio QA view.
+Embedded-audio analysis keeps the existing 512 MiB decoded-PCM limit per input, with at most 1 GiB retained for A/B playback. Decode and analysis jobs run one at a time. Before allocation, the application checks a 2 GiB estimate that includes the other side's retained PCM, the new output PCM, an additional output-sized decoder allowance, and the analysis workspace. This is a planning limit for PCM and analysis resources, not a guarantee about browser process memory: encoded input, video resources, native decoder overhead, and garbage-collection timing are outside that estimate.
+
+Analysis keeps filter state and loudness-window results instead of full-length intermediate PCM arrays, and regularly yields to handle input and cancellation. Changing a source or leaving Audio QA cancels active and queued work, stops its playback sources, and releases the old PCM references. Inputs above the limits report the reason in the Audio QA view.
 
 ### Audio Shortcuts
 
@@ -566,10 +568,17 @@ silent because reverse audio is not synthesized.
 | `Ctrl/⌘` + `S`           | Save project           |
 | `?`                      | Show all shortcuts     |
 
-In `Audio QA`, `A`, `B`, and `S` select Track A, Track B, and both tracks. `B` and `S` also have sidebar
-and clip-editing assignments; use the on-screen audio buttons to select the intended action explicitly.
-Inputs, dialogs, and active drags have their own key handling. `Escape` also dismisses dialogs or
-cancels a drag.
+Comparison-mode shortcuts take priority over timeline editing and global actions. In `Audio QA`,
+`A`, `B`, and `S` select Track A, Track B, and both tracks. `B` does not toggle the sidebar and `S`
+does not split clips in this mode. Ctrl/Command editing, saving and Undo/Redo, and Shift+S screenshots
+keep their usual meanings. `G` toggles gamut warnings in Difference and video scopes in other modes.
+Unmodified digits switch comparison modes; Shift+1–4 in Quad View select its panes, and Alt+1/2
+filter videos/images only while the media library is visible.
+
+Input, textarea, select and contenteditable controls, IME composition, and open dialogs protect
+against global shortcuts. Escape in a dialog closes only that dialog, restores focus, and preserves
+the loop. Escape cancels an active clip drag or closes its menu even if an input retains focus,
+without changing the input value or loop; IME composition and dialogs still take priority.
 
 ---
 
