@@ -1,3 +1,10 @@
+# /// script
+# requires-python = ">=3.12"
+# dependencies = [
+#     "pillow==13.0.0",
+#     "reportlab==5.0.1",
+# ]
+# ///
 """Compose the real UI capture in PDF, then rasterize with Poppler."""
 from pathlib import Path
 import subprocess

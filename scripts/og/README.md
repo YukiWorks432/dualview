@@ -6,8 +6,11 @@ retouched. The entire screenshot is scaled proportionally without cropping.
 
 ## Reproduce
 
-Use the repository's Node/pnpm versions and installed dependencies, Python 3 with
-`reportlab` and `Pillow`, Poppler (`pdftoppm`), and DejaVu Sans fonts. On Debian the
+Use the repository's Node/pnpm versions and installed dependencies,
+[uv](https://docs.astral.sh/uv/getting-started/installation/), Python 3.12 or newer,
+Poppler (`pdftoppm`), and DejaVu Sans fonts. uv reads the script metadata and
+`compose.py.lock` to install ReportLab and Pillow in an isolated environment;
+manual `pip install` and a repository-wide Python environment are unnecessary. On Debian the
 font files are in `/usr/share/fonts/truetype/dejavu`; set `OG_FONT_DIR` elsewhere.
 The embedded fonts avoid PDF viewer substitution. The app uses its configured
 system sans fallback; remote Adobe fonts are blocked for an offline capture.
@@ -18,8 +21,12 @@ pnpm preview --host 127.0.0.1 --port 4175
 # In a second terminal:
 pnpm exec playwright install chromium
 node scripts/og/capture.mjs
-python3 scripts/og/compose.py
+uv run --locked scripts/og/compose.py
 ```
+
+To update the Python dependencies intentionally, update their exact versions in
+`compose.py`, run `uv lock --script scripts/og/compose.py`, and commit both files.
+`--locked` fails if the metadata and lockfile disagree.
 
 Set `OG_CHROMIUM_PATH` to use an installed Chromium binary, and `OG_BASE_URL` to
 change the local preview address (keep the hostname `127.0.0.1`). Run scripts from
