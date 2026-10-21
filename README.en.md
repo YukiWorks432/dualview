@@ -755,7 +755,7 @@ Heavy comparison modes and export tooling are split so they are loaded only when
 
 <h2 id="getting-started">🚀 Getting Started</h2>
 
-Use Node.js 24.21.0 from [.node-version](.node-version) and pnpm 12.5.1 from
+Use Node.js 24.22.1 from [.node-version](.node-version) and pnpm 12.5.1 from
 [package.json](package.json). If using `fnm`, follow its
 [installation guide](https://github.com/Schniz/fnm#installation) first. Run the commands below from the
 cloned repository's root.
@@ -789,8 +789,8 @@ Open the development URL printed in the terminal. `pnpm preview` serves the buil
 
 ### Requirements
 
-- Node.js 24.21.0 and pnpm 12.5.1 are the repository's selected versions.
-- Declared engine minimums: Node.js 24.21.0 and pnpm 12.0.0.
+- Node.js 24.22.1 and pnpm 12.5.1 are the repository's selected versions.
+- Declared engine minimums: Node.js 24.22.1 and pnpm 12.0.0.
 - `fnm` is optional; the commands above use it to install and select the repository Node.js version.
 - WebGL analysis needs WebGL 2.0.
 - MP4 export needs WebCodecs `VideoEncoder`.

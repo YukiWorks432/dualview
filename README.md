@@ -678,7 +678,7 @@ pnpm dlx shadcn@latest add @fluid/elevated --dry-run
 <h2 id="getting-started">ローカルで動かす</h2>
 
 Node.jsは[.node-version](.node-version)、pnpmは[package.json](package.json)の`packageManager`に合わせます。
-現在の指定はNode.js 24.21.0、pnpm 12.5.1です。`engines`の最低条件はNode.js 24.21.0、pnpm 12.0.0です。
+現在の指定はNode.js 24.22.1、pnpm 12.5.1です。`engines`の最低条件はNode.js 24.22.1、pnpm 12.0.0です。
 `fnm`を使う場合は[公式手順](https://github.com/Schniz/fnm#installation)で導入しておきます。
 
 ```bash
