@@ -5,7 +5,7 @@
 ## 開発環境を用意する
 
 Node.jsは[.node-version](../.node-version)、pnpmは[package.json](../package.json)の`packageManager`に合わせる。
-現在の指定はNode.js 24.21.0、pnpm 12.5.1。`engines`の最低条件はNode.js 24.21.0、pnpm 12.0.0。
+現在の指定はNode.js 24.22.1、pnpm 12.5.1。`engines`の最低条件はNode.js 24.22.1、pnpm 12.0.0。
 `fnm`を使う場合は[公式手順](https://github.com/Schniz/fnm#installation)で導入しておく。
 
 ```bash
@@ -120,8 +120,8 @@ Viteは依存コードの通知を`dist/licenses/third-party.md`へ生成する�
 
 <h2 id="english">English: development and deployment</h2>
 
-Use Node.js 24.21.0 and pnpm 12.5.1 as recorded in `.node-version` and `package.json`.
-The declared engine minimums are Node.js 24.21.0 and pnpm 12.0.0. Clone this fork, run `fnm install`
+Use Node.js 24.22.1 and pnpm 12.5.1 as recorded in `.node-version` and `package.json`.
+The declared engine minimums are Node.js 24.22.1 and pnpm 12.0.0. Clone this fork, run `fnm install`
 and `fnm use` if using fnm, install with `pnpm install --frozen-lockfile`, then run `pnpm dev`.
 All commands on this page run from the repository root. Open the URL printed by Vite.
 

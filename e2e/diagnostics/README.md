@@ -22,7 +22,7 @@ diagnostic retains its broader observations without adding a latency threshold.
 
 ## Run
 
-Use the repository's pinned Node 24.21.0 / pnpm 12.5.1 environment and locked
+Use the repository's pinned Node 24.22.1 / pnpm 12.5.1 environment and locked
 Playwright 1.63 dependencies. CI installs its matching Chromium build; each result
 records the actual browser version and the artifact includes `browsers.json`.
 
