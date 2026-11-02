@@ -9,3 +9,10 @@ allowBuilds:
   esbuild: true
   sharp: true
   workerd: true
+overrides:
+  dompurify@>=3.4.4 <3.4.17: ^3.4.17
+  source-map-js@>=1.0.0 <1.2.2: ^1.2.2
+  vite@>=8.3.0 <=8.3.2: ^8.3.3
+  # Miniflareが固定する依存を修正版へ上げる。親の更新後には適用しない。
+  miniflare@5.20260918.0-alpha>sharp: 0.35.5
+  miniflare@5.20260918.0-alpha>undici: 7.30.1

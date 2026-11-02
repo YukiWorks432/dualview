@@ -53,6 +53,22 @@ CIは固定ロックファイルで依存関係を導入し、通常検査とChr
 素材の由来、生成コマンド、過去の測定値は[試験素材ガイド](../e2e/fixtures/README.md)にまとめている。
 過去の測定値を今回の検証結果として扱わない。
 
+## 依存関係を更新・監査する
+
+[Dependabot設定](../.github/dependabot.yml)により、pnpmとGitHub Actionsの更新PRを毎週月曜10:30（日本時間）に確認する。
+npm依存は本番用と開発用に分け、マイナー版・パッチ版をまとめる。メジャー版は個別に確認する。
+通常のnpm更新は公開から1日待ち、既存の24時間の公開猶予とインストール時のビルド許可設定を維持する。
+
+```bash
+pnpm audit --audit-level=high
+```
+
+監査は開発依存関係も含み、`high`以上を検出した場合、または監査通信に失敗した場合は失敗する。
+PRと`main`更新時には通常CIの`checks`で、依存関係のインストール前に実行する。
+[定期監査](../.github/workflows/dependency-audit.yml)は毎日09:09（日本時間）と手動実行に対応し、
+ロックファイルを直接監査するため、依存関係のインストールやビルドを行わない。
+実行時刻はGitHub Actionsの混雑により遅れる場合がある。
+
 ## 実装を探す
 
 | 場所                                                 | 主な責務                                                 |
@@ -137,6 +153,19 @@ then run `pnpm test:e2e`. CI uses frozen dependency installation and separate qu
 See [the workflow](../.github/workflows/ci.yml), [Playwright configuration](../playwright.config.ts),
 and [fixture guide](../e2e/fixtures/README.md#english). Historical fixture measurements are not evidence
 that a later change passed its tests.
+
+### Dependency updates and audits
+
+[Dependabot](../.github/dependabot.yml) checks npm and GitHub Actions updates every Monday at 10:30 JST.
+Minor and patch npm updates are grouped separately for production and development dependencies; major
+updates remain separate. Normal npm updates wait one day after publication, preserving the existing
+24-hour release-age policy and dependency build approvals.
+
+Run `pnpm audit --audit-level=high` to audit all dependencies, including development dependencies.
+High or critical advisories and registry errors fail the audit. The `checks` job runs it before
+installing dependencies for pull requests and pushes to `main`. The [scheduled audit](../.github/workflows/dependency-audit.yml)
+runs daily at 09:09 JST and supports manual dispatch. It audits the lockfile without installing or
+building dependencies. GitHub Actions congestion may delay the scheduled run.
 
 ### Architecture
 
