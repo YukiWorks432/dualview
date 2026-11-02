@@ -58,13 +58,13 @@ ProResコンポーネントのMPL対象部分にはMPL-2.0が適用されます�
 MPL-covered ProRes code remains under MPL-2.0. DualView itself remains MIT-licensed; the applicable
 license is determined for each component and file.
 
-## pixelmatch 7.2.0
+## pixelmatch 8.0.0
 
 別ファイルとして出力する差分解析Workerは、フレームの画素比較に`pixelmatch`を同梱します。
 
 The separately emitted difference-analysis Workers include `pixelmatch` to compare frame pixels.
 
-- Package: `pixelmatch` 7.2.0
+- Package: `pixelmatch` 8.0.0
 - License: ISC
 - Project: https://github.com/mapbox/pixelmatch
 
