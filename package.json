@@ -38,21 +38,21 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@base-ui/react": "^1.8.0",
-    "@mediabunny/prores": "^1.59.0",
+    "@base-ui/react": "^1.9.0",
+    "@mediabunny/prores": "^1.65.0",
     "@tailwindcss/vite": "^4.3.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "gif.js-upgrade": "^0.2.1",
     "jspdf": "^4.2.1",
-    "lucide-react": "^1.47.0",
-    "mediabunny": "^1.59.0",
+    "lucide-react": "^1.66.0",
+    "mediabunny": "^1.65.0",
     "pixelmatch": "^7.2.0",
-    "react": "^19.3.0",
-    "react-dom": "^19.3.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
     "tailwind-merge": "^3.7.0",
-    "uuid": "^14.0.2",
-    "zustand": "^5.0.15"
+    "uuid": "^14.0.3",
+    "zustand": "^5.0.16"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",
