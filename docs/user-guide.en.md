@@ -95,6 +95,13 @@ the shared preview. Image clips are not supported by this video-frame analysis.
 | Pixel threshold, default 0.10 | Difference needed to classify an individual pixel as changed                 |
 | Area threshold, default 2%    | Changed-pixel proportion needed to highlight an interval                     |
 
+Pixel colors are compared using pixelmatch 8's OKLab color space and HyAB distance. Compared with
+versions using pixelmatch 7, the same settings can produce different difference rates, highlighted
+intervals, and rectangles. The defaults remain 0.10 for the pixel threshold, 2% for the area threshold,
+and 60% for region sensitivity; settings are not automatically converted to reproduce the old metric.
+If you tuned settings before updating, check the same media again and adjust thresholds or sensitivity
+as needed.
+
 Transparent pixels are compared by visible color and opacity; hidden RGB differences between two fully
 transparent pixels do not count. Missing frames, A/B gaps, unsupported media, and decode errors are
 separate from “no difference.” The lane also distinguishes analyzed and not-yet-analyzed intervals.

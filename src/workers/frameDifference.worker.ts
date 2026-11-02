@@ -4,7 +4,7 @@ import type {
   DifferenceWorkerResponse,
 } from '../lib/difference/workerProtocol'
 /*!
- * pixelmatch 7.2.0 — ISC License
+ * pixelmatch 8.0.0 — ISC License
  * Copyright (c) 2025, Mapbox
  *
  * Permission to use, copy, modify, and/or distribute this software for any purpose with or without
