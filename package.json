@@ -47,7 +47,7 @@
     "jspdf": "^4.2.1",
     "lucide-react": "^1.66.0",
     "mediabunny": "^1.65.0",
-    "pixelmatch": "^7.2.0",
+    "pixelmatch": "^8.0.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "tailwind-merge": "^3.7.0",
