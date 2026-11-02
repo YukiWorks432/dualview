@@ -5,11 +5,26 @@
  */
 
 import { Cloud, CloudOff, Loader2, Check, AlertCircle } from 'lucide-react'
+import { useLayoutEffect, useState } from 'react'
 
 import { usePersistenceStore } from '../../stores/persistenceStore'
 
 export function SaveIndicator() {
   const { saveStatus, lastSavedAt, projectMetadata, isIndexedDBSupported } = usePersistenceStore()
+  const [now, setNow] = useState<number | null>(null)
+
+  useLayoutEffect(() => {
+    if (!isIndexedDBSupported || !projectMetadata || saveStatus !== 'saved' || !lastSavedAt) return
+
+    const updateTime = () => setNow(Date.now())
+    updateTime()
+    const timer = window.setInterval(updateTime, 1000)
+    document.addEventListener('visibilitychange', updateTime)
+    return () => {
+      window.clearInterval(timer)
+      document.removeEventListener('visibilitychange', updateTime)
+    }
+  }, [isIndexedDBSupported, projectMetadata, saveStatus, lastSavedAt])
 
   if (!isIndexedDBSupported) {
     return (
@@ -28,8 +43,7 @@ export function SaveIndicator() {
   }
 
   const formatTime = (date: Date) => {
-    const now = new Date()
-    const diff = now.getTime() - date.getTime()
+    const diff = (now ?? date.getTime()) - date.getTime()
 
     if (diff < 60000) {
       return 'Just now'
