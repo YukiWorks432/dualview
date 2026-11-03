@@ -9,6 +9,7 @@ declare global {
 
 test('WebGLしきい値の単独変更を自動保存し、IndexedDBと再読込後のUIに反映する', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
+  await page.clock.install({ time: new Date('2026-11-04T08:00:00+09:00') })
   await page.goto('/')
   await expect
     .poll(() =>
@@ -32,6 +33,8 @@ test('WebGLしきい値の単独変更を自動保存し、IndexedDBと再読込
     .locator('..')
     .getByRole('slider')
   await expect(threshold).toHaveValue('0.02')
+  // 500msだけ表示される未保存状態を、実行負荷によらず観測する。
+  await page.clock.pauseAt(new Date('2026-11-04T10:00:00+09:00'))
   await page.evaluate(async () => {
     const { usePersistenceStore } = await import('/src/stores/persistenceStore.ts')
     window.__autosaveStatuses = []
@@ -43,6 +46,11 @@ test('WebGLしきい値の単独変更を自動保存し、IndexedDBと再読込
   await threshold.press('ArrowRight')
   await expect(threshold).toHaveValue('0.03')
   await expect(page.getByText('Unsaved changes', { exact: true })).toBeVisible()
+  await page.clock.runFor(499)
+  await expect(page.getByText('Unsaved changes', { exact: true })).toBeVisible()
+  expect(await page.evaluate(() => window.__autosaveStatuses)).toEqual(['unsaved'])
+  await page.clock.runFor(1)
+  await page.clock.resume()
   await expect(page.getByText('Saved locally', { exact: true })).toBeVisible()
   await expect
     .poll(() =>
