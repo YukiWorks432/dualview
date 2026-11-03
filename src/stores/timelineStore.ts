@@ -601,6 +601,23 @@ const createTimelineState: StateCreator<TimelineStore> = (set, get) => ({
       set({ editError: 'ロックされたトラックは編集できません。' })
       return
     }
+    if (state.rippleEnabled && side === 'end') {
+      const overlapping = state.tracks.some((track) => {
+        const selected = track.clips
+          .filter((c) => ids.includes(c.id))
+          .sort((a, b) => a.startTime - b.startTime)
+        return selected.some(
+          (clip, index) => index > 0 && clip.startTime < selected[index - 1].endTime,
+        )
+      })
+      if (overlapping) {
+        set({
+          editError:
+            '重なったクリップの一括リップルトリムは実行できません。個別に編集してください。',
+        })
+        return
+      }
+    }
     const edits = new Map<string, TimelineClip>()
     for (const original of originals) {
       const trimmed = state.previewTrimClip(original.id, side, newTime)

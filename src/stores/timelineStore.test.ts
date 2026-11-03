@@ -645,3 +645,32 @@ it('複数末尾トリムは選択の配置を保ち、選択外だけをリッ�
     [10, 14],
   ])
 })
+
+it('重なった選択の一括リップルトリムを変更前に拒否する', () => {
+  seed({ startTime: 0, endTime: 10, inPoint: 0, outPoint: 10 })
+  const first = clips()[0]
+  timeline.setState({
+    tracks: timeline.getState().tracks.map((t) =>
+      t.id === 'track-a'
+        ? {
+            ...t,
+            clips: [
+              first,
+              { ...first, id: 'second', startTime: 1, endTime: 10 },
+              { ...first, id: 'tail', startTime: 10, endTime: 12 },
+            ],
+          }
+        : t,
+    ),
+    rippleEnabled: true,
+  })
+  const before = structuredClone(clips())
+  expect(
+    history
+      .getState()
+      .runWithHistory(() => timeline.getState().trimClips(['clip', 'second'], 'end', 2)),
+  ).toBe(false)
+  expect(clips()).toEqual(before)
+  expect(history.getState().past).toHaveLength(0)
+  expect(timeline.getState().editError).toContain('重なったクリップ')
+})
