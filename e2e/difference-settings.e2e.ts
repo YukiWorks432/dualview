@@ -89,10 +89,18 @@ for (const colorScheme of ['dark', 'light'] as const) {
       expect(hovered, 'Selected option must brighten on hover').toBeGreaterThan(resting)
       await unchecked.hover()
       await expectReadableItems(menu)
-      await unchecked.click()
+      const optionName = await unchecked.innerText()
+      await menu.getByRole('menuitemradio', { name: optionName, exact: true }).click()
+      // 選択で閉じる処理が終わってから、同じメニューを再表示する。
+      await expect(menu).toBeHidden()
       await trigger.click()
+      await expect(menu).toBeVisible()
+      await expect(
+        menu.getByRole('menuitemradio', { name: optionName, exact: true }),
+      ).toHaveAttribute('aria-checked', 'true')
       await expectReadableItems(menu)
       await page.keyboard.press('Escape')
+      await expect(menu).toBeHidden()
     }
   })
 }
