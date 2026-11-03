@@ -611,3 +611,37 @@ describe('タイムラインの操作契約', () => {
     expect(timeline.getState().getSnapPoint(1, ['clip'])).toBeNull()
   })
 })
+
+it('複数末尾トリムは選択の配置を保ち、選択外だけをリップル移動する', () => {
+  seed({ startTime: 0, endTime: 4, inPoint: 0, outPoint: 4 })
+  const first = clips()[0]
+  timeline.setState({
+    tracks: timeline.getState().tracks.map((t) =>
+      t.id === 'track-a'
+        ? {
+            ...t,
+            clips: [
+              first,
+              { ...first, id: 'second', startTime: 5, endTime: 9 },
+              { ...first, id: 'tail', startTime: 10, endTime: 14 },
+            ],
+          }
+        : t,
+    ),
+    rippleEnabled: true,
+  })
+  history
+    .getState()
+    .runWithHistory(() => timeline.getState().trimClips(['clip', 'second'], 'end', 6))
+  expect(clips().map((c) => [c.startTime, c.endTime])).toEqual([
+    [0, 6],
+    [5, 6],
+    [9, 13],
+  ])
+  history.getState().undo()
+  expect(clips().map((c) => [c.startTime, c.endTime])).toEqual([
+    [0, 4],
+    [5, 9],
+    [10, 14],
+  ])
+})

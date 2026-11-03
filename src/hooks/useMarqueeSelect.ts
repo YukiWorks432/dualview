@@ -8,9 +8,6 @@ export function useMarqueeSelect({
   containerRef,
 }: {
   containerRef: RefObject<HTMLElement | null>
-  pixelsPerSecond: number
-  trackHeight: number
-  rulerHeight?: number
 }) {
   const [box, setBox] = useState<{
     startX: number

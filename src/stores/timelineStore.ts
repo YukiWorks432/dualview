@@ -98,6 +98,7 @@ interface TimelineStore {
   previewTrimClip: (id: string, side: 'start' | 'end', time: number) => TimelineClip | undefined
   moveClip: (clipId: string, newTrackId: string, newStartTime: number) => void
   trimClip: (clipId: string, side: 'start' | 'end', newTime: number) => void
+  trimClips: (ids: string[], side: 'start' | 'end', newTime: number) => void
   splitClip: (clipId: string, splitTime: number) => TimelineClip | null // TL-001
   splitAndKeepLeft: (clipId: string, splitTime: number) => void // TL-001: Split and delete right portion
   splitAndKeepRight: (clipId: string, splitTime: number) => void // TL-001: Split and delete left portion
@@ -589,38 +590,50 @@ const createTimelineState: StateCreator<TimelineStore> = (set, get) => ({
     return sliceClip(original, start, end)
   },
 
-  trimClip: (clipId: string, side: 'start' | 'end', newTime: number) => {
+  trimClip: (clipId, side, newTime) => get().trimClips([clipId], side, newTime),
+
+  trimClips: (ids, side, newTime) => {
     const state = get()
-    const track = state.tracks.find((t) => t.clips.some((c) => c.id === clipId))
-    const original = track?.clips.find((c) => c.id === clipId)
-    if (!original || !track || track.locked) return
-    if (side === 'start' && hasClipKeyframes(clipId)) {
-      set({ editError: KEYFRAME_EDIT_ERROR })
+    if (!Number.isFinite(newTime)) return
+    const originals = state.tracks.flatMap((t) => t.clips).filter((c) => ids.includes(c.id))
+    if (!originals.length) return
+    if (state.tracks.some((t) => t.locked && t.clips.some((c) => ids.includes(c.id)))) {
+      set({ editError: 'ロックされたトラックは編集できません。' })
       return
     }
-    const trimmed = state.previewTrimClip(clipId, side, newTime)
-    if (!trimmed || trimmed === original) return
-    const end = trimmed.endTime
-    const delta = end - original.endTime
+    const edits = new Map<string, TimelineClip>()
+    for (const original of originals) {
+      const trimmed = state.previewTrimClip(original.id, side, newTime)
+      if (!trimmed || (side === 'start' && hasClipKeyframes(original.id))) {
+        set({ editError: KEYFRAME_EDIT_ERROR })
+        return
+      }
+      edits.set(original.id, trimmed)
+    }
+    if (originals.every((c) => edits.get(c.id) === c)) return
+    // 選択外の後続クリップだけを、元の配置から求めた合計量で移動する。
     set({
-      tracks: state.tracks.map((item) =>
-        item.id !== track.id
-          ? item
-          : {
-              ...item,
-              clips: item.clips.map((clip) => {
-                if (clip.id === clipId) return trimmed
-                if (state.rippleEnabled && side === 'end' && clip.startTime >= original.endTime) {
-                  return {
-                    ...clip,
-                    startTime: clip.startTime + delta,
-                    endTime: clip.endTime + delta,
-                  }
-                }
-                return clip
-              }),
-            },
-      ),
+      tracks: state.tracks.map((track) => ({
+        ...track,
+        clips: track.clips.map((clip) => {
+          const edited = edits.get(clip.id)
+          if (edited) return edited
+          const delta =
+            state.rippleEnabled && side === 'end'
+              ? track.clips.reduce(
+                  (total, original) =>
+                    total +
+                    (edits.has(original.id) && clip.startTime >= original.endTime
+                      ? edits.get(original.id)!.endTime - original.endTime
+                      : 0),
+                  0,
+                )
+              : 0
+          return delta
+            ? { ...clip, startTime: clip.startTime + delta, endTime: clip.endTime + delta }
+            : clip
+        }),
+      })),
     })
   },
 

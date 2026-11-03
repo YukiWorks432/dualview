@@ -166,12 +166,7 @@ function useClipGesture(pixelsPerSecond: number, trim: boolean) {
   }
   return { gesture, start, consumeClick }
 }
-export function useTimelineDrag({
-  pixelsPerSecond,
-}: {
-  pixelsPerSecond: number
-  trackHeight?: number
-}) {
+export function useTimelineDrag({ pixelsPerSecond }: { pixelsPerSecond: number }) {
   const { gesture: g, start, consumeClick } = useClipGesture(pixelsPerSecond, false)
   return {
     handleMouseDown: start,

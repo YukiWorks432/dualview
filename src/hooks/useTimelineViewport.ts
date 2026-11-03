@@ -50,16 +50,11 @@ export function useTimelineViewport(containerRef: RefObject<HTMLDivElement | nul
       const el = containerRef.current
       if (!el) return
       const state = useTimelineStore.getState()
+      const currentTime = usePlaybackStore.getState().currentTime
+      const currentX = currentTime * 50 * state.zoom - el.scrollLeft
       const x =
-        anchor ??
-        Math.max(
-          0,
-          Math.min(
-            el.clientWidth,
-            usePlaybackStore.getState().currentTime * 50 * state.zoom - el.scrollLeft,
-          ),
-        )
-      const time = (el.scrollLeft + x) / (50 * state.zoom)
+        anchor ?? (currentX < 0 || currentX > el.clientWidth ? el.clientWidth / 2 : currentX)
+      const time = anchor === undefined ? currentTime : (el.scrollLeft + x) / (50 * state.zoom)
       const minimum = Math.min(0.1, el.clientWidth / Math.max(1, 50 * state.duration))
       state.setZoom(Math.max(minimum, zoom))
       // 横幅の更新後にも同じ内容時刻を保つ。

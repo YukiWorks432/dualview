@@ -47,25 +47,23 @@ export default function App() {
   const shortcutsHelp = useKeyboardShortcutsHelp()
 
   // PERSIST-001: Initialize persistence store
-  const {
-    init: initPersistence,
-    createNewProject,
-    currentProjectId,
-    saveCurrentProject,
-  } = usePersistenceStore()
+  const { init: initPersistence, createNewProject, saveCurrentProject } = usePersistenceStore()
 
   // Initialize persistence and create a project if none exists
   useEffect(() => {
+    let mounted = true
     const initialize = async () => {
       await initPersistence()
-      // If no current project, create one
-      if (!currentProjectId) {
+      // StrictModeの解除済み処理から、後で開いたプロジェクトを置き換えない。
+      if (mounted && !usePersistenceStore.getState().currentProjectId) {
         await createNewProject()
       }
     }
     initialize()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+    return () => {
+      mounted = false
+    }
+  }, [initPersistence, createNewProject])
 
   const {
     setLoopIn,

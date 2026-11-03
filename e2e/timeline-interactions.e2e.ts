@@ -4,7 +4,8 @@ async function seed(page: Page) {
   await page.goto('/')
   await page.waitForFunction(async () => {
     const { usePersistenceStore } = await import('/src/stores/persistenceStore.ts')
-    return Boolean(usePersistenceStore.getState().currentProjectId)
+    const state = usePersistenceStore.getState()
+    return Boolean(state.currentProjectId) && !state.isLoading
   })
   await page.evaluate(async () => {
     const { useMediaStore } = await import('/src/stores/mediaStore.ts')
@@ -214,4 +215,41 @@ test('長尺を全体表示し直前の範囲へ戻せる', async ({ page }) => 
     .toBeLessThanOrEqual((await el.evaluate((e) => e.clientWidth)) + 1)
   await page.locator('[data-timeline-panel]').press('Shift+Semicolon')
   expect((await snapshot(page)).zoom).toBe(1)
+})
+
+test('トラック設定と追加のメニューをマウスで操作できる', async ({ page }) => {
+  await page.getByTitle('Track Settings', { exact: true }).first().click()
+  await page.locator('div[data-track-settings]').getByRole('checkbox').first().uncheck()
+  expect(
+    await page.evaluate(
+      async () =>
+        !(await import('/src/stores/timelineStore.ts')).useTimelineStore
+          .getState()
+          .tracks[0].acceptedTypes.includes('video'),
+    ),
+  ).toBe(true)
+  await page.getByTitle('Add new track', { exact: true }).click()
+  await page.getByRole('button', { name: 'Media Track', exact: true }).click()
+  expect(
+    await page.evaluate(
+      async () =>
+        (await import('/src/stores/timelineStore.ts')).useTimelineStore.getState().tracks.length,
+    ),
+  ).toBe(3)
+})
+test('画面外の再生位置をフレーム拡大で画面内に表示する', async ({ page }) => {
+  await page.evaluate(async () => {
+    const t = (await import('/src/stores/timelineStore.ts')).useTimelineStore
+    t.setState({
+      duration: 3600,
+      tracks: t.getState().tracks.map((t) => ({
+        ...t,
+        clips: t.clips.map((c) => ({ ...c, endTime: 3600, outPoint: 3600 })),
+      })),
+    })
+    ;(await import('/src/stores/playbackStore.ts')).usePlaybackStore.getState().seek(120)
+  })
+  await page.locator('[data-timeline-panel]').press('Semicolon')
+  await expect(page.locator('[data-playhead-head]')).toBeInViewport()
+  expect((await snapshot(page)).time).toBe(120)
 })

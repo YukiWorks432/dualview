@@ -26,7 +26,8 @@ async function seed(page: Page) {
   await page.goto('/')
   await page.waitForFunction(async () => {
     const { usePersistenceStore } = await import('/src/stores/persistenceStore.ts')
-    return Boolean(usePersistenceStore.getState().currentProjectId)
+    const state = usePersistenceStore.getState()
+    return Boolean(state.currentProjectId) && !state.isLoading
   })
   await page.evaluate(async () => {
     const { useMediaStore } = await import('/src/stores/mediaStore.ts')

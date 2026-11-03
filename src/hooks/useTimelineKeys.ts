@@ -93,15 +93,7 @@ export function useTimelineKeys() {
         return
       if (e.altKey) {
         const time = currentTime + (end ? dt : 0)
-        if (selected.some((c) => !state.previewTrimClip(c.id, end ? 'end' : 'start', time))) {
-          useTimelineStore.setState({
-            editError: 'キーフレームの時刻変換の仕様が未定義のため、この操作は実行できません。',
-          })
-          return
-        }
-        history.runWithHistory(() =>
-          selected.forEach((c) => state.trimClip(c.id, end ? 'end' : 'start', time)),
-        )
+        history.runWithHistory(() => state.trimClips(ids, end ? 'end' : 'start', time))
       } else
         history.runWithHistory(() =>
           selected.forEach((c) =>
