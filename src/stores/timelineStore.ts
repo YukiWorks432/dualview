@@ -94,6 +94,8 @@ interface TimelineStore {
   removeClip: (clipId: string) => void
   updateClip: (clipId: string, updates: Partial<TimelineClip>) => void
   selectClip: (clipId: string | null) => void
+  moveClips: (ids: string[], delta: number) => void
+  previewTrimClip: (id: string, side: 'start' | 'end', time: number) => TimelineClip | undefined
   moveClip: (clipId: string, newTrackId: string, newStartTime: number) => void
   trimClip: (clipId: string, side: 'start' | 'end', newTime: number) => void
   splitClip: (clipId: string, splitTime: number) => TimelineClip | null // TL-001
@@ -109,7 +111,11 @@ interface TimelineStore {
   // TL-003: Snap
   toggleSnap: () => void
   setSnapThreshold: (threshold: number) => void
-  getSnapPoint: (time: number, excludeClipId?: string) => number | null
+  getSnapPoint: (
+    time: number,
+    excludeClipId?: string | string[],
+    includePlayhead?: boolean,
+  ) => number | null
   getZoomAwareSnapThreshold: () => number // Snap threshold adjusted for zoom level
 
   // Overlap detection
@@ -271,7 +277,7 @@ const createTimelineState: StateCreator<TimelineStore> = (set, get) => ({
   shuttleBackward: () => usePlaybackStore.getState().shuttleBackward(),
   shuttleStop: () => usePlaybackStore.getState().shuttleStop(),
 
-  setZoom: (zoom: number) => set({ zoom: Math.max(0.1, Math.min(10, zoom)) }),
+  setZoom: (zoom: number) => set({ zoom: Math.max(0.000001, Math.min(1000, zoom)) }),
   zoomIn: () => set((state) => ({ zoom: Math.min(10, state.zoom * 1.2) })),
   zoomOut: () => set((state) => ({ zoom: Math.max(0.1, state.zoom / 1.2) })),
 
@@ -475,7 +481,29 @@ const createTimelineState: StateCreator<TimelineStore> = (set, get) => ({
   },
 
   selectClip: (clipId: string | null) => {
-    set({ selectedClipId: clipId })
+    set({ selectedClipId: clipId, selectedClipIds: clipId ? [clipId] : [] })
+  },
+
+  moveClips: (ids, delta) => {
+    const state = get()
+    const clips = state.tracks.flatMap((t) => t.clips).filter((c) => ids.includes(c.id))
+    if (!clips.length || !Number.isFinite(delta)) return
+    if (state.tracks.some((t) => t.locked && t.clips.some((c) => ids.includes(c.id)))) return
+    delta = Math.max(
+      -Math.min(...clips.map((c) => c.startTime)),
+      snapTimeToFrame(delta, state.frameRate),
+    )
+    if (!delta) return
+    set({
+      tracks: state.tracks.map((t) => ({
+        ...t,
+        clips: t.clips.map((c) =>
+          ids.includes(c.id)
+            ? { ...c, startTime: c.startTime + delta, endTime: c.endTime + delta }
+            : c,
+        ),
+      })),
+    })
   },
 
   moveClip: (clipId: string, newTrackId: string, newStartTime: number) => {
@@ -495,6 +523,16 @@ const createTimelineState: StateCreator<TimelineStore> = (set, get) => ({
     })
 
     if (!clip) return
+    const target = state.tracks.find((t) => t.id === newTrackId)!
+    const source = state.tracks.find((t) => t.clips.some((c) => c.id === clipId))!
+    const media = useMediaStore.getState().getFile(clip.mediaId)
+    if (source.locked || target.locked || (media && !target.acceptedTypes.includes(media.type)))
+      return
+    if (
+      clip.trackId === newTrackId &&
+      clip.startTime === snapTimeToFrame(Math.max(0, newStartTime), frameRate)
+    )
+      return
 
     // TL-002: Snap to frame boundary
     const clipDuration = clip.endTime - clip.startTime
@@ -510,12 +548,12 @@ const createTimelineState: StateCreator<TimelineStore> = (set, get) => ({
     set({ tracks: updatedTracks })
   },
 
-  trimClip: (clipId: string, side: 'start' | 'end', newTime: number) => {
+  previewTrimClip: (clipId: string, side: 'start' | 'end', newTime: number) => {
     const state = get()
     if (!Number.isFinite(newTime)) return
     const track = state.tracks.find((track) => track.clips.some((clip) => clip.id === clipId))
     const original = track?.clips.find((clip) => clip.id === clipId)
-    if (!original || !track) return
+    if (!original || !track || track.locked) return
     const speed = original.speed || 1
     const minDuration = 1 / state.frameRate
     const media = useMediaStore.getState().getFile(original.mediaId)
@@ -543,12 +581,26 @@ const createTimelineState: StateCreator<TimelineStore> = (set, get) => ({
             Math.max(original.startTime + minDuration, snapped),
           )
         : original.endTime
-    if (end <= start || (start === original.startTime && end === original.endTime)) return
+    if (end <= start) return
+    if (start === original.startTime && end === original.endTime) return original
+    if (side === 'start' && hasClipKeyframes(clipId)) {
+      return
+    }
+    return sliceClip(original, start, end)
+  },
+
+  trimClip: (clipId: string, side: 'start' | 'end', newTime: number) => {
+    const state = get()
+    const track = state.tracks.find((t) => t.clips.some((c) => c.id === clipId))
+    const original = track?.clips.find((c) => c.id === clipId)
+    if (!original || !track || track.locked) return
     if (side === 'start' && hasClipKeyframes(clipId)) {
       set({ editError: KEYFRAME_EDIT_ERROR })
       return
     }
-    const trimmed = sliceClip(original, start, end)
+    const trimmed = state.previewTrimClip(clipId, side, newTime)
+    if (!trimmed || trimmed === original) return
+    const end = trimmed.endTime
     const delta = end - original.endTime
     set({
       tracks: state.tracks.map((item) =>
@@ -890,32 +942,31 @@ const createTimelineState: StateCreator<TimelineStore> = (set, get) => ({
 
   setSnapThreshold: (threshold: number) => set({ snapThreshold: threshold }),
 
-  getSnapPoint: (time: number, excludeClipId?: string) => {
+  getSnapPoint: (time, excludeClipId, includePlayhead = true) => {
     const state = get()
     if (!state.snapEnabled) return null
-
-    const snapPoints: number[] = [
-      0, // Start of timeline
-      usePlaybackStore.getState().currentTime, // Playhead
-      ...state.markers.map((m) => m.time), // Markers
+    const excluded = typeof excludeClipId === 'string' ? [excludeClipId] : (excludeClipId ?? [])
+    const points = [
+      ...(includePlayhead ? [usePlaybackStore.getState().currentTime] : []),
+      ...state.markers.map((m) => m.time),
+      ...state.tracks.flatMap((t) =>
+        t.clips.filter((c) => !excluded.includes(c.id)).flatMap((c) => [c.startTime, c.endTime]),
+      ),
+      0,
+      state.duration,
+      ...(state.loopRegion ? [state.loopRegion.inPoint, state.loopRegion.outPoint] : []),
     ]
-
-    // Add clip edges
-    for (const track of state.tracks) {
-      for (const clip of track.clips) {
-        if (clip.id === excludeClipId) continue
-        snapPoints.push(clip.startTime, clip.endTime)
+    let closest: number | null = null
+    let distance = state.getZoomAwareSnapThreshold()
+    for (const point of points) {
+      const aligned = snapTimeToFrame(point, state.frameRate)
+      const d = Math.abs(time - aligned)
+      if (d <= distance && (closest === null || d < distance)) {
+        closest = aligned
+        distance = d
       }
     }
-
-    // Find closest snap point
-    for (const point of snapPoints) {
-      if (Math.abs(time - point) <= state.snapThreshold) {
-        return point
-      }
-    }
-
-    return null
+    return closest
   },
 
   // Zoom-aware snap threshold (threshold in pixels / pixels per second)
@@ -976,7 +1027,7 @@ const createTimelineState: StateCreator<TimelineStore> = (set, get) => ({
 
   selectAllClips: () => {
     const { tracks } = get()
-    const allClipIds = tracks.flatMap((t) => t.clips.map((c) => c.id))
+    const allClipIds = tracks.filter((t) => !t.locked).flatMap((t) => t.clips.map((c) => c.id))
     set({ selectedClipIds: allClipIds, selectedClipId: allClipIds[0] || null })
   },
 

@@ -197,7 +197,8 @@ test('calibrates compression-only differences on the default thresholds', async 
   await expect(page.getByText('Complete', { exact: true }).first()).toBeVisible({ timeout: 60_000 })
 
   // Give every source frame several CSS pixels so mouse coordinates cannot alias neighbors.
-  for (let step = 0; step < 10; step++) await page.keyboard.press('Control+Equal')
+  await page.locator('[data-timeline-panel]').focus()
+  for (let step = 0; step < 10; step++) await page.keyboard.press('Equal')
   const lane = page.getByRole('img', { name: /Read-only A\/B difference lane/ })
   await expect
     .poll(() =>

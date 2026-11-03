@@ -17,6 +17,28 @@ interface ShortcutCategory {
 
 const SHORTCUT_CATEGORIES: ShortcutCategory[] = [
   {
+    title: 'タイムラインを操作中（After Effects標準）',
+    shortcuts: [
+      { keys: ['Alt', 'ホイール'], description: 'ポインターの時刻を中心に拡大・縮小' },
+      { keys: ['Shift', 'ホイール'], description: '時間方向にスクロール' },
+      {
+        keys: ['中ボタン / Space', 'ドラッグ'],
+        description: '手のひら操作。Space短押しは再生・停止',
+      },
+      { keys: ['H / V'], description: '手のひら / 選択' },
+      { keys: ['PageUp / PageDown'], description: '前後1フレーム。Shift付きは10フレーム' },
+      { keys: ['I / O'], description: '選択クリップの先頭 / 最後のフレーム' },
+      { keys: ['B / N'], description: 'ループ範囲の開始 / 終了' },
+      { keys: ['Ctrl/⌘', 'Shift', 'D'], description: '現在位置で分割' },
+      { keys: ['Alt', '[ / ]'], description: '現在フレームで先頭 / 末尾をトリム' },
+      { keys: ['= / -'], description: '時間方向に拡大 / 縮小' },
+      { keys: [';'], description: '1フレームの拡大表示 / 全区間表示' },
+      { keys: ['D'], description: '再生位置まで表示を移動' },
+      { keys: ['Shift', 'ドラッグ'], description: 'クリップ端やマーカーへ吸着' },
+      { keys: ['Escape'], description: '未確定の編集を取り消す' },
+    ],
+  },
+  {
     title: 'Comparison Modes',
     shortcuts: primaryComparisonModes.flatMap((definition) =>
       definition.shortcut
@@ -49,7 +71,7 @@ const SHORTCUT_CATEGORIES: ShortcutCategory[] = [
     ],
   },
   {
-    title: 'Timeline Editing',
+    title: 'Timeline Editing (comparison viewer active)',
     shortcuts: [
       { keys: ['S'], description: 'Split selected clip (outside Audio QA)' },
       { keys: ['Q'], description: 'Keep left of playhead (trim right)' },
@@ -140,7 +162,7 @@ export function KeyboardShortcutsHelp({ isOpen, onClose }: KeyboardShortcutsHelp
 
         <div className="max-h-[calc(80vh-80px)] overflow-y-auto p-4">
           <p className="mb-4 text-sm text-text-secondary">
-            Comparison-mode shortcuts take priority over timeline and global shortcuts. While
+            When the comparison viewer is active, comparison-mode shortcuts take priority. While
             typing, composing text, or using a dialog, global shortcuts are paused. Escape closes
             the dialog and returns focus without clearing the loop. Outside dialogs and text
             composition, Escape cancels an active clip drag or closes its menu, even if a text field

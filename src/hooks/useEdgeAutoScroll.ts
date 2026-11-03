@@ -97,16 +97,16 @@ export function useEdgeAutoScroll(
   // Start/stop based on isActive
   useEffect(() => {
     if (isActive) {
-      document.addEventListener('mousemove', updateMousePosition)
+      document.addEventListener('pointermove', updateMousePosition)
       startAutoScroll()
     } else {
       stopAutoScroll()
-      document.removeEventListener('mousemove', updateMousePosition)
+      document.removeEventListener('pointermove', updateMousePosition)
     }
 
     return () => {
       stopAutoScroll()
-      document.removeEventListener('mousemove', updateMousePosition)
+      document.removeEventListener('pointermove', updateMousePosition)
     }
   }, [isActive, startAutoScroll, stopAutoScroll, updateMousePosition])
 

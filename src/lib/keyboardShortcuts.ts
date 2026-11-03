@@ -65,6 +65,21 @@ export function createShortcutDispatcher(getMode: () => ComparisonMode) {
       }
     }
     if (editingEvents.has(event)) return
+    const inTimeline =
+      event.target instanceof Element && event.target.closest('[data-timeline-panel]')
+    if (inTimeline) {
+      for (const handler of handlers.get('timeline') ?? []) {
+        handler(event)
+        if (event.defaultPrevented) return
+      }
+      if (
+        !event.ctrlKey &&
+        !event.metaKey &&
+        !['Digit1', 'Digit2', 'Digit3', 'Digit4'].includes(event.code) &&
+        event.key !== '?'
+      )
+        return
+    }
     const definition = getComparisonModeDefinition(getMode())
     const localShortcut =
       !event.ctrlKey &&

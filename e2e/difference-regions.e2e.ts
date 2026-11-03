@@ -190,7 +190,8 @@ test('shows difference regions only while playback is paused', async ({ page }) 
 
   // The current position is eight frames into this short fixture. Keep playback inside it
   // while measuring; slow browser round trips must not let the clip stop at its end.
-  await page.keyboard.press('o')
+  await page.locator('[data-timeline-panel]').focus()
+  await page.keyboard.press('n')
   await page.getByTitle('Toggle advanced tools').click()
   await expect(page.getByTitle('Clear loop (Esc)')).toBeVisible()
   await page.getByTitle('Toggle advanced tools').click()

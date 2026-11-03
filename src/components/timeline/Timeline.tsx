@@ -33,12 +33,13 @@ import { useEdgeAutoScroll } from '../../hooks/useEdgeAutoScroll'
 import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts'
 import { useMarqueeSelect } from '../../hooks/useMarqueeSelect'
 import { useTimelineDrag, useTimelineTrim } from '../../hooks/useTimelineDrag'
+import { useTimelineKeys } from '../../hooks/useTimelineKeys'
+import { useTimelineViewport } from '../../hooks/useTimelineViewport'
 import { MEDIA_DRAG_TYPE, type MediaDragData } from '../../lib/media/dragData'
 import { formatTime, cn } from '../../lib/utils'
 import { useHistoryStore } from '../../stores/historyStore'
 import { useMediaStore } from '../../stores/mediaStore'
 import { usePlaybackStore } from '../../stores/playbackStore'
-import { useProjectStore } from '../../stores/projectStore'
 import { useTimelineStore } from '../../stores/timelineStore'
 import type { MediaType } from '../../types'
 import { Button, ElevatedSurface, IconButton } from '../ui'
@@ -48,10 +49,10 @@ import { TimelineDiffControls } from './TimelineDiffControls'
 import { TimelineDiffLane } from './TimelineDiffLane'
 
 export function Timeline() {
-  const comparisonMode = useProjectStore((state) => state.comparisonMode)
   const containerRef = useRef<HTMLDivElement>(null)
   const playheadRef = useRef<HTMLDivElement>(null)
-  const [isDraggingPlayhead, setIsDraggingPlayhead] = useState(false)
+  const viewport = useTimelineViewport(containerRef)
+  useTimelineKeys()
   const [openTrackSettings, setOpenTrackSettings] = useState<string | null>(null)
   // Simplified timeline - hide advanced tools by default (Cognitive Load reduction)
   const [showAdvancedTools, setShowAdvancedTools] = useState(false)
@@ -91,8 +92,6 @@ export function Timeline() {
     duration,
     zoom,
     selectedClipId,
-    zoomIn,
-    zoomOut,
     toggleTrackMute,
     toggleTrackLock,
     selectClip,
@@ -122,7 +121,6 @@ export function Timeline() {
     toggleSnap,
     // TL-004: Multi-clip selection
     selectedClipIds,
-    addToSelection,
     toggleSelection,
     selectAllClips,
     clearSelection,
@@ -149,6 +147,7 @@ export function Timeline() {
   const {
     handleMouseDown: handleDragMouseDown,
     getClipPosition,
+    consumeClick,
     isClipDragging,
     isClipSnapped,
     getSnapIndicator,
@@ -159,14 +158,20 @@ export function Timeline() {
   })
 
   // TL-006: Enhanced trim state management
-  const { trimState, handleTrimStart, isTrimming, getTrimSnapIndicator } = useTimelineTrim({
+  const {
+    trimState,
+    preview: trimPreview,
+    handleTrimStart,
+    isTrimming,
+    getTrimSnapIndicator,
+  } = useTimelineTrim({
     pixelsPerSecond,
   })
 
   // TL-005: Edge auto-scroll during drag/trim
   useEdgeAutoScroll(containerRef, {
     contentWidth: timelineWidth,
-    isActive: isDragging || isTrimming || isDraggingPlayhead,
+    isActive: isDragging || isTrimming || viewport.scrubbing,
     edgeThreshold: 80,
     maxScrollSpeed: 12,
   })
@@ -182,45 +187,6 @@ export function Timeline() {
     trackHeight: 64,
     rulerHeight: 58,
   })
-
-  // Handle playhead dragging
-  const handlePlayheadMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault()
-    setIsDraggingPlayhead(true)
-  }
-
-  const handleTimelineClick = useCallback(
-    (e: React.MouseEvent) => {
-      if (!containerRef.current) return
-      const rect = containerRef.current.getBoundingClientRect()
-      const x = e.clientX - rect.left + containerRef.current.scrollLeft
-      const time = x / pixelsPerSecond
-      seek(Math.max(0, Math.min(time, duration)))
-    },
-    [pixelsPerSecond, duration, seek],
-  )
-
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isDraggingPlayhead || !containerRef.current) return
-      const rect = containerRef.current.getBoundingClientRect()
-      const x = e.clientX - rect.left + containerRef.current.scrollLeft
-      const time = x / pixelsPerSecond
-      seek(Math.max(0, Math.min(time, duration)))
-    }
-
-    const handleMouseUp = () => setIsDraggingPlayhead(false)
-
-    if (isDraggingPlayhead) {
-      window.addEventListener('mousemove', handleMouseMove)
-      window.addEventListener('mouseup', handleMouseUp)
-    }
-
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove)
-      window.removeEventListener('mouseup', handleMouseUp)
-    }
-  }, [isDraggingPlayhead, pixelsPerSecond, duration, seek])
 
   // Close track settings and add track menu when clicking outside
   useEffect(() => {
@@ -238,7 +204,7 @@ export function Timeline() {
 
   // Handle clip mouse down - delegates to drag hook with track lock check
   const handleClipMouseDown = useCallback(
-    (e: React.MouseEvent, clipId: string, trackId: string, startTime: number) => {
+    (e: React.PointerEvent, clipId: string, trackId: string, startTime: number) => {
       const track = tracks.find((t) => t.id === trackId)
       if (track?.locked) return
       handleDragMouseDown(e, clipId, trackId, startTime)
@@ -329,7 +295,7 @@ export function Timeline() {
   // Handle trim mouse down - delegates to trim hook with track lock check
   const handleTrimMouseDown = useCallback(
     (
-      e: React.MouseEvent,
+      e: React.PointerEvent,
       clipId: string,
       side: 'start' | 'end',
       clipTime: number,
@@ -456,18 +422,33 @@ export function Timeline() {
     // Snap to nice values (1, 2, 5, 10, 15, 30, 60, etc.)
     const niceIntervals = [0.1, 0.25, 0.5, 1, 2, 5, 10, 15, 30, 60, 120, 300, 600]
     const majorInterval = niceIntervals.find((i) => i >= majorIntervalSec) || 600
-    const minorInterval =
+    const proposedMinorInterval =
       niceIntervals.find((i) => i >= minorIntervalSec && i < majorInterval) || majorInterval / 4
 
+    const minorInterval =
+      pixelsPerSecond / frameRate >= 8
+        ? 1 / frameRate
+        : Math.max(1 / frameRate, Math.ceil(proposedMinorInterval * frameRate) / frameRate)
     // Generate markers
-    for (let t = 0; t <= duration + majorInterval; t += minorInterval) {
+    for (
+      let t = Math.max(
+        0,
+        Math.floor(viewport.view.left / pixelsPerSecond / minorInterval) * minorInterval,
+      );
+      t <=
+      Math.min(
+        duration,
+        (viewport.view.left + viewport.view.width) / pixelsPerSecond + majorInterval,
+      );
+      t += minorInterval
+    ) {
       const isMajor =
         Math.abs(t % majorInterval) < 0.001 || Math.abs((t % majorInterval) - majorInterval) < 0.001
       markers.push({ time: t, major: isMajor })
     }
 
     return markers
-  }, [duration, pixelsPerSecond])
+  }, [duration, pixelsPerSecond, viewport.view.left, viewport.view.width, frameRate])
 
   // Format time based on zoom level (show frames at high zoom)
   const formatMarkerTime = useCallback(
@@ -490,7 +471,24 @@ export function Timeline() {
   )
 
   return (
-    <div className="h-64 md:h-80 bg-surface border-t border-border flex flex-col">
+    <div
+      data-timeline-panel
+      tabIndex={0}
+      aria-label="タイムライン"
+      onClickCapture={viewport.clickCapture}
+      onPointerDownCapture={viewport.pointerDown}
+      onPointerMove={viewport.pointerMove}
+      onPointerUp={(e) => {
+        viewport.pointerMove(e)
+        viewport.stop()
+      }}
+      onPointerCancel={viewport.stop}
+      onLostPointerCapture={viewport.stop}
+      className={cn(
+        'h-64 md:h-80 bg-surface border-t border-border flex flex-col outline-none focus-visible:ring-2 focus-visible:ring-primary',
+        viewport.hand && 'cursor-grab',
+      )}
+    >
       {editError && (
         <div
           role="alert"
@@ -679,9 +677,7 @@ export function Timeline() {
                       }
                     }}
                     disabled={!selectedClipId}
-                    title={
-                      comparisonMode === 'audio' ? 'Split at playhead' : 'Split at playhead (S)'
-                    }
+                    title={'Split at playhead (Ctrl+Shift+D)'}
                     className="h-7 w-7"
                   >
                     <Scissors className="w-3.5 h-3.5" />
@@ -726,7 +722,7 @@ export function Timeline() {
                   <IconButton
                     variant="secondary"
                     onClick={toggleSnap}
-                    title="Snap to edges (N)"
+                    title="スナップを許可（Shift＋ドラッグ）"
                     className={`h-7 w-7 ${snapEnabled ? 'bg-primary/20 text-primary' : ''}`}
                   >
                     <Magnet className="w-3.5 h-3.5" />
@@ -734,7 +730,7 @@ export function Timeline() {
                   <IconButton
                     variant="secondary"
                     onClick={toggleRipple}
-                    title="Ripple edit (R)"
+                    title="リップル編集"
                     className={`h-7 w-7 ${rippleEnabled ? 'bg-primary/20 text-primary' : ''}`}
                   >
                     <ArrowRightLeft className="w-3.5 h-3.5" />
@@ -745,13 +741,21 @@ export function Timeline() {
 
             {/* Zoom controls - always visible */}
             <div className="flex items-center gap-0.5 ui-radius-md bg-surface p-0.5 ml-1 md:ml-2">
-              <IconButton variant="secondary" onClick={zoomOut} className="h-7 w-7">
+              <IconButton
+                variant="secondary"
+                onClick={() => viewport.zoomTo(zoom / 1.2)}
+                className="h-7 w-7"
+              >
                 <ZoomOut className="w-3.5 h-3.5" />
               </IconButton>
               <span className="hidden sm:inline text-[10px] text-muted-foreground w-10 text-center font-mono">
                 {Math.round(zoom * 100)}%
               </span>
-              <IconButton variant="secondary" onClick={zoomIn} className="h-7 w-7">
+              <IconButton
+                variant="secondary"
+                onClick={() => viewport.zoomTo(zoom * 1.2)}
+                className="h-7 w-7"
+              >
                 <ZoomIn className="w-3.5 h-3.5" />
               </IconButton>
             </div>
@@ -764,209 +768,213 @@ export function Timeline() {
       {/* Timeline area */}
       <div className="flex-1 flex overflow-hidden">
         {/* Track labels - hidden on mobile */}
-        <div className="hidden md:block w-40 flex-shrink-0 border-r border-border">
-          <div className="h-6 border-b border-border" /> {/* Ruler spacer */}
-          <div className="h-[34px] border-b border-border" aria-hidden="true" />
-          {tracks.map((track) => (
-            <div
-              key={track.id}
-              className="h-12 md:h-16 px-2 flex flex-col justify-center border-b border-border relative"
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-muted-foreground truncate">
-                  {track.name}
-                </span>
-                <div className="flex gap-1">
-                  <button
-                    data-track-settings
-                    onClick={() =>
-                      setOpenTrackSettings(openTrackSettings === track.id ? null : track.id)
-                    }
-                    className={cn(
-                      'surface-control ui-radius-sm inline-flex h-7 w-7 items-center justify-center border p-0',
-                      openTrackSettings === track.id && 'bg-surface',
-                    )}
-                    title="Track Settings"
-                  >
-                    <Settings className="w-3 h-3 text-muted-foreground" />
-                  </button>
-                  <button
-                    onClick={() => toggleTrackMute(track.id)}
-                    className="surface-control ui-radius-sm inline-flex h-7 w-7 items-center justify-center border p-0"
-                    title={track.muted ? 'Unmute' : 'Mute'}
-                  >
-                    {track.muted ? (
-                      <VolumeX className="w-3 h-3 text-destructive" />
-                    ) : (
-                      <Volume2 className="w-3 h-3 text-muted-foreground" />
-                    )}
-                  </button>
-                  <button
-                    onClick={() => toggleTrackLock(track.id)}
-                    className="surface-control ui-radius-sm inline-flex h-7 w-7 items-center justify-center border p-0"
-                    title={track.locked ? 'Unlock' : 'Lock'}
-                  >
-                    {track.locked ? (
-                      <Lock className="w-3 h-3 text-warning" />
-                    ) : (
-                      <Unlock className="w-3 h-3 text-muted-foreground" />
-                    )}
-                  </button>
+        <div className="hidden md:block w-40 flex-shrink-0 border-r border-border overflow-hidden">
+          <div style={{ transform: `translateY(-${viewport.view.top}px)` }}>
+            <div className="h-6 border-b border-border" /> {/* Ruler spacer */}
+            <div className="h-[34px] border-b border-border" aria-hidden="true" />
+            {tracks.map((track) => (
+              <div
+                key={track.id}
+                className="h-12 md:h-16 px-2 flex flex-col justify-center border-b border-border relative"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-muted-foreground truncate">
+                    {track.name}
+                  </span>
+                  <div className="flex gap-1">
+                    <button
+                      data-track-settings
+                      onClick={() =>
+                        setOpenTrackSettings(openTrackSettings === track.id ? null : track.id)
+                      }
+                      className={cn(
+                        'surface-control ui-radius-sm inline-flex h-7 w-7 items-center justify-center border p-0',
+                        openTrackSettings === track.id && 'bg-surface',
+                      )}
+                      title="Track Settings"
+                    >
+                      <Settings className="w-3 h-3 text-muted-foreground" />
+                    </button>
+                    <button
+                      onClick={() => toggleTrackMute(track.id)}
+                      className="surface-control ui-radius-sm inline-flex h-7 w-7 items-center justify-center border p-0"
+                      title={track.muted ? 'Unmute' : 'Mute'}
+                    >
+                      {track.muted ? (
+                        <VolumeX className="w-3 h-3 text-destructive" />
+                      ) : (
+                        <Volume2 className="w-3 h-3 text-muted-foreground" />
+                      )}
+                    </button>
+                    <button
+                      onClick={() => toggleTrackLock(track.id)}
+                      className="surface-control ui-radius-sm inline-flex h-7 w-7 items-center justify-center border p-0"
+                      title={track.locked ? 'Unlock' : 'Lock'}
+                    >
+                      {track.locked ? (
+                        <Lock className="w-3 h-3 text-warning" />
+                      ) : (
+                        <Unlock className="w-3 h-3 text-muted-foreground" />
+                      )}
+                    </button>
+                  </div>
                 </div>
-              </div>
-              {/* Accepted types indicator */}
-              <div className="flex gap-1 mt-1">
-                {track.acceptedTypes.includes('video') && (
-                  <span title="Accepts video">
-                    <Video className="w-3 h-3 text-green-400" />
-                  </span>
-                )}
-                {track.acceptedTypes.includes('image') && (
-                  <span title="Accepts images">
-                    <Image className="w-3 h-3 text-blue-400" />
-                  </span>
-                )}
-              </div>
+                {/* Accepted types indicator */}
+                <div className="flex gap-1 mt-1">
+                  {track.acceptedTypes.includes('video') && (
+                    <span title="Accepts video">
+                      <Video className="w-3 h-3 text-green-400" />
+                    </span>
+                  )}
+                  {track.acceptedTypes.includes('image') && (
+                    <span title="Accepts images">
+                      <Image className="w-3 h-3 text-blue-400" />
+                    </span>
+                  )}
+                </div>
 
-              {/* Track settings dropdown */}
-              {openTrackSettings === track.id && (
+                {/* Track settings dropdown */}
+                {openTrackSettings === track.id && (
+                  <ElevatedSurface asChild offset={1}>
+                    <div
+                      data-track-settings
+                      className="ui-radius-md absolute left-full top-0 ml-1 z-30 border border-transparent p-2 min-w-[140px]"
+                    >
+                      <div className="text-xs font-medium text-muted-foreground mb-2">
+                        Accepted Media Types
+                      </div>
+                      {(['video', 'image'] as MediaType[]).map((type) => {
+                        const isActive = track.acceptedTypes.includes(type)
+                        const Icon = type === 'video' ? Video : Image
+                        return (
+                          <label
+                            key={type}
+                            className="flex items-center gap-2 ui-radius-sm py-1 cursor-pointer surface-menu-item px-1"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={isActive}
+                              onChange={() => {
+                                const newTypes = isActive
+                                  ? track.acceptedTypes.filter((t) => t !== type)
+                                  : [...track.acceptedTypes, type]
+                                if (newTypes.length > 0) {
+                                  setTrackAcceptedTypes(track.id, newTypes)
+                                }
+                              }}
+                              className="w-3 h-3 accent-primary"
+                            />
+                            <Icon
+                              className={cn(
+                                'w-3 h-3',
+                                type === 'video' && 'text-green-400',
+                                type === 'image' && 'text-blue-400',
+                              )}
+                            />
+                            <span className="text-xs text-foreground capitalize">{type}</span>
+                          </label>
+                        )
+                      })}
+                      {/* Delete track option (only for non-essential tracks) */}
+                      {!['a', 'b'].includes(track.type) && (
+                        <>
+                          <div className="h-px bg-border my-2" />
+                          <button
+                            onClick={() => {
+                              pushState()
+                              removeTrack(track.id)
+                              setOpenTrackSettings(null)
+                            }}
+                            className="flex items-center gap-2 w-full ui-radius-sm py-1 px-1 text-destructive hover:bg-destructive/10"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                            <span className="text-xs">Delete Track</span>
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </ElevatedSurface>
+                )}
+              </div>
+            ))}
+            {/* Add Track button */}
+            <div
+              data-add-track-menu
+              className="h-10 px-2 flex items-center justify-center border-b border-border relative"
+            >
+              <button
+                onClick={() => setShowAddTrackMenu(!showAddTrackMenu)}
+                className={cn(
+                  'surface-control-elevation ui-radius-md flex items-center gap-1.5 border px-2 py-1 text-xs font-medium transition-colors',
+                  showAddTrackMenu
+                    ? 'border-primary bg-primary text-primary-foreground'
+                    : 'surface-control text-muted-foreground hover:text-foreground',
+                )}
+                title="Add new track"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Add Track</span>
+              </button>
+
+              {/* Add track dropdown menu */}
+              {showAddTrackMenu && (
                 <ElevatedSurface asChild offset={1}>
                   <div
-                    data-track-settings
-                    className="ui-radius-md absolute left-full top-0 ml-1 z-30 border border-transparent p-2 min-w-[140px]"
+                    data-add-track-menu
+                    className="ui-radius-md absolute left-full top-0 ml-1 z-30 border border-transparent min-w-[140px]"
                   >
-                    <div className="text-xs font-medium text-muted-foreground mb-2">
-                      Accepted Media Types
-                    </div>
-                    {(['video', 'image'] as MediaType[]).map((type) => {
-                      const isActive = track.acceptedTypes.includes(type)
-                      const Icon = type === 'video' ? Video : Image
-                      return (
-                        <label
-                          key={type}
-                          className="flex items-center gap-2 ui-radius-sm py-1 cursor-pointer surface-menu-item px-1"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={isActive}
-                            onChange={() => {
-                              const newTypes = isActive
-                                ? track.acceptedTypes.filter((t) => t !== type)
-                                : [...track.acceptedTypes, type]
-                              if (newTypes.length > 0) {
-                                setTrackAcceptedTypes(track.id, newTypes)
-                              }
-                            }}
-                            className="w-3 h-3 accent-primary"
-                          />
-                          <Icon
-                            className={cn(
-                              'w-3 h-3',
-                              type === 'video' && 'text-green-400',
-                              type === 'image' && 'text-blue-400',
-                            )}
-                          />
-                          <span className="text-xs text-foreground capitalize">{type}</span>
-                        </label>
-                      )
-                    })}
-                    {/* Delete track option (only for non-essential tracks) */}
-                    {!['a', 'b'].includes(track.type) && (
-                      <>
-                        <div className="h-px bg-border my-2" />
-                        <button
-                          onClick={() => {
-                            pushState()
-                            removeTrack(track.id)
-                            setOpenTrackSettings(null)
-                          }}
-                          className="flex items-center gap-2 w-full ui-radius-sm py-1 px-1 text-destructive hover:bg-destructive/10"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                          <span className="text-xs">Delete Track</span>
-                        </button>
-                      </>
-                    )}
+                    <button
+                      onClick={() => {
+                        pushState()
+                        addTrack('media')
+                        setShowAddTrackMenu(false)
+                      }}
+                      className="w-full flex items-center gap-2 ui-radius-sm px-3 py-2 text-sm text-foreground surface-menu-item"
+                    >
+                      <Video className="w-4 h-4 text-green-400" />
+                      <span>Media Track</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        pushState()
+                        addTrack('audio')
+                        setShowAddTrackMenu(false)
+                      }}
+                      className="w-full flex items-center gap-2 ui-radius-sm px-3 py-2 text-sm text-foreground surface-menu-item"
+                    >
+                      <Music className="w-4 h-4 text-blue-400" />
+                      <span>Audio Track</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        pushState()
+                        addTrack('text')
+                        setShowAddTrackMenu(false)
+                      }}
+                      className="w-full flex items-center gap-2 ui-radius-sm px-3 py-2 text-sm text-foreground surface-menu-item"
+                    >
+                      <Type className="w-4 h-4 text-purple-400" />
+                      <span>Text Track</span>
+                    </button>
                   </div>
                 </ElevatedSurface>
               )}
             </div>
-          ))}
-          {/* Add Track button */}
-          <div
-            data-add-track-menu
-            className="h-10 px-2 flex items-center justify-center border-b border-border relative"
-          >
-            <button
-              onClick={() => setShowAddTrackMenu(!showAddTrackMenu)}
-              className={cn(
-                'surface-control-elevation ui-radius-md flex items-center gap-1.5 border px-2 py-1 text-xs font-medium transition-colors',
-                showAddTrackMenu
-                  ? 'border-primary bg-primary text-primary-foreground'
-                  : 'surface-control text-muted-foreground hover:text-foreground',
-              )}
-              title="Add new track"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Add Track</span>
-            </button>
-
-            {/* Add track dropdown menu */}
-            {showAddTrackMenu && (
-              <ElevatedSurface asChild offset={1}>
-                <div
-                  data-add-track-menu
-                  className="ui-radius-md absolute left-full top-0 ml-1 z-30 border border-transparent min-w-[140px]"
-                >
-                  <button
-                    onClick={() => {
-                      pushState()
-                      addTrack('media')
-                      setShowAddTrackMenu(false)
-                    }}
-                    className="w-full flex items-center gap-2 ui-radius-sm px-3 py-2 text-sm text-foreground surface-menu-item"
-                  >
-                    <Video className="w-4 h-4 text-green-400" />
-                    <span>Media Track</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      pushState()
-                      addTrack('audio')
-                      setShowAddTrackMenu(false)
-                    }}
-                    className="w-full flex items-center gap-2 ui-radius-sm px-3 py-2 text-sm text-foreground surface-menu-item"
-                  >
-                    <Music className="w-4 h-4 text-blue-400" />
-                    <span>Audio Track</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      pushState()
-                      addTrack('text')
-                      setShowAddTrackMenu(false)
-                    }}
-                    className="w-full flex items-center gap-2 ui-radius-sm px-3 py-2 text-sm text-foreground surface-menu-item"
-                  >
-                    <Type className="w-4 h-4 text-purple-400" />
-                    <span>Text Track</span>
-                  </button>
-                </div>
-              </ElevatedSurface>
-            )}
           </div>
         </div>
-
         {/* Timeline content */}
         <div
+          data-timeline-scroll
           ref={containerRef}
-          className="flex-1 overflow-x-auto overflow-y-hidden relative"
-          onClick={handleTimelineClick}
-          onMouseDown={handleMarqueeMouseDown}
+          className="flex-1 overflow-auto relative"
+          onPointerDown={handleMarqueeMouseDown}
         >
-          <div style={{ width: timelineWidth, minWidth: '100%' }}>
+          <div className="relative" style={{ width: timelineWidth, minWidth: '100%' }}>
             {/* Time ruler */}
-            <div className="h-6 border-b border-border relative bg-background">
+            <div
+              data-time-ruler
+              className="h-6 border-b border-border sticky top-0 z-30 bg-background"
+            >
               {/* Loop region indicator (VID-003) */}
               {loopRegion && (
                 <div
@@ -1034,6 +1042,7 @@ export function Timeline() {
             {tracks.map((track) => (
               <div
                 key={track.id}
+                data-track-id={track.id}
                 data-track-drop-zone
                 onDragOver={(e) => handleTrackDragOver(e, track.id)}
                 onDragLeave={handleTrackDragLeave}
@@ -1057,8 +1066,12 @@ export function Timeline() {
                 {/* Clips - using memoized component for performance */}
                 {track.clips.map((clip) => {
                   const media = getFile(clip.mediaId)
-                  const clipWidth = (clip.endTime - clip.startTime) * pixelsPerSecond
-                  const visualStartTime = getClipPosition(clip.id, clip.startTime)
+                  const displayed = trimPreview?.id === clip.id ? trimPreview : clip
+                  const clipWidth = (displayed.endTime - displayed.startTime) * pixelsPerSecond
+                  const visualStartTime =
+                    trimPreview?.id === clip.id
+                      ? trimPreview.startTime
+                      : getClipPosition(clip.id, clip.startTime)
                   const clipLeft = visualStartTime * pixelsPerSecond
                   const isBeingDragged = isClipDragging(clip.id)
                   const isSelected = selectedClipId === clip.id || selectedClipIds.includes(clip.id)
@@ -1093,8 +1106,23 @@ export function Timeline() {
                       onTrimMouseDown={handleTrimMouseDown}
                       onClick={(e, clipId) => {
                         e.stopPropagation()
+                        if (consumeClick()) return
                         if (e.shiftKey) {
-                          addToSelection(clipId)
+                          const ordered = tracks.flatMap((t) =>
+                            [...t.clips].sort((a, b) => a.startTime - b.startTime),
+                          )
+                          const anchor = ordered.findIndex((c) => c.id === selectedClipId)
+                          const end = ordered.findIndex((c) => c.id === clipId)
+                          useTimelineStore
+                            .getState()
+                            .selectClips(
+                              ordered
+                                .slice(
+                                  Math.min(anchor < 0 ? end : anchor, end),
+                                  Math.max(anchor, end) + 1,
+                                )
+                                .map((c) => c.id),
+                            )
                         } else if (e.ctrlKey || e.metaKey) {
                           toggleSelection(clipId)
                         } else {
@@ -1104,7 +1132,7 @@ export function Timeline() {
                       onContextMenu={(e, clipId, trackId) => {
                         e.preventDefault()
                         e.stopPropagation()
-                        selectClip(clipId)
+                        if (!selectedClipIds.includes(clipId)) selectClip(clipId)
                         setContextMenu({ x: e.clientX, y: e.clientY, clipId, trackId })
                       }}
                       onDelete={removeClip}
@@ -1133,11 +1161,13 @@ export function Timeline() {
             {/* Playhead */}
             <div
               ref={playheadRef}
-              className="absolute top-0 bottom-0 w-0.5 bg-primary z-20 cursor-ew-resize"
+              className="absolute top-0 bottom-0 w-0.5 bg-primary z-20 pointer-events-none"
               style={{ left: currentTime * pixelsPerSecond }}
-              onMouseDown={handlePlayheadMouseDown}
             >
-              <div className="absolute -top-0 left-1/2 -translate-x-1/2 w-3 h-3 bg-primary rounded-b-sm" />
+              <div
+                data-playhead-head
+                className="pointer-events-auto absolute -top-0 left-1/2 -translate-x-1/2 w-3 h-3 bg-primary rounded-b-sm"
+              />
             </div>
 
             {/* TL-004: Marquee selection box */}

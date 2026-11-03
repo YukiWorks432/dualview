@@ -176,6 +176,31 @@ export starts. Borrowed preview videos return to their paused position. See the
 
 ## Shortcuts
 
+### Timeline controls (After Effects defaults)
+
+Click or Tab into the timeline to activate its shortcuts. Inputs, IME composition and dialogs retain ownership of typing. Viewer shortcuts listed below apply when the comparison viewer is active.
+
+| Input                         | Action                                                                       |
+| ----------------------------- | ---------------------------------------------------------------------------- |
+| Wheel / Shift+wheel           | Vertical / horizontal scrolling                                              |
+| Alt+wheel                     | Zoom around the pointer time                                                 |
+| Middle drag / Space+left drag | Pan; tap Space to play/pause on key release                                  |
+| H / V                         | Hand / selection tool                                                        |
+| Ruler click or drag           | Seek; stop playback unless Alt is held                                       |
+| Empty click / marquee         | Clear / replace selection; Shift adds to marquee selection                   |
+| Ctrl+click / Shift+click      | Toggle / extend selection in display order                                   |
+| Selected clip drag            | Move the selected clips together, retaining their tracks                     |
+| Edge drag / Escape            | Trim / cancel an uncommitted edit                                            |
+| Shift+drag                    | Snap to clip edges, markers, loop bounds and the playhead                    |
+| PageUp / PageDown             | Back / forward one frame; Shift moves ten frames                             |
+| I / O, B / N                  | Selected clip first / last frame; loop start / end                           |
+| J / K                         | Previous / next visible marker or loop boundary                              |
+| Ctrl+Shift+D                  | Split selected clips; without selection split unlocked clips at the playhead |
+| [ / ], Alt+[ / ]              | Align / trim the first or last visible frame to the playhead                 |
+| = / -, ;, Shift+;, D          | Zoom, frame/full toggle, full/previous toggle, scroll to playhead            |
+
+On macOS use Command for Ctrl and Option for Alt. Existing project versions, media references and autosave remain supported. Duplication remains adjacent on the same track and paste remains at the playhead. Keyframed start-trim and split restrictions remain. Group vertical movement and simultaneous group trim are outside this change.
+
 | Action                                      | Keys                                      |
 | ------------------------------------------- | ----------------------------------------- |
 | Play/pause                                  | `Space`                                   |

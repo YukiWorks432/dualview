@@ -108,8 +108,9 @@ test('Audio QAのA/B/Sが音声だけを選び、修飾キー付き編集と通�
     .locator('[data-clip]')
     .first()
     .click({ position: { x: 20, y: 20 } })
-  await page.keyboard.press('s')
+  await page.keyboard.press('Control+Shift+d')
   await expect(page.locator('[data-clip]')).toHaveCount(3)
+  await focusBackground(page)
   await page.keyboard.press('b')
   await expect(page.getByTitle('Open Sidebar (B)')).toBeVisible()
   await page.keyboard.press('b')
@@ -296,7 +297,7 @@ test('ヘルプとプロジェクトと書き出しのEscapeがループを保�
   await page.keyboard.press('Escape')
   await focusBackground(page)
   await page.locator('[data-clip]').first().click({ button: 'right' })
-  const clipMenu = page.getByRole('button', { name: 'Split at Playhead S', exact: true })
+  const clipMenu = page.getByRole('button', { name: 'Split at Playhead Ctrl+Shift+D', exact: true })
   await expect(clipMenu).toBeVisible()
   await page.keyboard.press('Shift+Slash')
   await expect(page.getByRole('dialog')).toBeVisible()
@@ -417,7 +418,7 @@ test('モード固有G・Shift数字とAlt絞り込みは一つの操作だけ�
   expect((await state(page)).mode).toBe('side-by-side')
 })
 
-test('検索欄に焦点を残したドラッグをEscapeで取り消し、位置と入力とループを保つ', async ({
+test('検索欄からタイムラインへ焦点を移したドラッグをEscapeで取り消し、位置と入力とループを保つ', async ({
   page,
 }) => {
   await seed(page)
@@ -431,7 +432,7 @@ test('検索欄に焦点を残したドラッグをEscapeで取り消し、位�
   await page.mouse.move(original.x + 20, original.y + 20)
   await page.mouse.down()
   await page.mouse.move(original.x + 140, original.y + 20, { steps: 5 })
-  await expect(search).toBeFocused()
+  await expect(page.locator('[data-timeline-panel]')).toBeFocused()
   // 位置が動くまで待ち、開始済みのドラッグを実際のEscapeとmouseupで取り消す。
   await expect
     .poll(async () => (await clip.boundingBox())?.x ?? -1)
@@ -440,15 +441,18 @@ test('検索欄に焦点を残したドラッグをEscapeで取り消し、位�
   await page.mouse.up()
   expect((await state(page)).clips).toEqual(before.clips)
   await expect.poll(async () => (await clip.boundingBox())?.x ?? -1).toBeCloseTo(original.x, 0)
-  await expect(search).toBeFocused()
+  await expect(page.locator('[data-timeline-panel]')).toBeFocused()
   await expect(search).toHaveValue('red')
   expect((await state(page)).loop).toEqual(before.loop)
-  // 操作を取り消した後のEscapeは入力欄に留まり、ループ解除へ漏れない。
+  // 入力へ戻ってからのEscapeはループ解除へ漏れない。
+  await search.focus()
   await page.keyboard.press('Escape')
   expect((await state(page)).loop).toEqual(before.loop)
 })
 
-test('検索欄に焦点を残したクリップメニューのEscapeは入力とループを保つ', async ({ page }) => {
+test('検索欄からタイムラインへ焦点を移したクリップメニューのEscapeは入力とループを保つ', async ({
+  page,
+}) => {
   await seed(page)
   await setLoop(page)
   const before = await state(page)
@@ -458,9 +462,9 @@ test('検索欄に焦点を残したクリップメニューのEscapeは入力�
     .locator('[data-clip]')
     .first()
     .click({ button: 'right', position: { x: 20, y: 20 } })
-  const menu = page.getByRole('button', { name: 'Split at Playhead S', exact: true })
+  const menu = page.getByRole('button', { name: 'Split at Playhead Ctrl+Shift+D', exact: true })
   await expect(menu).toBeVisible()
-  await expect(search).toBeFocused()
+  await expect(page.locator('[data-timeline-panel]')).toBeFocused()
   // 変換中は、開始済みの操作よりIMEがEscapeを所有する。
   await search.evaluate((element) =>
     element.dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true })),
@@ -472,7 +476,7 @@ test('検索欄に焦点を残したクリップメニューのEscapeは入力�
   )
   await page.keyboard.press('Escape')
   await expect(menu).toHaveCount(0)
-  await expect(search).toBeFocused()
+  await expect(page.locator('[data-timeline-panel]')).toBeFocused()
   await expect(search).toHaveValue('red')
   expect((await state(page)).clips).toEqual(before.clips)
   expect((await state(page)).loop).toEqual(before.loop)

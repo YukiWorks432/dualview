@@ -566,3 +566,48 @@ describe('キーフレーム付きクリップの受理済み暫定制限', () =
     expectReferences()
   })
 })
+
+describe('タイムラインの操作契約', () => {
+  it('単一選択は以前の集合を置き換える', () => {
+    seed()
+    timeline.getState().selectClips(['clip', 'other'])
+    timeline.getState().selectClip('clip')
+    expect(timeline.getState().selectedClipIds).toEqual(['clip'])
+  })
+  it('複数移動は素材範囲と時間差を保ち、0秒で共通量を制限する', () => {
+    seed({ startTime: 1, endTime: 3 })
+    const original = clips()[0]
+    timeline.setState({
+      tracks: timeline
+        .getState()
+        .tracks.map((t) =>
+          t.id === 'track-a'
+            ? { ...t, clips: [original, { ...original, id: 'second', startTime: 4, endTime: 5 }] }
+            : t,
+        ),
+    })
+    timeline.getState().moveClips(['clip', 'second'], -3)
+    expect(clips().map((c) => [c.startTime, c.endTime])).toEqual([
+      [0, 2],
+      [3, 4],
+    ])
+    expect(clips().map((c) => [c.inPoint, c.outPoint])).toEqual([
+      [original.inPoint, original.outPoint],
+      [original.inPoint, original.outPoint],
+    ])
+  })
+  it('吸着は最寄りを選び、複数の移動対象を除外できる', () => {
+    seed({ startTime: 1, endTime: 3 })
+    timeline.setState({
+      zoom: 1,
+      markers: [
+        { id: 'a', time: 1, label: 'a' },
+        { id: 'b', time: 1.1, label: 'b' },
+      ],
+    })
+    playback.getState().seek(8)
+    expect(timeline.getState().getSnapPoint(1.08, ['clip'])).toBeCloseTo(1.1)
+    timeline.setState({ markers: [] })
+    expect(timeline.getState().getSnapPoint(1, ['clip'])).toBeNull()
+  })
+})

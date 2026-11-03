@@ -68,8 +68,6 @@ export default function App() {
   }, [])
 
   const {
-    zoomIn,
-    zoomOut,
     setLoopIn,
     setLoopOut,
     clearLoop,
@@ -115,11 +113,6 @@ export default function App() {
     }
 
     if (e.ctrlKey || e.metaKey) {
-      if (['Equal', 'NumpadAdd', 'Minus', 'NumpadSubtract'].includes(e.code)) {
-        e.preventDefault()
-        if (e.code === 'Equal' || e.code === 'NumpadAdd') zoomIn()
-        else zoomOut()
-      }
       return
     }
     if (e.shiftKey && !['KeyM', 'KeyS', 'ArrowLeft', 'ArrowRight'].includes(e.code)) return
