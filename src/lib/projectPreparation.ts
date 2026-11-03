@@ -38,6 +38,33 @@ export async function prepareProject(
       }
       if (entry.type !== 'video' && entry.type !== 'image') continue
       const blob = mediaBlobs.get(entry.id)
+      if (entry.reference) {
+        if (entry.reference.handle) {
+          try {
+            const source = await entry.reference.handle.getFile()
+            if (
+              source.size === entry.reference.size &&
+              source.lastModified === entry.reference.lastModified
+            ) {
+              const prepared = await prepareMediaFile(source)
+              files.push({ ...prepared, id: entry.id, reference: entry.reference })
+              continue
+            }
+          } catch {
+            /* 再許可・移動・差し替えが必要な素材は、編集を保持して再指定に委ねる。 */
+          }
+        }
+        files.push({
+          ...entry,
+          type: entry.type,
+          file: new File([], entry.name, { type: entry.reference.type }),
+          url: '',
+          status: 'error',
+          needsRelink: true,
+          statusMessage: '素材を再指定してください',
+        })
+        continue
+      }
       if (!blob) continue
       const media = await prepareMediaFile(new File([blob], entry.name, { type: blob.type }))
       files.push({ ...media, id: entry.id })

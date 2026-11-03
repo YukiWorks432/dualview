@@ -2,6 +2,7 @@ import { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react'
 
 import { Header } from './components/layout/Header'
 import { Sidebar } from './components/layout/Sidebar'
+import { ImportActivity } from './components/media/ImportActivity'
 import { PreviewCanvas, type PreviewCanvasHandle } from './components/preview/PreviewCanvas'
 import { ProjectSelector } from './components/project'
 import { ScopesPanel } from './components/scopes'
@@ -14,6 +15,7 @@ import { useKeyboardShortcutsHelp } from './hooks/useKeyboardShortcutsHelp'
 import { useTimelineDiffLifecycle } from './hooks/useTimelineDiff'
 import { isSupportedMediaFile } from './lib/media/fileTypes'
 import { captureMediaImport } from './lib/media/importRequest'
+import { captureDroppedHandles } from './lib/media/localReference'
 import { captureCanvasScreenshot, downloadBlob } from './lib/screenshotExport'
 import { useHistoryStore } from './stores/historyStore'
 import { isMediaImportCurrent, useMediaStore } from './stores/mediaStore'
@@ -28,6 +30,10 @@ const ExportDialog = lazy(() =>
 
 export default function App() {
   useTimelineDiffLifecycle()
+  useEffect(() => {
+    window.addEventListener('drop', captureDroppedHandles, true)
+    return () => window.removeEventListener('drop', captureDroppedHandles, true)
+  }, [])
 
   const [isExportOpen, setIsExportOpen] = useState(false)
   const [isTimelineVisible, setIsTimelineVisible] = useState(true)
@@ -313,6 +319,7 @@ export default function App() {
 
   return (
     <SurfaceProvider value={1}>
+      <ImportActivity />
       <div
         className="surface-wash h-screen flex flex-col overflow-hidden"
         onDrop={handleDrop}

@@ -95,7 +95,7 @@
    together, then pause to inspect individual frames.
 4. Open `Difference` for visual analysis or `Audio QA` for audio embedded in the videos.
 5. Export an image or PDF for review. Save a `.dualview` project to keep the editable comparison
-   and media together.
+   and local media references; keep the original files separately.
 
 Local media is processed in your browser without being uploaded to the operator. URL import connects
 directly to the source URL. Projects are automatically stored in this browser; export a separate backup
@@ -603,18 +603,18 @@ Toggle with `G` key.
 
 - **Auto-save:** 500ms debounced saves to IndexedDB
 - **Multiple projects:** Create, duplicate, delete
-- **Import/Export:** `.dualview` JSON files with embedded media
+- **Import/Export:** `.dualview` JSON files with local media references and embedded media from legacy projects or URL/paste imports
 - **Templates:** Built-in presets + custom templates
 - **Metadata:** Title, description, tags
 
 Local files added to DualView are processed in the browser and are not uploaded to the operator.
-Projects and media are saved in this browser so you can continue later.
+Project edits and local file references are saved in this browser. If a reference is unavailable when reopening a project, select the original file to reconnect it.
 
 Auto-save includes all stored comparison, scope, export and timeline settings, project metadata,
 media replacements and keyframe edits. The indicator stays unsaved while newer edits are pending,
 shows saving during the latest write, and reports write failures. Playback position is included in
 the next save for restoration, but playback ticks, analysis progress, pointer information and
-selection changes alone do not schedule writes. The existing project file format is unchanged.
+selection changes alone do not schedule writes. Version 1 projects remain readable; projects with local media references use version 2.
 
 Creating or opening a project first saves the outgoing edits. The current project stays available
 until the destination has been fully read and decoded; a save or load failure keeps your current
@@ -626,8 +626,8 @@ Undo/Redo continues to work for edits made within the current project session.
 File selection, drag and drop, image paste, and URL import follow the same rules for accepting results.
 Removing a source, clearing the media list, or creating/loading a project invalidates affected imports
 and retries. Their late results cannot add media or clips. Unused object URLs and decoding resources
-are released. Closing the URL import dialog cancels its request. Local files are copied into an
-independent browser-owned file before processing.
+are released. Closing the URL import dialog cancels its request. Local files use a
+browser reference without copying the complete file. Keep the original file available during comparison.
 
 Filmstrip extraction continues through clip moves, trims, and view toggles. Matching media and settings
 reuse extracted frames; failed extraction falls back to ordinary thumbnails. Removing or replacing
@@ -638,8 +638,9 @@ native browser support independently of the ProRes decoder used for the comparis
 URL import connects directly to the URL you enter to fetch that media. Other local files already
 loaded in DualView are not sent to that destination.
 
-A downloaded `.dualview` project includes the media itself, so share it with the same care as the
-source files. Clearing browser site data removes saved projects and media, so export important work
+A downloaded `.dualview` version 2 project stores local media references. Keep and share those source
+files separately. Embedded media from legacy projects or URL/paste imports remains included; handle
+those files with the same care as the original sources. Clearing browser site data removes saved projects and media, so export important work
 before doing so.
 
 ### A/B Frame Difference Lane

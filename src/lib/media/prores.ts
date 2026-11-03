@@ -26,7 +26,11 @@ export function ensureProResDecoder(): Promise<void> {
   return proResRegistration
 }
 
-export async function probeVideoFile(file: File, signal?: AbortSignal): Promise<VideoProbeResult> {
+export async function probeVideoFile(
+  file: File,
+  signal?: AbortSignal,
+  onStage?: (message: string) => void,
+): Promise<VideoProbeResult> {
   signal?.throwIfAborted()
   const input = new Input({
     formats: ALL_FORMATS,
@@ -55,6 +59,7 @@ export async function probeVideoFile(file: File, signal?: AbortSignal): Promise<
     const codec = await track.getCodec()
     signal?.throwIfAborted()
     if (codec === 'prores') {
+      onStage?.('ProResデコーダーを準備しています')
       await ensureProResDecoder()
     }
 
@@ -76,6 +81,7 @@ export async function probeVideoFile(file: File, signal?: AbortSignal): Promise<
     signal?.throwIfAborted()
     let thumbnail: string | undefined
     if (codec === 'prores' && decodable) {
+      onStage?.('最初のフレームを準備しています')
       const sink = new CanvasSink(track, {
         width: 160,
         alpha: hasAlpha,

@@ -95,7 +95,7 @@ export function URLImport({ isOpen, onClose }: URLImportProps) {
       }
 
       // Add to media store
-      const mediaFile = await addFile(file, request)
+      const mediaFile = await addFile(file, request, true)
       if (!isMediaImportCurrent(mediaFile, request)) return
 
       // Auto-add to timeline if tracks are empty

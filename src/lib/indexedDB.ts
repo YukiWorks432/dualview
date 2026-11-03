@@ -1,3 +1,5 @@
+import type { MediaReference } from '../types'
+
 /**
  * IndexedDB wrapper for project persistence (PERSIST-001)
  *
@@ -31,6 +33,7 @@ export interface ProjectRecord {
 }
 
 export interface MediaManifestEntry {
+  reference?: MediaReference
   id: string
   name: string
   type: string

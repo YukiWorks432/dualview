@@ -373,3 +373,34 @@ describe('保存状態と一時状態', () => {
     expect(project.getState().webglComparisonSettings.threshold).toBe(0.3)
   })
 })
+
+it('saves references without media bytes and restores missing clips for reconnection', async () => {
+  const file = media.getState().files[0]
+  media.setState({
+    files: [
+      {
+        ...file,
+        reference: {
+          name: file.name,
+          size: file.file.size,
+          lastModified: file.file.lastModified,
+          type: file.file.type,
+        },
+      },
+    ],
+  })
+  const before = timeline.getState().tracks.flatMap((track) => track.clips)
+  const record = await autosave()
+  expect(db.blobs.get(record.id)?.size).toBe(0)
+  const restored = await restore(record)
+  expect(restored.files[0]).toMatchObject({ id: 'image', needsRelink: true, status: 'error' })
+  expect(restored.timeline.tracks?.flatMap((track) => track.clips)).toEqual(before)
+  const exported = JSON.parse(await (await persistence.getState().exportProject()).text())
+  expect(exported.version).toBe(2)
+  expect(exported.mediaFiles).toEqual([])
+  expect(exported.project.mediaManifest[0].reference.size).toBe(5)
+  const importedId = await persistence
+    .getState()
+    .importProject(new File([JSON.stringify(exported)], 'linked.dualview'))
+  expect(db.records.get(importedId)?.mediaManifest[0].reference?.name).toBe('image.png')
+})

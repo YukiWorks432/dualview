@@ -338,7 +338,7 @@ export const VideoSurface = forwardRef<VideoFrameElement, VideoSurfaceProps>(fun
   return (
     <video
       ref={setVideoRef}
-      src={media.url}
+      src={media.url || undefined}
       className={className}
       style={style}
       data-track={dataTrack}

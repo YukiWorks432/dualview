@@ -32,7 +32,7 @@ export const VisualSurface = forwardRef<VisualFrameElement, VisualSurfaceProps>(
       return (
         <img
           ref={(node) => assignRef(forwardedRef, node)}
-          src={media.url}
+          src={media.url || undefined}
           className={className}
           style={style}
           data-track={dataTrack}
