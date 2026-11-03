@@ -199,6 +199,8 @@ Click or Tab into the timeline to activate its shortcuts. Inputs, IME compositio
 | [ / ], Alt+[ / ]              | Align / trim the first or last visible frame to the playhead                 |
 | = / -, ;, Shift+;, D          | Zoom, frame/full toggle, full/previous toggle, scroll to playhead            |
 
+Loop creation, boundary changes and clearing support Undo/Redo. Repeating an unchanged boundary does not add history. Dragging in the timeline selects clips without selecting interface text. Holding Space shows a grab cursor; panning shows a grabbing cursor.
+
 On macOS use Command for Ctrl and Option for Alt. Existing project versions, media references and autosave remain supported. Duplication remains adjacent on the same track and paste remains at the playhead. Keyframed start-trim and split restrictions remain. Group vertical movement and simultaneous drag-trimming are outside this change. Ripple-trimming overlapping selected clips on one track is refused before changing any clip.
 
 | Action                                      | Keys                                      |

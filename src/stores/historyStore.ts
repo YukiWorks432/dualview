@@ -8,11 +8,12 @@ import type { ClipKeyframes } from '../lib/keyframes'
 import { projectSession } from '../lib/projectSession'
 import type { TimelineTrack } from '../types'
 import { useKeyframeStore } from './keyframeStore'
-import { useTimelineStore } from './timelineStore'
+import { useTimelineStore, type LoopRegion } from './timelineStore'
 
 interface HistoryState {
   session: number
   tracks: TimelineTrack[]
+  loopRegion: LoopRegion | null
   keyframes: Map<string, ClipKeyframes>
 }
 
@@ -51,6 +52,7 @@ export const useHistoryStore = create<HistoryStore>((set, get) => ({
     const currentState: HistoryState = {
       session: projectSession.capture(),
       tracks: cloneTracks(timelineState.tracks),
+      loopRegion: timelineState.loopRegion && { ...timelineState.loopRegion },
       keyframes: structuredClone(useKeyframeStore.getState().clipKeyframes),
     }
 
@@ -62,11 +64,15 @@ export const useHistoryStore = create<HistoryStore>((set, get) => ({
 
   runWithHistory: (action) => {
     const before = useTimelineStore.getState().tracks
+    const beforeLoop = useTimelineStore.getState().loopRegion
     const beforeKeyframes = useKeyframeStore.getState().clipKeyframes
     const session = projectSession.capture()
     action()
+    const afterLoop = useTimelineStore.getState().loopRegion
     if (
       useTimelineStore.getState().tracks === before &&
+      beforeLoop?.inPoint === afterLoop?.inPoint &&
+      beforeLoop?.outPoint === afterLoop?.outPoint &&
       useKeyframeStore.getState().clipKeyframes === beforeKeyframes
     )
       return false
@@ -76,6 +82,7 @@ export const useHistoryStore = create<HistoryStore>((set, get) => ({
         {
           session,
           tracks: cloneTracks(before),
+          loopRegion: beforeLoop && { ...beforeLoop },
           keyframes: structuredClone(beforeKeyframes),
         },
       ],
@@ -96,6 +103,7 @@ export const useHistoryStore = create<HistoryStore>((set, get) => ({
     const currentState: HistoryState = {
       session: projectSession.capture(),
       tracks: cloneTracks(timelineState.tracks),
+      loopRegion: timelineState.loopRegion && { ...timelineState.loopRegion },
       keyframes: structuredClone(useKeyframeStore.getState().clipKeyframes),
     }
 
@@ -108,6 +116,9 @@ export const useHistoryStore = create<HistoryStore>((set, get) => ({
       selectedKeyframeId: null,
     })
     useTimelineStore.getState().restoreTracks(cloneTracks(previousState.tracks))
+    useTimelineStore.setState({
+      loopRegion: previousState.loopRegion && { ...previousState.loopRegion },
+    })
 
     set({
       past: newPast,
@@ -127,6 +138,7 @@ export const useHistoryStore = create<HistoryStore>((set, get) => ({
     const currentState: HistoryState = {
       session: projectSession.capture(),
       tracks: cloneTracks(timelineState.tracks),
+      loopRegion: timelineState.loopRegion && { ...timelineState.loopRegion },
       keyframes: structuredClone(useKeyframeStore.getState().clipKeyframes),
     }
 
@@ -139,6 +151,9 @@ export const useHistoryStore = create<HistoryStore>((set, get) => ({
       selectedKeyframeId: null,
     })
     useTimelineStore.getState().restoreTracks(cloneTracks(nextState.tracks))
+    useTimelineStore.setState({
+      loopRegion: nextState.loopRegion && { ...nextState.loopRegion },
+    })
 
     set({
       past: [...get().past, currentState],

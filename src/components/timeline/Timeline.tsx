@@ -494,8 +494,10 @@ export function Timeline() {
       onPointerCancel={viewport.stop}
       onLostPointerCapture={viewport.stop}
       className={cn(
-        'h-64 md:h-80 bg-surface border-t border-border flex flex-col outline-none focus-visible:ring-2 focus-visible:ring-primary',
-        viewport.hand && 'cursor-grab',
+        'h-64 md:h-80 bg-surface border-t border-border flex flex-col select-none outline-none focus-visible:ring-2 focus-visible:ring-primary',
+        viewport.panning
+          ? 'cursor-grabbing [&_*]:cursor-grabbing'
+          : viewport.hand && 'cursor-grab [&_*]:cursor-grab',
       )}
     >
       {editError && (
@@ -653,8 +655,8 @@ export function Timeline() {
                 <div className="flex items-center gap-0.5 ui-radius-md bg-surface p-0.5 ml-1">
                   <IconButton
                     variant="secondary"
-                    onClick={() => (loopRegion ? clearLoop() : setLoopIn())}
-                    title={loopRegion ? 'Clear loop (Esc)' : 'Set loop in (I/O)'}
+                    onClick={() => runWithHistory(loopRegion ? clearLoop : setLoopIn)}
+                    title={loopRegion ? 'ループ範囲を解除（Esc）' : 'ループ開始を設定'}
                     className={`h-7 w-7 ${loopRegion ? 'bg-primary/20 text-primary' : ''}`}
                   >
                     <Repeat className="w-3.5 h-3.5" />

@@ -16,7 +16,7 @@ const TRACK_COLORS: Record<TrackType, string> = {
   media: '#4ade80', // green
 }
 
-interface LoopRegion {
+export interface LoopRegion {
   inPoint: number
   outPoint: number
 }
