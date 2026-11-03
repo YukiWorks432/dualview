@@ -1,9 +1,9 @@
 import { create } from 'zustand'
 
 import { clearFilmstripCache } from '../lib/filmstripExtractor'
-import { detachFile } from '../lib/media/detachFile'
 import { getSupportedMediaType } from '../lib/media/fileTypes'
 import { captureMediaImport, invalidateMediaImports } from '../lib/media/importRequest'
+import { getDroppedHandle } from '../lib/media/localReference'
 import { probeVideoFile } from '../lib/media/prores'
 import { generateId } from '../lib/utils'
 import type { MediaFile } from '../types'
@@ -13,7 +13,10 @@ interface MediaStore {
   files: MediaFile[]
   selectedIds: string[]
 
-  addFile: (file: File, signal?: AbortSignal) => Promise<MediaFile | null>
+  addFile: (file: File, signal?: AbortSignal, embedded?: boolean) => Promise<MediaFile | null>
+  reconnectFile: (id: string, file: File) => Promise<void>
+  cancelImport: (id: string) => void
+  cancelImports: () => void
   removeFile: (id: string) => void
   selectFile: (id: string) => void
   deselectFile: (id: string) => void
@@ -72,7 +75,11 @@ function createVideoThumbnail(video: HTMLVideoElement): string | undefined {
 }
 
 // Prepare resources without publishing them to the active media library.
-export async function prepareMediaFile(file: File, signal?: AbortSignal): Promise<MediaFile> {
+export async function prepareMediaFile(
+  file: File,
+  signal?: AbortSignal,
+  onStage?: (message: string) => void,
+): Promise<MediaFile> {
   signal?.throwIfAborted()
   const type = getSupportedMediaType(file)
   if (!type) throw new Error('DualView only accepts image and video files')
@@ -94,7 +101,7 @@ export async function prepareMediaFile(file: File, signal?: AbortSignal): Promis
       let probeError: unknown = null
 
       try {
-        const probe = await probeVideoFile(file, signal)
+        const probe = await probeVideoFile(file, signal, onStage)
         signal?.throwIfAborted()
         mediaFile.videoCodec = probe.codec ?? undefined
         mediaFile.playbackBackend = probe.codec === 'prores' ? 'mediabunny' : 'native'
@@ -120,6 +127,7 @@ export async function prepareMediaFile(file: File, signal?: AbortSignal): Promis
       }
 
       try {
+        onStage?.('最初のフレームを準備しています')
         const video = await loadNativeVideo(url, signal)
         try {
           signal?.throwIfAborted()
@@ -202,9 +210,11 @@ async function processMedia(
     useMediaStore.getState().getFile(id)?.file === file
   let prepared: MediaFile | undefined
   try {
-    prepared = await prepareMediaFile(file, request)
+    prepared = await prepareMediaFile(file, request, (message) => {
+      if (isCurrent()) useMediaStore.getState().updateStatus(id, 'processing', message)
+    })
     if (!isCurrent()) return null
-    const adopted = { ...prepared, id }
+    const adopted = { ...prepared, id, reference: useMediaStore.getState().getFile(id)?.reference }
     const previous = useMediaStore.getState().getFile(id)
     useMediaStore.setState((state) => ({
       files: state.files.map((item) => (item.id === id ? adopted : item)),
@@ -246,19 +256,12 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
   files: [],
   selectedIds: [],
 
-  addFile: async (source: File, context?: AbortSignal) => {
+  addFile: async (source: File, context?: AbortSignal, embedded = false) => {
     const signal = captureMediaImport(context)
     if (signal.aborted) return null
     const type = getSupportedMediaType(source)
     if (!type) throw new Error('DualView only accepts image and video files')
-    let file: File
-    try {
-      file = await detachFile(source, signal)
-    } catch (error) {
-      if (signal.aborted) return null
-      throw error
-    }
-    if (signal.aborted) return null
+    const file = source
     const id = generateId()
     set((state) => ({
       files: [
@@ -269,13 +272,93 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
           type,
           url: '',
           file,
+          reference: embedded
+            ? undefined
+            : {
+                name: file.name,
+                size: file.size,
+                lastModified: file.lastModified,
+                type: file.type,
+              },
+          importStartedAt: Date.now(),
+          statusMessage: '動画・画像の情報を確認しています',
           status: 'processing',
-          processingProgress: 10,
+          processingProgress: undefined,
         },
       ],
     }))
     if (signal.aborted || !get().getFile(id)) return null
+    const handle = embedded ? undefined : await getDroppedHandle(file)
+    if (signal.aborted || !get().getFile(id)) {
+      get().removeFile(id)
+      return null
+    }
+    if (handle)
+      set((state) => ({
+        files: state.files.map((item) =>
+          item.id === id ? { ...item, reference: { ...item.reference!, handle } } : item,
+        ),
+      }))
     return processMedia(id, file, signal)
+  },
+
+  reconnectFile: async (id, source) => {
+    const previous = get().getFile(id)
+    if (!previous?.reference || !previous.needsRelink) return
+    if (source.name !== previous.reference.name || source.size !== previous.reference.size) {
+      throw new Error('元の素材と名前・容量が一致するファイルを選択してください')
+    }
+    if (processing.has(id)) return
+    const controller = new AbortController()
+    processing.set(id, controller)
+    const signal = captureMediaImport(controller.signal)
+    const pending = {
+      ...previous,
+      status: 'processing' as const,
+      statusMessage: '素材を再接続しています',
+      importStartedAt: Date.now(),
+    }
+    set((state) => ({ files: state.files.map((file) => (file === previous ? pending : file)) }))
+    try {
+      const prepared = await prepareMediaFile(source, signal)
+      if (signal.aborted || get().getFile(id) !== pending) {
+        URL.revokeObjectURL(prepared.url)
+        return
+      }
+      set((state) => ({
+        files: state.files.map((file) =>
+          file === pending
+            ? {
+                ...prepared,
+                id,
+                reference: {
+                  ...previous.reference!,
+                  lastModified: source.lastModified,
+                  handle: undefined,
+                },
+              }
+            : file,
+        ),
+      }))
+    } catch (error) {
+      if (!signal.aborted) throw error
+    } finally {
+      if (get().getFile(id) === pending)
+        set((state) => ({ files: state.files.map((file) => (file === pending ? previous : file)) }))
+      if (processing.get(id) === controller) processing.delete(id)
+    }
+  },
+
+  cancelImport: (id) => {
+    if (get().getFile(id)?.needsRelink) processing.get(id)?.abort()
+    else get().removeFile(id)
+  },
+
+  cancelImports: () => {
+    invalidateMediaImports()
+    for (const file of get().files) {
+      if (file.status === 'processing' || file.status === 'pending') get().cancelImport(file.id)
+    }
   },
 
   removeFile: (id: string) => {
@@ -327,7 +410,7 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
 
   retryProcessing: async (id: string) => {
     const file = get().getFile(id)
-    if (!file || file.status !== 'error') return
+    if (!file || file.status !== 'error' || file.needsRelink) return
     const signal = captureMediaImport()
     set((state) => ({
       files: state.files.map((item) =>
@@ -336,7 +419,7 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
               ...item,
               status: 'processing' as const,
               statusMessage: undefined,
-              processingProgress: 10,
+              processingProgress: undefined,
             }
           : item,
       ),

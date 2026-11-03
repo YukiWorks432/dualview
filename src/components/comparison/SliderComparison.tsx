@@ -352,7 +352,7 @@ export function SliderComparison() {
             ) : (
               <img
                 ref={imgBRef}
-                src={(mediaB || mediaA)!.url}
+                src={(mediaB || mediaA)!.url || undefined}
                 className="w-full h-full object-contain"
                 alt="B"
                 data-track="b"
@@ -389,7 +389,7 @@ export function SliderComparison() {
               ) : (
                 <img
                   ref={imgARef}
-                  src={(mediaA || mediaB)!.url}
+                  src={(mediaA || mediaB)!.url || undefined}
                   className="w-full h-full object-contain"
                   alt="A"
                   data-track="a"

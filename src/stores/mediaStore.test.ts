@@ -115,7 +115,7 @@ describe('media request ownership', () => {
     expect(revoked.mock.calls).toEqual([['blob:test-1']])
   })
 
-  it('keeps independent concurrent imports and detached source bytes', async () => {
+  it('keeps independent concurrent imports referencing the original file', async () => {
     const source = imageFile()
     const a = media.getState().addFile(source)
     const b = media.getState().addFile(source)
@@ -126,7 +126,7 @@ describe('media request ownership', () => {
     const first = await a
     expect(first?.id).not.toBe(second?.id)
     expect(media.getState().files).toHaveLength(2)
-    expect(first!.file).not.toBe(source)
+    expect(first!.file).toBe(source)
     expect(first!.file.lastModified).toBe(42)
     expect(await first!.file.text()).toBe('pixels')
     expect(revoked).not.toHaveBeenCalled()
@@ -153,19 +153,6 @@ describe('media request ownership', () => {
     expect(URL.createObjectURL).not.toHaveBeenCalled()
   })
 
-  it('cancels the original file stream while detaching, releasing its reader', async () => {
-    const cancel = vi.fn<() => void>()
-    const source = imageFile()
-    const stream = new ReadableStream<Uint8Array<ArrayBuffer>>({ cancel })
-    vi.spyOn(source, 'stream').mockReturnValue(stream)
-    const pending = media.getState().addFile(source)
-    media.getState().clearFiles()
-    expect(await pending).toBeNull()
-    expect(cancel).toHaveBeenCalledOnce()
-    await vi.waitFor(() => expect(stream.locked).toBe(false))
-    expect(TestImage.instances).toEqual([])
-  })
-
   it('rejects a once-successful result if it was removed before caller continuation', async () => {
     const pending = await pendingImport()
     pending.image.onload!()
@@ -174,4 +161,27 @@ describe('media request ownership', () => {
     media.getState().removeFile(pending.id)
     expect(isMediaImportCurrent(result, pending.request)).toBe(false)
   })
+})
+
+it('reconnects the existing media ID and preserves clips when reconnection is cancelled', async () => {
+  const pending = await pendingImport()
+  pending.image.onload!()
+  const original = (await pending.promise)!
+  timeline.getState().addClip('track-a', original.id, 0, 10)
+  const clips = timeline.getState().tracks.flatMap((track) => track.clips)
+  media.setState({ files: [{ ...original, url: '', needsRelink: true, status: 'error' }] })
+  await expect(
+    media.getState().reconnectFile(original.id, new File(['bad'], 'other.png')),
+  ).rejects.toThrow('元の素材と名前・容量が一致するファイルを選択してください')
+  const retry = media.getState().reconnectFile(original.id, imageFile())
+  media.getState().cancelImport(original.id)
+  await retry
+  expect(media.getState().getFile(original.id)?.needsRelink).toBe(true)
+  expect(timeline.getState().tracks.flatMap((track) => track.clips)).toEqual(clips)
+  const success = media.getState().reconnectFile(original.id, imageFile())
+  TestImage.instances.at(-1)!.onload!()
+  await success
+  expect(media.getState().getFile(original.id)).toMatchObject({ status: 'ready', id: original.id })
+  expect(media.getState().getFile(original.id)?.needsRelink).toBeUndefined()
+  expect(timeline.getState().tracks.flatMap((track) => track.clips)).toEqual(clips)
 })

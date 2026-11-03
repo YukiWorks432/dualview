@@ -94,6 +94,9 @@ test('saves outgoing edits, reloads browser media and keeps Undo inside each pro
   expect((await projectSnapshot(page)).clips).toEqual([])
 
   await openSavedProject(page, 'Persistence A')
+  await page
+    .getByLabel('difference-a.webmを再指定', { exact: true })
+    .setInputFiles(path.join(process.cwd(), 'e2e/fixtures/difference-a.webm'))
   await expect(page.locator('[data-clip]')).toHaveCount(1)
   await expectDecodedFixture(page)
   expect((await projectSnapshot(page)).clips).toEqual(a.clips)
@@ -111,6 +114,9 @@ test('saves outgoing edits, reloads browser media and keeps Undo inside each pro
   await page.reload()
   await expect.poll(async () => (await projectSnapshot(page)).id).toBeTruthy()
   await openSavedProject(page, 'Persistence A')
+  await page
+    .getByLabel('difference-a.webmを再指定', { exact: true })
+    .setInputFiles(path.join(process.cwd(), 'e2e/fixtures/difference-a.webm'))
   await expect(page.locator('[data-clip]')).toHaveCount(1)
   await expectDecodedFixture(page)
   const reloaded = await projectSnapshot(page)

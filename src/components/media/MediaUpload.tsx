@@ -54,7 +54,7 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
           if (file) {
             setIsUploading(true)
             try {
-              const mediaFile = await addFile(file, request)
+              const mediaFile = await addFile(file, request, true)
               if (!isMediaImportCurrent(mediaFile, request)) return
 
               // Auto-add to timeline
@@ -296,7 +296,7 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
 
     try {
       const file = await captureScreenAsFile()
-      const mediaFile = await addFile(file, request)
+      const mediaFile = await addFile(file, request, true)
       if (!isMediaImportCurrent(mediaFile, request)) return
 
       // Auto-add to timeline
@@ -442,8 +442,8 @@ export function MediaUpload({ className, onUpload }: MediaUploadProps) {
       <div className="ui-radius-md border border-border/60 px-2.5 py-2 text-[10px] leading-relaxed text-muted-foreground">
         <p>
           <strong className="font-semibold text-muted-foreground">Files are not uploaded.</strong>{' '}
-          Comparison and analysis happen in your browser. Projects and media are saved in this
-          browser so you can continue later.
+          Comparison and analysis happen in your browser. Local media files are referenced; project
+          edits are saved in this browser so you can continue later.
         </p>
         <a
           href="/privacy/#local-processing"

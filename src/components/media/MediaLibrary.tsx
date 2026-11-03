@@ -506,7 +506,11 @@ export function MediaLibrary() {
                   <StatusIndicator
                     status={file.status}
                     message={file.statusMessage}
-                    onRetry={file.status === 'error' ? () => retryProcessing(file.id) : undefined}
+                    onRetry={
+                      file.status === 'error' && !file.needsRelink
+                        ? () => retryProcessing(file.id)
+                        : undefined
+                    }
                   />
                 </div>
                 <div className="flex items-center gap-2 text-[10px] text-muted-foreground mt-0.5">

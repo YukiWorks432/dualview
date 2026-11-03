@@ -162,6 +162,7 @@ function selectMediaManifestEntry(f: MediaFile): MediaManifestEntry {
   return {
     id: f.id,
     name: f.name,
+    reference: f.reference,
     type: f.type,
     duration: f.duration,
     width: f.width,
@@ -453,7 +454,7 @@ export const usePersistenceStore = create<PersistenceStore>((set, get) => ({
     const mediaBlobs = new Map<string, Blob>()
 
     for (const file of mediaFiles) {
-      if (file.file) {
+      if (file.file && !file.reference) {
         mediaBlobs.set(file.id, file.file)
       }
     }
@@ -672,9 +673,15 @@ export const usePersistenceStore = create<PersistenceStore>((set, get) => ({
 
     // Build export package
     const exportData = {
-      version: 1,
+      version: projectRecord.mediaManifest.some((entry) => entry.reference) ? 2 : 1,
       exportedAt: Date.now(),
-      project: projectRecord,
+      project: {
+        ...projectRecord,
+        mediaManifest: projectRecord.mediaManifest.map((entry) => ({
+          ...entry,
+          reference: entry.reference ? { ...entry.reference, handle: undefined } : undefined,
+        })),
+      },
       mediaFiles: [] as Array<{ id: string; name: string; type: string; data: string }>,
     }
 
@@ -701,7 +708,7 @@ export const usePersistenceStore = create<PersistenceStore>((set, get) => ({
     const text = await file.text()
     const exportData = JSON.parse(text)
 
-    if (exportData.version !== 1) {
+    if (exportData.version !== 1 && exportData.version !== 2) {
       throw new Error('Unsupported project file version')
     }
 

@@ -187,7 +187,7 @@ export function SideBySide() {
             ) : (
               <img
                 ref={imgARef}
-                src={mediaA.url}
+                src={mediaA.url || undefined}
                 className="w-full h-full object-contain"
                 alt="A"
                 data-track="a"
@@ -269,7 +269,7 @@ export function SideBySide() {
             ) : (
               <img
                 ref={imgBRef}
-                src={mediaB.url}
+                src={mediaB.url || undefined}
                 className="w-full h-full object-contain"
                 alt="B"
                 data-track="b"

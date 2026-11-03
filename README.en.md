@@ -608,7 +608,7 @@ Toggle with `G` key.
 - **Metadata:** Title, description, tags
 
 Local files added to DualView are processed in the browser and are not uploaded to the operator.
-Projects and media are saved in this browser so you can continue later.
+Project edits and local file references are saved in this browser. If a reference is unavailable when reopening a project, select the original file to reconnect it.
 
 Auto-save includes all stored comparison, scope, export and timeline settings, project metadata,
 media replacements and keyframe edits. The indicator stays unsaved while newer edits are pending,
@@ -626,8 +626,8 @@ Undo/Redo continues to work for edits made within the current project session.
 File selection, drag and drop, image paste, and URL import follow the same rules for accepting results.
 Removing a source, clearing the media list, or creating/loading a project invalidates affected imports
 and retries. Their late results cannot add media or clips. Unused object URLs and decoding resources
-are released. Closing the URL import dialog cancels its request. Local files are copied into an
-independent browser-owned file before processing.
+are released. Closing the URL import dialog cancels its request. Local files use a
+browser reference without copying the complete file. Keep the original file available during comparison.
 
 Filmstrip extraction continues through clip moves, trims, and view toggles. Matching media and settings
 reuse extracted frames; failed extraction falls back to ordinary thumbnails. Removing or replacing

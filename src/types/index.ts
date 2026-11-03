@@ -200,12 +200,23 @@ export type SplitLayout = '2x1' | '1x2' | '2x2'
 // MEDIA-012: Media Status Types
 export type MediaStatus = 'pending' | 'processing' | 'ready' | 'error'
 
+export interface MediaReference {
+  handle?: FileSystemFileHandle
+  name: string
+  size: number
+  lastModified: number
+  type: string
+}
+
 export interface MediaFile {
   id: string
   name: string
   type: MediaType
   url: string
   file: File
+  reference?: MediaReference
+  needsRelink?: boolean
+  importStartedAt?: number
   duration?: number
   width?: number
   height?: number

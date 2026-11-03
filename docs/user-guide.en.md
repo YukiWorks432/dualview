@@ -7,8 +7,8 @@ playback, editing, analysis, project storage, and exports. Names in code formatt
 
 ## Prepare media
 
-Import through file selection, drag and drop, image paste, or URL. Local files are copied into an
-independent browser-owned file before processing. URL import connects directly to the entered URL;
+Import through file selection, drag and drop, image paste, or URL. Local files use a
+browser reference without copying the complete file. Keep the original file available during comparison. URL import connects directly to the entered URL;
 other local media already loaded into DualView is not sent there.
 
 Removing a source, clearing the media list, or creating/loading a project invalidates affected imports
@@ -134,7 +134,7 @@ long or high-channel-count sources.
 
 ## Save and switch projects
 
-Projects and media are stored in IndexedDB. Auto-save waits 500 ms after save-relevant edits to group
+Project edits and local file references are stored in IndexedDB; local media bytes are not copied. Reopen unavailable sources with the reconnect controls, using a file with the same name and size. Existing clips and trims are preserved. Auto-save waits 500 ms after save-relevant edits to group
 writes. It includes persisted comparison, scope, export, and timeline settings, title/description/tags,
 media replacements, and keyframes.
 
