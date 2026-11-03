@@ -259,7 +259,7 @@ test('既存形式から読んだキーフレーム付きクリップで3操作�
   await page.locator('[data-clip]').first().click()
   await seek(page, 2)
   const before = await snapshot(page)
-  for (const key of ['s', 'w']) {
+  for (const key of ['Control+Shift+d', 'Alt+[']) {
     await page.keyboard.press(key)
     await expect(page.getByRole('alert')).toContainText('時刻変換の仕様が未定義')
     expect(await snapshot(page)).toEqual(before)
@@ -272,7 +272,8 @@ test('既存形式から読んだキーフレーム付きクリップで3操作�
   await page.mouse.up()
   await expect(page.getByRole('alert')).toContainText('時刻変換の仕様が未定義')
   expect(await snapshot(page)).toEqual(before)
-  await page.keyboard.press('q')
+  await page.locator('[data-clip]').first().click({ button: 'right' })
+  await page.getByRole('button', { name: 'Keep Left of Playhead', exact: true }).click()
   await expect(page.getByRole('alert')).toHaveCount(0)
   const shortened = await snapshot(page)
   expect(shortened.clips[0].endTime).toBe(2)

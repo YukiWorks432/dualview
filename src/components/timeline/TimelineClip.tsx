@@ -33,9 +33,9 @@ interface TimelineClipProps {
     clipId: string
     side: 'start' | 'end'
   } | null
-  onMouseDown: (e: React.MouseEvent, clipId: string, trackId: string, startTime: number) => void
+  onMouseDown: (e: React.PointerEvent, clipId: string, trackId: string, startTime: number) => void
   onTrimMouseDown: (
-    e: React.MouseEvent,
+    e: React.PointerEvent,
     clipId: string,
     side: 'start' | 'end',
     clipTime: number,
@@ -74,14 +74,14 @@ export const TimelineClip = memo(function TimelineClip({
     maxFrames: 60,
   })
   const handleMouseDown = useCallback(
-    (e: React.MouseEvent) => {
+    (e: React.PointerEvent) => {
       onMouseDown(e, clip.id, clip.trackId, clip.startTime)
     },
     [onMouseDown, clip.id, clip.trackId, clip.startTime],
   )
 
   const handleTrimStartMouseDown = useCallback(
-    (e: React.MouseEvent) => {
+    (e: React.PointerEvent) => {
       e.stopPropagation()
       onTrimMouseDown(e, clip.id, 'start', clip.startTime, clip.trackId)
     },
@@ -89,7 +89,7 @@ export const TimelineClip = memo(function TimelineClip({
   )
 
   const handleTrimEndMouseDown = useCallback(
-    (e: React.MouseEvent) => {
+    (e: React.PointerEvent) => {
       e.stopPropagation()
       onTrimMouseDown(e, clip.id, 'end', clip.endTime, clip.trackId)
     },
@@ -135,13 +135,14 @@ export const TimelineClip = memo(function TimelineClip({
   return (
     <div
       data-clip
+      data-clip-id={clip.id}
       className={cn(
         'absolute top-1 bottom-1 overflow-hidden group/clip',
         trackLocked ? 'cursor-not-allowed' : 'cursor-grab active:cursor-grabbing',
         bgColorClass,
         isSelected && 'ring-2 ring-primary',
-        isBeingDragged && 'opacity-70 z-10 scale-[1.02]',
-        !isBeingDragged && 'transition-all',
+        isBeingDragged && 'opacity-70 z-10',
+        !isBeingDragged && 'transition-colors',
         isSnapped && 'ring-2 ring-warning',
         hasOverlap && 'ring-2 ring-destructive animate-pulse',
       )}
@@ -150,7 +151,7 @@ export const TimelineClip = memo(function TimelineClip({
         width: Math.max(clipWidth, 20),
       }}
       onClick={handleClick}
-      onMouseDown={handleMouseDown}
+      onPointerDown={handleMouseDown}
       onContextMenu={handleContextMenu}
       title={hasOverlap ? 'Warning: This clip overlaps with another clip' : undefined}
     >
@@ -226,7 +227,7 @@ export const TimelineClip = memo(function TimelineClip({
               trimState?.clipId === clip.id && trimState.side === 'start' && 'bg-primary',
             )}
             title="先頭をトリム"
-            onMouseDown={handleTrimStartMouseDown}
+            onPointerDown={handleTrimStartMouseDown}
           />
           <div
             className={cn(
@@ -234,7 +235,7 @@ export const TimelineClip = memo(function TimelineClip({
               trimState?.clipId === clip.id && trimState.side === 'end' && 'bg-primary',
             )}
             title="末尾をトリム"
-            onMouseDown={handleTrimEndMouseDown}
+            onPointerDown={handleTrimEndMouseDown}
           />
         </>
       )}

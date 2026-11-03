@@ -507,6 +507,31 @@ GIF encoding uses the bundled local worker. Borrowed preview videos return to th
 
 <h2 id="shortcuts">⌨️ Keyboard Shortcuts</h2>
 
+### Timeline controls (After Effects defaults)
+
+Click or Tab into the timeline to activate its shortcuts. Inputs, IME composition and dialogs retain ownership of typing. Viewer shortcuts listed below apply when the comparison viewer is active.
+
+| Input                         | Action                                                                       |
+| ----------------------------- | ---------------------------------------------------------------------------- |
+| Wheel / Shift+wheel           | Vertical / horizontal scrolling                                              |
+| Alt+wheel                     | Zoom around the pointer time                                                 |
+| Middle drag / Space+left drag | Pan; tap Space to play/pause on key release                                  |
+| H / V                         | Hand / selection tool                                                        |
+| Ruler click or drag           | Seek; stop playback unless Alt is held                                       |
+| Empty click / marquee         | Clear / replace selection; Shift adds to marquee selection                   |
+| Ctrl+click / Shift+click      | Toggle / extend selection in display order                                   |
+| Selected clip drag            | Move the selected clips together, retaining their tracks                     |
+| Edge drag / Escape            | Trim / cancel an uncommitted edit                                            |
+| Shift+drag                    | Snap to clip edges, markers, loop bounds and the playhead                    |
+| PageUp / PageDown             | Back / forward one frame; Shift moves ten frames                             |
+| I / O, B / N                  | Selected clip first / last frame; loop start / end                           |
+| J / K                         | Previous / next visible marker or loop boundary                              |
+| Ctrl+Shift+D                  | Split selected clips; without selection split unlocked clips at the playhead |
+| [ / ], Alt+[ / ]              | Align / trim the first or last visible frame to the playhead                 |
+| = / -, ;, Shift+;, D          | Zoom, frame/full toggle, full/previous toggle, scroll to playhead            |
+
+On macOS use Command for Ctrl and Option for Alt. Existing project versions, media references and autosave remain supported. Duplication remains adjacent on the same track and paste remains at the playhead. Keyframed start-trim and split restrictions remain. Group vertical movement and simultaneous drag-trimming are outside this change. Ripple-trimming overlapping selected clips on one track is refused before changing any clip.
+
 Use these shortcuts for playback, comparison, and editing:
 
 ### Playback
@@ -571,7 +596,7 @@ silent because reverse audio is not synthesized.
 | `Ctrl/⌘` + `S`           | Save project           |
 | `?`                      | Show all shortcuts     |
 
-Comparison-mode shortcuts take priority over timeline editing and global actions. In `Audio QA`,
+When the comparison viewer is active, comparison-mode shortcuts take priority over timeline editing and global actions. In `Audio QA`,
 `A`, `B`, and `S` select Track A, Track B, and both tracks. `B` does not toggle the sidebar and `S`
 does not split clips in this mode. Ctrl/Command editing, saving and Undo/Redo, and Shift+S screenshots
 keep their usual meanings. `G` toggles gamut warnings in Difference and video scopes in other modes.

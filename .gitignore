@@ -32,3 +32,6 @@ test-results/
 
 # Reproducible social-card intermediates
 /tmp/pdfs/
+
+# 作業用の計画書
+/plans/

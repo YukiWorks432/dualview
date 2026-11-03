@@ -61,6 +61,7 @@ test('J/K/L, Space and speed selection advance the real clock and both displayed
   await seek(page, 2.7)
   await expectColor(page, 'a', 'blue')
   await expectColor(page, 'b', 'blue')
+  await page.evaluate(() => (document.activeElement as HTMLElement)?.blur())
   await page.keyboard.press('j')
   await expect.poll(async () => (await snapshot(page)).shuttle).toBe(-1)
   const reverseStart = await clockSample(page)
@@ -121,6 +122,7 @@ test('J/K/L, Space and speed selection advance the real clock and both displayed
   await expectColor(page, 'a', 'red')
   await expectColor(page, 'b', 'red')
   await page.getByTitle('Go to start (Home)').click()
+  await page.evaluate(() => (document.activeElement as HTMLElement)?.blur())
   await page.keyboard.press('j')
   await page.keyboard.press('Space')
   const shortReverse = await snapshot(page)
@@ -325,6 +327,7 @@ test('embedded audio keeps clip placement, trims and speed, and stops during rev
   expect(started.offset).toBeGreaterThanOrEqual(1.5)
   expect(started.offset).toBeLessThan(2.1)
   expect(started.offset! + started.duration!).toBeCloseTo(4)
+  await page.evaluate(() => (document.activeElement as HTMLElement)?.blur())
   await page.keyboard.press('j')
   await expect
     .poll(async () => {

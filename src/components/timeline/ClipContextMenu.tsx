@@ -25,7 +25,6 @@ import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts'
 import { useHistoryStore } from '../../stores/historyStore'
 import { useMediaStore } from '../../stores/mediaStore'
 import { usePlaybackStore } from '../../stores/playbackStore'
-import { useProjectStore } from '../../stores/projectStore'
 import { useTimelineStore } from '../../stores/timelineStore'
 import { ElevatedSurface } from '../ui'
 
@@ -38,7 +37,6 @@ interface ClipContextMenuProps {
 }
 
 export function ClipContextMenu({ x, y, clipId, trackId, onClose }: ClipContextMenuProps) {
-  const comparisonMode = useProjectStore((state) => state.comparisonMode)
   const menuRef = useRef<HTMLDivElement>(null)
   const [showSpeedSubmenu, setShowSpeedSubmenu] = useState(false)
   const [showReplaceSubmenu, setShowReplaceSubmenu] = useState(false)
@@ -196,7 +194,7 @@ export function ClipContextMenu({ x, y, clipId, trackId, onClose }: ClipContextM
         <MenuButton
           icon={Scissors}
           label="Split at Playhead"
-          shortcut={comparisonMode === 'audio' ? undefined : 'S'}
+          shortcut="Ctrl+Shift+D"
           disabled={isLocked}
           onClick={() =>
             handleAction(() => {
@@ -207,7 +205,6 @@ export function ClipContextMenu({ x, y, clipId, trackId, onClose }: ClipContextM
         <MenuButton
           icon={ArrowLeftToLine}
           label="Keep Left of Playhead"
-          shortcut="Q"
           disabled={isLocked}
           onClick={() =>
             handleAction(() => {
@@ -218,7 +215,6 @@ export function ClipContextMenu({ x, y, clipId, trackId, onClose }: ClipContextM
         <MenuButton
           icon={ArrowRightToLine}
           label="Keep Right of Playhead"
-          shortcut="W"
           disabled={isLocked}
           onClick={() =>
             handleAction(() => {
