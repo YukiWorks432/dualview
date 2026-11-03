@@ -10,6 +10,8 @@ export function useTimelineViewport(containerRef: RefObject<HTMLDivElement | nul
   const [view, setView] = useState({ left: 0, width: 1000, top: 0 })
   const [scrubbing, setScrubbing] = useState(false)
   const [hand, setHand] = useState(false)
+  const [spaceHeld, setSpaceHeld] = useState(false)
+  const [panning, setPanning] = useState(false)
   const space = useRef(false)
   const usedSpace = useRef(false)
   const suppressClick = useRef(false)
@@ -29,6 +31,7 @@ export function useTimelineViewport(containerRef: RefObject<HTMLDivElement | nul
     const g = gesture.current
     gesture.current = null
     setScrubbing(false)
+    setPanning(false)
     if (g?.element.hasPointerCapture(g.id)) g.element.releasePointerCapture(g.id)
   }, [])
   const seekAt = useCallback(
@@ -71,6 +74,7 @@ export function useTimelineViewport(containerRef: RefObject<HTMLDivElement | nul
       e.preventDefault()
       if (!e.repeat) {
         space.current = true
+        setSpaceHeld(true)
         usedSpace.current = false
       }
       return
@@ -116,6 +120,7 @@ export function useTimelineViewport(containerRef: RefObject<HTMLDivElement | nul
       e.preventDefault()
       stop()
       space.current = false
+      setSpaceHeld(false)
     }
   })
   useEffect(() => {
@@ -146,6 +151,7 @@ export function useTimelineViewport(containerRef: RefObject<HTMLDivElement | nul
     const release = (e: KeyboardEvent) => {
       if (e.code !== 'Space' || !space.current) return
       space.current = false
+      setSpaceHeld(false)
       if (
         !usedSpace.current &&
         e.target instanceof Element &&
@@ -157,6 +163,7 @@ export function useTimelineViewport(containerRef: RefObject<HTMLDivElement | nul
     }
     const blur = () => {
       space.current = false
+      setSpaceHeld(false)
       stop()
     }
     el.addEventListener('wheel', wheel, { passive: false })
@@ -199,6 +206,7 @@ export function useTimelineViewport(containerRef: RefObject<HTMLDivElement | nul
       latestX: e.clientX,
       shift: e.shiftKey,
     }
+    setPanning(pan)
     e.currentTarget.setPointerCapture(e.pointerId)
     if (scrub) {
       setScrubbing(true)
@@ -222,7 +230,8 @@ export function useTimelineViewport(containerRef: RefObject<HTMLDivElement | nul
   return {
     view,
     scrubbing,
-    hand,
+    hand: hand || spaceHeld,
+    panning,
     zoomTo,
     pointerDown,
     pointerMove,

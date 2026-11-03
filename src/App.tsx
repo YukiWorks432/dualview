@@ -87,7 +87,7 @@ export default function App() {
     webglComparisonSettings,
     toggleScopes,
   } = useProjectStore()
-  const { undo, redo } = useHistoryStore()
+  const { undo, redo, runWithHistory } = useHistoryStore()
 
   useKeyboardShortcuts('app', (e) => {
     if (e.altKey) return
@@ -148,17 +148,17 @@ export default function App() {
       case 'KeyI':
         // Set loop in point (VID-003)
         e.preventDefault()
-        setLoopIn()
+        runWithHistory(setLoopIn)
         break
       case 'KeyO':
         // Set loop out point (VID-003)
         e.preventDefault()
-        setLoopOut()
+        runWithHistory(setLoopOut)
         break
       case 'Escape':
         // Clear loop region (VID-003)
         e.preventDefault()
-        clearLoop()
+        runWithHistory(clearLoop)
         break
       case 'Home':
         e.preventDefault()

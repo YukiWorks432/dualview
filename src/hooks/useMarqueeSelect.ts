@@ -98,6 +98,7 @@ export function useMarqueeSelect({
         return
       const el = containerRef.current
       if (!el) return
+      e.preventDefault()
       const rect = el.getBoundingClientRect(),
         x = e.clientX - rect.left + el.scrollLeft,
         y = e.clientY - rect.top + el.scrollTop

@@ -27,7 +27,7 @@ export function useTimelineKeys() {
       return
     if (e.key === 'Escape') {
       e.preventDefault()
-      state.clearLoop()
+      history.runWithHistory(() => state.clearLoop())
       return
     }
     if (
@@ -57,19 +57,23 @@ export function useTimelineKeys() {
         playback.seek(Math.max(...selected.map((c) => c.endTime)) - dt)
       if (e.code === 'F2') state.clearSelection()
       if (e.code === 'KeyB')
-        useTimelineStore.setState({
-          loopRegion: {
-            inPoint: currentTime,
-            outPoint: Math.max(currentTime + dt, loopRegion?.outPoint ?? duration),
-          },
-        })
+        history.runWithHistory(() =>
+          useTimelineStore.setState({
+            loopRegion: {
+              inPoint: currentTime,
+              outPoint: Math.max(currentTime + dt, loopRegion?.outPoint ?? duration),
+            },
+          }),
+        )
       if (e.code === 'KeyN')
-        useTimelineStore.setState({
-          loopRegion: {
-            inPoint: Math.min(loopRegion?.inPoint ?? 0, currentTime),
-            outPoint: currentTime + dt,
-          },
-        })
+        history.runWithHistory(() =>
+          useTimelineStore.setState({
+            loopRegion: {
+              inPoint: Math.min(loopRegion?.inPoint ?? 0, currentTime),
+              outPoint: currentTime + dt,
+            },
+          }),
+        )
       if (e.code === 'KeyJ' || e.code === 'KeyK') {
         const times = [
           ...markers.map((m) => m.time),
