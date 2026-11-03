@@ -1,3 +1,5 @@
+import path from 'node:path'
+
 import { expect, test, type Page } from '@playwright/test'
 
 import { expectColor, seek, upload } from './mediaPlayback'
@@ -96,51 +98,93 @@ test('分割前後・Undo/Redoで通常動画とProResの既知フレームを�
   }
 })
 
-test('複製した速度・逆再生・キーフレームを版1の保存ファイルから読み戻せる', async ({ page }) => {
-  await page.setViewportSize({ width: 1440, height: 900 })
-  await page.goto('/')
-  await page.getByRole('button', { name: 'Hide filmstrip' }).click()
-  await upload(page, 'Media A', 'playback-colors.webm')
-  await page.evaluate(async () => {
-    const { useTimelineStore } = await import('/src/stores/timelineStore.ts')
-    const { useKeyframeStore } = await import('/src/stores/keyframeStore.ts')
-    const clip = useTimelineStore.getState().tracks[0].clips[0]
-    useTimelineStore.getState().updateClip(clip.id, { speed: 2, reverse: true, label: '保存対象' })
-    useKeyframeStore.getState().addKeyframeToClip(clip.id, 'opacity', 0.5, 0.25, 'ease-in')
-    useTimelineStore.getState().selectClip(clip.id)
-    if (document.activeElement instanceof HTMLElement) document.activeElement.blur()
-  })
-  await page.keyboard.press('Control+d')
-  await expect(page.locator('[data-clip]')).toHaveCount(2)
-  const before = await snapshot(page)
-  expect(before.keyframes).toHaveLength(2)
-  const result = await page.evaluate(async () => {
-    const { usePersistenceStore } = await import('/src/stores/persistenceStore.ts')
-    const state = usePersistenceStore.getState()
-    const saved = await state.saveCurrentProject()
-    const blob = await state.exportProject()
-    const data = JSON.parse(await blob.text())
-    const id = await state.importProject(
-      new File([blob], 'clip-roundtrip.dualview', { type: 'application/json' }),
-    )
-    const loaded = await state.loadProject(id)
-    return {
-      saved,
-      loaded,
-      version: data.version,
-      keyframes: JSON.parse(data.project.keyframeData).length,
+for (const version of [1, 2]) {
+  test(`複製した速度・逆再生・キーフレームを版${version}の保存ファイルから読み戻せる`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await page.goto('/')
+    await page.getByRole('button', { name: 'Hide filmstrip' }).click()
+    await upload(page, 'Media A', 'playback-colors.webm')
+    if (version === 1) {
+      // 旧形式の公開スキーマを使い、素材本体を含む第1版を先に読み込む。
+      await page.evaluate(async () => {
+        const { usePersistenceStore } = await import('/src/stores/persistenceStore.ts')
+        const { useMediaStore } = await import('/src/stores/mediaStore.ts')
+        const state = usePersistenceStore.getState()
+        await state.saveCurrentProject()
+        const data = JSON.parse(await (await state.exportProject()).text())
+        data.version = 1
+        for (const entry of data.project.mediaManifest) delete entry.reference
+        data.mediaFiles = await Promise.all(
+          useMediaStore.getState().files.map(async (media) => ({
+            id: media.id,
+            name: media.name,
+            type: media.file.type,
+            data: btoa(
+              Array.from(new Uint8Array(await media.file.arrayBuffer()), (byte) =>
+                String.fromCharCode(byte),
+              ).join(''),
+            ),
+          })),
+        )
+        const id = await state.importProject(new File([JSON.stringify(data)], 'legacy.dualview'))
+        if (!(await state.loadProject(id)))
+          throw new Error('旧形式の初期素材を復元できませんでした')
+      })
     }
+    await page.evaluate(async () => {
+      const { useTimelineStore } = await import('/src/stores/timelineStore.ts')
+      const { useKeyframeStore } = await import('/src/stores/keyframeStore.ts')
+      const clip = useTimelineStore.getState().tracks[0].clips[0]
+      useTimelineStore
+        .getState()
+        .updateClip(clip.id, { speed: 2, reverse: true, label: '保存対象' })
+      useKeyframeStore.getState().addKeyframeToClip(clip.id, 'opacity', 0.5, 0.25, 'ease-in')
+      useTimelineStore.getState().selectClip(clip.id)
+      if (document.activeElement instanceof HTMLElement) document.activeElement.blur()
+    })
+    await page.keyboard.press('Control+d')
+    await expect(page.locator('[data-clip]')).toHaveCount(2)
+    const before = await snapshot(page)
+    expect(before.keyframes).toHaveLength(2)
+    const result = await page.evaluate(async () => {
+      const { usePersistenceStore } = await import('/src/stores/persistenceStore.ts')
+      const state = usePersistenceStore.getState()
+      const saved = await state.saveCurrentProject()
+      const blob = await state.exportProject()
+      const data = JSON.parse(await blob.text())
+      const id = await state.importProject(
+        new File([blob], 'clip-roundtrip.dualview', { type: 'application/json' }),
+      )
+      const loaded = await state.loadProject(id)
+      return {
+        saved,
+        loaded,
+        version: data.version,
+        keyframes: JSON.parse(data.project.keyframeData).length,
+      }
+    })
+    expect(result).toEqual({ saved: true, loaded: true, version, keyframes: 2 })
+    const after = await snapshot(page)
+    expect(after.clips).toEqual(before.clips)
+    expect(after.keyframes).toEqual(before.keyframes)
+    expect(after.duration).toBe(4)
+    if (version === 2) {
+      await page
+        .getByLabel('playback-colors.webmを再指定', { exact: true })
+        .setInputFiles(path.join(process.cwd(), 'e2e/fixtures/playback-colors.webm'))
+      await expect(page.getByLabel('playback-colors.webmを再指定', { exact: true })).toHaveCount(0)
+      const reconnected = await snapshot(page)
+      expect(reconnected.clips).toEqual(before.clips)
+      expect(reconnected.keyframes).toEqual(before.keyframes)
+    }
+    await seek(page, 2.5)
+    await expectColor(page, 'a', 'blue')
+    await seek(page, 3.5)
+    await expectColor(page, 'a', 'red')
   })
-  expect(result).toEqual({ saved: true, loaded: true, version: 1, keyframes: 2 })
-  const after = await snapshot(page)
-  expect(after.clips).toEqual(before.clips)
-  expect(after.keyframes).toEqual(before.keyframes)
-  expect(after.duration).toBe(4)
-  await seek(page, 2.5)
-  await expectColor(page, 'a', 'blue')
-  await seek(page, 3.5)
-  await expectColor(page, 'a', 'red')
-})
+}
 
 test('短すぎる素材への差替えは理由を表示し参照・トリム・Redo履歴を保持する', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 })

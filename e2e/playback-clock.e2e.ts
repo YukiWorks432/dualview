@@ -1,3 +1,5 @@
+import path from 'node:path'
+
 import { expect, test, type Page } from '@playwright/test'
 
 import { expectColor, seek, upload } from './mediaPlayback'
@@ -204,6 +206,11 @@ test('paused markers, rapid seeks, clip crossings and project reload present the
     usePlaybackStore.getState().shuttleBackward()
     if (!(await usePersistenceStore.getState().loadProject(id))) throw new Error('reload failed')
   }, savedId)
+  for (const name of ['playback-colors.webm', 'playback-colors.mov']) {
+    const input = page.getByLabel(`${name}を再指定`, { exact: true })
+    await input.setInputFiles(path.join(process.cwd(), 'e2e/fixtures', name))
+    await expect(input).toHaveCount(0)
+  }
   expect(await snapshot(page)).toMatchObject({
     time: 2.5,
     playing: false,
