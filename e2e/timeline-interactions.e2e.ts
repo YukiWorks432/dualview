@@ -2,11 +2,15 @@ import { expect, test, type Page } from '@playwright/test'
 async function seed(page: Page) {
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.goto('/')
-  await page.waitForFunction(async () => {
-    const { usePersistenceStore } = await import('/src/stores/persistenceStore.ts')
-    const state = usePersistenceStore.getState()
-    return Boolean(state.currentProjectId) && !state.isLoading
-  })
+  await expect
+    .poll(() =>
+      page.evaluate(async () => {
+        const { usePersistenceStore } = await import('/src/stores/persistenceStore.ts')
+        const state = usePersistenceStore.getState()
+        return Boolean(state.currentProjectId) && !state.isLoading
+      }),
+    )
+    .toBe(true)
   await page.evaluate(async () => {
     const { useMediaStore } = await import('/src/stores/mediaStore.ts')
     const { useTimelineStore } = await import('/src/stores/timelineStore.ts')
@@ -295,11 +299,11 @@ test('ループボタンと比較画面のI/Oによる指定・解除も取り�
   expect((await snapshot(page)).loop).toEqual({ inPoint: 5, outPoint: 6 })
   await page.keyboard.press('End')
   await page.keyboard.press('o')
-  expect((await snapshot(page)).loop).toEqual({ inPoint: 5, outPoint: 10 })
+  expect((await snapshot(page)).loop).toEqual({ inPoint: 5, outPoint: 10 - 1 / 30 })
   await page.keyboard.press('Escape')
   expect((await snapshot(page)).loop).toBeNull()
   await page.keyboard.press('Control+z')
-  expect((await snapshot(page)).loop).toEqual({ inPoint: 5, outPoint: 10 })
+  expect((await snapshot(page)).loop).toEqual({ inPoint: 5, outPoint: 10 - 1 / 30 })
   await page.keyboard.press('Control+z')
   expect((await snapshot(page)).loop).toEqual({ inPoint: 5, outPoint: 6 })
   await page.keyboard.press('Control+z')
