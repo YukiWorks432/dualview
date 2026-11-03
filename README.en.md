@@ -5,8 +5,8 @@
 <h1 align="center">DualView</h1>
 
 <p align="center">
-  <a href="https://dualview.yukiworks432.workers.dev">
-    <img src="https://img.shields.io/badge/App-dualview.yukiworks432.workers.dev-ff5722?style=for-the-badge" alt="Open DualView">
+  <a href="https://dualview.hanayuki.xyz">
+    <img src="https://img.shields.io/badge/App-dualview.hanayuki.xyz-ff5722?style=for-the-badge" alt="Open DualView">
   </a>
   <a href="https://github.com/YukiWorks432/dualview">
     <img src="https://img.shields.io/badge/GitHub-YukiWorks432-181717?style=for-the-badge&logo=github" alt="YukiWorks432 on GitHub">
@@ -78,18 +78,18 @@
 > continuing that work with modernization, maintenance, and ongoing development while preserving
 > attribution to the original project.
 
-| Role                 | Links                                                                                                                                              |
-| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Original project** | [gokayfem/dualview](https://github.com/gokayfem/dualview) · [dualview.ai](https://dualview.ai)                                                     |
-| **Original creator** | [Gökay Aydoğan](https://github.com/gokayfem) · [@gokayfem](https://x.com/gokayfem)                                                                 |
-| **Maintained fork**  | [dualview.yukiworks432.workers.dev](https://dualview.yukiworks432.workers.dev) · [YukiWorks432/dualview](https://github.com/YukiWorks432/dualview) |
-| **Fork maintainer**  | [花雪 / HanaYuki](https://github.com/YukiWorks432) · [@YuK1_Works](https://x.com/YuK1_Works) · [hanayuki.xyz](https://hanayuki.xyz)                |
+| Role                 | Links                                                                                                                               |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| **Original project** | [gokayfem/dualview](https://github.com/gokayfem/dualview) · [dualview.ai](https://dualview.ai)                                      |
+| **Original creator** | [Gökay Aydoğan](https://github.com/gokayfem) · [@gokayfem](https://x.com/gokayfem)                                                  |
+| **Maintained fork**  | [dualview.hanayuki.xyz](https://dualview.hanayuki.xyz) · [YukiWorks432/dualview](https://github.com/YukiWorks432/dualview)          |
+| **Fork maintainer**  | [花雪 / HanaYuki](https://github.com/YukiWorks432) · [@YuK1_Works](https://x.com/YuK1_Works) · [hanayuki.xyz](https://hanayuki.xyz) |
 
 ---
 
 ## Start a comparison
 
-1. [Open the app](https://dualview.yukiworks432.workers.dev) and import your images or videos.
+1. [Open the app](https://dualview.hanayuki.xyz) and import your images or videos.
 2. Place the sources on Track A and Track B. Align clip positions and trim points as needed.
 3. Choose `Slider` to move an A/B boundary or `Side by Side` to view both sources. Play videos
    together, then pause to inspect individual frames.
@@ -99,7 +99,7 @@
 
 Local media is processed in your browser without being uploaded to the operator. URL import connects
 directly to the source URL. Projects are automatically stored in this browser; export a separate backup
-of important work. See [Privacy and data handling](https://dualview.yukiworks432.workers.dev/privacy/).
+of important work. See [Privacy and data handling](https://dualview.hanayuki.xyz/privacy/).
 
 ## Why DualView?
 
@@ -704,10 +704,10 @@ common-resolution analysis can be adjusted independently for this view. The SVG 
 interactive inspection and are not included in screenshot or video exports.
 
 Published site information:
-[Privacy](https://dualview.yukiworks432.workers.dev/privacy/) ·
-[Terms](https://dualview.yukiworks432.workers.dev/terms/) ·
-[About](https://dualview.yukiworks432.workers.dev/about/) ·
-[Licenses](https://dualview.yukiworks432.workers.dev/licenses/)
+[Privacy](https://dualview.hanayuki.xyz/privacy/) ·
+[Terms](https://dualview.hanayuki.xyz/terms/) ·
+[About](https://dualview.hanayuki.xyz/about/) ·
+[Licenses](https://dualview.hanayuki.xyz/licenses/)
 
 ---
 
@@ -858,7 +858,7 @@ change passed its tests.
 ### Deployment
 
 The maintained web app is deployed as Cloudflare Workers Static Assets at
-[dualview.yukiworks432.workers.dev](https://dualview.yukiworks432.workers.dev). There is no
+[dualview.hanayuki.xyz](https://dualview.hanayuki.xyz). There is no
 application Worker or backend API in the deployment path; Wrangler uploads the Vite `dist/` output
 directly.
 
@@ -1027,7 +1027,7 @@ If your work depends on this maintained fork, GitHub's **Cite this repository** 
   title   = {DualView},
   version = {1.0.0},
   year    = {2026},
-  url     = {https://dualview.yukiworks432.workers.dev},
+  url     = {https://dualview.hanayuki.xyz},
   note    = {Maintained fork of https://github.com/gokayfem/dualview}
 }
 ```
@@ -1052,16 +1052,16 @@ DualView's original work remains credited to **Gökay Aydoğan** and the
 ## 📄 License
 
 MIT License - see [LICENSE](LICENSE) for details. Browser-distributed dependency notices and
-source links are published on the [Licenses page](https://dualview.yukiworks432.workers.dev/licenses/).
+source links are published on the [Licenses page](https://dualview.hanayuki.xyz/licenses/).
 
 Contributions are welcome on this fork. Use [Issues](https://github.com/YukiWorks432/dualview/issues)
 for bug reports and proposals, or [Pull requests](https://github.com/YukiWorks432/dualview/pulls) for
 contributions. For private inquiries or personal information, use the
 [maintainer's contact page](https://hanayuki.xyz/contact/).
 
-[Privacy](https://dualview.yukiworks432.workers.dev/privacy/) ·
-[Terms](https://dualview.yukiworks432.workers.dev/terms/) ·
-[About](https://dualview.yukiworks432.workers.dev/about/)
+[Privacy](https://dualview.hanayuki.xyz/privacy/) ·
+[Terms](https://dualview.hanayuki.xyz/terms/) ·
+[About](https://dualview.hanayuki.xyz/about/)
 
 ---
 

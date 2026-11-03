@@ -5,8 +5,8 @@
 <h1 align="center">DualView</h1>
 
 <p align="center">
-  <a href="https://dualview.yukiworks432.workers.dev">
-    <img src="https://img.shields.io/badge/App-dualview.yukiworks432.workers.dev-ff5722?style=for-the-badge" alt="Open DualView">
+  <a href="https://dualview.hanayuki.xyz">
+    <img src="https://img.shields.io/badge/App-dualview.hanayuki.xyz-ff5722?style=for-the-badge" alt="Open DualView">
   </a>
   <a href="https://github.com/YukiWorks432/dualview">
     <img src="https://img.shields.io/badge/GitHub-YukiWorks432-181717?style=for-the-badge&logo=github" alt="YukiWorks432 on GitHub">
@@ -83,7 +83,7 @@
 
 ローカル素材はブラウザー内で処理され、運営者へアップロードされません。
 URLからの取り込みでは取得先へ直接通信します。プロジェクトはこのブラウザーに自動保存されるため、
-重要な作業は別途書き出して保管します。詳しくは[データの取り扱い](https://dualview.yukiworks432.workers.dev/privacy/)をご覧ください。
+重要な作業は別途書き出して保管します。詳しくは[データの取り扱い](https://dualview.hanayuki.xyz/privacy/)をご覧ください。
 
 ---
 
@@ -99,7 +99,7 @@ URLからの取り込みでは取得先へ直接通信します。プロジェ�
 | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
 | 原プロジェクト   | [gokayfem/dualview](https://github.com/gokayfem/dualview) · [dualview.ai](https://dualview.ai)                                         |
 | 原作者           | [Gökay Aydoğan](https://github.com/gokayfem) · [@gokayfem](https://x.com/gokayfem) · [Hugging Face](https://huggingface.co/gokaygokay) |
-| 保守中のフォーク | [公開アプリ](https://dualview.yukiworks432.workers.dev) · [YukiWorks432/dualview](https://github.com/YukiWorks432/dualview)            |
+| 保守中のフォーク | [公開アプリ](https://dualview.hanayuki.xyz) · [YukiWorks432/dualview](https://github.com/YukiWorks432/dualview)                        |
 | フォークの保守者 | [花雪 / HanaYuki](https://github.com/YukiWorks432) · [@YuK1_Works](https://x.com/YuK1_Works) · [hanayuki.xyz](https://hanayuki.xyz)    |
 
 ## どのような確認に使うか
@@ -908,7 +908,7 @@ WebGL Split Viewの中央解析は左右と同じ素材・再生位置・トリ�
   title   = {DualView},
   version = {1.0.0},
   year    = {2026},
-  url     = {https://dualview.yukiworks432.workers.dev},
+  url     = {https://dualview.hanayuki.xyz},
   note    = {Maintained fork of https://github.com/gokayfem/dualview}
 }
 ```
@@ -934,15 +934,15 @@ DualViewの原作者はGökay Aydoğan、原プロジェクトはgokayfem/dualvi
 ## ライセンスと問い合わせ
 
 ソースコードは[MIT License](LICENSE)で公開します。第三者コードの通知と対応するソースコードは
-[ライセンスページ](https://dualview.yukiworks432.workers.dev/licenses/)に掲載します。
+[ライセンスページ](https://dualview.hanayuki.xyz/licenses/)に掲載します。
 
 不具合・改善提案は[Issues](https://github.com/YukiWorks432/dualview/issues)、変更提案は
 [Pull requests](https://github.com/YukiWorks432/dualview/pulls)で受け付けます。
 個人情報や非公開の素材を含む問い合わせは[保守者の窓口](https://hanayuki.xyz/contact/)を利用します。
 
-[プライバシー](https://dualview.yukiworks432.workers.dev/privacy/) ·
-[利用条件](https://dualview.yukiworks432.workers.dev/terms/) ·
-[サイトについて](https://dualview.yukiworks432.workers.dev/about/)
+[プライバシー](https://dualview.hanayuki.xyz/privacy/) ·
+[利用条件](https://dualview.hanayuki.xyz/terms/) ·
+[サイトについて](https://dualview.hanayuki.xyz/about/)
 
 <p align="center">
   <sub>一つひとつの画素を大切にするクリエイターへ</sub>
