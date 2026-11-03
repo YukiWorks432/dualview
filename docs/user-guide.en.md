@@ -150,7 +150,9 @@ Opening, creating, or deleting the active project resets Undo/Redo, selections, 
 clipboards, and playback. Undo/Redo remains available within the current project editing session.
 Projects can be duplicated or deleted; built-in and custom templates are also supported.
 
-A `.dualview` project is JSON containing the media itself. Sharing it shares those sources too.
+A `.dualview` version 2 project is JSON containing references to local media. Keep and share those
+source files separately and reconnect them when opening the project. Embedded media from version 1
+projects or URL/paste imports is still included. Version 1 files remain readable.
 Clearing browser site data removes saved work, so export important projects before doing so.
 
 ## Export
