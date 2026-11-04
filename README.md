@@ -41,8 +41,10 @@
 <br>
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/24a2b466-a9d9-4b0a-990a-66b47b308357" alt="A/Bの素材を比較するDualViewのデモ" width="100%">
+  <img src="docs/images/slider.png" alt="現在のDualViewで2枚の画像をSlider表示し、A/Bタイムラインに配置した画面" width="100%">
 </p>
+
+現在のUIで独自のサンプル画像2枚を読み込んだ表示例です。[公開アプリを開く](https://dualview.hanayuki.xyz)。
 
 <br>
 
@@ -53,13 +55,14 @@
   <a href="#export">書き出し</a> •
   <a href="#shortcuts">操作</a> •
   <a href="#getting-started">導入</a> •
-  <a href="#project-lineage">原プロジェクト</a>
+  <a href="#project-lineage">原プロジェクト</a> •
+  <a href="#support">開発支援</a>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/React-19.3.0-61DAFB?style=flat-square&logo=react" alt="React">
-  <img src="https://img.shields.io/badge/TypeScript-7.0.2-3178C6?style=flat-square&logo=typescript" alt="TypeScript">
-  <img src="https://img.shields.io/badge/Vite-8.3.0-646CFF?style=flat-square&logo=vite" alt="Vite">
+  <img src="https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react" alt="React">
+  <img src="https://img.shields.io/badge/TypeScript-7-3178C6?style=flat-square&logo=typescript" alt="TypeScript">
+  <img src="https://img.shields.io/badge/Vite-8-646CFF?style=flat-square&logo=vite" alt="Vite">
   <img src="https://img.shields.io/badge/WebGL-GPU_Accelerated-990000?style=flat-square&logo=webgl" alt="WebGL">
   <img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" alt="License">
 </p>
@@ -127,7 +130,7 @@ A/B素材を読み込み、比較表示を選び、差を調べて、確認結�
 
 - フレーム単位の移動と同期再生
 - ブラウザー内でのApple ProRes再生
-- I/O点を指定したループ
+- タイムラインでB/Nを使うループ範囲とUndo/Redo
 - 複数クリップのタイムライン編集
 - クリップのトリムと配置調整
 
@@ -225,6 +228,12 @@ WebGLの表示ごとの用途は[解析リファレンス](docs/analysis-referen
 ---
 
 <h2 id="webgl-analysis">WebGL解析</h2>
+
+<p align="center">
+  <img src="docs/images/difference.png" alt="現在のDifference画面で、2枚の画像の色の違いをWebGLで可視化した例" width="100%">
+</p>
+
+この例は静止画像の色違いを比較しています。下部の動画フレーム解析は実行していません。
 
 GPUで実行するGLSLシェーダーの解析は、8分類・58種類から選べます。
 [型定義](src/types/index.ts)と[解析シェーダー](src/lib/webgl/comparison-shaders)が分類と識別子の参照元です。
@@ -559,6 +568,8 @@ Crossfadeは独立した分類とStylizedの両方から選べます。
 
 macOSではCtrlをCommand、AltをOptionへ読み替えます。単一クリップのトラック間移動、直後への複製、再生位置への貼り付けはDualViewの配置規則を維持します。キーフレーム付き先頭トリム・分割の制限も維持します。旧プロジェクトの時刻や素材参照は変換しません。
 
+ループ範囲の指定・変更・解除はUndo/Redoに対応します。同じ端を同じ時刻へ再指定しても、履歴やRedoは変わりません。タイムラインのドラッグでは文字列を選択せず、Space保持中は手のカーソル、表示の移動中はつかんだカーソルを表示します。
+
 Spaceドラッグと再生を区別するため、タイムライン内のSpace短押しはキーを離した時に再生を切り替えます。複数クリップの縦移動・同時ドラッグトリム、After Effectsのレイヤー構造は対象外です。同一トラックで重なったクリップの一括リップルトリムは、変更前に理由を表示して拒否します。
 
 | 操作                                           | キー                                     |
@@ -633,8 +644,7 @@ Differenceの`G`は比較画面の色域警告を切り替えます。
 `.dualview`はJSON形式です。参照素材がある場合は第2版として編集内容と参照情報を保存します。共有先では元の素材を別途用意して再指定してください。従来の素材入り第1版も読み込めます。
 ブラウザーのサイトデータを削除すると保存済みの作業も失われます。重要なデータは先に書き出して保管します。
 
-従来の第1版も引き続き読み込めます。参照形式の第2版を共有する場合は、元の素材も別途渡してください。
-ローカル素材は運営者へアップロードされません。元ファイルを参照し、編集情報をこのブラウザーに保存します。
+保存先はブラウザーとサイトごとに分かれます。[IndexedDBは別のドメインと保存内容を共有しない](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API#key_concepts_and_usage)ため、以前の`dualview.yukiworks432.workers.dev`から現在の`dualview.hanayuki.xyz`へプロジェクトは自動移行しません。以前のサイトで`.dualview`を書き出し、現在のサイトで読み込み、必要に応じて元の素材を再指定してください。
 
 ---
 
@@ -644,13 +654,13 @@ Differenceの`G`は比較画面の色域警告を切り替えます。
 <tr>
 <td>
 
-| UI・状態管理 | 版     |
-| ------------ | ------ |
-| React        | 19.3.0 |
-| TypeScript   | 7.0.2  |
-| Vite         | 8.3.0  |
-| Zustand      | 5.0.15 |
-| Tailwind CSS | 4.3.3  |
+| UI・状態管理 | 系列 |
+| ------------ | ---- |
+| React        | 19.x |
+| TypeScript   | 7.x  |
+| Vite         | 8.x  |
+| Zustand      | 5.x  |
+| Tailwind CSS | 4.x  |
 
 </td>
 <td>
@@ -668,7 +678,7 @@ Differenceの`G`は比較画面の色域警告を切り替えます。
 </tr>
 </table>
 
-版番号は[package.json](package.json)と[pnpm-lock.yaml](pnpm-lock.yaml)に対応します。
+上表は主な版の系列です。依存範囲は[package.json](package.json)、解決済みの版は[pnpm-lock.yaml](pnpm-lock.yaml)を参照してください。
 解析画面や書き出し処理の大きなモジュールは、必要になった時点で読み込みます。
 
 | 開発ツール | 役割                                                   |
@@ -918,6 +928,11 @@ WebGL Split Viewの中央解析は左右と同じ素材・再生位置・トリ�
 [このフォークの引用情報](CITATION.cff)
 
 </details>
+
+<h2 id="support">継続開発の支援</h2>
+
+このフォークの保守・継続開発は[GitHub Sponsors](https://github.com/sponsors/YukiWorks432)から支援できます。
+不具合の報告や改善提案は[Issues](https://github.com/YukiWorks432/dualview/issues)へお寄せください。
 
 ## クレジット
 

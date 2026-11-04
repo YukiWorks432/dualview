@@ -41,8 +41,10 @@
 <br>
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/24a2b466-a9d9-4b0a-990a-66b47b308357" alt="DualView Demo" width="100%">
+  <img src="docs/images/slider.png" alt="Current DualView UI comparing two images in Slider with A/B timeline tracks" width="100%">
 </p>
+
+Actual current UI with two original sample images. [Open the app](https://dualview.hanayuki.xyz).
 
 <br>
 
@@ -56,13 +58,14 @@
   <a href="#shortcuts">Shortcuts</a> •
   <a href="#getting-started">Get Started</a> •
   <a href="#project-lineage">Lineage</a> •
-  <a href="#guides">Guides</a>
+  <a href="#guides">Guides</a> •
+  <a href="#support">Support</a>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/React-19.3.0-61DAFB?style=flat-square&logo=react" alt="React">
-  <img src="https://img.shields.io/badge/TypeScript-7.0.2-3178C6?style=flat-square&logo=typescript" alt="TypeScript">
-  <img src="https://img.shields.io/badge/Vite-8.3.0-646CFF?style=flat-square&logo=vite" alt="Vite">
+  <img src="https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react" alt="React">
+  <img src="https://img.shields.io/badge/TypeScript-7-3178C6?style=flat-square&logo=typescript" alt="TypeScript">
+  <img src="https://img.shields.io/badge/Vite-8-646CFF?style=flat-square&logo=vite" alt="Vite">
   <img src="https://img.shields.io/badge/WebGL-GPU_Accelerated-990000?style=flat-square&logo=webgl" alt="WebGL">
   <img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" alt="License">
 </p>
@@ -128,7 +131,7 @@ Standalone audio files, text/JSON, 3D models, and document comparison are not pa
 - Frame-by-frame navigation
 - Synchronized playback
 - Apple ProRes playback in-browser
-- Loop regions with I/O points
+- Loop regions set with B/N in the timeline, including Undo/Redo
 - Multi-clip timeline editing
 - Clip trimming & positioning
 
@@ -259,6 +262,12 @@ controlling the preview. See [Find differences](docs/user-guide.en.md#find-diffe
 ---
 
 <h2 id="webgl-analysis">🔥 WebGL Analysis Engine</h2>
+
+<p align="center">
+  <img src="docs/images/difference.png" alt="Current Difference view visualizing the color differences between two still images with WebGL" width="100%">
+</p>
+
+This example compares two color grades of a still image. The video-frame analysis lane has not been run.
 
 The **GPU-accelerated analysis engine** exposes **58 WebGL analysis modes across 8 categories**.
 The counts below include separate direction, size, and A/B comparison variants in the current
@@ -530,6 +539,8 @@ Click or Tab into the timeline to activate its shortcuts. Inputs, IME compositio
 | [ / ], Alt+[ / ]              | Align / trim the first or last visible frame to the playhead                 |
 | = / -, ;, Shift+;, D          | Zoom, frame/full toggle, full/previous toggle, scroll to playhead            |
 
+Loop creation, boundary changes and clearing support Undo/Redo. Repeating an unchanged boundary preserves history and Redo. Timeline drags do not select interface text. Holding Space shows a grab cursor; panning shows a grabbing cursor.
+
 On macOS use Command for Ctrl and Option for Alt. Existing project versions, media references and autosave remain supported. Duplication remains adjacent on the same track and paste remains at the playhead. Keyframed start-trim and split restrictions remain. Group vertical movement and simultaneous drag-trimming are outside this change. Ripple-trimming overlapping selected clips on one track is refused before changing any clip.
 
 Use these shortcuts for playback, comparison, and editing:
@@ -552,7 +563,7 @@ playback. End stops on the final timeline frame, and loops wrap in either direct
 Paused marker jumps and seeks refresh native and ProRes frames; reverse shuttle is
 silent because reverse audio is not synthesized.
 
-### Loop & Markers
+### Loop & Markers (viewer focused)
 
 | Key      | Action                 |
 | -------- | ---------------------- |
@@ -641,6 +652,8 @@ shows saving during the latest write, and reports write failures. Playback posit
 the next save for restoration, but playback ticks, analysis progress, pointer information and
 selection changes alone do not schedule writes. Version 1 projects remain readable; projects with local media references use version 2.
 
+Browser storage is separate for each browser and site. [IndexedDB follows the same-origin policy](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API#key_concepts_and_usage), so projects do not move automatically from `dualview.yukiworks432.workers.dev` to `dualview.hanayuki.xyz`. Export a `.dualview` project at the former site, import it at the current site, and reconnect the original media if requested.
+
 Creating or opening a project first saves the outgoing edits. The current project stays available
 until the destination has been fully read and decoded; a save or load failure keeps your current
 edits and media, and the Projects dialog shows the error so you can retry. If several switches
@@ -694,7 +707,7 @@ highlights from the current frame scores without decoding again.
 ### Current-frame Difference Regions
 
 Slider and Side by Side outline local differences on the current A/B frame by default; the setting
-can be turned off. The frame-notification API is required. Region highlighting runs only while playback is paused; starting playback hides
+can be turned off. Native-video region highlighting requires `requestVideoFrameCallback`; comparison previews remain available without it. Region highlighting runs only while playback is paused; starting playback hides
 the rectangles and stops this analysis path. Paused seeks and frame steps invalidate the previous
 result and analyze the newly displayed frame once both sides are ready.
 
@@ -713,7 +726,7 @@ Published site information:
 
 ## 🛠️ Tech Stack
 
-These are the declared dependency baselines for this revision. [package.json](package.json) and
+The table shows the major version families used by this project. [package.json](package.json) and
 [pnpm-lock.yaml](pnpm-lock.yaml) are authoritative for dependency ranges and resolved versions; keep
 them consistent when updating dependencies.
 
@@ -721,13 +734,13 @@ them consistent when updating dependencies.
 <tr>
 <td>
 
-| Core         | Version |
-| ------------ | ------- |
-| React        | 19.3.0  |
-| TypeScript   | 7.0.2   |
-| Vite         | 8.3.0   |
-| Zustand      | 5.0.15  |
-| Tailwind CSS | 4.3.3   |
+| Core         | Family |
+| ------------ | ------ |
+| React        | 19.x   |
+| TypeScript   | 7.x    |
+| Vite         | 8.x    |
+| Zustand      | 5.x    |
+| Tailwind CSS | 4.x    |
 
 </td>
 <td>
@@ -1037,6 +1050,11 @@ If your work depends on this maintained fork, GitHub's **Cite this repository** 
 [Fork citation metadata](CITATION.cff)
 
 </details>
+
+<h2 id="support">Support development</h2>
+
+Support maintenance and continued development of this fork through [GitHub Sponsors](https://github.com/sponsors/YukiWorks432).
+Report bugs and suggest improvements through [Issues](https://github.com/YukiWorks432/dualview/issues).
 
 ## Credits
 

@@ -51,3 +51,18 @@ regeneration. Check text readability, no clipping/overlap, the actual current UI
 matching OG/Twitter URL and alt text, and the 1200×630 output. The tiny app controls
 provide visual context; the headline carries the message at social-preview size.
 Commit the scripts and final PNG, not transient captures, fixtures, or PDFs.
+
+## README screenshots
+
+With the same production preview running, capture the README images with:
+
+```sh
+node scripts/og/capture.mjs --readme
+```
+
+This writes `docs/images/slider.png` and `docs/images/difference.png` at 2880×1640.
+Both show the actual current UI with the same original landscape images. The
+Difference screenshot demonstrates color differences between still images; its
+video-analysis lane remains unanalysed. Screenshots use the system sans fallback,
+with remote font requests blocked as described above. Review both files before
+committing them. The `--readme` option does not regenerate the composed OG card.

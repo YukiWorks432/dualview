@@ -1,4 +1,4 @@
-import { mkdir } from 'node:fs/promises'
+import { copyFile, mkdir } from 'node:fs/promises'
 
 import { chromium } from '@playwright/test'
 
@@ -57,5 +57,21 @@ await page.mouse.move(0, 0)
 await page.waitForTimeout(1500)
 await page.screenshot({ path: `${output}/current-ui.png`, animations: 'disabled' })
 console.log(await page.locator('body').innerText())
+if (process.argv.includes('--readme')) {
+  await mkdir('docs/images', { recursive: true })
+  await copyFile(`${output}/current-ui.png`, 'docs/images/slider.png')
+  await page.getByRole('tab', { name: 'Difference comparison mode', exact: true }).click()
+  await page.locator('canvas').first().waitFor({ state: 'visible' })
+  await page.waitForFunction(() =>
+    [...document.images]
+      .filter((image) => image.src.startsWith('blob:'))
+      .every((image) => image.complete && image.naturalWidth > 0),
+  )
+  await page.evaluate(
+    () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))),
+  )
+  await page.mouse.move(0, 0)
+  await page.screenshot({ path: 'docs/images/difference.png', animations: 'disabled' })
+}
 await browser.close()
 if (errors.length) throw new Error(errors.join('\n'))
