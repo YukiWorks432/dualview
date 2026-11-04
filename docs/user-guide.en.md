@@ -155,6 +155,8 @@ source files separately and reconnect them when opening the project. Embedded me
 projects or URL/paste imports is still included. Version 1 files remain readable.
 Clearing browser site data removes saved work, so export important projects before doing so.
 
+Browser storage is separate for each browser and site. [IndexedDB follows the same-origin policy](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API#key_concepts_and_usage), so projects do not move automatically from `dualview.yukiworks432.workers.dev` to `dualview.hanayuki.xyz`. Export a `.dualview` project at the former site, import it at the current site, and reconnect the original media if requested.
+
 ## Export
 
 Press `E` to open export settings and select the output format and source.
@@ -234,7 +236,7 @@ handling; `Escape` also dismisses dialogs or cancels a drag.
 - WebGL analysis needs WebGL 2.0.
 - MP4 export needs WebCodecs `VideoEncoder`.
 - Timeline difference analysis needs Worker and OffscreenCanvas.
-- Current-frame difference regions need the frame-notification API. Without it, comparison previews
+- Native-video difference regions need `requestVideoFrameCallback`. Without it, comparison previews
   still update after loading and seeking.
 - ProRes playback and timeline analysis use Mediabunny's ProRes decoder. Filmstrip and animated-export
   support follow the separate conditions described above.
