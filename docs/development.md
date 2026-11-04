@@ -225,7 +225,7 @@ this fork's maintainer. GitHub's `Cite this repository` reads that metadata. The
   title   = {DualView},
   version = {1.0.0},
   year    = {2026},
-  url     = {https://dualview.yukiworks432.workers.dev},
+  url     = {https://dualview.hanayuki.xyz},
   note    = {Maintained fork of https://github.com/gokayfem/dualview}
 }
 ```

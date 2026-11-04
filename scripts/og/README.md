@@ -38,8 +38,10 @@ requests are permitted. Images, raw 2880×1640 capture, PDF, and 600×315 inspec
 preview are regenerated under ignored `tmp/pdfs/`.
 
 The PDF keeps a 48 px safe margin, a large headline, and the current violet/dark
-visual language. The final asset is `public/og-current-ui.png`; both image metadata
-URLs in `index.html` use that new path to refresh old social caches. The legacy
+visual language. The footer is right-aligned and shows `dualview.hanayuki.xyz`,
+matching the public URL in the page metadata and project links. The final asset is
+`public/og-current-ui.png`; OG and X metadata in `index.html` reference it at
+`https://dualview.hanayuki.xyz/og-current-ui.png`. The legacy
 `og-image.png` remains available for already-shared links. The screenshot shows
 image comparison; the broader image/video wording describes supported product
 capabilities, not a claim that the fixture is video.
